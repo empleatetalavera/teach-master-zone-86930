@@ -433,7 +433,7 @@ export default function Profile() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <div className="container max-w-6xl mx-auto py-8">
         {/* Teacher Profile Quick Access */}
-        {userRole === 'teacher' && (
+        {(userRole === 'teacher' || userRole === 'admin') && (
           <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
