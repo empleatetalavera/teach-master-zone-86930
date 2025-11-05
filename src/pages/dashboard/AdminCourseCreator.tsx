@@ -28,16 +28,20 @@ export default function AdminCourseCreator() {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
 
-  // Datos del curso
+  // Datos del certificado de profesionalidad
   const [courseData, setCourseData] = useState({
     title: "",
     description: "",
     category: "",
-    level: "intermediate",
+    level: "2",
     sepeCode: "",
+    familyProfessional: "",
+    qualificationLevel: "2",
+    professionalCompetence: "",
+    professionalEnvironment: "",
   });
 
-  // Módulos del curso
+  // Unidades de competencia y módulos formativos
   const [modules, setModules] = useState<ModuleHours[]>([
     {
       id: crypto.randomUUID(),
@@ -193,9 +197,9 @@ export default function AdminCourseCreator() {
 
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Crear Curso SEPE</h1>
+            <h1 className="text-3xl font-bold">Crear Certificado de Profesionalidad</h1>
             <p className="text-muted-foreground">
-              Configure el curso con todos sus módulos y distribución de horas
+              Configure el certificado con sus unidades de competencia y módulos formativos
             </p>
           </div>
           <Button onClick={saveCourse} disabled={saving}>
@@ -204,23 +208,23 @@ export default function AdminCourseCreator() {
           </Button>
         </div>
 
-        {/* Datos del Curso */}
+        {/* Datos del Certificado */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Información del Curso</CardTitle>
+            <CardTitle>Información del Certificado de Profesionalidad</CardTitle>
             <CardDescription>
-              Datos generales del curso de formación profesional
+              Datos identificativos del certificado según normativa SEPE
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
                 <Label htmlFor="title">
-                  Título del Curso SEPE <span className="text-destructive">*</span>
+                  Denominación del Certificado <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="title"
-                  placeholder="Ej: HABILITACION PARA LA DOCENCIA EN GRADOS A,B Y C..."
+                  placeholder="Ej: DOCENCIA DE LA FORMACION PROFESIONAL PARA EL EMPLEO"
                   value={courseData.title}
                   onChange={(e) =>
                     setCourseData({ ...courseData, title: e.target.value })
@@ -229,7 +233,9 @@ export default function AdminCourseCreator() {
               </div>
 
               <div>
-                <Label htmlFor="sepeCode">Código SEPE</Label>
+                <Label htmlFor="sepeCode">
+                  Código Certificado <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="sepeCode"
                   placeholder="Ej: SSCE0110"
@@ -241,32 +247,32 @@ export default function AdminCourseCreator() {
               </div>
 
               <div>
-                <Label htmlFor="category">Categoría</Label>
+                <Label htmlFor="familyProfessional">Familia Profesional</Label>
                 <Input
-                  id="category"
-                  placeholder="Ej: Formación Profesional"
-                  value={courseData.category}
+                  id="familyProfessional"
+                  placeholder="Ej: Servicios Socioculturales y a la Comunidad"
+                  value={courseData.familyProfessional}
                   onChange={(e) =>
-                    setCourseData({ ...courseData, category: e.target.value })
+                    setCourseData({ ...courseData, familyProfessional: e.target.value })
                   }
                 />
               </div>
 
               <div>
-                <Label htmlFor="level">Nivel</Label>
+                <Label htmlFor="qualificationLevel">Nivel de Cualificación</Label>
                 <Select
-                  value={courseData.level}
+                  value={courseData.qualificationLevel}
                   onValueChange={(value) =>
-                    setCourseData({ ...courseData, level: value })
+                    setCourseData({ ...courseData, qualificationLevel: value })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="beginner">Principiante</SelectItem>
-                    <SelectItem value="intermediate">Intermedio</SelectItem>
-                    <SelectItem value="advanced">Avanzado</SelectItem>
+                    <SelectItem value="1">Nivel 1 - Certificado Profesionalidad</SelectItem>
+                    <SelectItem value="2">Nivel 2 - Certificado Profesionalidad</SelectItem>
+                    <SelectItem value="3">Nivel 3 - Certificado Profesionalidad</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -279,16 +285,31 @@ export default function AdminCourseCreator() {
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="description">
-                  Descripción <span className="text-destructive">*</span>
+                <Label htmlFor="professionalCompetence">
+                  Competencia General
                 </Label>
                 <Textarea
-                  id="description"
+                  id="professionalCompetence"
                   rows={3}
-                  placeholder="Descripción general del curso..."
-                  value={courseData.description}
+                  placeholder="Descripción de la competencia general que otorga el certificado..."
+                  value={courseData.professionalCompetence}
                   onChange={(e) =>
-                    setCourseData({ ...courseData, description: e.target.value })
+                    setCourseData({ ...courseData, professionalCompetence: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="professionalEnvironment">
+                  Entorno Profesional
+                </Label>
+                <Textarea
+                  id="professionalEnvironment"
+                  rows={3}
+                  placeholder="Ámbito profesional, sectores productivos, ocupaciones..."
+                  value={courseData.professionalEnvironment}
+                  onChange={(e) =>
+                    setCourseData({ ...courseData, professionalEnvironment: e.target.value })
                   }
                 />
               </div>
@@ -296,19 +317,19 @@ export default function AdminCourseCreator() {
           </CardContent>
         </Card>
 
-        {/* Módulos del Curso */}
+        {/* Unidades de Competencia y Módulos Formativos */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Módulos y Unidades de Competencia</CardTitle>
+                <CardTitle>Unidades de Competencia (UC) y Módulos Formativos (MF)</CardTitle>
                 <CardDescription>
-                  Define cada módulo con su distribución de horas
+                  Define cada UC con su MF asociado y distribución de horas (presencial/distancia/teleformación)
                 </CardDescription>
               </div>
               <Button onClick={addModule} variant="outline" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
-                Agregar Módulo
+                Agregar UC/MF
               </Button>
             </div>
           </CardHeader>
@@ -327,15 +348,18 @@ export default function AdminCourseCreator() {
                       <div className="flex-1 space-y-4">
                         <div>
                           <Label>
-                            Título del Módulo <span className="text-destructive">*</span>
+                            Unidad de Competencia y Módulo Formativo <span className="text-destructive">*</span>
                           </Label>
                           <Input
-                            placeholder="Ej: UC1442_3: Programar acciones formativas..."
+                            placeholder="Ej: 1. UC1442_3: Programar acciones formativas / MF1442_3: Programación didáctica"
                             value={module.title}
                             onChange={(e) =>
                               updateModule(module.id, "title", e.target.value)
                             }
                           />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Formato: Nº. UCxxxx_x: Descripción / MFxxxx_x: Descripción
+                          </p>
                         </div>
 
                         <div>
@@ -430,19 +454,19 @@ export default function AdminCourseCreator() {
           </CardContent>
         </Card>
 
-        {/* Resumen */}
+        {/* Resumen del Certificado */}
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Resumen del Curso</CardTitle>
+            <CardTitle>Resumen del Certificado de Profesionalidad</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-5">
               <div>
-                <p className="text-sm text-muted-foreground">Total Módulos</p>
+                <p className="text-sm text-muted-foreground">Unidades Competencia</p>
                 <p className="text-2xl font-bold">{modules.length}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Horas Totales</p>
+                <p className="text-sm text-muted-foreground">Duración Total</p>
                 <p className="text-2xl font-bold text-primary">
                   {calculateTotalHours()}h
                 </p>
@@ -451,6 +475,12 @@ export default function AdminCourseCreator() {
                 <p className="text-sm text-muted-foreground">Horas Presenciales</p>
                 <p className="text-2xl font-bold">
                   {modules.reduce((sum, m) => sum + m.presentialHours, 0)}h
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Horas Distancia</p>
+                <p className="text-2xl font-bold">
+                  {modules.reduce((sum, m) => sum + m.distanceHours, 0)}h
                 </p>
               </div>
               <div>

@@ -48,7 +48,7 @@ const adminItems = [
   { title: "Análisis AI", url: "/dashboard/admin/ai-analytics", icon: MessageSquare },
   { title: "Usuarios", url: "/dashboard/admin/users", icon: Users },
   { title: "Atención al Alumno", url: "/dashboard/admin/support", icon: Headphones },
-  { title: "Cursos", url: "/dashboard/admin/courses", icon: BookOpen },
+  { title: "Certificados", url: "/dashboard/admin/courses", icon: BookOpen },
   { title: "Configurar Cursos", url: "/dashboard/admin/course-settings", icon: Settings },
   { title: "Informes", url: "/dashboard/admin/reports", icon: BarChart },
   { title: "Personalización", url: "/dashboard/admin/settings", icon: GraduationCap },

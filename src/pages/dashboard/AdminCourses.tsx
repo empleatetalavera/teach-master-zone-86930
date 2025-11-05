@@ -114,14 +114,14 @@ export default function AdminCourses() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Gestión de Cursos</h1>
+          <h1 className="text-3xl font-bold">Certificados de Profesionalidad</h1>
           <p className="text-muted-foreground">
-            Administra todos los cursos de la plataforma
+            Gestiona los certificados de profesionalidad de la plataforma
           </p>
         </div>
         <Button onClick={() => navigate("/dashboard/admin/courses/create")} className="gap-2">
           <Plus className="h-4 w-4" />
-          Crear Curso SEPE
+          Crear Certificado de Profesionalidad
         </Button>
       </div>
 
@@ -144,13 +144,13 @@ export default function AdminCourses() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Total Cursos</CardDescription>
+            <CardDescription>Total Certificados</CardDescription>
             <CardTitle className="text-3xl">{courses.length}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Cursos Activos</CardDescription>
+            <CardDescription>Certificados Activos</CardDescription>
             <CardTitle className="text-3xl text-primary">
               {courses.filter((c) => c.is_active).length}
             </CardTitle>
