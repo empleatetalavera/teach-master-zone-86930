@@ -76,13 +76,6 @@ export default function Auth() {
       // Attempt login
       const { error } = await signIn(loginEmail, loginPassword);
 
-      // Record the login attempt
-      await supabase.from('login_attempts').insert({
-        email: loginEmail.toLowerCase().trim(),
-        success: !error,
-        attempt_time: new Date().toISOString(),
-      });
-
       if (error) {
         toast({
           title: "Error al iniciar sesión",

@@ -1,1 +1,10 @@
 project_id = "fkxbgifvwivlvpwxdzdb"
+
+[functions.ai-assistant]
+verify_jwt = true
+
+[functions.check-student-activity]
+verify_jwt = true
+
+[functions.reset-user-password]
+verify_jwt = true
