@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useContentTracker } from "@/hooks/useContentTracker";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, BookOpen, Lightbulb, FileText, MessageSquare } from "lucide-react";
 import ScormPlayer from "@/components/scorm/ScormPlayer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModuleChat } from "@/components/ModuleChat";
@@ -218,10 +218,22 @@ export default function ModuleView() {
           <CardContent className="space-y-6">
             <Tabs defaultValue="content" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="content">Contenido</TabsTrigger>
-                <TabsTrigger value="interactive">Interactivo</TabsTrigger>
-                <TabsTrigger value="activities">Actividades</TabsTrigger>
-                <TabsTrigger value="chat">Chat</TabsTrigger>
+                <TabsTrigger value="content" className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Contenido
+                </TabsTrigger>
+                <TabsTrigger value="interactive" className="flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4" />
+                  Interactivo
+                </TabsTrigger>
+                <TabsTrigger value="activities" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Actividades
+                </TabsTrigger>
+                <TabsTrigger value="chat" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Chat
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="content" className="space-y-6 mt-6">

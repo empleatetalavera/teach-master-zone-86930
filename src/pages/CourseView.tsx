@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { TutorMessaging } from "@/components/TutorMessaging";
+import { GradesSection } from "@/components/GradesSection";
 
 interface Course {
   id: string;
@@ -269,7 +270,12 @@ export default function CourseView() {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <img 
+                    src="/branding/sepe-logo.png" 
+                    alt="SEPE" 
+                    className="h-8 object-contain"
+                  />
                   <Badge className={getLevelColor(course.level)}>
                     {getLevelLabel(course.level)}
                   </Badge>
@@ -326,6 +332,7 @@ export default function CourseView() {
           <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="intro">Inicio</TabsTrigger>
             <TabsTrigger value="modules">Módulos</TabsTrigger>
+            <TabsTrigger value="grades">Calificaciones</TabsTrigger>
             <TabsTrigger value="exams">Exámenes</TabsTrigger>
             <TabsTrigger value="tutorials">Tutorías</TabsTrigger>
             <TabsTrigger value="calendar">Calendario</TabsTrigger>
@@ -434,6 +441,10 @@ export default function CourseView() {
                   </div>
                 </CardContent>
               </Card>
+          </TabsContent>
+
+          <TabsContent value="grades" className="space-y-4">
+            <GradesSection courseId={courseId!} enrollmentId={enrollment?.id} />
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
@@ -623,8 +634,17 @@ export default function CourseView() {
                       {tutorial.title}
                     </CardTitle>
                     <CardDescription>
-                      {new Date(tutorial.start_time).toLocaleString("es-ES")}
-                      {tutorial.end_time && ` - ${new Date(tutorial.end_time).toLocaleTimeString("es-ES")}`}
+                      {new Date(tutorial.start_time).toLocaleString("es-ES", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                      {tutorial.end_time && ` - ${new Date(tutorial.end_time).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}`}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -668,7 +688,15 @@ export default function CourseView() {
                             <p className="text-sm text-muted-foreground">{event.description}</p>
                             <div className="flex items-center gap-2 mt-2 text-sm">
                               <Calendar className="h-4 w-4" />
-                              <span>{new Date(event.start_time).toLocaleString('es-ES')}</span>
+                              <span>
+                                {new Date(event.start_time).toLocaleString('es-ES', {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit"
+                                })}
+                              </span>
                             </div>
                           </div>
                           <Badge>{event.event_type}</Badge>

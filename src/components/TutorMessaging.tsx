@@ -55,18 +55,32 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
       setLoadingMessages(true);
       const { data, error } = await supabase
         .from("communications")
-        .select(`
-          *,
-          sender:profiles!communications_sender_id_fkey(full_name, avatar_url),
-          receiver:profiles!communications_receiver_id_fkey(full_name, avatar_url)
-        `)
+        .select("*")
         .eq("course_id", courseId)
         .eq("sender_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(20);
 
       if (error) throw error;
-      setMessages(data || []);
+      
+      // Load sender profiles separately to avoid foreign key issues
+      if (data && data.length > 0) {
+        const senderIds = [...new Set(data.map(m => m.sender_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", senderIds);
+        
+        const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const messagesWithProfiles = data.map(msg => ({
+          ...msg,
+          sender: profilesMap.get(msg.sender_id)
+        }));
+        
+        setMessages(messagesWithProfiles);
+      } else {
+        setMessages([]);
+      }
     } catch (error) {
       console.error("Error loading messages:", error);
     } finally {
