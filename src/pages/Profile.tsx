@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Upload, User, FileText, Briefcase, GraduationCap, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Loader2, Upload, User, FileText, Briefcase, GraduationCap, CheckCircle, XCircle, Clock, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Profile {
@@ -61,7 +61,7 @@ interface TrainingHistory {
 }
 
 export default function Profile() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, userRole, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -432,6 +432,35 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <div className="container max-w-6xl mx-auto py-8">
+        {/* Teacher Profile Quick Access */}
+        {userRole === 'teacher' && (
+          <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <GraduationCap className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Perfil de Tutor</p>
+                    <p className="text-sm text-muted-foreground">
+                      Gestiona tu información profesional docente
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => navigate('/dashboard/teacher/profile')}
+                  variant="default"
+                  className="gap-2"
+                >
+                  Acceder
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
