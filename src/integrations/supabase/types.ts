@@ -658,6 +658,48 @@ export type Database = {
           },
         ]
       }
+      module_scorm_content: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_required: boolean | null
+          module_id: string
+          order_index: number
+          scorm_package_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_required?: boolean | null
+          module_id: string
+          order_index?: number
+          scorm_package_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_required?: boolean | null
+          module_id?: string
+          order_index?: number
+          scorm_package_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_scorm_content_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_scorm_content_scorm_package_id_fkey"
+            columns: ["scorm_package_id"]
+            isOneToOne: false
+            referencedRelation: "scorm_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modules: {
         Row: {
           content: string | null
@@ -853,6 +895,136 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      scorm_packages: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          is_active: boolean | null
+          manifest_data: Json | null
+          scorm_version: string | null
+          title: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          is_active?: boolean | null
+          manifest_data?: Json | null
+          scorm_version?: string | null
+          title: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          is_active?: boolean | null
+          manifest_data?: Json | null
+          scorm_version?: string | null
+          title?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      scorm_progress: {
+        Row: {
+          cmi_data: Json | null
+          completion_status: string | null
+          created_at: string | null
+          enrollment_id: string
+          id: string
+          last_accessed_at: string | null
+          lesson_status: string | null
+          module_id: string
+          score_max: number | null
+          score_min: number | null
+          score_raw: number | null
+          scorm_package_id: string
+          session_time: string | null
+          success_status: string | null
+          suspend_data: string | null
+          total_time: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cmi_data?: Json | null
+          completion_status?: string | null
+          created_at?: string | null
+          enrollment_id: string
+          id?: string
+          last_accessed_at?: string | null
+          lesson_status?: string | null
+          module_id: string
+          score_max?: number | null
+          score_min?: number | null
+          score_raw?: number | null
+          scorm_package_id: string
+          session_time?: string | null
+          success_status?: string | null
+          suspend_data?: string | null
+          total_time?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cmi_data?: Json | null
+          completion_status?: string | null
+          created_at?: string | null
+          enrollment_id?: string
+          id?: string
+          last_accessed_at?: string | null
+          lesson_status?: string | null
+          module_id?: string
+          score_max?: number | null
+          score_min?: number | null
+          score_raw?: number | null
+          scorm_package_id?: string
+          session_time?: string | null
+          success_status?: string | null
+          suspend_data?: string | null
+          total_time?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scorm_progress_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scorm_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scorm_progress_scorm_package_id_fkey"
+            columns: ["scorm_package_id"]
+            isOneToOne: false
+            referencedRelation: "scorm_packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_documents: {
         Row: {

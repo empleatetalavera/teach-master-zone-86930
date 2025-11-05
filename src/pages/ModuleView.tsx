@@ -7,6 +7,7 @@ import { useContentTracker } from "@/hooks/useContentTracker";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import ScormPlayer from "@/components/scorm/ScormPlayer";
 
 interface Module {
   id: string;
@@ -217,6 +218,13 @@ export default function ModuleView() {
                 dangerouslySetInnerHTML={{ __html: module.content || "" }}
               />
             </div>
+
+            {/* SCORM Content */}
+            {enrollmentId && (
+              <div className="pt-6 border-t">
+                <ScormPlayer moduleId={moduleId!} enrollmentId={enrollmentId} />
+              </div>
+            )}
 
             <div className="flex items-center justify-between pt-6 border-t">
               <Button

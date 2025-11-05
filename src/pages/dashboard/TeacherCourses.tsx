@@ -37,6 +37,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import ScormUploader from "@/components/scorm/ScormUploader";
+import ScormManager from "@/components/scorm/ScormManager";
 
 const mockScormContent = [
   {
@@ -482,76 +484,9 @@ export default function TeacherCourses() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="scorm" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Contenidos SCORM</CardTitle>
-                  <CardDescription>
-                    Gestiona tus paquetes de contenido SCORM
-                  </CardDescription>
-                </div>
-                <Button onClick={handleUploadScorm}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Subir SCORM
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Tamaño</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Cursos</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockScormContent.map((content) => (
-                    <TableRow key={content.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          {content.name}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{content.type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {content.size}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {content.uploadDate}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {content.courses} cursos
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon">
-                            <Play className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Download className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+        <TabsContent value="scorm" className="space-y-6">
+          <ScormUploader />
+          <ScormManager />
         </TabsContent>
       </Tabs>
     </div>
