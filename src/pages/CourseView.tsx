@@ -45,6 +45,8 @@ export default function CourseView() {
   const [enrollment, setEnrollment] = useState<any>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [forumTopics, setForumTopics] = useState<any[]>([]);
+  const [tutorials, setTutorials] = useState<any[]>([]);
+  const [exams, setExams] = useState<any[]>([]);
 
   useEffect(() => {
     if (courseId && user) {
@@ -143,6 +145,33 @@ export default function CourseView() {
         .limit(10);
 
       setForumTopics(topicsData || []);
+
+      // Load tutorials (events of type 'tutorial')
+      const { data: tutorialsData } = await supabase
+        .from("course_events")
+        .select("*")
+        .eq("course_id", courseId)
+        .eq("event_type", "tutorial")
+        .order("start_time", { ascending: true });
+
+      setTutorials(tutorialsData || []);
+
+      // Load exams (evaluations)
+      const { data: examsData } = await supabase
+        .from("evaluations")
+        .select(`
+          *,
+          evaluation_attempts (
+            id,
+            score,
+            status,
+            completed_at
+          )
+        `)
+        .eq("course_id", courseId)
+        .eq("is_active", true);
+
+      setExams(examsData || []);
     } catch (error: any) {
       console.error("Error loading course:", error);
       toast({
@@ -261,21 +290,77 @@ export default function CourseView() {
         </Card>
 
         {/* Course Content Tabs */}
-        <Tabs defaultValue="modules" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="modules">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Contenido
-            </TabsTrigger>
-            <TabsTrigger value="calendar">
-              <Calendar className="h-4 w-4 mr-2" />
-              Calendario
-            </TabsTrigger>
-            <TabsTrigger value="forum">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Foro
-            </TabsTrigger>
+        <Tabs defaultValue="intro" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="intro">Inicio</TabsTrigger>
+            <TabsTrigger value="modules">Módulos</TabsTrigger>
+            <TabsTrigger value="exams">Exámenes</TabsTrigger>
+            <TabsTrigger value="tutorials">Tutorías</TabsTrigger>
+            <TabsTrigger value="calendar">Calendario</TabsTrigger>
+            <TabsTrigger value="forum">Foro</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="intro" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Guía de Uso de la Plataforma</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="prose prose-sm max-w-none">
+                  <h3 className="text-lg font-semibold">Bienvenido/a al Campus Virtual</h3>
+                  <p className="text-muted-foreground">
+                    Esta plataforma está diseñada para facilitar tu proceso de aprendizaje. A continuación, 
+                    te explicamos cómo navegar por las diferentes secciones:
+                  </p>
+                  <ul className="space-y-2 mt-4 list-disc list-inside">
+                    <li><strong>Módulos:</strong> Accede al contenido del curso organizado por unidades didácticas</li>
+                    <li><strong>Exámenes:</strong> Realiza las evaluaciones programadas</li>
+                    <li><strong>Tutorías:</strong> Consulta las sesiones de tutoría y accede a las videollamadas</li>
+                    <li><strong>Calendario:</strong> Visualiza todas las fechas importantes del curso</li>
+                    <li><strong>Foro:</strong> Participa en discusiones con otros estudiantes y tutores</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Objetivos del Curso</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Objetivo General</h3>
+                    <p className="text-muted-foreground">
+                      Al finalizar este curso, habrás adquirido los conocimientos y competencias necesarios para desempeñarte con éxito en el área de estudio.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Objetivos Específicos</h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <span>Comprender los conceptos fundamentales de la materia</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <span>Aplicar los conocimientos adquiridos en casos prácticos</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <span>Desarrollar habilidades de análisis crítico</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <span>Trabajar de forma colaborativa en proyectos del área</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
             <h2 className="text-2xl font-bold">Módulos del curso</h2>
@@ -384,6 +469,110 @@ export default function CourseView() {
                 </AccordionItem>
               ))}
             </Accordion>
+          </TabsContent>
+
+          <TabsContent value="exams" className="space-y-4">
+            {exams.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No hay exámenes disponibles</p>
+                </CardContent>
+              </Card>
+            ) : (
+              exams.map((exam) => (
+                <Card key={exam.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        {exam.title}
+                      </span>
+                      <Badge variant={exam.evaluation_attempts?.some((a: any) => a.status === 'completed') ? "default" : "secondary"}>
+                        {exam.evaluation_attempts?.some((a: any) => a.status === 'completed') ? "Completado" : "Pendiente"}
+                      </Badge>
+                    </CardTitle>
+                    {exam.description && (
+                      <CardDescription>{exam.description}</CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="text-muted-foreground">
+                        Nota mínima: <strong>{exam.passing_score}%</strong>
+                      </span>
+                      <span className="text-muted-foreground">
+                        Intentos: <strong>{exam.max_attempts || "Ilimitados"}</strong>
+                      </span>
+                      {exam.time_limit_minutes && (
+                        <span className="text-muted-foreground">
+                          Tiempo: <strong>{exam.time_limit_minutes} min</strong>
+                        </span>
+                      )}
+                    </div>
+                    {exam.evaluation_attempts && exam.evaluation_attempts.length > 0 && (
+                      <div className="mt-4 p-4 bg-muted rounded-lg">
+                        <p className="text-sm font-medium mb-2">Último intento:</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">
+                            Calificación: <strong>{exam.evaluation_attempts[0].score}%</strong>
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(exam.evaluation_attempts[0].completed_at).toLocaleDateString("es-ES")}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    <Button className="w-full mt-4">
+                      {exam.evaluation_attempts?.some((a: any) => a.status === 'completed') ? "Ver Resultados" : "Comenzar Examen"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="tutorials" className="space-y-4">
+            {tutorials.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No hay tutorías programadas</p>
+                </CardContent>
+              </Card>
+            ) : (
+              tutorials.map((tutorial) => (
+                <Card key={tutorial.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5" />
+                      {tutorial.title}
+                    </CardTitle>
+                    <CardDescription>
+                      {new Date(tutorial.start_time).toLocaleString("es-ES")}
+                      {tutorial.end_time && ` - ${new Date(tutorial.end_time).toLocaleTimeString("es-ES")}`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {tutorial.description && (
+                      <p className="text-sm text-muted-foreground">{tutorial.description}</p>
+                    )}
+                    {tutorial.meeting_url && (
+                      <Button className="w-full" asChild>
+                        <a href={tutorial.meeting_url} target="_blank" rel="noopener noreferrer">
+                          Acceder a la Tutoría
+                        </a>
+                      </Button>
+                    )}
+                    {tutorial.location && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <span className="font-medium">Ubicación:</span> {tutorial.location}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-4">
