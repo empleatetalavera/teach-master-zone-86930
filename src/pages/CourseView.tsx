@@ -349,15 +349,19 @@ export default function CourseView() {
 
         {/* Course Content Tabs */}
         <Tabs defaultValue="intro" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="intro">Inicio</TabsTrigger>
-            <TabsTrigger value="modules">Módulos</TabsTrigger>
-            <TabsTrigger value="grades">Calificaciones</TabsTrigger>
-            <TabsTrigger value="exams">Exámenes</TabsTrigger>
-            <TabsTrigger value="tutorials">Tutorías</TabsTrigger>
-            <TabsTrigger value="calendar">Calendario</TabsTrigger>
-            <TabsTrigger value="forum">Foro</TabsTrigger>
-          </TabsList>
+          <div className="flex gap-4">
+            <TabsList className="flex flex-col h-fit w-48 sticky top-4">
+              <TabsTrigger value="intro" className="w-full justify-start">Inicio</TabsTrigger>
+              <TabsTrigger value="modules" className="w-full justify-start">Módulos</TabsTrigger>
+              <TabsTrigger value="grades" className="w-full justify-start">Calificaciones</TabsTrigger>
+              <TabsTrigger value="exams" className="w-full justify-start">Exámenes</TabsTrigger>
+              <TabsTrigger value="tutorials" className="w-full justify-start">Tutorías</TabsTrigger>
+              <TabsTrigger value="calendar" className="w-full justify-start">Calendario</TabsTrigger>
+              <TabsTrigger value="forum" className="w-full justify-start">Foro</TabsTrigger>
+              <TabsTrigger value="time-tracking" className="w-full justify-start">Tiempos Invertidos</TabsTrigger>
+            </TabsList>
+            
+            <div className="flex-1">
 
           <TabsContent value="intro" className="space-y-6">
             <Card>
@@ -787,6 +791,73 @@ export default function CourseView() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="time-tracking" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tiempos Invertidos en el Curso</CardTitle>
+                <CardDescription>Resumen del tiempo dedicado al curso y sus módulos</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Card className="bg-primary/5 border-primary/20">
+                    <CardHeader className="pb-3">
+                      <CardDescription>Tiempo Total</CardDescription>
+                      <CardTitle className="text-3xl text-primary">
+                        {Math.floor((modules.reduce((acc, m) => acc + (m.duration_minutes || 0), 0)) / 60)}h {modules.reduce((acc, m) => acc + (m.duration_minutes || 0), 0) % 60}m
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                  
+                  <Card className="bg-secondary/5 border-secondary/20">
+                    <CardHeader className="pb-3">
+                      <CardDescription>Módulos Completados</CardDescription>
+                      <CardTitle className="text-3xl text-secondary">
+                        {modules.filter(m => m.completed).length} / {modules.length}
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                  
+                  <Card className="bg-accent/5 border-accent/20">
+                    <CardHeader className="pb-3">
+                      <CardDescription>Progreso General</CardDescription>
+                      <CardTitle className="text-3xl text-accent">
+                        {enrollment?.progress_percentage || 0}%
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold">Desglose por Módulo</h3>
+                  {modules.map((module) => (
+                    <Card key={module.id} className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{module.title}</h4>
+                        </div>
+                        <Badge variant={module.completed ? "default" : "outline"}>
+                          {module.completed ? "Completado" : "En progreso"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>{Math.floor((module.duration_minutes || 0) / 60)}h {(module.duration_minutes || 0) % 60}m</span>
+                        </div>
+                        <div className="flex-1">
+                          <Progress value={module.progress || 0} className="h-2" />
+                        </div>
+                        <span className="font-medium">{module.progress || 0}%</span>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+            </div>
+          </div>
         </Tabs>
       </div>
     </div>
