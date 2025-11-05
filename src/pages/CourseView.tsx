@@ -10,6 +10,7 @@ import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { TutorMessaging } from "@/components/TutorMessaging";
 
 interface Course {
   id: string;
@@ -19,6 +20,13 @@ interface Course {
   level: string;
   duration_hours: number;
   thumbnail_url: string;
+  video_url?: string;
+  objectives?: string;
+  specific_objectives?: string[];
+  concept_map_url?: string;
+  support_email?: string;
+  support_phone?: string;
+  tutor_id?: string;
 }
 
 interface Module {
@@ -64,7 +72,15 @@ export default function CourseView() {
         .single();
 
       if (courseError) throw courseError;
-      setCourse(courseData);
+      
+      // Parse specific_objectives if it's a JSON field
+      const parsedCourse = {
+        ...courseData,
+        specific_objectives: Array.isArray(courseData.specific_objectives) 
+          ? courseData.specific_objectives 
+          : []
+      };
+      setCourse(parsedCourse as Course);
 
       // Load modules
       const { data: modulesData, error: modulesError } = await supabase
@@ -291,13 +307,14 @@ export default function CourseView() {
 
         {/* Course Content Tabs */}
         <Tabs defaultValue="intro" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="intro">Inicio</TabsTrigger>
             <TabsTrigger value="modules">Módulos</TabsTrigger>
             <TabsTrigger value="exams">Exámenes</TabsTrigger>
             <TabsTrigger value="tutorials">Tutorías</TabsTrigger>
             <TabsTrigger value="calendar">Calendario</TabsTrigger>
             <TabsTrigger value="forum">Foro</TabsTrigger>
+            <TabsTrigger value="support">Contacto</TabsTrigger>
           </TabsList>
 
           <TabsContent value="intro" className="space-y-6">
@@ -323,43 +340,84 @@ export default function CourseView() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Objetivos del Curso</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Objetivo General</h3>
-                    <p className="text-muted-foreground">
-                      Al finalizar este curso, habrás adquirido los conocimientos y competencias necesarios para desempeñarte con éxito en el área de estudio.
-                    </p>
+              {course.video_url && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Vídeo de Presentación</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                      <video 
+                        src={course.video_url} 
+                        controls 
+                        className="w-full h-full"
+                      >
+                        Tu navegador no soporta el elemento de vídeo.
+                      </video>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Objetivos del Curso</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Objetivo General</h3>
+                      <p className="text-muted-foreground">
+                        {course.objectives || "Al finalizar este curso, habrás adquirido los conocimientos y competencias necesarios para desempeñarte con éxito en el área de estudio."}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Objetivos Específicos</h3>
+                      <ul className="space-y-2">
+                        {course.specific_objectives && course.specific_objectives.length > 0 ? (
+                          course.specific_objectives.map((obj: string, idx: number) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                              <span>{obj}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                              <span>Comprender los conceptos fundamentales de la materia</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                              <span>Aplicar los conocimientos adquiridos en casos prácticos</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                              <span>Desarrollar habilidades de análisis crítico</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                              <span>Trabajar de forma colaborativa en proyectos del área</span>
+                            </li>
+                          </>
+                        )}
+                      </ul>
+
+                      {course.concept_map_url && (
+                        <div className="mt-6">
+                          <h3 className="text-lg font-semibold mb-4">Mapa Conceptual</h3>
+                          <img 
+                            src={course.concept_map_url} 
+                            alt="Mapa conceptual del curso" 
+                            className="w-full rounded-lg border"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Objetivos Específicos</h3>
-                    <ul className="space-y-2">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                        <span>Comprender los conceptos fundamentales de la materia</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                        <span>Aplicar los conocimientos adquiridos en casos prácticos</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                        <span>Desarrollar habilidades de análisis crítico</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                        <span>Trabajar de forma colaborativa en proyectos del área</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
@@ -605,6 +663,15 @@ export default function CourseView() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="support" className="space-y-4">
+            <TutorMessaging 
+              courseId={courseId!}
+              tutorId={course.tutor_id}
+              supportEmail={course.support_email}
+              supportPhone={course.support_phone}
+            />
           </TabsContent>
 
           <TabsContent value="forum" className="space-y-4">

@@ -420,42 +420,63 @@ export type Database = {
       courses: {
         Row: {
           category: string | null
+          concept_map_url: string | null
           created_at: string | null
           description: string | null
           duration_hours: number | null
           id: string
           is_active: boolean | null
           level: string | null
+          objectives: string | null
+          specific_objectives: Json | null
+          support_email: string | null
+          support_phone: string | null
           thumbnail_url: string | null
           title: string
           training_center_id: string | null
+          tutor_id: string | null
           updated_at: string | null
+          video_url: string | null
         }
         Insert: {
           category?: string | null
+          concept_map_url?: string | null
           created_at?: string | null
           description?: string | null
           duration_hours?: number | null
           id?: string
           is_active?: boolean | null
           level?: string | null
+          objectives?: string | null
+          specific_objectives?: Json | null
+          support_email?: string | null
+          support_phone?: string | null
           thumbnail_url?: string | null
           title: string
           training_center_id?: string | null
+          tutor_id?: string | null
           updated_at?: string | null
+          video_url?: string | null
         }
         Update: {
           category?: string | null
+          concept_map_url?: string | null
           created_at?: string | null
           description?: string | null
           duration_hours?: number | null
           id?: string
           is_active?: boolean | null
           level?: string | null
+          objectives?: string | null
+          specific_objectives?: Json | null
+          support_email?: string | null
+          support_phone?: string | null
           thumbnail_url?: string | null
           title?: string
           training_center_id?: string | null
+          tutor_id?: string | null
           updated_at?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
