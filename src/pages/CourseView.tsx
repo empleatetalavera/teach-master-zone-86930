@@ -13,6 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { TutorMessaging } from "@/components/TutorMessaging";
 import { GradesSection } from "@/components/GradesSection";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TimeTrackingReport } from "@/components/TimeTrackingReport";
 
 interface Course {
   id: string;
@@ -58,6 +59,7 @@ export default function CourseView() {
   const [forumTopics, setForumTopics] = useState<any[]>([]);
   const [tutorials, setTutorials] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
+  const [studentName, setStudentName] = useState<string>("");
 
   useEffect(() => {
     if (courseId && user) {
@@ -191,6 +193,17 @@ export default function CourseView() {
         .eq("is_active", true);
 
       setExams(examsData || []);
+
+      // Load student name from profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user!.id)
+        .single();
+      
+      if (profileData) {
+        setStudentName(profileData.full_name || "Usuario");
+      }
     } catch (error: any) {
       console.error("Error loading course:", error);
       toast({
@@ -793,68 +806,12 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="time-tracking" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tiempos Invertidos en el Curso</CardTitle>
-                <CardDescription>Resumen del tiempo dedicado al curso y sus módulos</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Card className="bg-primary/5 border-primary/20">
-                    <CardHeader className="pb-3">
-                      <CardDescription>Tiempo Total</CardDescription>
-                      <CardTitle className="text-3xl text-primary">
-                        {Math.floor((modules.reduce((acc, m) => acc + (m.duration_minutes || 0), 0)) / 60)}h {modules.reduce((acc, m) => acc + (m.duration_minutes || 0), 0) % 60}m
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                  
-                  <Card className="bg-secondary/5 border-secondary/20">
-                    <CardHeader className="pb-3">
-                      <CardDescription>Módulos Completados</CardDescription>
-                      <CardTitle className="text-3xl text-secondary">
-                        {modules.filter(m => m.completed).length} / {modules.length}
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                  
-                  <Card className="bg-accent/5 border-accent/20">
-                    <CardHeader className="pb-3">
-                      <CardDescription>Progreso General</CardDescription>
-                      <CardTitle className="text-3xl text-accent">
-                        {enrollment?.progress_percentage || 0}%
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                </div>
-
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold">Desglose por Módulo</h3>
-                  {modules.map((module) => (
-                    <Card key={module.id} className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex-1">
-                          <h4 className="font-semibold">{module.title}</h4>
-                        </div>
-                        <Badge variant={module.completed ? "default" : "outline"}>
-                          {module.completed ? "Completado" : "En progreso"}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          <span>{Math.floor((module.duration_minutes || 0) / 60)}h {(module.duration_minutes || 0) % 60}m</span>
-                        </div>
-                        <div className="flex-1">
-                          <Progress value={module.progress || 0} className="h-2" />
-                        </div>
-                        <span className="font-medium">{module.progress || 0}%</span>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <TimeTrackingReport 
+              courseName={course?.title || ""}
+              modules={modules}
+              enrollment={enrollment}
+              studentName={studentName}
+            />
           </TabsContent>
             </div>
           </div>
