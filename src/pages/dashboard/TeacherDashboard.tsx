@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { BookOpen, Users, ClipboardCheck, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const stats = [
   {
@@ -30,6 +31,8 @@ const stats = [
 ];
 
 const TeacherDashboard = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-start">
@@ -37,7 +40,9 @@ const TeacherDashboard = () => {
           <h1 className="text-3xl font-bold mb-2">Dashboard Docente</h1>
           <p className="text-muted-foreground">Gestiona tus cursos y alumnos</p>
         </div>
-        <Button variant="hero">Crear Nuevo Curso</Button>
+        <Button variant="hero" onClick={() => navigate("/dashboard/teacher/courses")}>
+          Crear Nuevo Curso
+        </Button>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">

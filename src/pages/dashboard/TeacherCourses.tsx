@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -34,39 +35,7 @@ import {
   Play
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const mockCourses = [
-  {
-    id: 1,
-    title: "Introducción a React",
-    description: "Aprende los fundamentos de React desde cero",
-    students: 45,
-    duration: "8 semanas",
-    status: "active",
-    progress: 75,
-    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400"
-  },
-  {
-    id: 2,
-    title: "JavaScript Avanzado",
-    description: "Domina conceptos avanzados de JavaScript",
-    students: 32,
-    duration: "6 semanas",
-    status: "active",
-    progress: 45,
-    image: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400"
-  },
-  {
-    id: 3,
-    title: "TypeScript para Profesionales",
-    description: "Aprende TypeScript y sus mejores prácticas",
-    students: 28,
-    duration: "4 semanas",
-    status: "draft",
-    progress: 20,
-    image: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400"
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 const mockScormContent = [
   {
@@ -97,20 +66,111 @@ const mockScormContent = [
 
 export default function TeacherCourses() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("courses");
+  const [newCourse, setNewCourse] = useState({
+    title: "",
+    duration: "",
+    description: "",
+    category: "Desarrollo Web",
+    level: "Principiante"
+  });
 
-  const handleEditCourse = (courseId: number) => {
+  // Fetch courses from database
+  const { data: courses = [], isLoading } = useQuery({
+    queryKey: ["teacher-courses"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Create course mutation
+  const createCourseMutation = useMutation({
+    mutationFn: async (courseData: typeof newCourse) => {
+      const { data, error } = await supabase
+        .from("courses")
+        .insert([{
+          title: courseData.title,
+          description: courseData.description,
+          duration_hours: parseInt(courseData.duration) || null,
+          category: courseData.category,
+          level: courseData.level,
+          is_active: true
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
+      toast({
+        title: "¡Curso creado!",
+        description: "El curso ha sido creado exitosamente",
+      });
+      setNewCourse({
+        title: "",
+        duration: "",
+        description: "",
+        category: "Desarrollo Web",
+        level: "Principiante"
+      });
+      setActiveTab("courses");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error al crear curso",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleCreateCourse = () => {
+    if (!newCourse.title || !newCourse.description) {
+      toast({
+        title: "Campos requeridos",
+        description: "Por favor completa el título y la descripción",
+        variant: "destructive",
+      });
+      return;
+    }
+    createCourseMutation.mutate(newCourse);
+  };
+
+  const handleEditCourse = (courseId: string) => {
     toast({
       title: "Editar curso",
       description: `Editando curso ${courseId}`,
     });
   };
 
-  const handleDeleteCourse = (courseId: number) => {
+  const handleDeleteCourse = async (courseId: string) => {
+    const { error } = await supabase
+      .from("courses")
+      .update({ is_active: false })
+      .eq("id", courseId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
     toast({
       title: "Curso eliminado",
-      description: "El curso ha sido eliminado correctamente",
-      variant: "destructive",
+      description: "El curso ha sido desactivado correctamente",
     });
   };
 
@@ -138,79 +198,80 @@ export default function TeacherCourses() {
         </TabsList>
 
         <TabsContent value="courses" className="space-y-4">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {mockCourses.map((course) => (
-              <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div 
-                  className="h-48 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${course.image})` }}
-                />
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">{course.title}</CardTitle>
-                      <CardDescription className="mt-2">{course.description}</CardDescription>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="ml-2">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditCourse(course.id)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Vista previa
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteCourse(course.id)}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+          {isLoading ? (
+            <div className="text-center py-8">Cargando cursos...</div>
+          ) : courses.length === 0 ? (
+            <Card className="p-12 text-center">
+              <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">No hay cursos todavía</h3>
+              <p className="text-muted-foreground mb-4">Crea tu primer curso para comenzar</p>
+              <Button onClick={() => setActiveTab("create")}>
+                <BookOpen className="mr-2 h-4 w-4" />
+                Crear Primer Curso
+              </Button>
+            </Card>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {courses.map((course) => (
+                <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div 
+                    className="h-48 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center"
+                  >
+                    <BookOpen className="h-16 w-16 text-primary" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Users className="h-4 w-4" />
-                        <span>{course.students} estudiantes</span>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-xl">{course.title}</CardTitle>
+                        <CardDescription className="mt-2">{course.description}</CardDescription>
                       </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        <span>{course.duration}</span>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="ml-2">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditCourse(course.id)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Vista previa
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteCourse(course.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    
-                    <div className="space-y-2">
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Progreso</span>
-                        <span className="font-medium">{course.progress}%</span>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span>{course.duration_hours ? `${course.duration_hours} horas` : 'Sin definir'}</span>
+                        </div>
+                        {course.category && (
+                          <Badge variant="outline">{course.category}</Badge>
+                        )}
                       </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${course.progress}%` }}
-                        />
-                      </div>
-                    </div>
 
-                    <Badge variant={course.status === "active" ? "default" : "secondary"}>
-                      {course.status === "active" ? "Activo" : "Borrador"}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      <Badge variant={course.is_active ? "default" : "secondary"}>
+                        {course.is_active ? "Activo" : "Inactivo"}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="create" className="space-y-4">
@@ -227,15 +288,42 @@ export default function TeacherCourses() {
                   <Label htmlFor="title">Título del Curso *</Label>
                   <Input 
                     id="title" 
-                    placeholder="Ej: Introducción a Python" 
+                    placeholder="Ej: Introducción a Python"
+                    value={newCourse.title}
+                    onChange={(e) => setNewCourse({...newCourse, title: e.target.value})}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Duración *</Label>
+                  <Label htmlFor="duration">Duración (horas) *</Label>
                   <Input 
                     id="duration" 
-                    placeholder="Ej: 8 semanas" 
+                    type="number"
+                    placeholder="Ej: 40"
+                    value={newCourse.duration}
+                    onChange={(e) => setNewCourse({...newCourse, duration: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Categoría *</Label>
+                  <Input 
+                    id="category"
+                    placeholder="Ej: Desarrollo Web"
+                    value={newCourse.category}
+                    onChange={(e) => setNewCourse({...newCourse, category: e.target.value})}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="level">Nivel *</Label>
+                  <Input 
+                    id="level"
+                    placeholder="Ej: Principiante, Intermedio, Avanzado"
+                    value={newCourse.level}
+                    onChange={(e) => setNewCourse({...newCourse, level: e.target.value})}
                   />
                 </div>
               </div>
@@ -246,18 +334,21 @@ export default function TeacherCourses() {
                   id="description" 
                   placeholder="Describe el contenido y objetivos del curso..."
                   className="min-h-[120px]"
+                  value={newCourse.description}
+                  onChange={(e) => setNewCourse({...newCourse, description: e.target.value})}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image">Imagen del Curso</Label>
+                <Label htmlFor="image">Imagen del Curso (Próximamente)</Label>
                 <div className="flex items-center gap-4">
                   <Input 
                     id="image" 
                     type="file" 
                     accept="image/*"
+                    disabled
                   />
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" disabled>
                     <Upload className="h-4 w-4" />
                   </Button>
                 </div>
@@ -266,25 +357,15 @@ export default function TeacherCourses() {
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="scorm">Contenido SCORM (Opcional)</Label>
-                <Input 
-                  id="scorm" 
-                  type="file" 
-                  accept=".zip"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Sube un paquete SCORM 1.2 o 2004 en formato ZIP
-                </p>
-              </div>
-
               <div className="flex gap-4">
-                <Button className="flex-1" size="lg">
+                <Button 
+                  className="flex-1" 
+                  size="lg"
+                  onClick={handleCreateCourse}
+                  disabled={createCourseMutation.isPending}
+                >
                   <BookOpen className="mr-2 h-4 w-4" />
-                  Crear Curso
-                </Button>
-                <Button variant="outline" size="lg">
-                  Guardar Borrador
+                  {createCourseMutation.isPending ? "Creando..." : "Crear Curso"}
                 </Button>
               </div>
             </CardContent>
