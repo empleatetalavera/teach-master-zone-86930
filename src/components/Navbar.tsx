@@ -43,6 +43,9 @@ export const Navbar = () => {
             >
               Personalización
             </a>
+            <Button variant="outline" asChild>
+              <a href="/demo">Ver Demo</a>
+            </Button>
             <Button variant="default" asChild>
               <a href="/auth">Acceder</a>
             </Button>
@@ -83,6 +86,9 @@ export const Navbar = () => {
               >
                 Personalización
               </a>
+              <Button variant="outline" asChild className="w-full">
+                <a href="/demo">Ver Demo</a>
+              </Button>
               <Button variant="default" asChild className="w-full">
                 <a href="/auth">Acceder</a>
               </Button>

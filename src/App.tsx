@@ -10,6 +10,7 @@ import { AIAssistant } from "@/components/AIAssistant";
 import { GradeNotificationToast } from "@/components/GradeNotificationToast";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import Index from "./pages/Index";
+import Demo from "./pages/Demo";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
@@ -50,6 +51,7 @@ function AppRoutes() {
     <>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/demo" element={<Demo />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

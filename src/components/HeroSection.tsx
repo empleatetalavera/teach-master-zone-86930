@@ -31,13 +31,13 @@ export const HeroSection = () => {
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="xl" variant="hero" className="group" asChild>
-                <a href="/auth">
-                  Acceder a la Plataforma
+                <a href="/demo">
+                  Ver Demo Interactiva
                   <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </a>
               </Button>
               <Button size="xl" variant="outline" asChild>
-                <a href="#features">Ver Características</a>
+                <a href="/auth">Acceder a la Plataforma</a>
               </Button>
             </div>
             
