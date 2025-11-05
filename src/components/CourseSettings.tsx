@@ -18,6 +18,7 @@ interface CourseSettingsProps {
     concept_map_url?: string;
     support_email?: string;
     support_phone?: string;
+    tutor_cv_url?: string;
   };
   onUpdate?: () => void;
 }
@@ -27,6 +28,7 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
   const [uploading, setUploading] = useState(false);
   const [videoUrl, setVideoUrl] = useState(initialData?.video_url || "");
   const [conceptMapUrl, setConceptMapUrl] = useState(initialData?.concept_map_url || "");
+  const [tutorCvUrl, setTutorCvUrl] = useState(initialData?.tutor_cv_url || "");
   const [specificObjectives, setSpecificObjectives] = useState<string[]>(
     initialData?.specific_objectives || []
   );
@@ -154,6 +156,70 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
       onUpdate?.();
     } catch (error: any) {
       console.error("Error uploading concept map:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleTutorCvUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast({
+        title: "Error",
+        description: "Por favor selecciona un archivo PDF",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "El archivo no puede superar los 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileName = `${courseId}-tutor-cv-${Date.now()}.pdf`;
+      const filePath = `tutor-cvs/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("course-images")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("course-images")
+        .getPublicUrl(filePath);
+
+      setTutorCvUrl(publicUrl);
+
+      const { error: updateError } = await supabase
+        .from("courses")
+        .update({ tutor_cv_url: publicUrl })
+        .eq("id", courseId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "CV subido",
+        description: "El CV del docente se ha guardado correctamente",
+      });
+
+      onUpdate?.();
+    } catch (error: any) {
+      console.error("Error uploading tutor CV:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -308,6 +374,46 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
               disabled={uploading}
               className="mt-2"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>CV del Docente (SEPE)</CardTitle>
+          <CardDescription>Sube el curriculum vitae del docente para cumplir con requisitos SEPE</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {tutorCvUrl && (
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm">CV del docente subido</span>
+                </div>
+                <Button asChild variant="outline" size="sm">
+                  <a href={tutorCvUrl} target="_blank" rel="noopener noreferrer">
+                    Ver PDF
+                  </a>
+                </Button>
+              </div>
+            </div>
+          )}
+          <div>
+            <Label htmlFor="tutor-cv-upload">
+              {tutorCvUrl ? "Cambiar CV" : "Subir CV"}
+            </Label>
+            <Input
+              id="tutor-cv-upload"
+              type="file"
+              accept="application/pdf"
+              onChange={handleTutorCvUpload}
+              disabled={uploading}
+              className="mt-2"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Tamaño máximo: 10MB. Solo archivos PDF
+            </p>
           </div>
         </CardContent>
       </Card>

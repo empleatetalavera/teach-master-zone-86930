@@ -434,6 +434,7 @@ export type Database = {
           thumbnail_url: string | null
           title: string
           training_center_id: string | null
+          tutor_cv_url: string | null
           tutor_id: string | null
           updated_at: string | null
           video_url: string | null
@@ -454,6 +455,7 @@ export type Database = {
           thumbnail_url?: string | null
           title: string
           training_center_id?: string | null
+          tutor_cv_url?: string | null
           tutor_id?: string | null
           updated_at?: string | null
           video_url?: string | null
@@ -474,6 +476,7 @@ export type Database = {
           thumbnail_url?: string | null
           title?: string
           training_center_id?: string | null
+          tutor_cv_url?: string | null
           tutor_id?: string | null
           updated_at?: string | null
           video_url?: string | null

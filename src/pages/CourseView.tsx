@@ -6,12 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { TutorMessaging } from "@/components/TutorMessaging";
 import { GradesSection } from "@/components/GradesSection";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Course {
   id: string;
@@ -28,6 +29,7 @@ interface Course {
   support_email?: string;
   support_phone?: string;
   tutor_id?: string;
+  tutor_cv_url?: string;
 }
 
 interface Module {
@@ -302,22 +304,40 @@ export default function CourseView() {
                 <BarChart3 className="h-4 w-4" />
                 <span>{enrollment?.progress_percentage || 0}% completado</span>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="ml-auto"
-                asChild
-              >
-                <a 
-                  href="https://wa.me/34665673416?text=Hola,%20tengo%20una%20duda%20sobre%20el%20curso" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
+              <div className="ml-auto flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
                 >
-                  <MessageSquare className="h-4 w-4" />
-                  WhatsApp Dudas
-                </a>
-              </Button>
+                  <a 
+                    href="https://wa.me/34665673416?text=Hola,%20tengo%20una%20duda%20sobre%20el%20curso" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    WhatsApp Dudas
+                  </a>
+                </Button>
+                
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Contacto
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[400px] max-h-[600px] overflow-auto" align="end">
+                    <TutorMessaging 
+                      courseId={courseId!}
+                      tutorId={course.tutor_id}
+                      supportEmail={course.support_email}
+                      supportPhone={course.support_phone}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
             {enrollment && (
               <div className="mt-4">
@@ -329,7 +349,7 @@ export default function CourseView() {
 
         {/* Course Content Tabs */}
         <Tabs defaultValue="intro" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="intro">Inicio</TabsTrigger>
             <TabsTrigger value="modules">Módulos</TabsTrigger>
             <TabsTrigger value="grades">Calificaciones</TabsTrigger>
@@ -337,7 +357,6 @@ export default function CourseView() {
             <TabsTrigger value="tutorials">Tutorías</TabsTrigger>
             <TabsTrigger value="calendar">Calendario</TabsTrigger>
             <TabsTrigger value="forum">Foro</TabsTrigger>
-            <TabsTrigger value="support">Contacto</TabsTrigger>
           </TabsList>
 
           <TabsContent value="intro" className="space-y-6">
@@ -441,6 +460,28 @@ export default function CourseView() {
                   </div>
                 </CardContent>
               </Card>
+
+              {course.tutor_cv_url && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Curriculum del Docente</CardTitle>
+                    <CardDescription>CV del profesional que imparte este curso</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full">
+                      <a 
+                        href={course.tutor_cv_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <FileDown className="h-4 w-4" />
+                        Descargar CV del Docente
+                      </a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
           </TabsContent>
 
           <TabsContent value="grades" className="space-y-4">
@@ -707,15 +748,6 @@ export default function CourseView() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="support" className="space-y-4">
-            <TutorMessaging 
-              courseId={courseId!}
-              tutorId={course.tutor_id}
-              supportEmail={course.support_email}
-              supportPhone={course.support_phone}
-            />
           </TabsContent>
 
           <TabsContent value="forum" className="space-y-4">
