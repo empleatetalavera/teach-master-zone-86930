@@ -15,12 +15,15 @@ const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 c
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login');
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [resetEmail, setResetEmail] = useState("");
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
   
-  const { signIn, resetPassword, user, userRole, loading } = useAuth();
+  const { signIn, signUp, resetPassword, user, userRole, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -102,6 +105,63 @@ export default function Auth() {
     setIsLoading(false);
   };
 
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate inputs
+    try {
+      emailSchema.parse(signupEmail);
+      passwordSchema.parse(signupPassword);
+    } catch (error: any) {
+      toast({
+        title: "Error de validación",
+        description: error.errors?.[0]?.message || "Por favor verifica los datos ingresados",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check passwords match
+    if (signupPassword !== signupConfirmPassword) {
+      toast({
+        title: "Error",
+        description: "Las contraseñas no coinciden",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { error } = await signUp(signupEmail, signupPassword, 'admin');
+
+      if (error) {
+        toast({
+          title: "Error al crear cuenta",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Cuenta creada",
+          description: "Tu cuenta ha sido creada. Puedes iniciar sesión ahora.",
+        });
+        setMode('login');
+        setSignupEmail("");
+        setSignupPassword("");
+        setSignupConfirmPassword("");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al crear la cuenta",
+        variant: "destructive",
+      });
+    }
+
+    setIsLoading(false);
+  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +192,7 @@ export default function Auth() {
         title: "Email enviado",
         description: "Revisa tu correo para restablecer tu contraseña.",
       });
-      setShowForgotPassword(false);
+      setMode('login');
       setResetEmail("");
     }
 
@@ -166,12 +226,12 @@ export default function Auth() {
           <div className="text-center">
             <CardTitle className="text-2xl">Campus Virtual</CardTitle>
             <CardDescription>
-              {showForgotPassword ? "Recuperar contraseña" : "Plataforma de formación online"}
+              {mode === 'reset' ? "Recuperar contraseña" : mode === 'signup' ? "Crear cuenta" : "Plataforma de formación online"}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
-          {showForgotPassword ? (
+          {mode === 'reset' ? (
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="reset-email">Correo electrónico</Label>
@@ -199,10 +259,67 @@ export default function Auth() {
                 type="button"
                 variant="ghost"
                 className="w-full"
-                onClick={() => setShowForgotPassword(false)}
+                onClick={() => setMode('login')}
                 disabled={isLoading}
               >
                 Volver al inicio de sesión
+              </Button>
+            </form>
+          ) : mode === 'signup' ? (
+            <form onSubmit={handleSignup} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Email</Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={signupEmail}
+                  onChange={(e) => setSignupEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">Contraseña</Label>
+                <Input
+                  id="signup-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={signupPassword}
+                  onChange={(e) => setSignupPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-confirm-password">Confirmar contraseña</Label>
+                <Input
+                  id="signup-confirm-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={signupConfirmPassword}
+                  onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creando cuenta...
+                  </>
+                ) : (
+                  "Crear Cuenta"
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                className="w-full"
+                onClick={() => setMode('login')}
+              >
+                ¿Ya tienes cuenta? Inicia sesión
               </Button>
             </form>
           ) : (
@@ -241,14 +358,24 @@ export default function Auth() {
                   "Iniciar Sesión"
                 )}
               </Button>
-              <Button
-                type="button"
-                variant="link"
-                className="w-full"
-                onClick={() => setShowForgotPassword(true)}
-              >
-                ¿Olvidaste tu contraseña?
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full"
+                  onClick={() => setMode('reset')}
+                >
+                  ¿Olvidaste tu contraseña?
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setMode('signup')}
+                >
+                  Crear cuenta nueva
+                </Button>
+              </div>
             </form>
           )}
 
