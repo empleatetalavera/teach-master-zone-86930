@@ -9,14 +9,14 @@ export interface BrandingConfig {
   footer?: string;
 }
 
-// Default Emplate Talavera branding
+// Default TalentCloudSolution branding
 export const defaultBranding: BrandingConfig = {
-  centerName: "Emplate Talavera Formación",
-  centerLogo: "/branding/emplate-logo.png",
+  centerName: "TalentCloudSolution",
+  centerLogo: "/branding/talentcloud-logo.png",
   primaryColor: "hsl(177, 33%, 52%)",
   secondaryColor: "hsl(177, 40%, 42%)",
   officialBadge: "Centro Acreditado SEPE",
-  footer: "Emplate Talavera Formación - Todos los derechos reservados",
+  footer: "TalentCloudSolution - Todos los derechos reservados",
 };
 
 // Example: Custom training center

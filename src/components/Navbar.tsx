@@ -12,8 +12,8 @@ export const Navbar = () => {
           {/* Logo */}
           <div className="flex items-center gap-4">
             <img
-              src="/branding/emplate-logo.png"
-              alt="Emplate Talavera Formación"
+              src="/branding/talentcloud-logo.png"
+              alt="TalentCloudSolution"
               className="h-12 object-contain"
             />
             <img
