@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ const mockScormContent = [
 export default function TeacherCourses() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("courses");
   const [newCourse, setNewCourse] = useState({
     title: "",
@@ -320,6 +322,10 @@ export default function TeacherCourses() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/teacher/courses/${course.id}`)}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Ficha SEPE
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEditCourse(course.id)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Editar

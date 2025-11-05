@@ -26,6 +26,7 @@ import AdminSupport from "./pages/dashboard/AdminSupport";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import TeacherCourses from "./pages/dashboard/TeacherCourses";
 import TeacherStudents from "./pages/dashboard/TeacherStudents";
+import CourseDetailSEPE from "./pages/dashboard/CourseDetailSEPE";
 import TeacherStudentDetail from "./pages/dashboard/TeacherStudentDetail";
 import TeacherReports from "./pages/dashboard/TeacherReports";
 import TeacherProfile from "./pages/dashboard/TeacherProfile";
@@ -64,6 +65,7 @@ function AppRoutes() {
           <Route path="admin/test-notifications" element={<TestNotifications />} />
           <Route path="teacher" element={<TeacherDashboard />} />
           <Route path="teacher/courses" element={<TeacherCourses />} />
+          <Route path="teacher/courses/:courseId" element={<CourseDetailSEPE />} />
           <Route path="teacher/students" element={<TeacherStudents />} />
           <Route path="teacher/students/:studentId" element={<TeacherStudentDetail />} />
           <Route path="teacher/reports" element={<TeacherReports />} />

@@ -94,3 +94,27 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Print Styles for SEPE Course Detail */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  body {
+    background: white !important;
+  }
+  
+  @page {
+    margin: 2cm;
+  }
+}
+
+/* Hide print-only elements by default */
+.print-only {
+  display: none;
+}
