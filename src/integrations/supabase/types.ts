@@ -1375,6 +1375,7 @@ export type Database = {
           unlock_time: string
         }[]
       }
+      no_roles_exist: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "teacher" | "student" | "inspector"
