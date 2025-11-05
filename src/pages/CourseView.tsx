@@ -818,40 +818,38 @@ export default function CourseView() {
             {/* Right Sidebar - Tutor and Evaluations */}
             <div className="hidden lg:block w-80 space-y-4 sticky top-4 h-fit">
               {/* Tu Tutor */}
-              {course.tutor_id && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Tu Tutor</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-semibold">
-                        MG
-                      </div>
-                      <div>
-                        <p className="font-semibold">María González</p>
-                        <p className="text-sm text-muted-foreground">Tutora especializada</p>
-                      </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Tu Tutor</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-semibold">
+                      MG
                     </div>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button className="w-full" variant="outline">
-                          <MessageSquare className="w-4 h-4 mr-2" />
-                          Enviar mensaje
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[400px] max-h-[600px] overflow-auto" align="end">
-                        <TutorMessaging 
-                          courseId={courseId!}
-                          tutorId={course.tutor_id}
-                          supportEmail={course.support_email}
-                          supportPhone={course.support_phone}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </CardContent>
-                </Card>
-              )}
+                    <div>
+                      <p className="font-semibold">María González</p>
+                      <p className="text-sm text-muted-foreground">Tutora especializada</p>
+                    </div>
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button className="w-full" variant="outline">
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Enviar mensaje
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] max-h-[600px] overflow-auto" align="end">
+                      <TutorMessaging 
+                        courseId={courseId!}
+                        tutorId={course.tutor_id || ''}
+                        supportEmail={course.support_email || 'maria.gonzalez@talentcloud.demo'}
+                        supportPhone={course.support_phone || '+34 925 123 456'}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </CardContent>
+              </Card>
 
               {/* Próxima Evaluación */}
               {exams.length > 0 && (
@@ -861,7 +859,7 @@ export default function CourseView() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <p className="text-sm mb-2">{exams[0]?.title || 'Examen Módulo 2'}</p>
+                      <p className="text-sm font-medium mb-2">{exams[0]?.title || 'Examen Módulo 2'}</p>
                       <p className="text-3xl font-bold text-primary">5 días</p>
                     </div>
                     <Button className="w-full">
