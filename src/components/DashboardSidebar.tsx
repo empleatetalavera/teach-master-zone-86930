@@ -49,13 +49,15 @@ const adminItems = [
   { title: "Usuarios", url: "/dashboard/admin/users", icon: Users },
   { title: "Atención al Alumno", url: "/dashboard/admin/support", icon: Headphones },
   { title: "Cursos", url: "/dashboard/admin/courses", icon: BookOpen },
+  { title: "Configurar Cursos", url: "/dashboard/admin/course-settings", icon: Settings },
   { title: "Informes", url: "/dashboard/admin/reports", icon: BarChart },
-  { title: "Personalización", url: "/dashboard/admin/settings", icon: Settings },
+  { title: "Personalización", url: "/dashboard/admin/settings", icon: GraduationCap },
 ];
 
 const teacherItems = [
   { title: "Dashboard", url: "/dashboard/teacher", icon: LayoutDashboard },
   { title: "Mis Cursos", url: "/dashboard/teacher/courses", icon: BookOpen },
+  { title: "Configurar Cursos", url: "/dashboard/teacher/course-settings", icon: Settings },
   { title: "Mi Perfil Docente", url: "/dashboard/teacher/profile", icon: UserCircle },
   { title: "Alumnos", url: "/dashboard/teacher/students", icon: Users },
   { title: "Informes", url: "/dashboard/teacher/reports", icon: BarChart },

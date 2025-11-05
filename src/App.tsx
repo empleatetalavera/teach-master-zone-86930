@@ -23,6 +23,7 @@ import AdminAIAnalytics from "./pages/dashboard/AdminAIAnalytics";
 import AdminTraceability from "./pages/dashboard/AdminTraceability";
 import AdminUsers from "./pages/dashboard/AdminUsers";
 import AdminSupport from "./pages/dashboard/AdminSupport";
+import AdminCourseSettings from "./pages/dashboard/AdminCourseSettings";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import TeacherCourses from "./pages/dashboard/TeacherCourses";
 import TeacherStudents from "./pages/dashboard/TeacherStudents";
@@ -62,6 +63,8 @@ function AppRoutes() {
           <Route path="admin/users" element={<AdminUsers />} />
           <Route path="admin/support" element={<AdminSupport />} />
           <Route path="admin/settings" element={<AdminSettings />} />
+          <Route path="admin/course-settings" element={<AdminCourseSettings />} />
+          <Route path="admin/course-settings/:courseId" element={<AdminCourseSettings />} />
           <Route path="admin/test-notifications" element={<TestNotifications />} />
           <Route path="teacher" element={<TeacherDashboard />} />
           <Route path="teacher/courses" element={<TeacherCourses />} />
@@ -72,6 +75,8 @@ function AppRoutes() {
           <Route path="teacher/profile" element={<TeacherProfile />} />
           <Route path="teacher/alerts" element={<AlertSettings />} />
           <Route path="teacher/quick-responses" element={<QuickResponseManager />} />
+          <Route path="teacher/course-settings" element={<AdminCourseSettings />} />
+          <Route path="teacher/course-settings/:courseId" element={<AdminCourseSettings />} />
           <Route path="teacher/support" element={<AdminSupport />} />
           <Route path="student" element={<StudentDashboard />} />
           <Route path="student/courses" element={<StudentCourses />} />
