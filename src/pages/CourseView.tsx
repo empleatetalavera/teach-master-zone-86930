@@ -283,7 +283,7 @@ export default function CourseView() {
                 </CardDescription>
               </div>
             </div>
-            <div className="flex items-center gap-6 mt-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-6 mt-4 text-sm text-muted-foreground flex-wrap">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>{course.duration_hours} horas</span>
@@ -296,6 +296,22 @@ export default function CourseView() {
                 <BarChart3 className="h-4 w-4" />
                 <span>{enrollment?.progress_percentage || 0}% completado</span>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto"
+                asChild
+              >
+                <a 
+                  href="https://wa.me/34665673416?text=Hola,%20tengo%20una%20duda%20sobre%20el%20curso" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  WhatsApp Dudas
+                </a>
+              </Button>
             </div>
             {enrollment && (
               <div className="mt-4">

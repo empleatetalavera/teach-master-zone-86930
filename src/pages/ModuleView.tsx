@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import ScormPlayer from "@/components/scorm/ScormPlayer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ModuleChat } from "@/components/ModuleChat";
+import { InteractiveContent } from "@/components/InteractiveContent";
 
 interface Module {
   id: string;
@@ -213,18 +216,53 @@ export default function ModuleView() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <div
-                dangerouslySetInnerHTML={{ __html: module.content || "" }}
-              />
-            </div>
+            <Tabs defaultValue="content" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="content">Contenido</TabsTrigger>
+                <TabsTrigger value="interactive">Interactivo</TabsTrigger>
+                <TabsTrigger value="activities">Actividades</TabsTrigger>
+                <TabsTrigger value="chat">Chat</TabsTrigger>
+              </TabsList>
 
-            {/* SCORM Content */}
-            {enrollmentId && (
-              <div className="pt-6 border-t">
-                <ScormPlayer moduleId={moduleId!} enrollmentId={enrollmentId} />
-              </div>
-            )}
+              <TabsContent value="content" className="space-y-6 mt-6">
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <div
+                    dangerouslySetInnerHTML={{ __html: module.content || "" }}
+                  />
+                </div>
+
+                {/* SCORM Content */}
+                {enrollmentId && (
+                  <div className="pt-6 border-t">
+                    <ScormPlayer moduleId={moduleId!} enrollmentId={enrollmentId} />
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="interactive" className="mt-6">
+                <InteractiveContent moduleId={moduleId!} />
+              </TabsContent>
+
+              <TabsContent value="activities" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Actividades del Módulo</CardTitle>
+                    <CardDescription>
+                      Completa las actividades para reforzar tu aprendizaje
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No hay actividades asignadas para este módulo</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="chat" className="mt-6">
+                <ModuleChat moduleId={moduleId!} courseId={courseId!} />
+              </TabsContent>
+            </Tabs>
 
             <div className="flex items-center justify-between pt-6 border-t">
               <Button
