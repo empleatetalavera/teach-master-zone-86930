@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
+
+    /* Emplate Talavera Brand Colors - Teal/Turquoise */
+    --primary: 177 33% 52%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 177 33% 65%;
+
+    --secondary: 177 40% 42%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 177 15% 95%;
+    --muted-foreground: 177 10% 45%;
+
+    --accent: 177 50% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 177 20% 88%;
+    --input: 177 20% 88%;
+    --ring: 177 33% 52%;
+
+    --radius: 0.75rem;
+
+    /* Emplate Talavera Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(177 33% 52%), hsl(177 33% 65%));
+    --gradient-secondary: linear-gradient(135deg, hsl(177 40% 42%), hsl(177 40% 55%));
+    --gradient-accent: linear-gradient(135deg, hsl(177 50% 45%), hsl(177 50% 60%));
+    --gradient-hero: linear-gradient(135deg, hsl(177 33% 52%) 0%, hsl(177 50% 45%) 100%);
+    
+    --shadow-soft: 0 2px 8px hsl(177 33% 52% / 0.08);
+    --shadow-medium: 0 4px 16px hsl(177 33% 52% / 0.12);
+    --shadow-large: 0 8px 32px hsl(177 33% 52% / 0.16);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 177 33% 52%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 177 33% 65%;
+
+    --secondary: 177 40% 42%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 18%;
+    --muted-foreground: 177 10% 65%;
+
+    --accent: 177 50% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 177 33% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -1,0 +1,100 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/lib/auth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { AIAssistant } from "@/components/AIAssistant";
+import { useSessionTracker } from "@/hooks/useSessionTracker";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
+import CourseView from "./pages/CourseView";
+import ModuleView from "./pages/ModuleView";
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import AdminTrainingCenters from "./pages/dashboard/AdminTrainingCenters";
+import AdminLicenses from "./pages/dashboard/AdminLicenses";
+import AdminContentOrders from "./pages/dashboard/AdminContentOrders";
+import AdminSettings from "./pages/dashboard/AdminSettings";
+import AdminAIAnalytics from "./pages/dashboard/AdminAIAnalytics";
+import AdminTraceability from "./pages/dashboard/AdminTraceability";
+import AdminUsers from "./pages/dashboard/AdminUsers";
+import AdminSupport from "./pages/dashboard/AdminSupport";
+import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
+import TeacherCourses from "./pages/dashboard/TeacherCourses";
+import TeacherStudents from "./pages/dashboard/TeacherStudents";
+import TeacherStudentDetail from "./pages/dashboard/TeacherStudentDetail";
+import TeacherReports from "./pages/dashboard/TeacherReports";
+import TeacherProfile from "./pages/dashboard/TeacherProfile";
+import AlertSettings from "./pages/dashboard/AlertSettings";
+import TestNotifications from "./pages/dashboard/TestNotifications";
+import QuickResponseManager from "./pages/dashboard/QuickResponseManager";
+import StudentCourses from "./pages/dashboard/StudentCourses";
+import StudentDashboard from "./pages/dashboard/StudentDashboard";
+import StudentSupport from "./pages/dashboard/StudentSupport";
+import NotFound from "./pages/NotFound";
+
+const queryClient = new QueryClient();
+
+function AppRoutes() {
+  useSessionTracker();
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/course/:courseId" element={<ProtectedRoute><CourseView /></ProtectedRoute>} />
+        <Route path="/course/:courseId/module/:moduleId" element={<ProtectedRoute><ModuleView /></ProtectedRoute>} />
+        
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+          <Route path="admin" element={<AdminDashboard />} />
+          <Route path="admin/centers" element={<AdminTrainingCenters />} />
+          <Route path="admin/licenses" element={<AdminLicenses />} />
+          <Route path="admin/orders" element={<AdminContentOrders />} />
+          <Route path="admin/ai-analytics" element={<AdminAIAnalytics />} />
+          <Route path="admin/traceability" element={<AdminTraceability />} />
+          <Route path="admin/users" element={<AdminUsers />} />
+          <Route path="admin/support" element={<AdminSupport />} />
+          <Route path="admin/settings" element={<AdminSettings />} />
+          <Route path="admin/test-notifications" element={<TestNotifications />} />
+          <Route path="teacher" element={<TeacherDashboard />} />
+          <Route path="teacher/courses" element={<TeacherCourses />} />
+          <Route path="teacher/students" element={<TeacherStudents />} />
+          <Route path="teacher/students/:studentId" element={<TeacherStudentDetail />} />
+          <Route path="teacher/reports" element={<TeacherReports />} />
+          <Route path="teacher/profile" element={<TeacherProfile />} />
+          <Route path="teacher/alerts" element={<AlertSettings />} />
+          <Route path="teacher/quick-responses" element={<QuickResponseManager />} />
+          <Route path="teacher/support" element={<AdminSupport />} />
+          <Route path="student" element={<StudentDashboard />} />
+          <Route path="student/courses" element={<StudentCourses />} />
+          <Route path="student/support" element={<StudentSupport />} />
+        </Route>
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <AIAssistant />
+    </>
+  );
+}
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
