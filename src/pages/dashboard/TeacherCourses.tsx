@@ -75,6 +75,9 @@ export default function TeacherCourses() {
     category: "Desarrollo Web",
     level: "Principiante"
   });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Fetch courses from database
   const { data: courses = [], isLoading } = useQuery({
@@ -90,9 +93,29 @@ export default function TeacherCourses() {
     }
   });
 
+  // Upload image to storage
+  const uploadCourseImage = async (file: File, courseId: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${courseId}-${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('course-images')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('course-images')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
   // Create course mutation
   const createCourseMutation = useMutation({
     mutationFn: async (courseData: typeof newCourse) => {
+      // First, create the course
       const { data, error } = await supabase
         .from("courses")
         .insert([{
@@ -107,6 +130,21 @@ export default function TeacherCourses() {
         .single();
       
       if (error) throw error;
+
+      // If there's an image, upload it and update the course
+      if (selectedImage && data) {
+        const imageUrl = await uploadCourseImage(selectedImage, data.id);
+        
+        const { error: updateError } = await supabase
+          .from("courses")
+          .update({ thumbnail_url: imageUrl })
+          .eq("id", data.id);
+
+        if (updateError) throw updateError;
+        
+        return { ...data, thumbnail_url: imageUrl };
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -122,6 +160,8 @@ export default function TeacherCourses() {
         category: "Desarrollo Web",
         level: "Principiante"
       });
+      setSelectedImage(null);
+      setImagePreview(null);
       setActiveTab("courses");
     },
     onError: (error) => {
@@ -132,6 +172,46 @@ export default function TeacherCourses() {
       });
     }
   });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Archivo muy grande",
+          description: "La imagen debe ser menor a 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: "Formato no válido",
+          description: "Solo se permiten imágenes JPG, PNG o WEBP",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSelectedImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
 
   const handleCreateCourse = () => {
     if (!newCourse.title || !newCourse.description) {
@@ -215,9 +295,17 @@ export default function TeacherCourses() {
               {courses.map((course) => (
                 <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div 
-                    className="h-48 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center"
+                    className="h-48 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden"
                   >
-                    <BookOpen className="h-16 w-16 text-primary" />
+                    {course.thumbnail_url ? (
+                      <img 
+                        src={course.thumbnail_url} 
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <BookOpen className="h-16 w-16 text-primary" />
+                    )}
                   </div>
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -340,20 +428,36 @@ export default function TeacherCourses() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image">Imagen del Curso (Próximamente)</Label>
-                <div className="flex items-center gap-4">
-                  <Input 
-                    id="image" 
-                    type="file" 
-                    accept="image/*"
-                    disabled
-                  />
-                  <Button variant="outline" size="icon" disabled>
-                    <Upload className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Label htmlFor="image">Imagen del Curso</Label>
+                {imagePreview ? (
+                  <div className="relative">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={handleRemoveImage}
+                      type="button"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <Input 
+                      id="image" 
+                      type="file" 
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleImageChange}
+                    />
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground">
-                  Formato recomendado: JPG o PNG, 1200x600px
+                  Formatos: JPG, PNG, WEBP. Tamaño máximo: 5MB. Recomendado: 1200x600px
                 </p>
               </div>
 
