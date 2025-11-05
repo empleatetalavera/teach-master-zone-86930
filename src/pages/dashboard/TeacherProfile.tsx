@@ -58,6 +58,32 @@ export default function TeacherProfile() {
         .eq("id", user!.id)
         .single();
 
+      // Load or create teacher profile
+      let { data: teacherData, error: teacherError } = await supabase
+        .from("teacher_profiles")
+        .select("*")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+
+      // Create teacher profile if it doesn't exist
+      if (!teacherData && !teacherError) {
+        const { data: newTeacherData, error: insertError } = await supabase
+          .from("teacher_profiles")
+          .insert({
+            user_id: user!.id,
+            specializations: [],
+            certifications: [],
+            languages: [],
+            experience_years: 0,
+            education: "",
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        teacherData = newTeacherData;
+      }
+
       // Count teaching courses
       const { count: coursesCount } = await supabase
         .from("courses")
@@ -69,15 +95,15 @@ export default function TeacherProfile() {
         .from("enrollments")
         .select("*", { count: "exact", head: true });
 
-      if (profileData) {
+      if (profileData && teacherData) {
         setProfile({
           full_name: profileData.full_name || "",
           bio: profileData.bio || "",
-          specializations: ["Marketing Digital", "E-learning"], // Mock data
-          experience_years: 5, // Mock data
-          certifications: ["Certificado en Docencia Online", "Master en Pedagogía"], // Mock data
-          education: "Licenciatura en Educación", // Mock data
-          languages: ["Español", "Inglés"], // Mock data
+          specializations: (teacherData.specializations as string[]) || [],
+          experience_years: teacherData.experience_years || 0,
+          certifications: (teacherData.certifications as string[]) || [],
+          education: teacherData.education || "",
+          languages: (teacherData.languages as string[]) || [],
           teaching_courses: coursesCount || 0,
           total_students: studentsCount || 0,
         });
@@ -97,7 +123,8 @@ export default function TeacherProfile() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
+      // Update basic profile (name and bio)
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           full_name: profile.full_name,
@@ -105,7 +132,21 @@ export default function TeacherProfile() {
         })
         .eq("id", user!.id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // Update teacher profile
+      const { error: teacherError } = await supabase
+        .from("teacher_profiles")
+        .update({
+          specializations: profile.specializations,
+          certifications: profile.certifications,
+          languages: profile.languages,
+          experience_years: profile.experience_years,
+          education: profile.education,
+        })
+        .eq("user_id", user!.id);
+
+      if (teacherError) throw teacherError;
 
       toast({
         title: "Perfil actualizado",

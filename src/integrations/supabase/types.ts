@@ -1602,6 +1602,42 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_profiles: {
+        Row: {
+          certifications: Json | null
+          created_at: string | null
+          education: string | null
+          experience_years: number | null
+          id: string
+          languages: Json | null
+          specializations: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          certifications?: Json | null
+          created_at?: string | null
+          education?: string | null
+          experience_years?: number | null
+          id?: string
+          languages?: Json | null
+          specializations?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          certifications?: Json | null
+          created_at?: string | null
+          education?: string | null
+          experience_years?: number | null
+          id?: string
+          languages?: Json | null
+          specializations?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       teacher_student_contacts: {
         Row: {
           contact_type: string
