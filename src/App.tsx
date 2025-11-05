@@ -36,6 +36,7 @@ import CourseDetailSEPE from "./pages/dashboard/CourseDetailSEPE";
 import TeacherStudentDetail from "./pages/dashboard/TeacherStudentDetail";
 import TeacherReports from "./pages/dashboard/TeacherReports";
 import TeacherProfile from "./pages/dashboard/TeacherProfile";
+import TeacherCalendar from "./pages/dashboard/TeacherCalendar";
 import AlertSettings from "./pages/dashboard/AlertSettings";
 import TestNotifications from "./pages/dashboard/TestNotifications";
 import QuickResponseManager from "./pages/dashboard/QuickResponseManager";
@@ -82,6 +83,7 @@ function AppRoutes() {
           <Route path="teacher/students/:studentId" element={<TeacherStudentDetail />} />
           <Route path="teacher/reports" element={<TeacherReports />} />
           <Route path="teacher/profile" element={<TeacherProfile />} />
+          <Route path="teacher/calendar" element={<TeacherCalendar />} />
           <Route path="teacher/alerts" element={<AlertSettings />} />
           <Route path="teacher/quick-responses" element={<QuickResponseManager />} />
           <Route path="teacher/course-settings" element={<AdminCourseSettings />} />

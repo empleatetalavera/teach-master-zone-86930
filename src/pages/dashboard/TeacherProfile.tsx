@@ -301,7 +301,7 @@ export default function TeacherProfile() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid md:grid-cols-5 gap-4">
         <Card 
           className="p-4 cursor-pointer hover:shadow-lg transition-shadow border-primary/20 hover:border-primary"
           onClick={() => navigate('/dashboard/teacher/courses')}
@@ -328,6 +328,21 @@ export default function TeacherProfile() {
             <div>
               <p className="text-xs text-muted-foreground">Pendientes</p>
               <p className="text-lg font-bold">{pendingActivities}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card 
+          className="p-4 cursor-pointer hover:shadow-lg transition-shadow border-indigo-500/20 hover:border-indigo-500"
+          onClick={() => navigate('/dashboard/teacher/calendar')}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Calendario</p>
+              <p className="text-lg font-bold">Eventos</p>
             </div>
           </div>
         </Card>
