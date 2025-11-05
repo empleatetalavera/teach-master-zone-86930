@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Printer, Clock, Eye, Activity } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { StudentReportGenerator } from "@/components/StudentReportGenerator";
 
 const mockAccessLog = [
   {
@@ -92,11 +93,14 @@ export default function TeacherStudentDetail() {
             </p>
           </div>
         </div>
-        <Button variant="outline">
-          <Printer className="mr-2 h-4 w-4" />
-          Imprimir
-        </Button>
       </div>
+
+      {/* Report Generator */}
+      <StudentReportGenerator 
+        studentId={studentId || ''}
+        courseId="52d30340-897b-4938-b84f-bcca27874a8d"
+        studentName="Demo Seminario Web"
+      />
 
       <Card>
         <CardHeader>
