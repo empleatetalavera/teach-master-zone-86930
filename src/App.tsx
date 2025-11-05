@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { AIAssistant } from "@/components/AIAssistant";
+import { GradeNotificationToast } from "@/components/GradeNotificationToast";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -86,6 +87,7 @@ function AppRoutes() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AIAssistant />
+      <GradeNotificationToast />
     </>
   );
 }

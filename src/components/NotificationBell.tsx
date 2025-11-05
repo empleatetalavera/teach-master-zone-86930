@@ -157,6 +157,19 @@ export function NotificationBell() {
     }
   };
 
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "grade_published":
+        return "🎓";
+      case "student_inactive":
+        return "⚠️";
+      case "low_performance":
+        return "📊";
+      default:
+        return "🔔";
+    }
+  };
+
   const handleNotificationClick = async (notification: Notification) => {
     await markAsRead(notification.id);
 
@@ -164,6 +177,16 @@ export function NotificationBell() {
     if (notification.type === "student_inactive" || notification.type === "low_performance") {
       if (notification.related_user_id) {
         navigate(`/dashboard/teacher/students/${notification.related_user_id}`);
+      }
+    } else if (notification.type === "grade_published") {
+      // Navigate to grades section in the course
+      if (notification.related_course_id) {
+        navigate(`/course/${notification.related_course_id}`);
+        // Optionally open the grades tab
+        setTimeout(() => {
+          const gradesTab = document.querySelector('[value="grades"]') as HTMLElement;
+          if (gradesTab) gradesTab.click();
+        }, 500);
       }
     }
 
@@ -370,11 +393,15 @@ export function NotificationBell() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 transition-colors ${
+                  className={`p-4 transition-colors cursor-pointer hover:bg-muted/50 ${
                     !notification.is_read ? "bg-primary/5" : ""
                   }`}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex items-start gap-3">
+                    <div className="text-2xl" title={notification.type}>
+                      {getNotificationIcon(notification.type)}
+                    </div>
                     <div
                       className={`mt-1 h-2 w-2 rounded-full ${getPriorityColor(
                         notification.priority
@@ -401,7 +428,7 @@ export function NotificationBell() {
                         })}
                       </p>
                       
-                      {/* Quick Actions */}
+                      {/* Quick Actions for teacher notifications */}
                       {(notification.type === "student_inactive" || 
                         notification.type === "low_performance") && 
                         notification.related_user_id && (
@@ -430,6 +457,21 @@ export function NotificationBell() {
                             Ver Detalle
                           </Button>
                         </div>
+                      )}
+                      
+                      {/* Action button for grade notifications */}
+                      {notification.type === "grade_published" && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="h-7 text-xs mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNotificationClick(notification);
+                          }}
+                        >
+                          Ver Calificación
+                        </Button>
                       )}
                     </div>
                   </div>
