@@ -268,6 +268,14 @@ export default function CourseView() {
     );
   }
 
+  // Obtener próxima evaluación
+  const nextEvaluation = modules
+    .flatMap(m => m.evaluations || [])
+    .filter((e: any) => {
+      const attempts = e.evaluation_attempts || [];
+      return !attempts.some((a: any) => a.status === 'completed' && a.score >= 50);
+    })[0];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <div className="container max-w-7xl mx-auto py-8 px-4">
@@ -361,20 +369,26 @@ export default function CourseView() {
         </Card>
 
         {/* Course Content Tabs */}
-        <Tabs defaultValue="intro" className="space-y-4">
-          <div className="flex gap-4">
-            <TabsList className="flex flex-col h-fit w-48 sticky top-4">
-              <TabsTrigger value="intro" className="w-full justify-start">Inicio</TabsTrigger>
-              <TabsTrigger value="modules" className="w-full justify-start">Módulos</TabsTrigger>
-              <TabsTrigger value="grades" className="w-full justify-start">Calificaciones</TabsTrigger>
-              <TabsTrigger value="exams" className="w-full justify-start">Exámenes</TabsTrigger>
-              <TabsTrigger value="tutorials" className="w-full justify-start">Tutorías</TabsTrigger>
-              <TabsTrigger value="calendar" className="w-full justify-start">Calendario</TabsTrigger>
-              <TabsTrigger value="forum" className="w-full justify-start">Foro</TabsTrigger>
-              <TabsTrigger value="time-tracking" className="w-full justify-start">Tiempos Invertidos</TabsTrigger>
-            </TabsList>
-            
-            <div className="flex-1 min-w-0">
+        <div className="grid lg:grid-cols-[200px_1fr_320px] gap-6">
+          {/* Left Sidebar - Navigation */}
+          <div className="hidden lg:block">
+            <Tabs defaultValue="intro" className="space-y-4" orientation="vertical">
+              <TabsList className="flex flex-col h-fit w-full sticky top-4">
+                <TabsTrigger value="intro" className="w-full justify-start">Inicio</TabsTrigger>
+                <TabsTrigger value="modules" className="w-full justify-start">Módulos</TabsTrigger>
+                <TabsTrigger value="grades" className="w-full justify-start">Calificaciones</TabsTrigger>
+                <TabsTrigger value="exams" className="w-full justify-start">Exámenes</TabsTrigger>
+                <TabsTrigger value="tutorials" className="w-full justify-start">Tutorías</TabsTrigger>
+                <TabsTrigger value="calendar" className="w-full justify-start">Calendario</TabsTrigger>
+                <TabsTrigger value="forum" className="w-full justify-start">Foro</TabsTrigger>
+                <TabsTrigger value="time-tracking" className="w-full justify-start">Tiempos Invertidos</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          
+          {/* Main Content */}
+          <div className="min-w-0">
+            <Tabs defaultValue="intro" className="space-y-4">
 
           <TabsContent value="intro" className="space-y-6">
             <Card>
@@ -813,64 +827,66 @@ export default function CourseView() {
               studentName={studentName}
             />
           </TabsContent>
-            </div>
-            
-            {/* Right Sidebar - Tutor and Evaluations */}
-            <div className="hidden lg:block w-80 space-y-4 sticky top-4 h-fit">
-              {/* Tu Tutor */}
+          </Tabs>
+          </div>
+          
+          {/* Right Sidebar - Tutor and Evaluations */}
+          <div className="hidden lg:block space-y-4 sticky top-4 h-fit">
+            {/* Tu Tutor */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Tu Tutor</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-xl">
+                    MG
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg">María González</p>
+                    <p className="text-sm text-muted-foreground">Tutora especializada</p>
+                  </div>
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button className="w-full" variant="outline">
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Enviar mensaje
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[400px] max-h-[600px] overflow-auto" align="end">
+                    <TutorMessaging 
+                      courseId={courseId!}
+                      tutorId={course.tutor_id || ''}
+                      supportEmail={course.support_email || 'maria.gonzalez@talentcloud.demo'}
+                      supportPhone={course.support_phone || '+34 925 123 456'}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </CardContent>
+            </Card>
+
+            {/* Próxima Evaluación */}
+            {nextEvaluation && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Tu Tutor</CardTitle>
+                  <CardTitle className="text-lg">Próxima Evaluación</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-semibold">
-                      MG
-                    </div>
-                    <div>
-                      <p className="font-semibold">María González</p>
-                      <p className="text-sm text-muted-foreground">Tutora especializada</p>
-                    </div>
+                  <div>
+                    <p className="text-base font-medium mb-2">
+                      {nextEvaluation.title}
+                    </p>
+                    <p className="text-4xl font-bold text-primary">5 días</p>
                   </div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button className="w-full" variant="outline">
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Enviar mensaje
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[400px] max-h-[600px] overflow-auto" align="end">
-                      <TutorMessaging 
-                        courseId={courseId!}
-                        tutorId={course.tutor_id || ''}
-                        supportEmail={course.support_email || 'maria.gonzalez@talentcloud.demo'}
-                        supportPhone={course.support_phone || '+34 925 123 456'}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Button className="w-full bg-primary">
+                    Preparar examen
+                  </Button>
                 </CardContent>
               </Card>
-
-              {/* Próxima Evaluación */}
-              {exams.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Próxima Evaluación</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm font-medium mb-2">{exams[0]?.title || 'Examen Módulo 2'}</p>
-                      <p className="text-3xl font-bold text-primary">5 días</p>
-                    </div>
-                    <Button className="w-full">
-                      Preparar examen
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            )}
           </div>
-        </Tabs>
+        </div>
       </div>
     </div>
   );
