@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Award, BookOpen, Users, Calendar } from "lucide-react";
+import { Loader2, Save, Award, BookOpen, Users, Calendar, ClipboardCheck, MessageSquare, Bell, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface TeacherProfile {
   full_name: string;
@@ -23,11 +24,23 @@ interface TeacherProfile {
   total_students: number;
 }
 
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url: string | null;
+  duration_hours: number;
+  level: string;
+}
+
 export default function TeacherProfile() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [pendingActivities, setPendingActivities] = useState(0);
   const [profile, setProfile] = useState<TeacherProfile>({
     full_name: "",
     bio: "",
@@ -95,6 +108,20 @@ export default function TeacherProfile() {
         .from("enrollments")
         .select("*", { count: "exact", head: true });
 
+      // Load teacher's courses
+      const { data: coursesData } = await supabase
+        .from("courses")
+        .select("id, title, description, thumbnail_url, duration_hours, level")
+        .eq("tutor_id", user!.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      // Count pending activities to grade
+      const { count: pendingCount } = await supabase
+        .from("activity_submissions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "submitted");
+
       if (profileData && teacherData) {
         setProfile({
           full_name: profileData.full_name || "",
@@ -107,6 +134,8 @@ export default function TeacherProfile() {
           teaching_courses: coursesCount || 0,
           total_students: studentsCount || 0,
         });
+        setCourses(coursesData || []);
+        setPendingActivities(pendingCount || 0);
       }
     } catch (error: any) {
       console.error("Error loading profile:", error);
@@ -270,6 +299,117 @@ export default function TeacherProfile() {
           </div>
         </Card>
       </div>
+
+      {/* Quick Actions */}
+      <div className="grid md:grid-cols-4 gap-4">
+        <Card 
+          className="p-4 cursor-pointer hover:shadow-lg transition-shadow border-primary/20 hover:border-primary"
+          onClick={() => navigate('/dashboard/teacher/courses')}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Mis Cursos</p>
+              <p className="text-lg font-bold">{courses.length}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card 
+          className="p-4 cursor-pointer hover:shadow-lg transition-shadow border-orange-500/20 hover:border-orange-500"
+          onClick={() => navigate('/dashboard/teacher/students')}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+              <ClipboardCheck className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Pendientes</p>
+              <p className="text-lg font-bold">{pendingActivities}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card 
+          className="p-4 cursor-pointer hover:shadow-lg transition-shadow border-green-500/20 hover:border-green-500"
+          onClick={() => navigate('/dashboard/teacher/support')}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Mensajería</p>
+              <p className="text-lg font-bold">Ver</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card 
+          className="p-4 cursor-pointer hover:shadow-lg transition-shadow border-purple-500/20 hover:border-purple-500"
+          onClick={() => navigate('/dashboard/teacher/alerts')}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Bell className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Alertas</p>
+              <p className="text-lg font-bold">Config</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* My Courses Section */}
+      {courses.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Mis Cursos</CardTitle>
+                <CardDescription>Cursos que estás impartiendo actualmente</CardDescription>
+              </div>
+              <Button onClick={() => navigate('/dashboard/teacher/courses')} variant="outline">
+                Ver Todos
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-4">
+              {courses.slice(0, 4).map((course) => (
+                <Card 
+                  key={course.id} 
+                  className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/dashboard/teacher/courses/${course.id}`)}
+                >
+                  <div className="flex gap-4">
+                    {course.thumbnail_url && (
+                      <img 
+                        src={course.thumbnail_url} 
+                        alt={course.title}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <h4 className="font-semibold mb-1">{course.title}</h4>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {course.description}
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="secondary">{course.level}</Badge>
+                        <Badge variant="outline">{course.duration_hours}h</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Profile Information */}
       <Card>
