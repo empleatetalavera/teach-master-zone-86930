@@ -105,6 +105,31 @@ export default function Auth() {
     setIsLoading(false);
   };
 
+  const handleTutorDemo = async () => {
+    // Crea o accede a la cuenta demo de tutora
+    const email = 'tutora@talentcloud.demo';
+    const password = 'Demo2025!';
+    setIsLoading(true);
+    try {
+      const { error: signUpError } = await signUp(email, password, 'teacher');
+      if (signUpError && !signUpError.message.toLowerCase().includes('already')) {
+        toast({ title: 'Error al crear cuenta demo', description: signUpError.message, variant: 'destructive' });
+        setIsLoading(false);
+        return;
+      }
+      const { error: signInError } = await signIn(email, password);
+      if (signInError) {
+        toast({ title: 'Error al iniciar sesión', description: signInError.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Bienvenida', description: 'Accediste como Tutora Demo' });
+      }
+    } catch (e: any) {
+      toast({ title: 'Error', description: e?.message || 'No se pudo acceder a la cuenta demo', variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -374,6 +399,15 @@ export default function Auth() {
                   onClick={() => setMode('signup')}
                 >
                   Crear cuenta nueva
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={handleTutorDemo}
+                  disabled={isLoading}
+                >
+                  Acceso demo tutora
                 </Button>
               </div>
             </form>
