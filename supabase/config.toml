@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.generate-student-report]
 verify_jwt = true
+
+[functions.seed-demo-users]
+verify_jwt = false
