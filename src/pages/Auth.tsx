@@ -141,6 +141,42 @@ export default function Auth() {
     }
   };
 
+  const handleAdminAccess = async () => {
+    // Crear cuenta de administrador
+    const email = 'formacion.empleate@gmail.com';
+    const password = 'empleate2025';
+    setIsLoading(true);
+    try {
+      const { error: signUpError } = await signUp(email, password, 'admin');
+      if (signUpError && !signUpError.message.toLowerCase().includes('already')) {
+        toast({ title: 'Error al crear cuenta', description: signUpError.message, variant: 'destructive' });
+        setIsLoading(false);
+        return;
+      }
+
+      const { error: signInError } = await signIn(email, password);
+      if (signInError) {
+        toast({ title: 'Error al iniciar sesión', description: signInError.message, variant: 'destructive' });
+        setIsLoading(false);
+        return;
+      }
+
+      // Asignar rol de admin si no existe (permitido por RLS)
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes.user?.id;
+      if (userId) {
+        await supabase.from('user_roles').insert({ user_id: userId, role: 'admin' });
+      }
+
+      toast({ title: 'Bienvenido', description: 'Acceso como Administrador habilitado' });
+      navigate('/dashboard/admin');
+    } catch (e: any) {
+      toast({ title: 'Error', description: e?.message || 'No se pudo acceder como administrador', variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -419,6 +455,15 @@ export default function Auth() {
                   disabled={isLoading}
                 >
                   Acceso demo tutora
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={handleAdminAccess}
+                  disabled={isLoading}
+                >
+                  Crear cuenta admin
                 </Button>
               </div>
             </form>
