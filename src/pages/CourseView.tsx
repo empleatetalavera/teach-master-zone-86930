@@ -60,6 +60,7 @@ export default function CourseView() {
   const [tutorials, setTutorials] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
   const [studentName, setStudentName] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<string>("intro");
 
   useEffect(() => {
     if (courseId && user) {
@@ -372,7 +373,7 @@ export default function CourseView() {
         <div className="grid lg:grid-cols-[200px_1fr_320px] gap-6">
           {/* Left Sidebar - Navigation */}
           <div className="hidden lg:block">
-            <Tabs defaultValue="intro" className="space-y-4" orientation="vertical">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4" orientation="vertical">
               <TabsList className="flex flex-col h-fit w-full sticky top-4">
                 <TabsTrigger value="intro" className="w-full justify-start">Inicio</TabsTrigger>
                 <TabsTrigger value="modules" className="w-full justify-start">Módulos</TabsTrigger>
@@ -388,7 +389,7 @@ export default function CourseView() {
           
           {/* Main Content */}
           <div className="min-w-0">
-            <Tabs defaultValue="intro" className="space-y-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
 
           <TabsContent value="intro" className="space-y-6">
             <Card>
