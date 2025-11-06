@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  userRole: 'admin' | 'teacher' | 'student' | 'inspector' | null;
+  userRole: 'admin' | 'teacher' | 'student' | 'inspector' | 'auditor' | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, role: 'admin' | 'teacher' | 'student') => Promise<{ error: Error | null }>;
@@ -21,7 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [userRole, setUserRole] = useState<'admin' | 'teacher' | 'student' | 'inspector' | null>(null);
+  const [userRole, setUserRole] = useState<'admin' | 'teacher' | 'student' | 'inspector' | 'auditor' | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

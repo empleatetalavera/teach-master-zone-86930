@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -14,6 +14,7 @@ import { TutorMessaging } from "@/components/TutorMessaging";
 import { GradesSection } from "@/components/GradesSection";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TimeTrackingReport } from "@/components/TimeTrackingReport";
+import { QualityAuditView } from "@/components/QualityAuditView";
 
 interface Course {
   id: string;
@@ -49,7 +50,7 @@ interface Module {
 export default function CourseView() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [course, setCourse] = useState<Course | null>(null);
@@ -383,6 +384,12 @@ export default function CourseView() {
                 <TabsTrigger value="calendar" className="w-full justify-start">Calendario</TabsTrigger>
                 <TabsTrigger value="forum" className="w-full justify-start">Foro</TabsTrigger>
                 <TabsTrigger value="time-tracking" className="w-full justify-start">Tiempos Invertidos</TabsTrigger>
+                {userRole === 'auditor' && (
+                  <TabsTrigger value="audit" className="w-full justify-start">
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Auditoría
+                  </TabsTrigger>
+                )}
               </TabsList>
             </Tabs>
           </div>
@@ -828,6 +835,12 @@ export default function CourseView() {
               studentName={studentName}
             />
           </TabsContent>
+
+          {userRole === 'auditor' && (
+            <TabsContent value="audit" className="space-y-4">
+              <QualityAuditView courseId={courseId!} />
+            </TabsContent>
+          )}
           </Tabs>
           </div>
           
