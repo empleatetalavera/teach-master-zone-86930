@@ -11,10 +11,16 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Building2, FileText, CreditCard, DollarSign, Plus, Download, Eye, Check, X, Bell, Play } from "lucide-react";
+import { Building2, FileText, CreditCard, DollarSign, Plus, Download, Eye, Check, X, Bell, Play, Filter, FileSpreadsheet, Receipt, History, Percent } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import jsPDF from "jspdf";
+import { useAuth } from "@/lib/auth";
+import { InvoiceExport } from "@/components/billing/InvoiceExport";
+import { InvoiceFilters } from "@/components/billing/InvoiceFilters";
+import { TemplatesManager } from "@/components/billing/TemplatesManager";
+import { PaymentHistory } from "@/components/billing/PaymentHistory";
+import { TaxManager } from "@/components/billing/TaxManager";
 
 interface TrainingCenter {
   id: string;
@@ -74,16 +80,64 @@ interface PricingPlan {
   features: any;
 }
 
+interface InvoiceTemplate {
+  id: string;
+  name: string;
+  description: string;
+  training_center_id?: string;
+  is_default: boolean;
+  is_active: boolean;
+}
+
+interface PaymentHistory {
+  id: string;
+  invoice_id: string;
+  training_center_id: string;
+  amount: number;
+  payment_method: string;
+  payment_date: string;
+  transaction_reference: string | null;
+  notes: string | null;
+  training_centers?: { name: string };
+  invoices?: { invoice_number: string };
+}
+
+interface TaxConfiguration {
+  id: string;
+  name: string;
+  description: string;
+  tax_type: string;
+  rate: number;
+  applies_to: string;
+  is_inclusive: boolean;
+  is_active: boolean;
+}
+
 export default function AdminBilling() {
+  const { user } = useAuth();
   const [centers, setCenters] = useState<TrainingCenter[]>([]);
   const [licenses, setLicenses] = useState<License[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
+  const [taxConfigs, setTaxConfigs] = useState<TaxConfiguration[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Dialog states
   const [centerDialogOpen, setCenterDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [taxDialogOpen, setTaxDialogOpen] = useState(false);
+  
+  // Filter states
+  const [filterCenter, setFilterCenter] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
 
   const [centerForm, setCenterForm] = useState({
     name: "",
@@ -126,12 +180,15 @@ export default function AdminBilling() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [centersRes, licensesRes, invoicesRes, plansRes, notificationsRes] = await Promise.all([
+      const [centersRes, licensesRes, invoicesRes, plansRes, notificationsRes, templatesRes, paymentsRes, taxesRes] = await Promise.all([
         supabase.from("training_centers").select("*").order("created_at", { ascending: false }),
         supabase.from("licenses").select("*, training_centers(name)").order("created_at", { ascending: false }),
         supabase.from("invoices").select("*, training_centers(name)").order("issue_date", { ascending: false }),
         supabase.from("pricing_plans").select("*").order("base_price", { ascending: true }),
         supabase.from("notifications").select("*").in("type", ["invoice_overdue", "invoice_due_soon", "invoice_reminder"]).order("created_at", { ascending: false }).limit(50),
+        supabase.from("invoice_templates").select("*").order("created_at", { ascending: false }),
+        supabase.from("payment_history").select("*, training_centers(name), invoices(invoice_number)").order("payment_date", { ascending: false }),
+        supabase.from("tax_configurations").select("*").order("created_at", { ascending: false }),
       ]);
 
       if (centersRes.data) setCenters(centersRes.data);
@@ -139,6 +196,9 @@ export default function AdminBilling() {
       if (invoicesRes.data) setInvoices(invoicesRes.data);
       if (plansRes.data) setPricingPlans(plansRes.data);
       if (notificationsRes.data) setNotifications(notificationsRes.data);
+      if (templatesRes.data) setTemplates(templatesRes.data);
+      if (paymentsRes.data) setPaymentHistory(paymentsRes.data);
+      if (taxesRes.data) setTaxConfigs(taxesRes.data);
     } catch (error: any) {
       toast.error("Error al cargar datos: " + error.message);
     } finally {
@@ -371,9 +431,21 @@ export default function AdminBilling() {
       </div>
 
       <Tabs defaultValue="centers" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="centers">Centros</TabsTrigger>
           <TabsTrigger value="invoices">Facturas</TabsTrigger>
+          <TabsTrigger value="templates">
+            <Receipt className="h-4 w-4 mr-2" />
+            Plantillas
+          </TabsTrigger>
+          <TabsTrigger value="payments">
+            <History className="h-4 w-4 mr-2" />
+            Pagos
+          </TabsTrigger>
+          <TabsTrigger value="taxes">
+            <Percent className="h-4 w-4 mr-2" />
+            Impuestos
+          </TabsTrigger>
           <TabsTrigger value="pricing">Tarifas</TabsTrigger>
           <TabsTrigger value="notifications">
             <Bell className="h-4 w-4 mr-2" />
@@ -489,6 +561,24 @@ export default function AdminBilling() {
         </TabsContent>
 
         <TabsContent value="invoices" className="space-y-4">
+          <InvoiceFilters
+            centers={centers}
+            filterCenter={filterCenter}
+            setFilterCenter={setFilterCenter}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            filterDateFrom={filterDateFrom}
+            setFilterDateFrom={setFilterDateFrom}
+            filterDateTo={filterDateTo}
+            setFilterDateTo={setFilterDateTo}
+            onClear={() => {
+              setFilterCenter("");
+              setFilterStatus("");
+              setFilterDateFrom("");
+              setFilterDateTo("");
+            }}
+          />
+          
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -496,11 +586,23 @@ export default function AdminBilling() {
                   <CardTitle>Facturas</CardTitle>
                   <CardDescription>Gestiona y emite facturas a los centros de formación</CardDescription>
                 </div>
+                <div className="flex gap-2">
+                  <InvoiceExport 
+                    invoices={invoices.filter(inv => {
+                      let filtered = true;
+                      if (filterCenter) filtered = filtered && inv.training_center_id === filterCenter;
+                      if (filterStatus) filtered = filtered && inv.status === filterStatus;
+                      if (filterDateFrom) filtered = filtered && new Date(inv.issue_date) >= new Date(filterDateFrom);
+                      if (filterDateTo) filtered = filtered && new Date(inv.issue_date) <= new Date(filterDateTo);
+                      return filtered;
+                    })}
+                  />
+                </div>
                 <Dialog open={invoiceDialogOpen} onOpenChange={setInvoiceDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button><Plus className="mr-2 h-4 w-4" />Emitir Factura</Button>
-                  </DialogTrigger>
-                  <DialogContent>
+                    <DialogTrigger asChild>
+                      <Button><Plus className="mr-2 h-4 w-4" />Emitir Factura</Button>
+                    </DialogTrigger>
+                    <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Emitir Nueva Factura</DialogTitle>
                     </DialogHeader>
@@ -627,6 +729,24 @@ export default function AdminBilling() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-4">
+          <TemplatesManager templates={templates} onUpdate={loadData} />
+        </TabsContent>
+
+        <TabsContent value="payments" className="space-y-4">
+          <PaymentHistory 
+            payments={paymentHistory} 
+            invoices={invoices}
+            centers={centers}
+            onUpdate={loadData}
+            userId={user?.id || ""}
+          />
+        </TabsContent>
+
+        <TabsContent value="taxes" className="space-y-4">
+          <TaxManager taxes={taxConfigs} onUpdate={loadData} />
         </TabsContent>
 
         <TabsContent value="pricing" className="space-y-4">

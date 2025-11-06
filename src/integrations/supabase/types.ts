@@ -900,6 +900,68 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_templates: {
+        Row: {
+          color_scheme: Json | null
+          created_at: string | null
+          description: string | null
+          footer_text: string | null
+          header_text: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          logo_url: string | null
+          name: string
+          show_logo: boolean | null
+          show_qr_code: boolean | null
+          template_data: Json
+          training_center_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          color_scheme?: Json | null
+          created_at?: string | null
+          description?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          logo_url?: string | null
+          name: string
+          show_logo?: boolean | null
+          show_qr_code?: boolean | null
+          template_data?: Json
+          training_center_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          color_scheme?: Json | null
+          created_at?: string | null
+          description?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          logo_url?: string | null
+          name?: string
+          show_logo?: boolean | null
+          show_qr_code?: boolean | null
+          template_data?: Json
+          training_center_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_templates_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "training_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount: number
@@ -1294,6 +1356,63 @@ export type Database = {
             columns: ["related_course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_history: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          invoice_id: string
+          metadata: Json | null
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          processed_by: string | null
+          training_center_id: string
+          transaction_reference: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          invoice_id: string
+          metadata?: Json | null
+          notes?: string | null
+          payment_date?: string
+          payment_method: string
+          processed_by?: string | null
+          training_center_id: string
+          transaction_reference?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          invoice_id?: string
+          metadata?: Json | null
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          processed_by?: string | null
+          training_center_id?: string
+          transaction_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_history_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_history_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "training_centers"
             referencedColumns: ["id"]
           },
         ]
@@ -1830,6 +1949,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      tax_configurations: {
+        Row: {
+          applies_to: string
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          is_inclusive: boolean | null
+          metadata: Json | null
+          name: string
+          rate: number
+          start_date: string | null
+          tax_type: string
+          training_center_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          applies_to?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_inclusive?: boolean | null
+          metadata?: Json | null
+          name: string
+          rate: number
+          start_date?: string | null
+          tax_type: string
+          training_center_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_inclusive?: boolean | null
+          metadata?: Json | null
+          name?: string
+          rate?: number
+          start_date?: string | null
+          tax_type?: string
+          training_center_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_configurations_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "training_centers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teacher_profiles: {
         Row: {
