@@ -78,15 +78,38 @@ const studentItems = [
   { title: "Mensajes", url: "/dashboard/student/messages", icon: MessageSquare },
 ];
 
+const auditorItems = [
+  { title: "Dashboard", url: "/dashboard/auditor", icon: LayoutDashboard },
+  { title: "Cursos", url: "/dashboard/auditor/courses", icon: BookOpen },
+  { title: "Trazabilidad SEPE", url: "/dashboard/auditor/traceability", icon: Activity },
+  { title: "Seguimiento Alumnos", url: "/dashboard/auditor/students", icon: Users },
+  { title: "Informes de Calidad", url: "/dashboard/auditor/reports", icon: BarChart },
+  { title: "Comunicaciones", url: "/dashboard/auditor/communications", icon: MessageSquare },
+];
+
 export function DashboardSidebar() {
   const { state } = useSidebar();
   const navigate = useNavigate();
   const { role } = useParams();
   const { signOut } = useAuth();
 
-  const items = role === "admin" ? adminItems : role === "teacher" ? teacherItems : studentItems;
-  const roleLabel = role === "admin" ? "Administrador" : role === "teacher" ? "Docente" : "Alumno";
-  const RoleIcon = role === "admin" ? Settings : role === "teacher" ? UserCircle : GraduationCap;
+  const items = 
+    role === "admin" ? adminItems : 
+    role === "teacher" ? teacherItems : 
+    role === "auditor" ? auditorItems :
+    studentItems;
+  
+  const roleLabel = 
+    role === "admin" ? "Administrador" : 
+    role === "teacher" ? "Docente" : 
+    role === "auditor" ? "Auditor SEPE" :
+    "Alumno";
+  
+  const RoleIcon = 
+    role === "admin" ? Settings : 
+    role === "teacher" ? UserCircle : 
+    role === "auditor" ? Activity :
+    GraduationCap;
   
   const isCollapsed = state === "collapsed";
 

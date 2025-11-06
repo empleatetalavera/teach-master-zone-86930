@@ -43,6 +43,8 @@ import QuickResponseManager from "./pages/dashboard/QuickResponseManager";
 import StudentCourses from "./pages/dashboard/StudentCourses";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import StudentSupport from "./pages/dashboard/StudentSupport";
+import AuditorDashboard from "./pages/dashboard/AuditorDashboard";
+import AuditorCourses from "./pages/dashboard/AuditorCourses";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +94,13 @@ function AppRoutes() {
           <Route path="student" element={<StudentDashboard />} />
           <Route path="student/courses" element={<StudentCourses />} />
           <Route path="student/support" element={<StudentSupport />} />
+          <Route path="auditor" element={<AuditorDashboard />} />
+          <Route path="auditor/courses" element={<AuditorCourses />} />
+          <Route path="auditor/traceability" element={<AdminTraceability />} />
+          <Route path="auditor/students" element={<TeacherStudents />} />
+          <Route path="auditor/students/:studentId" element={<TeacherStudentDetail />} />
+          <Route path="auditor/reports" element={<TeacherReports />} />
+          <Route path="auditor/communications" element={<AdminSupport />} />
         </Route>
         
         <Route path="*" element={<NotFound />} />

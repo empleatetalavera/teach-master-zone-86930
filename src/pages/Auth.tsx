@@ -34,6 +34,10 @@ export default function Auth() {
         navigate("/dashboard/teacher");
       } else if (userRole === "student") {
         navigate("/dashboard/student");
+      } else if (userRole === "auditor") {
+        navigate("/dashboard/auditor");
+      } else if (userRole === "inspector") {
+        navigate("/dashboard/inspector");
       }
     }
   }, [user, userRole, loading, navigate]);
