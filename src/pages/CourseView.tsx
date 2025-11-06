@@ -361,7 +361,7 @@ export default function CourseView() {
                   </PopoverContent>
                 </Popover>
 
-                {userRole === 'auditor' && (
+                {(userRole === 'auditor' || userRole === 'admin') && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -395,7 +395,7 @@ export default function CourseView() {
                 <TabsTrigger value="calendar" className="w-full justify-start">Calendario</TabsTrigger>
                 <TabsTrigger value="forum" className="w-full justify-start">Foro</TabsTrigger>
                 <TabsTrigger value="time-tracking" className="w-full justify-start">Tiempos Invertidos</TabsTrigger>
-                {userRole === 'auditor' && (
+                {(userRole === 'auditor' || userRole === 'admin') && (
                   <TabsTrigger value="audit" className="w-full justify-start">
                     <ShieldCheck className="h-4 w-4 mr-2" />
                     Auditoría
@@ -847,7 +847,7 @@ export default function CourseView() {
             />
           </TabsContent>
 
-          {userRole === 'auditor' && (
+          {(userRole === 'auditor' || userRole === 'admin') && (
             <TabsContent value="audit" className="space-y-4">
               <QualityAuditView courseId={courseId!} />
             </TabsContent>
