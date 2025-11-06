@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { BookOpen, Users, ClipboardCheck, MessageSquare } from "lucide-react";
+import { BookOpen, Users, ClipboardCheck, MessageSquare, UserCircle, FileCheck, BarChart3, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -58,6 +58,63 @@ const TeacherDashboard = () => {
           </Card>
         ))}
       </div>
+
+      {/* Quick Access Section */}
+      <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <h2 className="text-xl font-semibold mb-6">Acceso Rápido</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Button
+            variant="outline"
+            className="h-auto py-6 px-6 flex flex-col items-start gap-3 hover:bg-primary/10 hover:border-primary transition-all group"
+            onClick={() => navigate("/dashboard/teacher/students")}
+          >
+            <div className="w-full flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center">
+                <UserCircle className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-base mb-1">Mis Estudiantes</p>
+              <p className="text-sm text-muted-foreground">Ver y gestionar todos los alumnos</p>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="h-auto py-6 px-6 flex flex-col items-start gap-3 hover:bg-secondary/10 hover:border-secondary transition-all group"
+            onClick={() => navigate("/dashboard/teacher/courses")}
+          >
+            <div className="w-full flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-br from-secondary to-accent rounded-lg flex items-center justify-center">
+                <FileCheck className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-secondary group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-base mb-1">Actividades Pendientes</p>
+              <p className="text-sm text-muted-foreground">Revisar entregas y evaluar</p>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="h-auto py-6 px-6 flex flex-col items-start gap-3 hover:bg-accent/10 hover:border-accent transition-all group"
+            onClick={() => navigate("/dashboard/teacher/reports")}
+          >
+            <div className="w-full flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-base mb-1">Estadísticas del Curso</p>
+              <p className="text-sm text-muted-foreground">Analizar progreso y métricas</p>
+            </div>
+          </Button>
+        </div>
+      </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="p-6">
