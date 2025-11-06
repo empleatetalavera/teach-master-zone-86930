@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Loader2, KeyRound } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2 } from "lucide-react";
+import { UserRoleManager } from "@/components/UserRoleManager";
 
 interface UserWithRole {
   id: string;
@@ -22,28 +20,31 @@ interface UserWithRole {
 
 const AdminUsers = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [isResetting, setIsResetting] = useState(false);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const { toast } = useToast();
-  const { signUp } = useAuth();
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "student" as "admin" | "teacher" | "student",
-    fullName: "",
-  });
 
   useEffect(() => {
     loadUsers();
   }, []);
+
+  useEffect(() => {
+    // Filter users based on search term
+    if (searchTerm) {
+      const filtered = users.filter(
+        (user) =>
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.role.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    } else {
+      setFilteredUsers(users);
+    }
+  }, [searchTerm, users]);
 
   const loadUsers = async () => {
     try {
@@ -69,6 +70,11 @@ const AdminUsers = () => {
 
       if (authError) {
         console.error("Error fetching auth users:", authError);
+        toast({
+          title: "Advertencia",
+          description: "No se pudieron cargar algunos datos de usuarios. Funcionalidad limitada.",
+          variant: "destructive",
+        });
       }
 
       // Combine data
@@ -84,6 +90,7 @@ const AdminUsers = () => {
       });
 
       setUsers(usersWithRoles);
+      setFilteredUsers(usersWithRoles);
     } catch (error: any) {
       console.error("Error loading users:", error);
       toast({
@@ -96,74 +103,6 @@ const AdminUsers = () => {
     }
   };
 
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Las contraseñas no coinciden",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast({
-        title: "Error",
-        description: "La contraseña debe tener al menos 6 caracteres",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsCreating(true);
-
-    try {
-      // Create user with signUp
-      const { error: signUpError } = await signUp(
-        formData.email,
-        formData.password,
-        formData.role
-      );
-
-      if (signUpError) {
-        throw signUpError;
-      }
-
-      toast({
-        title: "Usuario creado",
-        description: `Usuario ${formData.email} creado exitosamente con rol ${formData.role}`,
-      });
-
-      // Reset form
-      setFormData({
-        email: "",
-        password: "",
-        confirmPassword: "",
-        role: "student",
-        fullName: "",
-      });
-
-      setIsDialogOpen(false);
-      
-      // Reload users list
-      setTimeout(() => {
-        loadUsers();
-      }, 1000);
-
-    } catch (error: any) {
-      console.error("Error creating user:", error);
-      toast({
-        title: "Error al crear usuario",
-        description: error.message || "Ocurrió un error al crear el usuario",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case "admin":
@@ -172,6 +111,10 @@ const AdminUsers = () => {
         return "default";
       case "student":
         return "secondary";
+      case "inspector":
+        return "outline";
+      case "auditor":
+        return "outline";
       default:
         return "outline";
     }
@@ -185,83 +128,19 @@ const AdminUsers = () => {
         return "Profesor";
       case "student":
         return "Alumno";
+      case "inspector":
+        return "Inspector";
+      case "auditor":
+        return "Auditor";
       default:
         return role;
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmNewPassword) {
-      toast({
-        title: "Error",
-        description: "Las contraseñas no coinciden",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      toast({
-        title: "Error",
-        description: "La contraseña debe tener al menos 6 caracteres",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!selectedUser) return;
-
-    setIsResetting(true);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error("No hay sesión activa");
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-user-password`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            userId: selectedUser.id,
-            newPassword: newPassword,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Error al resetear la contraseña");
-      }
-
-      toast({
-        title: "Contraseña actualizada",
-        description: `La contraseña de ${selectedUser.email} se ha actualizado correctamente`,
-      });
-
-      setIsResetDialogOpen(false);
-      setSelectedUser(null);
-      setNewPassword("");
-      setConfirmNewPassword("");
-    } catch (error: any) {
-      console.error("Error resetting password:", error);
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo resetear la contraseña",
-        variant: "destructive",
-      });
-    } finally {
-      setIsResetting(false);
-    }
+  const handleRoleSuccess = () => {
+    setIsRoleDialogOpen(false);
+    setSelectedUser(null);
+    loadUsers();
   };
 
   if (loading) {
@@ -276,248 +155,168 @@ const AdminUsers = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
-          <p className="text-muted-foreground">
-            Crear y administrar usuarios con sus roles
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Shield className="h-8 w-8" />
+            Gestión de Usuarios y Roles
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Administra usuarios y asigna roles de forma segura
           </p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Crear Usuario
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Crear Nuevo Usuario</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateUser} className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  required
-                  placeholder="usuario@ejemplo.com"
-                />
-              </div>
+        <Button onClick={loadUsers} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Actualizar
+        </Button>
+      </div>
 
-              <div>
-                <Label htmlFor="fullName">Nombre Completo</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
-                  placeholder="Nombre del usuario"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="role">Rol *</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value: any) =>
-                    setFormData({ ...formData, role: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Administrador</SelectItem>
-                    <SelectItem value="teacher">Profesor</SelectItem>
-                    <SelectItem value="student">Alumno</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="password">Contraseña *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  required
-                  placeholder="Mínimo 6 caracteres"
-                  minLength={6}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="confirmPassword">Confirmar Contraseña *</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      confirmPassword: e.target.value,
-                    })
-                  }
-                  required
-                  placeholder="Repite la contraseña"
-                  minLength={6}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={isCreating}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isCreating}>
-                  {isCreating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creando...
-                    </>
-                  ) : (
-                    "Crear Usuario"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+      <div className="grid gap-6 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{users.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Administradores</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter((u) => u.role === "admin").length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Profesores</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter((u) => u.role === "teacher").length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Alumnos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter((u) => u.role === "student").length}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Usuarios Registrados ({users.length})</CardTitle>
+          <CardTitle>Lista de Usuarios</CardTitle>
+          <CardDescription>
+            Busca usuarios y gestiona sus roles de forma segura
+          </CardDescription>
+          <div className="pt-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por email, nombre o rol..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Fecha de Creación</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    No hay usuarios registrados
-                  </TableCell>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Rol Actual</TableHead>
+                  <TableHead>Fecha de Creación</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
-              ) : (
-                users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.email}</TableCell>
-                    <TableCell>{user.full_name || "-"}</TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleBadgeVariant(user.role)}>
-                        {getRoleLabel(user.role)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsResetDialogOpen(true);
-                        }}
-                      >
-                        <KeyRound className="h-4 w-4 mr-2" />
-                        Resetear Contraseña
-                      </Button>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
+                      {searchTerm
+                        ? "No se encontraron usuarios con ese criterio"
+                        : "No hay usuarios registrados"}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.email}</TableCell>
+                      <TableCell>{user.full_name || "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant={getRoleBadgeVariant(user.role)}>
+                          {getRoleLabel(user.role)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(user.created_at).toLocaleDateString("es-ES", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setIsRoleDialogOpen(true);
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          Gestionar Rol
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
-      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Resetear Contraseña</DialogTitle>
+            <DialogTitle>Gestionar Rol de Usuario</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleResetPassword} className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Vas a resetear la contraseña de: <strong>{selectedUser?.email}</strong>
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="newPassword">Nueva Contraseña *</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                placeholder="Mínimo 6 caracteres"
-                minLength={6}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="confirmNewPassword">Confirmar Nueva Contraseña *</Label>
-              <Input
-                id="confirmNewPassword"
-                type="password"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                required
-                placeholder="Repite la contraseña"
-                minLength={6}
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsResetDialogOpen(false);
-                  setSelectedUser(null);
-                  setNewPassword("");
-                  setConfirmNewPassword("");
-                }}
-                disabled={isResetting}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isResetting}>
-                {isResetting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Reseteando...
-                  </>
-                ) : (
-                  "Resetear Contraseña"
+          {selectedUser && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-muted p-4 space-y-2">
+                <p className="text-sm font-medium">Usuario Seleccionado:</p>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Email:</strong> {selectedUser.email}
+                </p>
+                {selectedUser.full_name && (
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Nombre:</strong> {selectedUser.full_name}
+                  </p>
                 )}
-              </Button>
+                <p className="text-sm text-muted-foreground">
+                  <strong>ID:</strong> <code className="text-xs">{selectedUser.id}</code>
+                </p>
+              </div>
+              <UserRoleManager
+                userId={selectedUser.id}
+                currentRole={selectedUser.role as any}
+                onSuccess={handleRoleSuccess}
+              />
             </div>
-          </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
