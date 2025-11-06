@@ -1269,6 +1269,53 @@ export type Database = {
         }
         Relationships: []
       }
+      report_audit_log: {
+        Row: {
+          course_id: string | null
+          file_format: string
+          filters_applied: Json | null
+          generated_at: string
+          generated_by: string
+          id: string
+          metadata: Json | null
+          report_name: string
+          report_type: string
+          student_id: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          file_format?: string
+          filters_applied?: Json | null
+          generated_at?: string
+          generated_by: string
+          id?: string
+          metadata?: Json | null
+          report_name: string
+          report_type: string
+          student_id?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          file_format?: string
+          filters_applied?: Json | null
+          generated_at?: string
+          generated_by?: string
+          id?: string
+          metadata?: Json | null
+          report_name?: string
+          report_type?: string
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_audit_log_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scorm_packages: {
         Row: {
           created_at: string | null

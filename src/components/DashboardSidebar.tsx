@@ -84,6 +84,7 @@ const auditorItems = [
   { title: "Trazabilidad SEPE", url: "/dashboard/auditor/traceability", icon: Activity },
   { title: "Seguimiento Alumnos", url: "/dashboard/auditor/students", icon: Users },
   { title: "Informes de Calidad", url: "/dashboard/auditor/reports", icon: BarChart },
+  { title: "Registro Informes", url: "/dashboard/auditor/report-logs", icon: FileText },
   { title: "Comunicaciones", url: "/dashboard/auditor/communications", icon: MessageSquare },
 ];
 
