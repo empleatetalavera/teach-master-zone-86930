@@ -191,16 +191,16 @@ const AuditorDashboard = () => {
       {/* Courses List */}
       <Card>
         <CardHeader>
-          <CardTitle>Cursos en Auditoría</CardTitle>
+          <CardTitle>Acciones Formativas en Seguimiento</CardTitle>
           <CardDescription>
-            Haz clic en un curso para ver el análisis detallado de calidad y trazabilidad
+            Haz clic en una acción formativa para ver el análisis detallado de calidad y trazabilidad
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {courses.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No hay cursos disponibles para auditoría
+                No hay acciones formativas disponibles para seguimiento
               </div>
             ) : (
               courses.map((course) => (
@@ -249,7 +249,7 @@ const AuditorDashboard = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Información de Auditoría
+            Perfil Auditor de Calidad SEPE
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -257,16 +257,16 @@ const AuditorDashboard = () => {
             ✓ Acceso completo a trazabilidad de actividades de alumnos
           </p>
           <p className="text-sm text-muted-foreground">
-            ✓ Seguimiento de tiempos invertidos en cada módulo
+            ✓ Seguimiento exhaustivo de tiempos invertidos en cada módulo
           </p>
           <p className="text-sm text-muted-foreground">
-            ✓ Registro de comunicaciones docente-alumno
+            ✓ Registro completo de comunicaciones docente-alumno
           </p>
           <p className="text-sm text-muted-foreground">
-            ✓ Métricas de calidad y cumplimiento normativo
+            ✓ Métricas de calidad y cumplimiento normativo SEPE
           </p>
           <p className="text-sm text-muted-foreground">
-            ✓ Retroalimentación y evaluaciones detalladas
+            ✓ Retroalimentación, evaluaciones y feedback detallados
           </p>
         </CardContent>
       </Card>

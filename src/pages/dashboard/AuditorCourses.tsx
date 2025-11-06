@@ -107,24 +107,24 @@ const AuditorCourses = () => {
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <ShieldCheck className="h-8 w-8" />
-          Cursos Disponibles
+          Acciones Formativas Disponibles
         </h1>
         <p className="text-muted-foreground mt-2">
-          Accede a cualquier curso para realizar auditoría de calidad
+          Accede a cualquier acción formativa para realizar seguimiento de calidad SEPE
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Buscar Cursos</CardTitle>
+          <CardTitle>Buscar Acciones Formativas</CardTitle>
           <CardDescription>
-            Filtra cursos por título o categoría
+            Filtra acciones formativas por título o categoría
           </CardDescription>
           <div className="pt-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar cursos..."
+                placeholder="Buscar acciones formativas..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -136,7 +136,7 @@ const AuditorCourses = () => {
           <div className="space-y-4">
             {filteredCourses.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                {searchTerm ? "No se encontraron cursos" : "No hay cursos disponibles"}
+                {searchTerm ? "No se encontraron acciones formativas" : "No hay acciones formativas disponibles"}
               </div>
             ) : (
               filteredCourses.map((course) => (
@@ -169,7 +169,7 @@ const AuditorCourses = () => {
                     variant="outline"
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    Auditar Curso
+                    Ver Seguimiento
                   </Button>
                 </div>
               ))
