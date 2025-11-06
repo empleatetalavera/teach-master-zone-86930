@@ -956,6 +956,59 @@ export type Database = {
           },
         ]
       }
+      live_sessions: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          recording_url: string | null
+          scheduled_date: string
+          session_url: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          recording_url?: string | null
+          scheduled_date: string
+          session_url: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          recording_url?: string | null
+          scheduled_date?: string
+          session_url?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_attempts: {
         Row: {
           attempt_time: string

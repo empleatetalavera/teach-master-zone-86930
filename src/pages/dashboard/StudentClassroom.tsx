@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, BookOpen, Video, FileText, MessageSquare, Clock, PlayCircle, CheckCircle } from "lucide-react";
+import { Loader2, BookOpen, Video, FileText, MessageSquare, Clock, PlayCircle, CheckCircle, Calendar, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format, isPast, isFuture, isToday } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface EnrolledCourse {
   id: string;
@@ -35,9 +37,22 @@ interface Module {
   progress?: number;
 }
 
+interface LiveSession {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string;
+  session_url: string;
+  scheduled_date: string;
+  duration_minutes: number;
+  status: 'scheduled' | 'live' | 'completed' | 'cancelled';
+  recording_url: string | null;
+}
+
 const StudentClassroom = () => {
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<EnrolledCourse | null>(null);
+  const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -45,6 +60,12 @@ const StudentClassroom = () => {
   useEffect(() => {
     loadEnrolledCourses();
   }, []);
+
+  useEffect(() => {
+    if (selectedCourse) {
+      loadLiveSessions(selectedCourse.course_id);
+    }
+  }, [selectedCourse]);
 
   const loadEnrolledCourses = async () => {
     try {
@@ -121,6 +142,28 @@ const StudentClassroom = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLiveSessions = async (courseId: string) => {
+    try {
+      const { data: sessions, error } = await supabase
+        .from("live_sessions")
+        .select("*")
+        .eq("course_id", courseId)
+        .neq("status", "cancelled")
+        .order("scheduled_date", { ascending: true });
+
+      if (error) throw error;
+
+      setLiveSessions(sessions || []);
+    } catch (error: any) {
+      console.error("Error loading live sessions:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las sesiones en vivo",
+        variant: "destructive",
+      });
     }
   };
 
@@ -237,8 +280,9 @@ const StudentClassroom = () => {
 
               {/* Course Tabs */}
               <Tabs defaultValue="modules" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="modules">Módulos</TabsTrigger>
+                  <TabsTrigger value="live-sessions">Clases en Vivo</TabsTrigger>
                   <TabsTrigger value="resources">Recursos</TabsTrigger>
                   <TabsTrigger value="communication">Comunicación</TabsTrigger>
                 </TabsList>
@@ -295,6 +339,154 @@ const StudentClassroom = () => {
                       ) : (
                         <div className="text-center py-8 text-muted-foreground">
                           No hay módulos disponibles
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="live-sessions" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Sesiones Adobe Connect</CardTitle>
+                      <CardDescription>
+                        Clases en vivo, sesiones programadas y grabaciones
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {liveSessions.length > 0 ? (
+                        <>
+                          {/* Live Sessions */}
+                          {liveSessions.some(s => s.status === 'live') && (
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-sm flex items-center gap-2">
+                                <span className="relative flex h-3 w-3">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                                </span>
+                                En Vivo Ahora
+                              </h4>
+                              {liveSessions
+                                .filter(session => session.status === 'live')
+                                .map((session) => (
+                                  <div
+                                    key={session.id}
+                                    className="flex items-center justify-between p-4 rounded-lg border border-destructive bg-destructive/5"
+                                  >
+                                    <div className="flex items-start gap-3 flex-1">
+                                      <Video className="h-5 w-5 text-destructive mt-1" />
+                                      <div className="flex-1">
+                                        <h4 className="font-semibold mb-1">{session.title}</h4>
+                                        <p className="text-sm text-muted-foreground mb-2">
+                                          {session.description}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                          <Clock className="h-3 w-3" />
+                                          {session.duration_minutes} minutos
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      className="bg-destructive hover:bg-destructive/90"
+                                      onClick={() => window.open(session.session_url, "_blank")}
+                                    >
+                                      <ExternalLink className="h-4 w-4 mr-2" />
+                                      Unirse Ahora
+                                    </Button>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+
+                          {/* Upcoming Sessions */}
+                          {liveSessions.some(s => s.status === 'scheduled') && (
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-sm">Sesiones Programadas</h4>
+                              {liveSessions
+                                .filter(session => session.status === 'scheduled')
+                                .map((session) => {
+                                  const sessionDate = new Date(session.scheduled_date);
+                                  const isUpcoming = isFuture(sessionDate);
+                                  
+                                  return (
+                                    <div
+                                      key={session.id}
+                                      className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                                    >
+                                      <div className="flex items-start gap-3 flex-1">
+                                        <Calendar className="h-5 w-5 text-primary mt-1" />
+                                        <div className="flex-1">
+                                          <h4 className="font-semibold mb-1">{session.title}</h4>
+                                          <p className="text-sm text-muted-foreground mb-2">
+                                            {session.description}
+                                          </p>
+                                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                            <span className="flex items-center gap-1">
+                                              <Calendar className="h-3 w-3" />
+                                              {format(sessionDate, "PPP", { locale: es })}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                              <Clock className="h-3 w-3" />
+                                              {format(sessionDate, "HH:mm")} ({session.duration_minutes} min)
+                                            </span>
+                                          </div>
+                                          {isToday(sessionDate) && (
+                                            <Badge variant="secondary" className="mt-2">
+                                              Hoy
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <Button variant="outline" disabled={!isUpcoming}>
+                                        Ver Detalles
+                                      </Button>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          )}
+
+                          {/* Recorded Sessions */}
+                          {liveSessions.some(s => s.status === 'completed' && s.recording_url) && (
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-sm">Grabaciones Disponibles</h4>
+                              {liveSessions
+                                .filter(session => session.status === 'completed' && session.recording_url)
+                                .map((session) => (
+                                  <div
+                                    key={session.id}
+                                    className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                                  >
+                                    <div className="flex items-start gap-3 flex-1">
+                                      <PlayCircle className="h-5 w-5 text-primary mt-1" />
+                                      <div className="flex-1">
+                                        <h4 className="font-semibold mb-1">{session.title}</h4>
+                                        <p className="text-sm text-muted-foreground mb-2">
+                                          {session.description}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                          <span>
+                                            Grabado el {format(new Date(session.scheduled_date), "PPP", { locale: es })}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => window.open(session.recording_url!, "_blank")}
+                                    >
+                                      <PlayCircle className="h-4 w-4 mr-2" />
+                                      Ver Grabación
+                                    </Button>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Video className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No hay sesiones en vivo programadas</p>
                         </div>
                       )}
                     </CardContent>
