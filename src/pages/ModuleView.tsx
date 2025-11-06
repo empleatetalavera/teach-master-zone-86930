@@ -11,6 +11,7 @@ import ScormPlayer from "@/components/scorm/ScormPlayer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModuleChat } from "@/components/ModuleChat";
 import { InteractiveContent } from "@/components/InteractiveContent";
+import DOMPurify from "dompurify";
 
 interface Module {
   id: string;
@@ -239,7 +240,12 @@ export default function ModuleView() {
               <TabsContent value="content" className="space-y-6 mt-6">
                 <div className="prose prose-sm max-w-none dark:prose-invert">
                   <div
-                    dangerouslySetInnerHTML={{ __html: module.content || "" }}
+                    dangerouslySetInnerHTML={{ 
+                      __html: DOMPurify.sanitize(module.content || "", {
+                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+                        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
+                      }) 
+                    }}
                   />
                 </div>
 

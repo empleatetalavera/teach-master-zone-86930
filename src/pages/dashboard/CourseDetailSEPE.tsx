@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import DOMPurify from "dompurify";
 
 export default function CourseDetailSEPE() {
   const { courseId } = useParams();
@@ -320,7 +321,12 @@ export default function CourseDetailSEPE() {
                     <CardContent>
                       <div 
                         className="prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: module.content || "<p>Contenido no disponible</p>" }}
+                        dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(module.content || "<p>Contenido no disponible</p>", {
+                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+                            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
+                          }) 
+                        }}
                       />
                     </CardContent>
                   </Card>
