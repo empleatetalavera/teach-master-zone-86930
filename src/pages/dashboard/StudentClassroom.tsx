@@ -45,7 +45,7 @@ interface LiveSession {
   session_url: string;
   scheduled_date: string;
   duration_minutes: number;
-  status: 'scheduled' | 'live' | 'completed' | 'cancelled';
+  status: string;
   recording_url: string | null;
 }
 

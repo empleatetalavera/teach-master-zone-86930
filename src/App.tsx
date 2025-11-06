@@ -44,6 +44,7 @@ import StudentCourses from "./pages/dashboard/StudentCourses";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import StudentSupport from "./pages/dashboard/StudentSupport";
 import StudentClassroom from "./pages/dashboard/StudentClassroom";
+import StudentEvaluations from "./pages/dashboard/StudentEvaluations";
 import AuditorDashboard from "./pages/dashboard/AuditorDashboard";
 import AuditorCourses from "./pages/dashboard/AuditorCourses";
 import AuditorReports from "./pages/dashboard/AuditorReports";
@@ -96,6 +97,7 @@ function AppRoutes() {
           <Route path="student" element={<StudentDashboard />} />
           <Route path="student/courses" element={<StudentCourses />} />
           <Route path="student/classroom" element={<StudentClassroom />} />
+          <Route path="student/evaluations" element={<StudentEvaluations />} />
           <Route path="student/support" element={<StudentSupport />} />
           <Route path="auditor" element={<AuditorDashboard />} />
           <Route path="auditor/courses" element={<AuditorCourses />} />
