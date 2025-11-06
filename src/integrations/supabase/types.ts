@@ -1840,7 +1840,7 @@ export type Database = {
       no_roles_exist: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "teacher" | "student" | "inspector"
+      app_role: "admin" | "teacher" | "student" | "inspector" | "auditor"
       communication_type: "message" | "forum" | "chat" | "video_call"
       evaluation_status:
         | "not_started"
@@ -1983,7 +1983,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "teacher", "student", "inspector"],
+      app_role: ["admin", "teacher", "student", "inspector", "auditor"],
       communication_type: ["message", "forum", "chat", "video_call"],
       evaluation_status: [
         "not_started",
