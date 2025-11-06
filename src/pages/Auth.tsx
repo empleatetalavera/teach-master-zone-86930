@@ -103,73 +103,42 @@ export default function Auth() {
     setIsLoading(false);
   };
 
-  const handleTutorDemo = async () => {
-    // Acceso directo como Tutora (crea la cuenta si no existe y asigna rol)
-    const email = 'tutora@talentcloud.demo';
-    const password = 'Demo2025!';
+  const handleDemoAccess = async (role: 'student' | 'teacher' | 'admin' | 'auditor') => {
     setIsLoading(true);
     try {
-      const { error: signUpError } = await signUp(email, password, 'teacher');
-      if (signUpError && !signUpError.message.toLowerCase().includes('already')) {
-        toast({ title: 'Error al crear cuenta', description: signUpError.message, variant: 'destructive' });
-        setIsLoading(false);
-        return;
-      }
+      console.log(`Creating demo session for role: ${role}`);
+      
+      const { data, error } = await supabase.functions.invoke('create-demo-session', {
+        body: { role }
+      });
 
-      const { error: signInError } = await signIn(email, password);
-      if (signInError) {
-        toast({ title: 'Error al iniciar sesión', description: signInError.message, variant: 'destructive' });
-        setIsLoading(false);
-        return;
-      }
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Failed to create demo session');
 
-      // Asignar rol de teacher si no existe (permitido por RLS)
-      const { data: userRes } = await supabase.auth.getUser();
-      const userId = userRes.user?.id;
-      if (userId) {
-        await supabase.from('user_roles').insert({ user_id: userId, role: 'teacher' });
-      }
+      console.log('Demo session created:', data);
 
-      toast({ title: 'Bienvenida', description: 'Acceso como Tutora habilitado' });
-      navigate('/dashboard/teacher');
-    } catch (e: any) {
-      toast({ title: 'Error', description: e?.message || 'No se pudo acceder como tutora', variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      // Set the session
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
 
-  const handleAdminAccess = async () => {
-    // Crear cuenta de administrador
-    const email = 'formacion.empleate@gmail.com';
-    const password = 'empleate2025';
-    setIsLoading(true);
-    try {
-      const { error: signUpError } = await signUp(email, password, 'admin');
-      if (signUpError && !signUpError.message.toLowerCase().includes('already')) {
-        toast({ title: 'Error al crear cuenta', description: signUpError.message, variant: 'destructive' });
-        setIsLoading(false);
-        return;
-      }
+      if (sessionError) throw sessionError;
 
-      const { error: signInError } = await signIn(email, password);
-      if (signInError) {
-        toast({ title: 'Error al iniciar sesión', description: signInError.message, variant: 'destructive' });
-        setIsLoading(false);
-        return;
-      }
-
-      // Asignar rol de admin si no existe (permitido por RLS)
-      const { data: userRes } = await supabase.auth.getUser();
-      const userId = userRes.user?.id;
-      if (userId) {
-        await supabase.from('user_roles').insert({ user_id: userId, role: 'admin' });
-      }
-
-      toast({ title: 'Bienvenido', description: 'Acceso como Administrador habilitado' });
-      navigate('/dashboard/admin');
-    } catch (e: any) {
-      toast({ title: 'Error', description: e?.message || 'No se pudo acceder como administrador', variant: 'destructive' });
+      toast({ 
+        title: 'Bienvenido', 
+        description: data.message || `Acceso como ${role} concedido` 
+      });
+      
+      // Navigate to appropriate dashboard
+      navigate(`/dashboard/${role}`);
+    } catch (error: any) {
+      console.error(`Error creating demo ${role}:`, error);
+      toast({ 
+        title: 'Error', 
+        description: error.message || `Error al acceder como ${role}`, 
+        variant: 'destructive' 
+      });
     } finally {
       setIsLoading(false);
     }
@@ -324,43 +293,37 @@ export default function Auth() {
                     type="button"
                     variant="secondary"
                     className="w-full"
-                    onClick={async () => {
-                      setLoginEmail('alumno@talentcloud.demo');
-                      setLoginPassword('Demo2025!');
-                    }}
+                    onClick={() => handleDemoAccess('student')}
                     disabled={isLoading}
                   >
-                    Alumno
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Alumno"}
                   </Button>
                   <Button
                     type="button"
                     variant="secondary"
                     className="w-full"
-                    onClick={handleTutorDemo}
+                    onClick={() => handleDemoAccess('teacher')}
                     disabled={isLoading}
                   >
-                    Tutora
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Tutora"}
                   </Button>
                   <Button
                     type="button"
                     variant="secondary"
                     className="w-full"
-                    onClick={handleAdminAccess}
+                    onClick={() => handleDemoAccess('admin')}
                     disabled={isLoading}
                   >
-                    Administrador
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Administrador"}
                   </Button>
                   <Button
                     type="button"
                     variant="secondary"
                     className="w-full"
-                    onClick={async () => {
-                      setLoginEmail('auditor@talentcloud.demo');
-                      setLoginPassword('Demo2025!');
-                    }}
+                    onClick={() => handleDemoAccess('auditor')}
                     disabled={isLoading}
                   >
-                    Auditor
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Auditor"}
                   </Button>
                 </div>
               </div>

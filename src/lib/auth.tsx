@@ -77,34 +77,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Bootstrap: if there are no roles yet, make the first signed-in user an admin
-      const { count, error: countError } = await supabase
-        .from('user_roles')
-        .select('id', { count: 'exact', head: true });
-
-      if (!countError && (count ?? 0) === 0) {
-        const { error: insertError } = await supabase
-          .from('user_roles')
-          .insert([{ user_id: userId, role: 'admin' as any }]);
-
-        if (insertError) {
-          console.error('Error bootstrapping first admin role:', insertError);
-          setUserRole(null);
-        } else {
-          setUserRole('admin');
-          toast({
-            title: 'Administrador inicial creado',
-            description: 'Tu cuenta se estableció como administrador por ser el primer usuario.',
-          });
-        }
-      } else {
-        setUserRole(null);
-        toast({
-          title: 'Rol no asignado',
-          description: 'Tu cuenta no tiene rol. Un administrador debe asignarte uno.',
-          variant: 'destructive',
-        });
-      }
+      // User has no role assigned - notify them
+      setUserRole(null);
+      toast({
+        title: 'Rol no asignado',
+        description: 'Tu cuenta no tiene rol asignado. Un administrador debe asignarte uno.',
+        variant: 'destructive',
+      });
     } catch (error) {
       console.error('Error fetching user role:', error);
       setUserRole(null);
