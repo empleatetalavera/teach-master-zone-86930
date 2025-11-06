@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import authBackground from "@/assets/auth-background.jpg";
 
 const emailSchema = z.string().email("Email inválido").max(255, "Email demasiado largo");
 const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 caracteres").max(100, "Contraseña demasiado larga");
@@ -220,19 +221,15 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat p-4 relative" style={{ backgroundImage: `url(${authBackground})` }}>
+      <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/95 backdrop-blur-sm" />
+      <Card className="w-full max-w-md relative z-10 shadow-2xl">
         <CardHeader className="space-y-4">
-          <div className="flex items-center justify-center gap-4 flex-wrap">
+          <div className="flex items-center justify-center">
             <img
-              src="/branding/emplate-logo.png"
-              alt="Emplate Talavera Formación"
-              className="h-16 object-contain"
-            />
-            <img
-              src="/branding/sepe-gobierno-logo.png"
-              alt="Gobierno de España - Ministerio de Trabajo - SEPE"
-              className="h-16 object-contain"
+              src="/branding/talentcloud-logo.png"
+              alt="TalentCloud Solutions"
+              className="h-20 object-contain"
             />
           </div>
           <div className="text-center">
