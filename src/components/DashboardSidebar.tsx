@@ -1,9 +1,9 @@
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Users, 
-  Settings, 
-  BarChart, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  Settings,
+  BarChart,
   FileText,
   Calendar,
   MessageSquare,
@@ -20,7 +20,8 @@ import {
   User,
   Activity,
   Headphones,
-  Bell
+  Bell,
+  DollarSign
 } from "lucide-react";
 import { NavLink, useNavigate, useParams } from "react-router-dom";
 import {
@@ -44,6 +45,7 @@ const adminItems = [
   { title: "Trazabilidad SEPE", url: "/dashboard/admin/traceability", icon: Activity },
   { title: "Centros", url: "/dashboard/admin/centers", icon: Building2 },
   { title: "Licencias", url: "/dashboard/admin/licenses", icon: Key },
+  { title: "Facturación", url: "/dashboard/admin/billing", icon: DollarSign },
   { title: "Pedidos", url: "/dashboard/admin/orders", icon: Package },
   { title: "Análisis AI", url: "/dashboard/admin/ai-analytics", icon: MessageSquare },
   { title: "Usuarios", url: "/dashboard/admin/users", icon: Users },

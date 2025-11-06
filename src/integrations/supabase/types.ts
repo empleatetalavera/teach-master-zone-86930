@@ -900,6 +900,78 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string | null
+          due_date: string
+          id: string
+          invoice_data: Json | null
+          invoice_number: string
+          issue_date: string
+          license_id: string | null
+          notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          status: string
+          tax_amount: number | null
+          total_amount: number
+          training_center_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          due_date: string
+          id?: string
+          invoice_data?: Json | null
+          invoice_number: string
+          issue_date?: string
+          license_id?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string
+          tax_amount?: number | null
+          total_amount: number
+          training_center_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          due_date?: string
+          id?: string
+          invoice_data?: Json | null
+          invoice_number?: string
+          issue_date?: string
+          license_id?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string
+          tax_amount?: number | null
+          total_amount?: number
+          training_center_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "training_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       licenses: {
         Row: {
           created_at: string | null
@@ -1225,6 +1297,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pricing_plans: {
+        Row: {
+          base_price: number
+          created_at: string | null
+          description: string | null
+          duration_months: number
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          license_type: string
+          max_courses: number
+          max_students: number
+          max_teachers: number
+          name: string
+          price_per_course: number | null
+          price_per_student: number | null
+          price_per_teacher: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_price: number
+          created_at?: string | null
+          description?: string | null
+          duration_months?: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          license_type: string
+          max_courses: number
+          max_students: number
+          max_teachers: number
+          name: string
+          price_per_course?: number | null
+          price_per_student?: number | null
+          price_per_teacher?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_price?: number
+          created_at?: string | null
+          description?: string | null
+          duration_months?: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          license_type?: string
+          max_courses?: number
+          max_students?: number
+          max_teachers?: number
+          name?: string
+          price_per_course?: number | null
+          price_per_student?: number | null
+          price_per_teacher?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

@@ -20,6 +20,7 @@ import ModuleView from "./pages/ModuleView";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import AdminTrainingCenters from "./pages/dashboard/AdminTrainingCenters";
 import AdminLicenses from "./pages/dashboard/AdminLicenses";
+import AdminBilling from "./pages/dashboard/AdminBilling";
 import AdminContentOrders from "./pages/dashboard/AdminContentOrders";
 import AdminSettings from "./pages/dashboard/AdminSettings";
 import AdminAIAnalytics from "./pages/dashboard/AdminAIAnalytics";
@@ -71,6 +72,7 @@ function AppRoutes() {
           <Route path="admin" element={<AdminDashboard />} />
           <Route path="admin/centers" element={<AdminTrainingCenters />} />
           <Route path="admin/licenses" element={<AdminLicenses />} />
+          <Route path="admin/billing" element={<AdminBilling />} />
           <Route path="admin/orders" element={<AdminContentOrders />} />
           <Route path="admin/ai-analytics" element={<AdminAIAnalytics />} />
           <Route path="admin/traceability" element={<AdminTraceability />} />
