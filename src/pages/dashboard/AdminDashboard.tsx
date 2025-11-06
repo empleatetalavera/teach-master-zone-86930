@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Key, Package, AlertCircle, TrendingUp, CheckCircle2, Clock } from "lucide-react";
+import { Building2, Key, Package, AlertCircle, TrendingUp, CheckCircle2, Clock, Users, BookOpen, BarChart3, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardStats {
   totalCenters: number;
@@ -39,6 +41,7 @@ const AdminDashboard = () => {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadDashboardData();
@@ -194,6 +197,63 @@ const AdminDashboard = () => {
           Gestión multi-centro y visión general de la plataforma
         </p>
       </div>
+
+      {/* Quick Access Section */}
+      <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <h2 className="text-xl font-semibold mb-6">Acceso Rápido</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Button
+            variant="outline"
+            className="h-auto py-6 px-6 flex flex-col items-start gap-3 hover:bg-primary/10 hover:border-primary transition-all group"
+            onClick={() => navigate("/dashboard/admin/users")}
+          >
+            <div className="w-full flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-base mb-1">Gestión de Usuarios</p>
+              <p className="text-sm text-muted-foreground">Ver y administrar usuarios</p>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="h-auto py-6 px-6 flex flex-col items-start gap-3 hover:bg-secondary/10 hover:border-secondary transition-all group"
+            onClick={() => navigate("/dashboard/admin/courses")}
+          >
+            <div className="w-full flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-br from-secondary to-accent rounded-lg flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-secondary group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-base mb-1">Administrar Cursos</p>
+              <p className="text-sm text-muted-foreground">Crear y gestionar formaciones</p>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="h-auto py-6 px-6 flex flex-col items-start gap-3 hover:bg-accent/10 hover:border-accent transition-all group"
+            onClick={() => navigate("/dashboard/admin/ai-analytics")}
+          >
+            <div className="w-full flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-base mb-1">Analíticas IA</p>
+              <p className="text-sm text-muted-foreground">Ver estadísticas y métricas</p>
+            </div>
+          </Button>
+        </div>
+      </Card>
 
       {/* Main Stats Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
