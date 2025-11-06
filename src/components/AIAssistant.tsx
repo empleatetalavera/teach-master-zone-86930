@@ -133,9 +133,9 @@ export function AIAssistant({ additionalContext }: AIAssistantProps) {
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-primary" />
           <div>
-            <CardTitle className="text-lg">Asistente Virtual</CardTitle>
+            <CardTitle className="text-lg">Esmeralda</CardTitle>
             <CardDescription className="text-xs">
-              Resuelve tus dudas al instante
+              Tu asistente virtual educativa
             </CardDescription>
           </div>
         </div>
@@ -167,14 +167,10 @@ export function AIAssistant({ additionalContext }: AIAssistantProps) {
               <Bot className="h-12 w-12 mb-4 opacity-50" />
               <div className="space-y-2">
                 <p className="text-sm font-medium">
-                  ¡Hola! Soy tu asistente virtual.
+                  Bienvenida, soy Esmeralda, tu asistente virtual.
                 </p>
                 <p className="text-xs">
-                  {pageContext.course
-                    ? `Estoy aquí para ayudarte con "${pageContext.course.courseTitle}"`
-                    : pageContext.module
-                    ? `Estoy aquí para ayudarte con el módulo "${pageContext.module.moduleTitle}"`
-                    : "¿En qué puedo ayudarte hoy?"}
+                  ¿En qué podemos ayudarla?
                 </p>
               </div>
             </div>
