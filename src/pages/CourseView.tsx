@@ -360,6 +360,17 @@ export default function CourseView() {
                     />
                   </PopoverContent>
                 </Popover>
+
+                {userRole === 'auditor' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setActiveTab('audit')}
+                  >
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Gestor Calidad
+                  </Button>
+                )}
               </div>
             </div>
             {enrollment && (
