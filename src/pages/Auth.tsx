@@ -106,25 +106,36 @@ export default function Auth() {
   };
 
   const handleTutorDemo = async () => {
-    // Crea o accede a la cuenta demo de tutora
+    // Acceso directo como Tutora (crea la cuenta si no existe y asigna rol)
     const email = 'tutora@talentcloud.demo';
     const password = 'Demo2025!';
     setIsLoading(true);
     try {
       const { error: signUpError } = await signUp(email, password, 'teacher');
       if (signUpError && !signUpError.message.toLowerCase().includes('already')) {
-        toast({ title: 'Error al crear cuenta demo', description: signUpError.message, variant: 'destructive' });
+        toast({ title: 'Error al crear cuenta', description: signUpError.message, variant: 'destructive' });
         setIsLoading(false);
         return;
       }
+
       const { error: signInError } = await signIn(email, password);
       if (signInError) {
         toast({ title: 'Error al iniciar sesión', description: signInError.message, variant: 'destructive' });
-      } else {
-        toast({ title: 'Bienvenida', description: 'Accediste como Tutora Demo' });
+        setIsLoading(false);
+        return;
       }
+
+      // Asignar rol de teacher si no existe (permitido por RLS)
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes.user?.id;
+      if (userId) {
+        await supabase.from('user_roles').insert({ user_id: userId, role: 'teacher' });
+      }
+
+      toast({ title: 'Bienvenida', description: 'Acceso como Tutora habilitado' });
+      navigate('/dashboard/teacher');
     } catch (e: any) {
-      toast({ title: 'Error', description: e?.message || 'No se pudo acceder a la cuenta demo', variant: 'destructive' });
+      toast({ title: 'Error', description: e?.message || 'No se pudo acceder como tutora', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
