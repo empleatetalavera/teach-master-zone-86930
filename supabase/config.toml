@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.create-demo-session]
 verify_jwt = false
+
+[functions.assign-user-role]
+verify_jwt = true
