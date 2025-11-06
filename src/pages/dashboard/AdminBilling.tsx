@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Building2, FileText, CreditCard, DollarSign, Plus, Download, Eye, Check, X } from "lucide-react";
+import { Building2, FileText, CreditCard, DollarSign, Plus, Download, Eye, Check, X, Bell, Play } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import jsPDF from "jspdf";
@@ -79,6 +79,7 @@ export default function AdminBilling() {
   const [licenses, setLicenses] = useState<License[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [centerDialogOpen, setCenterDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
@@ -125,17 +126,19 @@ export default function AdminBilling() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [centersRes, licensesRes, invoicesRes, plansRes] = await Promise.all([
+      const [centersRes, licensesRes, invoicesRes, plansRes, notificationsRes] = await Promise.all([
         supabase.from("training_centers").select("*").order("created_at", { ascending: false }),
         supabase.from("licenses").select("*, training_centers(name)").order("created_at", { ascending: false }),
         supabase.from("invoices").select("*, training_centers(name)").order("issue_date", { ascending: false }),
         supabase.from("pricing_plans").select("*").order("base_price", { ascending: true }),
+        supabase.from("notifications").select("*").in("type", ["invoice_overdue", "invoice_due_soon", "invoice_reminder"]).order("created_at", { ascending: false }).limit(50),
       ]);
 
       if (centersRes.data) setCenters(centersRes.data);
       if (licensesRes.data) setLicenses(licensesRes.data);
       if (invoicesRes.data) setInvoices(invoicesRes.data);
       if (plansRes.data) setPricingPlans(plansRes.data);
+      if (notificationsRes.data) setNotifications(notificationsRes.data);
     } catch (error: any) {
       toast.error("Error al cargar datos: " + error.message);
     } finally {
@@ -276,14 +279,29 @@ export default function AdminBilling() {
     toast.success("Factura descargada");
   };
 
+  const handleRunInvoiceCheck = async () => {
+    try {
+      toast.info("Ejecutando verificación de facturas...");
+      const { data, error } = await supabase.functions.invoke('check-invoice-status');
+      
+      if (error) throw error;
+      
+      toast.success(`Verificación completada: ${data.summary.notifications_created} notificaciones creadas`);
+      loadData();
+    } catch (error: any) {
+      toast.error("Error al verificar facturas: " + error.message);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      pending: "secondary",
-      paid: "default",
-      overdue: "destructive",
-      cancelled: "outline",
+    const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
+      pending: { variant: "secondary", label: "Pendiente" },
+      paid: { variant: "default", label: "Pagada" },
+      overdue: { variant: "destructive", label: "Vencida" },
+      cancelled: { variant: "outline", label: "Cancelada" },
     };
-    return <Badge variant={variants[status] || "default"}>{status}</Badge>;
+    const config = statusConfig[status] || { variant: "default", label: status };
+    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   if (loading) {
@@ -294,6 +312,10 @@ export default function AdminBilling() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Panel de Facturación</h1>
+        <Button onClick={handleRunInvoiceCheck} variant="outline">
+          <Play className="mr-2 h-4 w-4" />
+          Verificar Facturas
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -324,6 +346,11 @@ export default function AdminBilling() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{invoices.filter(i => i.status === "pending").length}</div>
+            {invoices.filter(i => i.status === "overdue").length > 0 && (
+              <p className="text-xs text-destructive mt-1">
+                {invoices.filter(i => i.status === "overdue").length} vencidas
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -348,6 +375,10 @@ export default function AdminBilling() {
           <TabsTrigger value="centers">Centros</TabsTrigger>
           <TabsTrigger value="invoices">Facturas</TabsTrigger>
           <TabsTrigger value="pricing">Tarifas</TabsTrigger>
+          <TabsTrigger value="notifications">
+            <Bell className="h-4 w-4 mr-2" />
+            Notificaciones
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="centers" className="space-y-4">
@@ -778,6 +809,65 @@ export default function AdminBilling() {
                   </Card>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notificaciones de Facturación</CardTitle>
+              <CardDescription>Historial de alertas y recordatorios automáticos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {notifications.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No hay notificaciones de facturación
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {notifications.map((notification) => (
+                    <Card key={notification.id} className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Bell className={`h-4 w-4 ${
+                              notification.priority === 'high' ? 'text-destructive' : 'text-primary'
+                            }`} />
+                            <h4 className="font-semibold">{notification.title}</h4>
+                            <Badge variant={notification.priority === 'high' ? 'destructive' : 'secondary'}>
+                              {notification.priority === 'high' ? 'Alta' : 'Normal'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{notification.message}</p>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+                            <span>{format(new Date(notification.created_at), "dd/MM/yyyy HH:mm", { locale: es })}</span>
+                            {notification.metadata?.invoice_number && (
+                              <span>Factura: {notification.metadata.invoice_number}</span>
+                            )}
+                            {notification.metadata?.amount && (
+                              <span>Importe: {notification.metadata.amount.toFixed(2)} €</span>
+                            )}
+                          </div>
+                        </div>
+                        {notification.metadata?.invoice_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // Scroll to invoices tab
+                              const invoicesTab = document.querySelector('[value="invoices"]') as HTMLElement;
+                              invoicesTab?.click();
+                            }}
+                          >
+                            Ver Factura
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
