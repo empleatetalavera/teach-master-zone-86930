@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Upload, User, FileText, Briefcase, GraduationCap, CheckCircle, XCircle, Clock, ArrowRight } from "lucide-react";
+import { Loader2, Upload, User, FileText, Briefcase, GraduationCap, CheckCircle, XCircle, Clock, ArrowRight, FileDown, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
 
 interface Profile {
   id: string;
@@ -60,6 +61,24 @@ interface TrainingHistory {
   is_sepe_certified: boolean;
 }
 
+interface Enrollment {
+  id: string;
+  course_id: string;
+  enrolled_at: string;
+  courses: {
+    title: string;
+    description: string;
+    duration_hours: number;
+    training_center_id: string | null;
+    training_centers?: {
+      name: string;
+      address: string;
+      contact_phone: string;
+      contact_email: string;
+    } | null;
+  };
+}
+
 export default function Profile() {
   const { user, userRole, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -79,6 +98,8 @@ export default function Profile() {
   });
   const [documents, setDocuments] = useState<Document[]>([]);
   const [trainingHistory, setTrainingHistory] = useState<TrainingHistory[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   const [personalData, setPersonalData] = useState({
     full_name: "",
@@ -111,6 +132,7 @@ export default function Profile() {
       fetchEmploymentData(),
       fetchDocuments(),
       fetchTrainingHistory(),
+      fetchEnrollments(),
     ]);
     setLoading(false);
   };
@@ -188,6 +210,145 @@ export default function Profile() {
       setTrainingHistory(data || []);
     } catch (error: any) {
       console.error("Error fetching training history:", error);
+    }
+  };
+
+  const fetchEnrollments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select(`
+          id,
+          course_id,
+          enrolled_at,
+          courses (
+            title,
+            description,
+            duration_hours,
+            training_center_id,
+            training_centers (
+              name,
+              address,
+              contact_phone,
+              contact_email
+            )
+          )
+        `)
+        .eq("user_id", user!.id)
+        .order("enrolled_at", { ascending: false });
+
+      if (error) throw error;
+      setEnrollments(data || []);
+    } catch (error: any) {
+      console.error("Error fetching enrollments:", error);
+    }
+  };
+
+  const generateEnrollmentPDF = async () => {
+    if (!profile || enrollments.length === 0) return;
+
+    setGeneratingPDF(true);
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      
+      // Header
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Certificado de Matrícula", pageWidth / 2, 20, { align: "center" });
+      
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Fecha de emisión: ${new Date().toLocaleDateString("es-ES")}`, pageWidth / 2, 28, { align: "center" });
+      
+      // Student info
+      let yPos = 45;
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Datos del Alumno", 20, yPos);
+      
+      yPos += 10;
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Nombre: ${profile.full_name || "No especificado"}`, 20, yPos);
+      yPos += 7;
+      pdf.text(`DNI/NIE: ${profile.dni_nie || "No especificado"}`, 20, yPos);
+      yPos += 7;
+      pdf.text(`Email: ${user?.email || ""}`, 20, yPos);
+      
+      // Enrollments
+      yPos += 15;
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Cursos Matriculados", 20, yPos);
+      
+      enrollments.forEach((enrollment, index) => {
+        if (yPos > 250) {
+          pdf.addPage();
+          yPos = 20;
+        }
+        
+        yPos += 12;
+        pdf.setFontSize(12);
+        pdf.setFont("helvetica", "bold");
+        pdf.text(`${index + 1}. ${enrollment.courses.title}`, 20, yPos);
+        
+        yPos += 7;
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`Duración: ${enrollment.courses.duration_hours || 0} horas`, 25, yPos);
+        
+        yPos += 6;
+        pdf.text(`Fecha de matrícula: ${new Date(enrollment.enrolled_at).toLocaleDateString("es-ES")}`, 25, yPos);
+        
+        if (enrollment.courses.training_centers) {
+          const tc = enrollment.courses.training_centers;
+          yPos += 6;
+          pdf.text(`Centro: ${tc.name}`, 25, yPos);
+          yPos += 6;
+          pdf.text(`Dirección: ${tc.address}`, 25, yPos);
+          yPos += 6;
+          pdf.text(`Contacto: ${tc.contact_phone} | ${tc.contact_email}`, 25, yPos);
+        }
+        
+        yPos += 8;
+      });
+      
+      // Important notice
+      yPos += 10;
+      if (yPos > 250) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(220, 38, 38); // Red color
+      pdf.text("IMPORTANTE:", 20, yPos);
+      
+      yPos += 8;
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(0, 0, 0);
+      const notice = "Dispone de un plazo de 18 meses desde la fecha de matrícula para completar cada curso.";
+      const splitNotice = pdf.splitTextToSize(notice, pageWidth - 40);
+      pdf.text(splitNotice, 20, yPos);
+      
+      // Save
+      pdf.save(`certificado_matricula_${profile.full_name?.replace(/ /g, "_")}_${new Date().getTime()}.pdf`);
+      
+      toast({
+        title: "PDF generado",
+        description: "El certificado de matrícula se ha descargado correctamente",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "No se pudo generar el PDF",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingPDF(false);
     }
   };
 
@@ -500,7 +661,7 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="personal" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="personal">
                   <User className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">Datos Personales</span>
@@ -515,6 +676,11 @@ export default function Profile() {
                   <FileText className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">Documentación</span>
                   <span className="sm:hidden">Docs</span>
+                </TabsTrigger>
+                <TabsTrigger value="enrollment">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Matrícula</span>
+                  <span className="sm:hidden">Matrícula</span>
                 </TabsTrigger>
                 <TabsTrigger value="training">
                   <GraduationCap className="h-4 w-4 mr-2" />
@@ -831,6 +997,114 @@ export default function Profile() {
                       </Table>
                     )}
                   </div>
+                </div>
+              </TabsContent>
+
+              {/* Matrícula */}
+              <TabsContent value="enrollment" className="space-y-4">
+                <div className="space-y-4">
+                  <Card className="bg-primary/5 border-primary/20">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                          <Calendar className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-2">Plazo de Realización</h3>
+                          <p className="text-muted-foreground">
+                            Dispones de <span className="font-bold text-primary">18 meses</span> desde la fecha de matrícula 
+                            para completar cada uno de los cursos en los que estás inscrito. Gestiona tu tiempo 
+                            adecuadamente para aprovechar al máximo tu formación.
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Cursos Matriculados</h3>
+                    <Button 
+                      onClick={generateEnrollmentPDF}
+                      disabled={generatingPDF || enrollments.length === 0}
+                      variant="default"
+                      className="gap-2"
+                    >
+                      {generatingPDF ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Generando...
+                        </>
+                      ) : (
+                        <>
+                          <FileDown className="h-4 w-4" />
+                          Descargar Certificado
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {enrollments.length === 0 ? (
+                    <Card>
+                      <CardContent className="p-8 text-center">
+                        <p className="text-muted-foreground">
+                          No estás matriculado en ningún curso actualmente
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {enrollments.map((enrollment) => (
+                        <Card key={enrollment.id}>
+                          <CardHeader>
+                            <CardTitle className="flex items-start justify-between gap-4">
+                              <span>{enrollment.courses.title}</span>
+                              <Badge variant="secondary" className="shrink-0">
+                                {enrollment.courses.duration_hours || 0}h
+                              </Badge>
+                            </CardTitle>
+                            <CardDescription>
+                              Fecha de matrícula: {new Date(enrollment.enrolled_at).toLocaleDateString("es-ES", {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {enrollment.courses.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {enrollment.courses.description}
+                              </p>
+                            )}
+                            
+                            {enrollment.courses.training_centers && (
+                              <div className="border-t pt-4 space-y-2">
+                                <h4 className="font-semibold text-sm">Centro de Formación</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                  <div className="md:col-span-2">
+                                    <span className="text-muted-foreground">Nombre:</span>{" "}
+                                    <span className="font-medium">{enrollment.courses.training_centers.name}</span>
+                                  </div>
+                                  <div className="md:col-span-2">
+                                    <span className="text-muted-foreground">Dirección:</span>{" "}
+                                    <span className="font-medium">{enrollment.courses.training_centers.address}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground">Teléfono:</span>{" "}
+                                    <span className="font-medium">{enrollment.courses.training_centers.contact_phone}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground">Email:</span>{" "}
+                                    <span className="font-medium">{enrollment.courses.training_centers.contact_email}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
