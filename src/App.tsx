@@ -11,6 +11,7 @@ import { AIAssistant } from "@/components/AIAssistant";
 import { GradeNotificationToast } from "@/components/GradeNotificationToast";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import Index from "./pages/Index";
+import Shop from "./pages/Shop";
 import Checkout from "./pages/Checkout";
 import PaymentInstructions from "./pages/PaymentInstructions";
 import Demo from "./pages/Demo";
@@ -63,6 +64,7 @@ function AppRoutes() {
     <>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/shop" element={<Shop />} />
         <Route path="/demo" element={<Demo />} />
         <Route path="/test-accounts" element={<TestAccounts />} />
         <Route path="/auth" element={<Auth />} />
