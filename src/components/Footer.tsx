@@ -17,20 +17,20 @@ export const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Plataforma</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary transition-colors">Características</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Precios</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Casos de Éxito</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Documentación</a></li>
+              <li><a href="/platform" className="hover:text-primary transition-colors">Características</a></li>
+              <li><a href="/shop" className="hover:text-primary transition-colors">Precios</a></li>
+              <li><a href="/case-studies" className="hover:text-primary transition-colors">Casos de Éxito</a></li>
+              <li><a href="/documentation" className="hover:text-primary transition-colors">Documentación</a></li>
             </ul>
           </div>
           
           <div>
             <h4 className="font-semibold mb-4">Empresa</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary transition-colors">Sobre Nosotros</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Contacto</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Soporte</a></li>
+              <li><a href="/about" className="hover:text-primary transition-colors">Sobre Nosotros</a></li>
+              <li><a href="/blog" className="hover:text-primary transition-colors">Blog</a></li>
+              <li><a href="/contact" className="hover:text-primary transition-colors">Contacto</a></li>
+              <li><a href="/support" className="hover:text-primary transition-colors">Soporte</a></li>
             </ul>
           </div>
           
@@ -39,22 +39,26 @@ export const Footer = () => {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>info@tulms.com</span>
+                <a href="mailto:comercial@talentcloudsolution.es" className="hover:text-primary">
+                  comercial@talentcloudsolution.es
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
-                <span>+34 900 123 456</span>
+                <a href="tel:+34665673416" className="hover:text-primary">
+                  +34 665 673 416
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" />
-                <span>Madrid, España</span>
+                <span>Talavera de la Reina, Toledo</span>
               </li>
             </ul>
           </div>
         </div>
         
         <div className="border-t border-border/50 mt-12 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Tu LMS. Todos los derechos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} TalentCloud Solution. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

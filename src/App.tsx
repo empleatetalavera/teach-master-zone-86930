@@ -12,6 +12,13 @@ import { GradeNotificationToast } from "@/components/GradeNotificationToast";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
+import Platform from "./pages/Platform";
+import CaseStudies from "./pages/CaseStudies";
+import Documentation from "./pages/Documentation";
+import About from "./pages/About";
+import Blog from "./pages/Blog";
+import Contact from "./pages/Contact";
+import Support from "./pages/Support";
 import Checkout from "./pages/Checkout";
 import PaymentInstructions from "./pages/PaymentInstructions";
 import Demo from "./pages/Demo";
@@ -65,6 +72,13 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/platform" element={<Platform />} />
+        <Route path="/case-studies" element={<CaseStudies />} />
+        <Route path="/documentation" element={<Documentation />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/support" element={<Support />} />
         <Route path="/demo" element={<Demo />} />
         <Route path="/test-accounts" element={<TestAccounts />} />
         <Route path="/auth" element={<Auth />} />
