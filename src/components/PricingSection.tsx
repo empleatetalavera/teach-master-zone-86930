@@ -2,6 +2,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, ShoppingCart, BookOpen, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useCart } from "@/hooks/useCart";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 const platformPlans = [
   {
@@ -95,6 +98,34 @@ const scormCategories = [
 ];
 
 export const PricingSection = () => {
+  const { addToCart } = useCart();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true);
+      
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Error loading products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = async (productId: string) => {
+    await addToCart(productId, 1);
+  };
+
   return (
     <section className="py-24 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -147,8 +178,16 @@ export const PricingSection = () => {
                 className="w-full" 
                 variant={plan.popular ? "default" : "outline"}
                 size="lg"
+                onClick={() => {
+                  const product = products.find(p => 
+                    p.name === plan.name && p.product_type === 'platform_plan'
+                  );
+                  if (product) handleAddToCart(product.id);
+                }}
+                disabled={loading}
               >
-                Contratar Plan
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Añadir al Carrito
               </Button>
             </Card>
           ))}
@@ -193,9 +232,21 @@ export const PricingSection = () => {
                 <p className="text-lg font-semibold text-center mb-4">{category.pricing}</p>
               </div>
 
-              <Button className="w-full" variant="outline" size="lg">
+              <Button 
+                className="w-full" 
+                variant="outline" 
+                size="lg"
+                onClick={() => {
+                  const product = products.find(p => 
+                    p.product_type === 'scorm_license' && 
+                    p.features?.category === (category.title.includes('INCUAL') ? 'incual' : 'certificado')
+                  );
+                  if (product) handleAddToCart(product.id);
+                }}
+                disabled={loading}
+              >
                 <ShoppingCart className="w-4 h-4 mr-2" />
-                Ver Catálogo Completo
+                Añadir Licencia
               </Button>
             </Card>
           ))}

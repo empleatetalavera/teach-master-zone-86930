@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useState } from "react";
+import { ShoppingCartWidget } from "@/components/ShoppingCartWidget";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,6 +44,7 @@ export const Navbar = () => {
             >
               Personalización
             </a>
+            <ShoppingCartWidget />
             <Button variant="outline" asChild>
               <a href="/demo">Ver Demo</a>
             </Button>

@@ -4,12 +4,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
+import { CartProvider } from "@/hooks/useCart";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { AIAssistant } from "@/components/AIAssistant";
 import { GradeNotificationToast } from "@/components/GradeNotificationToast";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import Index from "./pages/Index";
+import Checkout from "./pages/Checkout";
+import PaymentInstructions from "./pages/PaymentInstructions";
 import Demo from "./pages/Demo";
 import TestAccounts from "./pages/TestAccounts";
 import Auth from "./pages/Auth";
@@ -64,6 +67,8 @@ function AppRoutes() {
         <Route path="/test-accounts" element={<TestAccounts />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+        <Route path="/payment-instructions" element={<ProtectedRoute><PaymentInstructions /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/course/:courseId" element={<ProtectedRoute><CourseView /></ProtectedRoute>} />
         <Route path="/course/:courseId/module/:moduleId" element={<ProtectedRoute><ModuleView /></ProtectedRoute>} />
@@ -128,7 +133,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <CartProvider>
+            <AppRoutes />
+          </CartProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
