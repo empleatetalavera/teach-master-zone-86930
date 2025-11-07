@@ -3,10 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Loader2, Upload, Palette } from "lucide-react";
+import { Loader2, Upload, Palette, Eye } from "lucide-react";
 import { useBranding } from "@/hooks/useBranding";
 
 export default function CenterSettings() {
@@ -28,6 +29,15 @@ export default function CenterSettings() {
   useEffect(() => {
     loadCenterData();
   }, [user]);
+
+  // Parse HSL to format for CSS variables
+  const parseHSL = (hslString: string): string => {
+    const match = hslString.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+    if (match) {
+      return `${match[1]} ${match[2]}% ${match[3]}%`;
+    }
+    return hslString;
+  };
 
   const loadCenterData = async () => {
     if (!user) return;
@@ -224,7 +234,9 @@ export default function CenterSettings() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Configuration Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -330,23 +342,169 @@ export default function CenterSettings() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={loadCenterData}
-            disabled={saving || isUploadingLogo}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={saving || isUploadingLogo}>
-            {(saving || isUploadingLogo) && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Guardar Cambios
-          </Button>
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={loadCenterData}
+              disabled={saving || isUploadingLogo}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving || isUploadingLogo}>
+              {(saving || isUploadingLogo) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Guardar Cambios
+            </Button>
+          </div>
+        </form>
+
+        {/* Live Preview */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                Vista Previa en Tiempo Real
+              </CardTitle>
+              <CardDescription>
+                Así se verá tu centro con los nuevos cambios
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Preview Header */}
+              <div 
+                className="border rounded-lg p-4 bg-card"
+                style={{
+                  ['--preview-primary' as any]: parseHSL(primaryColor),
+                  ['--preview-secondary' as any]: parseHSL(secondaryColor),
+                }}
+              >
+                <div className="flex items-center justify-between mb-4 pb-4 border-b">
+                  <div className="flex items-center gap-3">
+                    {logoPreview && (
+                      <img 
+                        src={logoPreview} 
+                        alt="Logo preview"
+                        className="h-12 object-contain"
+                      />
+                    )}
+                    {officialBadge && (
+                      <Badge variant="secondary" className="text-xs">
+                        {officialBadge}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-sm font-medium text-muted-foreground">
+                    {centerName || "Nombre del Centro"}
+                  </div>
+                </div>
+
+                {/* Preview Elements */}
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Botón Primario:</p>
+                    <button
+                      type="button"
+                      className="px-4 py-2 rounded-md text-sm font-medium text-white transition-colors"
+                      style={{
+                        backgroundColor: `hsl(var(--preview-primary))`,
+                      }}
+                    >
+                      Ejemplo de Botón
+                    </button>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Botón Secundario:</p>
+                    <button
+                      type="button"
+                      className="px-4 py-2 rounded-md text-sm font-medium text-white transition-colors"
+                      style={{
+                        backgroundColor: `hsl(var(--preview-secondary))`,
+                      }}
+                    >
+                      Ejemplo de Botón
+                    </button>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Enlace:</p>
+                    <a 
+                      href="#"
+                      className="text-sm font-medium transition-colors"
+                      style={{
+                        color: `hsl(var(--preview-primary))`,
+                      }}
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      Enlace de ejemplo
+                    </a>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Badge:</p>
+                    <span 
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                      style={{
+                        backgroundColor: `hsl(var(--preview-primary))`,
+                      }}
+                    >
+                      Etiqueta
+                    </span>
+                  </div>
+
+                  <div className="pt-3 mt-3 border-t">
+                    <p className="text-xs text-muted-foreground mb-2">Degradado:</p>
+                    <div 
+                      className="h-16 rounded-lg"
+                      style={{
+                        background: `linear-gradient(135deg, hsl(var(--preview-primary)), hsl(var(--preview-secondary)))`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview Footer */}
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <p className="text-xs text-center text-muted-foreground">
+                  {footerText || `© ${new Date().getFullYear()} ${centerName || "Centro de Formación"}. Todos los derechos reservados.`}
+                </p>
+              </div>
+
+              {/* Color Values */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Color Primario:</span>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-8 h-8 rounded border"
+                      style={{ backgroundColor: primaryColor }}
+                    />
+                    <code className="text-xs bg-muted px-2 py-1 rounded">
+                      {primaryColor}
+                    </code>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Color Secundario:</span>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-8 h-8 rounded border"
+                      style={{ backgroundColor: secondaryColor }}
+                    />
+                    <code className="text-xs bg-muted px-2 py-1 rounded">
+                      {secondaryColor}
+                    </code>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
