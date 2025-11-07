@@ -17,7 +17,7 @@ export const CustomizationSection = () => {
             
             <p className="text-lg text-muted-foreground">
               Tu plataforma LMS completamente adaptada a tu identidad corporativa. 
-              Sin costes adicionales, con soporte técnico experto incluido.
+              Implementación rápida en 48 horas, sin costes adicionales, con soporte técnico experto incluido durante toda la vida útil de tu licencia.
             </p>
             
             <div className="space-y-4 pt-4">
@@ -27,7 +27,7 @@ export const CustomizationSection = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Tu Marca, Tu Diseño</h3>
-                  <p className="text-muted-foreground">Colores, logo y estilo adaptados a tu identidad visual</p>
+                  <p className="text-muted-foreground">Logo, colores corporativos, tipografías y diseño personalizado. Adaptación completa de la interfaz a tu manual de identidad visual sin límites.</p>
                 </div>
               </div>
               
@@ -37,7 +37,7 @@ export const CustomizationSection = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Tu Propio Dominio</h3>
-                  <p className="text-muted-foreground">URL personalizada dentro de tu dominio corporativo</p>
+                  <p className="text-muted-foreground">URL personalizada con tu dominio corporativo (ej: campus.tuempresa.com). Configuración incluida, certificados SSL y gestión DNS completa.</p>
                 </div>
               </div>
               
@@ -47,7 +47,7 @@ export const CustomizationSection = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Soporte Dedicado</h3>
-                  <p className="text-muted-foreground">Equipo experto disponible para asistencia técnica continua</p>
+                  <p className="text-muted-foreground">Equipo técnico experto disponible por email, teléfono y chat. Asistencia técnica continua, formación inicial y actualizaciones incluidas sin coste adicional.</p>
                 </div>
               </div>
             </div>

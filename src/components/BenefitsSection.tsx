@@ -7,10 +7,12 @@ const roles = [
     title: "Para Administradores",
     color: "from-primary to-primary-glow",
     benefits: [
-      "Panel de control completo",
-      "Gestión de usuarios y permisos",
-      "Reportes y estadísticas detalladas",
-      "Configuración personalizada"
+      "Panel de control completo con métricas en tiempo real",
+      "Gestión avanzada de usuarios, roles y permisos",
+      "Reportes SEPE y estadísticas detalladas exportables",
+      "Configuración personalizada de marca y dominio",
+      "Sistema de facturación y licencias integrado",
+      "Auditoría completa de actividad y trazabilidad"
     ]
   },
   {
@@ -18,10 +20,12 @@ const roles = [
     title: "Para Docentes",
     color: "from-secondary to-secondary",
     benefits: [
-      "Creación de cursos intuitiva",
-      "Herramientas de evaluación",
-      "Seguimiento de estudiantes",
-      "Gestión de contenidos multimedia"
+      "Creación y edición de cursos intuitiva con SCORM",
+      "Herramientas de evaluación automática y manual",
+      "Seguimiento individual y grupal de estudiantes",
+      "Gestión de contenidos multimedia y documentos",
+      "Sistema de mensajería y foros integrados",
+      "Calendario de eventos y sesiones en vivo"
     ]
   },
   {
@@ -29,10 +33,12 @@ const roles = [
     title: "Para Alumnos",
     color: "from-accent to-accent",
     benefits: [
-      "Acceso 24/7 a contenidos",
-      "Interfaz clara y atractiva",
-      "Seguimiento de progreso",
-      "Certificados de finalización"
+      "Acceso 24/7 desde cualquier dispositivo",
+      "Interfaz clara, moderna y fácil de usar",
+      "Seguimiento visual de progreso y calificaciones",
+      "Certificados oficiales de finalización",
+      "Foros y mensajería con tutores",
+      "Notificaciones de nuevas actividades y plazos"
     ]
   }
 ];

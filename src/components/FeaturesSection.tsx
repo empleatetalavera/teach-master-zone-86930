@@ -5,32 +5,32 @@ const features = [
   {
     icon: GraduationCap,
     title: "Sistema Intuitivo",
-    description: "Interfaz moderna y fácil de usar para administradores, docentes y alumnos."
+    description: "Interfaz moderna y fácil de usar para administradores, docentes y alumnos. Navegación optimizada con acceso rápido a todas las funcionalidades educativas."
   },
   {
     icon: Users,
     title: "Gestión de Usuarios",
-    description: "Control completo de roles, permisos y accesos de todos los usuarios de la plataforma."
+    description: "Control completo de roles, permisos y accesos. Sistema avanzado de administración con perfiles diferenciados para estudiantes, docentes, tutores y administradores."
   },
   {
     icon: BookOpen,
     title: "Recursos E-learning",
-    description: "Todos los recursos necesarios para impartir formación online de calidad."
+    description: "Biblioteca completa con contenidos SCORM 1.2 y 2004. Soporte para vídeos, documentos, evaluaciones interactivas, foros de debate y herramientas de colaboración."
   },
   {
     icon: Cloud,
     title: "100% Online",
-    description: "Plataforma cloud accesible desde cualquier dispositivo y lugar."
+    description: "Plataforma cloud de alta disponibilidad accesible 24/7 desde cualquier dispositivo. Sin instalaciones, sin mantenimiento técnico, siempre actualizada."
   },
   {
     icon: Settings,
     title: "Personalización Total",
-    description: "Tu marca, tu logo, tu dominio. Sin costes adicionales de personalización."
+    description: "Tu marca, tu logo, tu dominio corporativo. Personalización completa de colores, estilos e identidad visual sin costes adicionales. Implementación rápida en 48h."
   },
   {
     icon: BarChart,
     title: "Reportes y Analytics",
-    description: "Seguimiento detallado del progreso y rendimiento de tus estudiantes."
+    description: "Sistema completo de seguimiento y analíticas. Informes detallados de progreso, tiempo de estudio, calificaciones y trazabilidad SEPE. Exportación en múltiples formatos."
   }
 ];
 
