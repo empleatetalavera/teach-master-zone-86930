@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Video,
   Building2,
+  Building,
   Key,
   Package,
   User,
@@ -42,6 +43,7 @@ import { useAuth } from "@/lib/auth";
 
 const adminItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
+  { title: "Mi Centro", url: "/dashboard/admin/center-settings", icon: Building },
   { title: "Trazabilidad SEPE", url: "/dashboard/admin/traceability", icon: Activity },
   { title: "Centros", url: "/dashboard/admin/centers", icon: Building2 },
   { title: "Licencias", url: "/dashboard/admin/licenses", icon: Key },

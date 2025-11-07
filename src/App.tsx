@@ -43,6 +43,7 @@ import AdminSupport from "./pages/dashboard/AdminSupport";
 import AdminCourseSettings from "./pages/dashboard/AdminCourseSettings";
 import AdminCourses from "./pages/dashboard/AdminCourses";
 import AdminCourseCreator from "./pages/dashboard/AdminCourseCreator";
+import CenterSettings from "./pages/dashboard/CenterSettings";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import TeacherCourses from "./pages/dashboard/TeacherCourses";
 import TeacherStudents from "./pages/dashboard/TeacherStudents";
@@ -94,6 +95,7 @@ function AppRoutes() {
         
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="admin" element={<AdminDashboard />} />
+          <Route path="admin/center-settings" element={<CenterSettings />} />
           <Route path="admin/centers" element={<AdminTrainingCenters />} />
           <Route path="admin/licenses" element={<AdminLicenses />} />
           <Route path="admin/billing" element={<AdminBilling />} />
