@@ -1,34 +1,44 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
-  const { role } = useParams();
+  const location = useLocation();
+  const pathname = location.pathname || "";
+  const match = pathname.match(/^\/dashboard\/([^\/]+)/);
+  const roleSegment = match ? match[1] : undefined;
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        // User is not authenticated, redirect to auth
         console.log("ProtectedRoute: No user, redirecting to /auth");
         navigate("/auth", { replace: true });
-      } else if (!userRole) {
-        // User has no role assigned, redirect to auth
+        return;
+      }
+      if (!userRole) {
         console.log("ProtectedRoute: No role assigned, redirecting to /auth");
         navigate("/auth", { replace: true });
-      } else if (role && userRole && role !== userRole) {
-        // User is accessing wrong dashboard, redirect to correct one
-        // Note: super_admin can access admin routes
-        if (!(userRole === "super_admin" && role === "admin")) {
-          console.log(`ProtectedRoute: Wrong role, redirecting to /dashboard/${userRole}`);
-          const redirectRole = userRole === "super_admin" ? "admin" : userRole;
-          navigate(`/dashboard/${redirectRole}`, { replace: true });
-        }
+        return;
+      }
+
+      const targetRole = userRole === "super_admin" ? "admin" : userRole;
+
+      // If at /dashboard root, or role segment mismatches, redirect to correct dashboard
+      if (pathname === "/dashboard" || pathname === "/dashboard/") {
+        console.log(`ProtectedRoute: At /dashboard, redirecting to /dashboard/${targetRole}`);
+        navigate(`/dashboard/${targetRole}`, { replace: true });
+        return;
+      }
+
+      if (roleSegment && roleSegment !== targetRole) {
+        console.log(`ProtectedRoute: Wrong role in URL (${roleSegment}), redirecting to /dashboard/${targetRole}`);
+        navigate(`/dashboard/${targetRole}`, { replace: true });
       }
     }
-  }, [user, userRole, loading, navigate, role]);
+  }, [user, userRole, loading, navigate, pathname, roleSegment]);
 
   // Show loading state
   if (loading) {

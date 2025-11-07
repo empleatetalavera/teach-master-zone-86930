@@ -24,7 +24,7 @@ import {
   Bell,
   DollarSign
 } from "lucide-react";
-import { NavLink, useNavigate, useParams } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -103,30 +103,30 @@ const auditorItems = [
 export function DashboardSidebar() {
   const { state } = useSidebar();
   const navigate = useNavigate();
-  const { role } = useParams();
+  // Role derived from authenticated user
   const { signOut, userRole } = useAuth();
 
   // Determine which menu items to show
   // super_admin gets platform management menu
   // admin gets center management menu
   const items = 
-    role === "admin" && userRole === "super_admin" ? superAdminItems :
-    role === "admin" ? adminItems : 
-    role === "teacher" ? teacherItems : 
-    role === "auditor" ? auditorItems :
+    userRole === "super_admin" ? superAdminItems :
+    userRole === "admin" ? adminItems : 
+    userRole === "teacher" ? teacherItems : 
+    userRole === "auditor" ? auditorItems :
     studentItems;
   
   const roleLabel = 
     userRole === "super_admin" ? "Super Administrador" :
-    role === "admin" ? "Administrador de Centro" : 
-    role === "teacher" ? "Docente" : 
-    role === "auditor" ? "Auditor SEPE" :
+    userRole === "admin" ? "Administrador de Centro" : 
+    userRole === "teacher" ? "Docente" : 
+    userRole === "auditor" ? "Auditor SEPE" :
     "Alumno";
   
   const RoleIcon = 
-    role === "admin" ? Settings : 
-    role === "teacher" ? UserCircle : 
-    role === "auditor" ? Activity :
+    userRole === "admin" || userRole === "super_admin" ? Settings : 
+    userRole === "teacher" ? UserCircle : 
+    userRole === "auditor" ? Activity :
     GraduationCap;
   
   const isCollapsed = state === "collapsed";
