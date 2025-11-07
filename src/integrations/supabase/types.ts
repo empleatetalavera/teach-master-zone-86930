@@ -2264,47 +2264,80 @@ export type Database = {
       training_centers: {
         Row: {
           address: string | null
+          address_line: string | null
+          census_code: string | null
+          cif: string | null
+          city: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string | null
+          email: string | null
           footer_text: string | null
           id: string
           is_active: boolean | null
           logo_url: string | null
           name: string
           official_badge: string | null
+          phone: string | null
+          postal_code: string | null
           primary_color: string | null
+          province: string | null
+          region: string | null
           secondary_color: string | null
+          sepe_registry_number: string | null
+          slug: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
+          address_line?: string | null
+          census_code?: string | null
+          cif?: string | null
+          city?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          email?: string | null
           footer_text?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
           name: string
           official_badge?: string | null
+          phone?: string | null
+          postal_code?: string | null
           primary_color?: string | null
+          province?: string | null
+          region?: string | null
           secondary_color?: string | null
+          sepe_registry_number?: string | null
+          slug?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
+          address_line?: string | null
+          census_code?: string | null
+          cif?: string | null
+          city?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          email?: string | null
           footer_text?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
           name?: string
           official_badge?: string | null
+          phone?: string | null
+          postal_code?: string | null
           primary_color?: string | null
+          province?: string | null
+          region?: string | null
           secondary_color?: string | null
+          sepe_registry_number?: string | null
+          slug?: string | null
           updated_at?: string | null
         }
         Relationships: []
