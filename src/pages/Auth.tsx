@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import authBackground from "@/assets/auth-background.jpg";
-import { useBranding } from "@/hooks/useBranding";
+import { useCenterBranding } from "@/hooks/useCenterBranding";
 
 const emailSchema = z.string().email("Email inválido").max(255, "Email demasiado largo");
 const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 caracteres").max(100, "Contraseña demasiado larga");
@@ -22,10 +22,13 @@ export default function Auth() {
   const [loginPassword, setLoginPassword] = useState("");
   const [resetEmail, setResetEmail] = useState("");
   
+  const [searchParams] = useSearchParams();
+  const centerSlug = searchParams.get('center');
+  
   const { signIn, signUp, resetPassword, user, userRole, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { branding } = useBranding();
+  const { branding, loading: brandingLoading } = useCenterBranding(centerSlug);
 
   useEffect(() => {
     if (!loading && user && userRole) {
@@ -148,7 +151,7 @@ export default function Auth() {
     setIsLoading(false);
   };
 
-  if (loading) {
+  if (loading || brandingLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -174,8 +177,11 @@ export default function Auth() {
           <div className="text-center">
             <CardTitle className="text-2xl">{branding.centerName}</CardTitle>
             <CardDescription>
-              {mode === 'reset' ? "Recuperar contraseña" : "Plataforma de formación online"}
+              {mode === 'reset' ? "Recuperar contraseña" : "Acceso a Campus Virtual"}
             </CardDescription>
+            {branding.officialBadge && (
+              <p className="text-xs text-muted-foreground mt-2">{branding.officialBadge}</p>
+            )}
           </div>
         </CardHeader>
         <CardContent>

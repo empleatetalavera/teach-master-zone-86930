@@ -31,6 +31,7 @@ interface RecentActivity {
 interface CenterInfo {
   id: string;
   name: string;
+  slug: string | null;
   sepe_registry_number: string | null;
   census_code: string | null;
   cif: string | null;
@@ -252,14 +253,60 @@ const AdminDashboard = () => {
               <Building className="w-5 h-5" />
               Mi Centro - {centerInfo.name}
             </h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/dashboard/admin/center-settings")}
-            >
-              Editar
-            </Button>
+            <div className="flex items-center gap-2">
+              {centerInfo.slug && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const loginUrl = `${window.location.origin}/auth?center=${centerInfo.slug}`;
+                    navigator.clipboard.writeText(loginUrl);
+                    toast({
+                      title: "Enlace copiado",
+                      description: "El enlace de acceso del centro ha sido copiado al portapapeles",
+                    });
+                  }}
+                >
+                  Copiar enlace de acceso
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/dashboard/admin/center-settings")}
+              >
+                Editar
+              </Button>
+            </div>
           </div>
+
+          {centerInfo.slug && (
+            <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border/50">
+              <p className="text-sm font-medium mb-2">🔗 Enlace de acceso al centro:</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 px-3 py-2 bg-background rounded text-sm font-mono">
+                  {window.location.origin}/auth?center={centerInfo.slug}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const loginUrl = `${window.location.origin}/auth?center=${centerInfo.slug}`;
+                    navigator.clipboard.writeText(loginUrl);
+                    toast({
+                      title: "Enlace copiado",
+                      description: "El enlace de acceso ha sido copiado al portapapeles",
+                    });
+                  }}
+                >
+                  Copiar
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Comparte este enlace con alumnos y profesores para que accedan directamente al campus virtual de {centerInfo.name}
+              </p>
+            </div>
+          )}
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* SEPE Registry Info */}
