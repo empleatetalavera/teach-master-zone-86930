@@ -41,21 +41,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 
+// Super Admin items (Platform administrators - TalentCloudSolution)
+const superAdminItems = [
+  { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
+  { title: "Centros de Formación", url: "/dashboard/admin/centers", icon: Building2 },
+  { title: "Licencias", url: "/dashboard/admin/licenses", icon: Key },
+  { title: "Facturación Global", url: "/dashboard/admin/billing", icon: DollarSign },
+  { title: "Pedidos de Contenido", url: "/dashboard/admin/orders", icon: Package },
+  { title: "Análisis AI", url: "/dashboard/admin/ai-analytics", icon: MessageSquare },
+  { title: "Todos los Usuarios", url: "/dashboard/admin/users", icon: Users },
+  { title: "Soporte Global", url: "/dashboard/admin/support", icon: Headphones },
+];
+
+// Training Center Admin items (Center administrators)
 const adminItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
   { title: "Mi Centro", url: "/dashboard/admin/center-settings", icon: Building },
   { title: "Trazabilidad SEPE", url: "/dashboard/admin/traceability", icon: Activity },
-  { title: "Centros", url: "/dashboard/admin/centers", icon: Building2 },
-  { title: "Licencias", url: "/dashboard/admin/licenses", icon: Key },
-  { title: "Facturación", url: "/dashboard/admin/billing", icon: DollarSign },
-  { title: "Pedidos", url: "/dashboard/admin/orders", icon: Package },
-  { title: "Análisis AI", url: "/dashboard/admin/ai-analytics", icon: MessageSquare },
   { title: "Usuarios", url: "/dashboard/admin/users", icon: Users },
-  { title: "Atención al Alumno", url: "/dashboard/admin/support", icon: Headphones },
-  { title: "Certificados", url: "/dashboard/admin/courses", icon: BookOpen },
+  { title: "Cursos", url: "/dashboard/admin/courses", icon: BookOpen },
   { title: "Configurar Cursos", url: "/dashboard/admin/course-settings", icon: Settings },
+  { title: "Solicitar Contenido", url: "/dashboard/admin/orders", icon: Package },
   { title: "Informes", url: "/dashboard/admin/reports", icon: BarChart },
-  { title: "Personalización", url: "/dashboard/admin/settings", icon: GraduationCap },
+  { title: "Atención al Alumno", url: "/dashboard/admin/support", icon: Headphones },
 ];
 
 const teacherItems = [
@@ -96,16 +104,21 @@ export function DashboardSidebar() {
   const { state } = useSidebar();
   const navigate = useNavigate();
   const { role } = useParams();
-  const { signOut } = useAuth();
+  const { signOut, userRole } = useAuth();
 
+  // Determine which menu items to show
+  // super_admin gets platform management menu
+  // admin gets center management menu
   const items = 
+    role === "admin" && userRole === "super_admin" ? superAdminItems :
     role === "admin" ? adminItems : 
     role === "teacher" ? teacherItems : 
     role === "auditor" ? auditorItems :
     studentItems;
   
   const roleLabel = 
-    role === "admin" ? "Administrador" : 
+    userRole === "super_admin" ? "Super Administrador" :
+    role === "admin" ? "Administrador de Centro" : 
     role === "teacher" ? "Docente" : 
     role === "auditor" ? "Auditor SEPE" :
     "Alumno";

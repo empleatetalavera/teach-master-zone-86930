@@ -20,8 +20,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         navigate("/auth", { replace: true });
       } else if (role && userRole && role !== userRole) {
         // User is accessing wrong dashboard, redirect to correct one
-        console.log(`ProtectedRoute: Wrong role, redirecting to /dashboard/${userRole}`);
-        navigate(`/dashboard/${userRole}`, { replace: true });
+        // Note: super_admin can access admin routes
+        if (!(userRole === "super_admin" && role === "admin")) {
+          console.log(`ProtectedRoute: Wrong role, redirecting to /dashboard/${userRole}`);
+          const redirectRole = userRole === "super_admin" ? "admin" : userRole;
+          navigate(`/dashboard/${redirectRole}`, { replace: true });
+        }
       }
     }
   }, [user, userRole, loading, navigate, role]);

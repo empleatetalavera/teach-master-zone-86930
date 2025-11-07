@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import authBackground from "@/assets/auth-background.jpg";
+import { useBranding } from "@/hooks/useBranding";
 
 const emailSchema = z.string().email("Email inválido").max(255, "Email demasiado largo");
 const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 caracteres").max(100, "Contraseña demasiado larga");
@@ -24,11 +25,13 @@ export default function Auth() {
   const { signIn, signUp, resetPassword, user, userRole, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { branding } = useBranding();
 
   useEffect(() => {
     if (!loading && user && userRole) {
       // Redirect based on role
-      if (userRole === "admin") {
+      // super_admin and admin both go to admin dashboard
+      if (userRole === "super_admin" || userRole === "admin") {
         navigate("/dashboard/admin");
       } else if (userRole === "teacher") {
         navigate("/dashboard/teacher");
@@ -160,13 +163,16 @@ export default function Auth() {
         <CardHeader className="space-y-4">
           <div className="flex items-center justify-center">
             <img
-              src="/branding/talentcloud-logo.png"
-              alt="TalentCloud Solutions"
+              src={branding.centerLogo}
+              alt={branding.centerName}
               className="h-20 object-contain"
+              onError={(e) => {
+                e.currentTarget.src = "/branding/talentcloud-logo.png";
+              }}
             />
           </div>
           <div className="text-center">
-            <CardTitle className="text-2xl">Campus Virtual</CardTitle>
+            <CardTitle className="text-2xl">{branding.centerName}</CardTitle>
             <CardDescription>
               {mode === 'reset' ? "Recuperar contraseña" : "Plataforma de formación online"}
             </CardDescription>
