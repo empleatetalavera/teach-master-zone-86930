@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
+import { BrandingProvider } from "@/hooks/useBranding";
 import { CartProvider } from "@/hooks/useCart";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -151,9 +152,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <CartProvider>
-            <AppRoutes />
-          </CartProvider>
+          <BrandingProvider>
+            <CartProvider>
+              <AppRoutes />
+            </CartProvider>
+          </BrandingProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

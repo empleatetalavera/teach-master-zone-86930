@@ -1,16 +1,21 @@
 import { Mail, Phone, MapPin } from "lucide-react";
+import { useBranding } from "@/hooks/useBranding";
 
 export const Footer = () => {
+  const { branding } = useBranding();
+  
   return (
     <footer className="bg-muted/30 border-t border-border/50">
       <div className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Tu LMS
-            </h3>
+            <img 
+              src={branding.centerLogo} 
+              alt={branding.centerName}
+              className="h-12 object-contain"
+            />
             <p className="text-sm text-muted-foreground">
-              Plataforma e-learning profesional para entidades de formación
+              {branding.officialBadge || "Plataforma e-learning profesional"}
             </p>
           </div>
           
@@ -58,7 +63,7 @@ export const Footer = () => {
         </div>
         
         <div className="border-t border-border/50 mt-12 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} TalentCloud Solution. Todos los derechos reservados.</p>
+          <p>{branding.footerText || `© ${new Date().getFullYear()} ${branding.centerName}. Todos los derechos reservados.`}</p>
         </div>
       </div>
     </footer>

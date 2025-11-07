@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2 } from "lucide-react";
+import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2, Building2 } from "lucide-react";
 import { UserRoleManager } from "@/components/UserRoleManager";
 
 interface UserWithRole {
@@ -35,11 +35,14 @@ const AdminUsers = () => {
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserFullName, setNewUserFullName] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "teacher" | "student">("student");
+  const [newUserTrainingCenter, setNewUserTrainingCenter] = useState<string>("");
+  const [trainingCenters, setTrainingCenters] = useState<Array<{ id: string; name: string }>>([]);
   
   const { toast } = useToast();
 
   useEffect(() => {
     loadUsers();
+    loadTrainingCenters();
   }, []);
 
   useEffect(() => {
@@ -114,6 +117,21 @@ const AdminUsers = () => {
     }
   };
 
+  const loadTrainingCenters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("training_centers")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+
+      if (error) throw error;
+      setTrainingCenters(data || []);
+    } catch (error: any) {
+      console.error("Error loading training centers:", error);
+    }
+  };
+
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case "admin":
@@ -183,6 +201,7 @@ const AdminUsers = () => {
           password: newUserPassword,
           fullName: newUserFullName || undefined,
           role: newUserRole,
+          trainingCenterId: newUserTrainingCenter || undefined,
         },
       });
 
@@ -199,6 +218,7 @@ const AdminUsers = () => {
       setNewUserPassword("");
       setNewUserFullName("");
       setNewUserRole("student");
+      setNewUserTrainingCenter("");
       setIsCreateDialogOpen(false);
 
       // Reload users
@@ -463,6 +483,33 @@ const AdminUsers = () => {
               </Select>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="training-center">
+                <Building2 className="inline-block w-4 h-4 mr-1" />
+                Centro de Formación
+              </Label>
+              <Select
+                value={newUserTrainingCenter}
+                onValueChange={setNewUserTrainingCenter}
+                disabled={isCreating}
+              >
+                <SelectTrigger id="training-center">
+                  <SelectValue placeholder="Selecciona un centro (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sin centro asignado</SelectItem>
+                  {trainingCenters.map((center) => (
+                    <SelectItem key={center.id} value={center.id}>
+                      {center.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                El usuario verá el branding del centro seleccionado
+              </p>
+            </div>
+
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 variant="outline"
@@ -472,6 +519,7 @@ const AdminUsers = () => {
                   setNewUserPassword("");
                   setNewUserFullName("");
                   setNewUserRole("student");
+                  setNewUserTrainingCenter("");
                 }}
                 disabled={isCreating}
               >

@@ -1,8 +1,8 @@
-import { getCurrentBranding } from "@/lib/branding";
+import { useBranding } from "@/hooks/useBranding";
 import { Badge } from "@/components/ui/badge";
 
 export function BrandingHeader() {
-  const branding = getCurrentBranding();
+  const { branding } = useBranding();
 
   return (
     <div className="border-b border-border/50 bg-card">

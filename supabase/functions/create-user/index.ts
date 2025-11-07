@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, password, fullName, role } = await req.json();
+    const { email, password, fullName, role, trainingCenterId } = await req.json();
 
     console.log(`Creating user: ${email} with role ${role}`);
 
@@ -153,20 +153,24 @@ serve(async (req) => {
     }
 
     // Create profile if full name provided
-    if (fullName) {
+    if (fullName || trainingCenterId) {
+      const profileData: any = {
+        id: authData.user.id,
+      };
+      
+      if (fullName) profileData.full_name = fullName;
+      if (trainingCenterId) profileData.training_center_id = trainingCenterId;
+
       const { error: profileError } = await supabaseAdmin
         .from("profiles")
-        .insert({
-          id: authData.user.id,
-          full_name: fullName,
-        });
+        .insert(profileData);
 
       if (profileError) {
         console.error("Error creating profile:", profileError);
       }
     }
 
-    console.log(`User created successfully: ${email} with role ${role}`);
+    console.log(`User created successfully: ${email} with role ${role}${trainingCenterId ? ` and training center ${trainingCenterId}` : ''}`);
 
     return new Response(
       JSON.stringify({ 

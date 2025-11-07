@@ -1642,6 +1642,7 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           province: string | null
+          training_center_id: string | null
           updated_at: string | null
           visibility: Database["public"]["Enums"]["profile_visibility"] | null
         }
@@ -1660,6 +1661,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           province?: string | null
+          training_center_id?: string | null
           updated_at?: string | null
           visibility?: Database["public"]["Enums"]["profile_visibility"] | null
         }
@@ -1678,10 +1680,19 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           province?: string | null
+          training_center_id?: string | null
           updated_at?: string | null
           visibility?: Database["public"]["Enums"]["profile_visibility"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "training_centers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quick_response_templates: {
         Row: {
@@ -2303,21 +2314,32 @@ export type Database = {
           created_at: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
+          training_center_id: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           role: Database["public"]["Enums"]["app_role"]
+          training_center_id?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          training_center_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "training_centers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_sessions: {
         Row: {
