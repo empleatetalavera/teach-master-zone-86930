@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Building2, Edit, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Building2, Edit, Trash2, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -46,6 +46,10 @@ export default function AdminTrainingCenters() {
     is_active: true,
   });
 
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
   useEffect(() => {
     loadCenters();
   }, []);
@@ -70,14 +74,103 @@ export default function AdminTrainingCenters() {
     }
   };
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Error",
+          description: "Solo se permiten archivos de imagen",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "El archivo no debe superar 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setLogoFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadLogo = async (): Promise<string | null> => {
+    if (!logoFile) return formData.logo_url;
+
+    try {
+      setIsUploadingLogo(true);
+      
+      // Delete old logo if updating
+      if (editingCenter?.logo_url) {
+        const oldPath = editingCenter.logo_url.split('/').pop();
+        if (oldPath) {
+          await supabase.storage
+            .from('center-logos')
+            .remove([oldPath]);
+        }
+      }
+
+      // Upload new logo
+      const fileExt = logoFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('center-logos')
+        .upload(fileName, logoFile, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('center-logos')
+        .getPublicUrl(fileName);
+
+      return data.publicUrl;
+    } catch (error: any) {
+      toast({
+        title: "Error al subir logo",
+        description: error.message,
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      // Upload logo if a new one was selected
+      const logoUrl = await uploadLogo();
+      
+      const dataToSave = {
+        ...formData,
+        logo_url: logoUrl || formData.logo_url,
+      };
+
       if (editingCenter) {
         const { error } = await supabase
           .from("training_centers")
-          .update(formData)
+          .update(dataToSave)
           .eq("id", editingCenter.id);
 
         if (error) throw error;
@@ -85,7 +178,7 @@ export default function AdminTrainingCenters() {
       } else {
         const { error } = await supabase
           .from("training_centers")
-          .insert([formData]);
+          .insert([dataToSave]);
 
         if (error) throw error;
         toast({ title: "Centro creado correctamente" });
@@ -117,6 +210,8 @@ export default function AdminTrainingCenters() {
       address: center.address || "",
       is_active: center.is_active,
     });
+    setLogoPreview(center.logo_url || null);
+    setLogoFile(null);
     setIsDialogOpen(true);
   };
 
@@ -174,6 +269,8 @@ export default function AdminTrainingCenters() {
       address: "",
       is_active: true,
     });
+    setLogoFile(null);
+    setLogoPreview(null);
   };
 
   return (
@@ -244,30 +341,59 @@ export default function AdminTrainingCenters() {
                 </TabsContent>
 
                 <TabsContent value="branding" className="space-y-4">
-                  <div>
-                    <Label htmlFor="logo_url">URL del Logo</Label>
-                    <Input
-                      id="logo_url"
-                      value={formData.logo_url}
-                      onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                      placeholder="/branding/logo.png"
-                    />
+                  <div className="space-y-2">
+                    <Label htmlFor="logo">Logo del Centro</Label>
+                    <div className="flex flex-col gap-3">
+                      {logoPreview && (
+                        <div className="relative w-32 h-32 border rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                          <img 
+                            src={logoPreview} 
+                            alt="Vista previa del logo" 
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </div>
+                      )}
+                      <Input
+                        id="logo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        className="cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Formatos permitidos: JPG, PNG, SVG. Tamaño máximo: 5MB
+                      </p>
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="primary_color">Color Primario</Label>
-                    <Input
-                      id="primary_color"
-                      value={formData.primary_color}
-                      onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
-                    />
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        id="primary_color"
+                        value={formData.primary_color}
+                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                        className="flex-1"
+                      />
+                      <div 
+                        className="w-10 h-10 rounded border"
+                        style={{ backgroundColor: formData.primary_color }}
+                      />
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="secondary_color">Color Secundario</Label>
-                    <Input
-                      id="secondary_color"
-                      value={formData.secondary_color}
-                      onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
-                    />
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        id="secondary_color"
+                        value={formData.secondary_color}
+                        onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                        className="flex-1"
+                      />
+                      <div 
+                        className="w-10 h-10 rounded border"
+                        style={{ backgroundColor: formData.secondary_color }}
+                      />
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="official_badge">Insignia Oficial</Label>
@@ -275,7 +401,7 @@ export default function AdminTrainingCenters() {
                       id="official_badge"
                       value={formData.official_badge}
                       onChange={(e) => setFormData({ ...formData, official_badge: e.target.value })}
-                      placeholder="Centro Acreditado"
+                      placeholder="Centro Acreditado SEPE"
                     />
                   </div>
                   <div>
@@ -284,6 +410,7 @@ export default function AdminTrainingCenters() {
                       id="footer_text"
                       value={formData.footer_text}
                       onChange={(e) => setFormData({ ...formData, footer_text: e.target.value })}
+                      placeholder="© 2025 - Todos los derechos reservados"
                     />
                   </div>
                 </TabsContent>
@@ -293,8 +420,15 @@ export default function AdminTrainingCenters() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit">
-                  {editingCenter ? "Actualizar" : "Crear"} Centro
+                <Button type="submit" disabled={isUploadingLogo}>
+                  {isUploadingLogo ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Subiendo logo...
+                    </>
+                  ) : (
+                    <>{editingCenter ? "Actualizar" : "Crear"} Centro</>
+                  )}
                 </Button>
               </div>
             </form>
@@ -323,36 +457,66 @@ export default function AdminTrainingCenters() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Logo</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Contacto</TableHead>
-                  <TableHead>Insignia</TableHead>
+                  <TableHead>Colores</TableHead>
                   <TableHead>Estado</TableHead>
-                  <TableHead>Fecha de Registro</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {centers.map((center) => (
                   <TableRow key={center.id}>
-                    <TableCell className="font-medium">{center.name}</TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        <div>{center.contact_email}</div>
-                        <div className="text-muted-foreground">{center.contact_phone}</div>
+                      {center.logo_url ? (
+                        <img 
+                          src={center.logo_url} 
+                          alt={`Logo de ${center.name}`}
+                          className="h-12 w-12 object-contain rounded"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 bg-muted rounded flex items-center justify-center">
+                          <Building2 className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{center.name}</div>
+                        {center.official_badge && (
+                          <Badge variant="secondary" className="mt-1">
+                            {center.official_badge}
+                          </Badge>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      {center.official_badge && (
-                        <Badge variant="secondary">{center.official_badge}</Badge>
-                      )}
+                      <div className="text-sm">
+                        {center.contact_email && <div>{center.contact_email}</div>}
+                        {center.contact_phone && (
+                          <div className="text-muted-foreground">{center.contact_phone}</div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <div 
+                          className="w-6 h-6 rounded border"
+                          style={{ backgroundColor: center.primary_color }}
+                          title="Color primario"
+                        />
+                        <div 
+                          className="w-6 h-6 rounded border"
+                          style={{ backgroundColor: center.secondary_color }}
+                          title="Color secundario"
+                        />
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={center.is_active ? "default" : "secondary"}>
                         {center.is_active ? "Activo" : "Inactivo"}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(center.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
