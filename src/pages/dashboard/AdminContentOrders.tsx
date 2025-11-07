@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Package, Edit, Trash2, Clock, CheckCircle2 } from "lucide-react";
+import { Plus, Package, Edit, Trash2, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
 
 interface ContentOrder {
   id: string;
@@ -40,7 +41,11 @@ export default function AdminContentOrders() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<ContentOrder | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [userCenterId, setUserCenterId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user, userRole } = useAuth();
+
+  const isSuperAdmin = userRole === "super_admin";
 
   const [formData, setFormData] = useState({
     training_center_id: "",
@@ -54,21 +59,56 @@ export default function AdminContentOrders() {
   });
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadUserCenter();
+  }, [user]);
+
+  useEffect(() => {
+    if (userCenterId || isSuperAdmin) {
+      loadData();
+    }
+  }, [userCenterId, isSuperAdmin]);
+
+  const loadUserCenter = async () => {
+    if (!user || isSuperAdmin) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("training_center_id")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+      setUserCenterId(data?.training_center_id || null);
+    } catch (error: any) {
+      console.error("Error loading user center:", error);
+    }
+  };
 
   const loadData = async () => {
     try {
-      const [ordersRes, centersRes] = await Promise.all([
-        supabase
-          .from("content_orders")
-          .select("*, training_centers(name)")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("training_centers")
-          .select("id, name")
-          .eq("is_active", true),
-      ]);
+      let ordersQuery = supabase
+        .from("content_orders")
+        .select("*, training_centers(name)");
+
+      // Filter by center if not super_admin
+      if (!isSuperAdmin && userCenterId) {
+        ordersQuery = ordersQuery.eq("training_center_id", userCenterId);
+      }
+
+      const ordersRes = await ordersQuery.order("created_at", { ascending: false });
+
+      // Load centers - super_admin sees all, admin sees only theirs
+      let centersQuery = supabase
+        .from("training_centers")
+        .select("id, name")
+        .eq("is_active", true);
+
+      if (!isSuperAdmin && userCenterId) {
+        centersQuery = centersQuery.eq("id", userCenterId);
+      }
+
+      const centersRes = await centersQuery;
 
       if (ordersRes.error) throw ordersRes.error;
       if (centersRes.error) throw centersRes.error;
@@ -89,17 +129,43 @@ export default function AdminContentOrders() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Auto-fill center for non-super admin
+    const training_center_id = isSuperAdmin ? formData.training_center_id : userCenterId;
+
+    if (!training_center_id) {
+      toast({
+        title: "Error",
+        description: "No se pudo determinar el centro de formación",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const submitData = {
-      ...formData,
+      training_center_id,
+      content_type: formData.content_type,
+      title: formData.title,
+      description: formData.description || null,
+      status: formData.status,
+      priority: formData.priority,
       price: formData.price ? parseFloat(formData.price) : null,
       due_date: formData.due_date || null,
     };
 
     try {
       if (editingOrder) {
+        // Super_admin can edit all fields, admin can only edit some
+        const updateData = isSuperAdmin 
+          ? submitData 
+          : {
+              title: formData.title,
+              description: formData.description || null,
+              content_type: formData.content_type,
+            };
+
         const { error } = await supabase
           .from("content_orders")
-          .update(submitData)
+          .update(updateData)
           .eq("id", editingOrder.id);
 
         if (error) throw error;
@@ -110,7 +176,12 @@ export default function AdminContentOrders() {
           .insert([submitData]);
 
         if (error) throw error;
-        toast({ title: "Pedido creado correctamente" });
+        toast({ 
+          title: "Solicitud enviada correctamente",
+          description: isSuperAdmin 
+            ? "Pedido creado" 
+            : "Tu solicitud ha sido enviada al equipo de TalentCloudSolution"
+        });
       }
 
       setIsDialogOpen(false);
@@ -126,6 +197,16 @@ export default function AdminContentOrders() {
   };
 
   const handleEdit = (order: ContentOrder) => {
+    // Admin de centro solo puede editar sus propios pedidos pendientes
+    if (!isSuperAdmin && order.status !== "pending") {
+      toast({
+        title: "No permitido",
+        description: "Solo puedes editar pedidos pendientes",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setEditingOrder(order);
     setFormData({
       training_center_id: order.training_center_id,
@@ -141,6 +222,18 @@ export default function AdminContentOrders() {
   };
 
   const handleDelete = async (id: string) => {
+    const order = orders.find(o => o.id === id);
+    
+    // Admin de centro solo puede eliminar pedidos pendientes
+    if (!isSuperAdmin && order?.status !== "pending") {
+      toast({
+        title: "No permitido",
+        description: "Solo puedes eliminar pedidos pendientes",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!confirm("¿Está seguro de eliminar este pedido?")) return;
 
     try {
@@ -223,8 +316,15 @@ export default function AdminContentOrders() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Pedidos de Contenido</h1>
-          <p className="text-muted-foreground">Gestiona los pedidos de contenido de los centros</p>
+          <h1 className="text-3xl font-bold">
+            {isSuperAdmin ? "Pedidos de Contenido" : "Solicitar Contenido"}
+          </h1>
+          <p className="text-muted-foreground">
+            {isSuperAdmin 
+              ? "Gestiona los pedidos de contenido de los centros"
+              : "Solicita cursos y contenido formativo para tu centro"
+            }
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
@@ -233,35 +333,45 @@ export default function AdminContentOrders() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Nuevo Pedido
+              {isSuperAdmin ? "Nuevo Pedido" : "Nueva Solicitud"}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingOrder ? "Editar Pedido" : "Nuevo Pedido de Contenido"}
+                {editingOrder 
+                  ? (isSuperAdmin ? "Editar Pedido" : "Editar Solicitud")
+                  : (isSuperAdmin ? "Nuevo Pedido de Contenido" : "Nueva Solicitud de Contenido")
+                }
               </DialogTitle>
+              {!isSuperAdmin && !editingOrder && (
+                <p className="text-sm text-muted-foreground">
+                  Tu solicitud será revisada por el equipo de TalentCloudSolution
+                </p>
+              )}
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="training_center_id">Centro de Formación *</Label>
-                <Select
-                  value={formData.training_center_id}
-                  onValueChange={(value) => setFormData({ ...formData, training_center_id: value })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar centro" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {centers.map((center) => (
-                      <SelectItem key={center.id} value={center.id}>
-                        {center.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {isSuperAdmin && (
+                <div>
+                  <Label htmlFor="training_center_id">Centro de Formación *</Label>
+                  <Select
+                    value={formData.training_center_id}
+                    onValueChange={(value) => setFormData({ ...formData, training_center_id: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar centro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {centers.map((center) => (
+                        <SelectItem key={center.id} value={center.id}>
+                          {center.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -328,6 +438,7 @@ export default function AdminContentOrders() {
                   <Select
                     value={formData.status}
                     onValueChange={(value) => setFormData({ ...formData, status: value })}
+                    disabled={!isSuperAdmin}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -339,36 +450,48 @@ export default function AdminContentOrders() {
                       <SelectItem value="cancelled">Cancelado</SelectItem>
                     </SelectContent>
                   </Select>
+                  {!isSuperAdmin && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      El estado será actualizado por TalentCloudSolution
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <Label htmlFor="due_date">Fecha de Entrega</Label>
-                  <Input
-                    id="due_date"
-                    type="date"
-                    value={formData.due_date}
-                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  />
-                </div>
+                {isSuperAdmin && (
+                  <div>
+                    <Label htmlFor="due_date">Fecha de Entrega</Label>
+                    <Input
+                      id="due_date"
+                      type="date"
+                      value={formData.due_date}
+                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    />
+                  </div>
+                )}
               </div>
 
-              <div>
-                <Label htmlFor="price">Precio (€)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
-                />
-              </div>
+              {isSuperAdmin && (
+                <div>
+                  <Label htmlFor="price">Precio (€)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
                 <Button type="submit">
-                  {editingOrder ? "Actualizar" : "Crear"} Pedido
+                  {editingOrder 
+                    ? "Actualizar" 
+                    : (isSuperAdmin ? "Crear Pedido" : "Enviar Solicitud")
+                  }
                 </Button>
               </div>
             </form>
@@ -420,9 +543,11 @@ export default function AdminContentOrders() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>Pedidos de Contenido</CardTitle>
+              <CardTitle>
+                {isSuperAdmin ? "Pedidos de Contenido" : "Mis Solicitudes"}
+              </CardTitle>
               <CardDescription>
-                {filteredOrders.length} pedidos
+                {filteredOrders.length} {isSuperAdmin ? "pedidos" : "solicitudes"}
               </CardDescription>
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -450,22 +575,24 @@ export default function AdminContentOrders() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Centro</TableHead>
+                  {isSuperAdmin && <TableHead>Centro</TableHead>}
                   <TableHead>Contenido</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Prioridad</TableHead>
                   <TableHead>Estado</TableHead>
-                  <TableHead>Entrega</TableHead>
-                  <TableHead>Precio</TableHead>
+                  {isSuperAdmin && <TableHead>Entrega</TableHead>}
+                  {isSuperAdmin && <TableHead>Precio</TableHead>}
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">
-                      {order.training_centers.name}
-                    </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell className="font-medium">
+                        {order.training_centers.name}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <div>
                         <div className="font-medium">{order.title}</div>
@@ -487,34 +614,42 @@ export default function AdminContentOrders() {
                     <TableCell>
                       {getStatusBadge(order.status)}
                     </TableCell>
-                    <TableCell>
-                      {order.due_date ? (
-                        <div className="text-sm">
-                          {new Date(order.due_date).toLocaleDateString()}
-                        </div>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {order.price ? `€${order.price.toFixed(2)}` : "-"}
-                    </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell>
+                        {order.due_date ? (
+                          <div className="text-sm">
+                            {new Date(order.due_date).toLocaleDateString()}
+                          </div>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                    )}
+                    {isSuperAdmin && (
+                      <TableCell>
+                        {order.price ? `€${order.price.toFixed(2)}` : "-"}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(order)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(order.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {(isSuperAdmin || order.status === "pending") && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(order)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {(isSuperAdmin || order.status === "pending") && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(order.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

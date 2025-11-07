@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Building2, Edit, Trash2, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -44,6 +45,16 @@ export default function AdminTrainingCenters() {
     contact_phone: "",
     address: "",
     is_active: true,
+  });
+
+  const [licenseData, setLicenseData] = useState({
+    create_license: true,
+    license_type: "basic",
+    max_students: 100,
+    max_teachers: 10,
+    max_courses: 20,
+    duration_months: 12,
+    price: "1500",
   });
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -176,12 +187,48 @@ export default function AdminTrainingCenters() {
         if (error) throw error;
         toast({ title: "Centro actualizado correctamente" });
       } else {
-        const { error } = await supabase
+        // Create center
+        const { data: newCenter, error: centerError } = await supabase
           .from("training_centers")
-          .insert([dataToSave]);
+          .insert([dataToSave])
+          .select()
+          .single();
 
-        if (error) throw error;
-        toast({ title: "Centro creado correctamente" });
+        if (centerError) throw centerError;
+
+        // Create initial license if requested
+        if (licenseData.create_license && newCenter) {
+          const startDate = new Date();
+          const endDate = new Date();
+          endDate.setMonth(endDate.getMonth() + licenseData.duration_months);
+
+          const { error: licenseError } = await supabase
+            .from("licenses")
+            .insert([{
+              training_center_id: newCenter.id,
+              license_type: licenseData.license_type,
+              max_students: licenseData.max_students,
+              max_teachers: licenseData.max_teachers,
+              max_courses: licenseData.max_courses,
+              start_date: startDate.toISOString(),
+              end_date: endDate.toISOString(),
+              price: parseFloat(licenseData.price),
+              is_active: true,
+            }]);
+
+          if (licenseError) {
+            console.error("Error creating license:", licenseError);
+            toast({
+              title: "Centro creado pero hubo un error con la licencia",
+              description: licenseError.message,
+              variant: "destructive",
+            });
+          } else {
+            toast({ title: "Centro y licencia creados correctamente" });
+          }
+        } else {
+          toast({ title: "Centro creado correctamente" });
+        }
       }
 
       setIsDialogOpen(false);
@@ -269,6 +316,15 @@ export default function AdminTrainingCenters() {
       address: "",
       is_active: true,
     });
+    setLicenseData({
+      create_license: true,
+      license_type: "basic",
+      max_students: 100,
+      max_teachers: 10,
+      max_courses: 20,
+      duration_months: 12,
+      price: "1500",
+    });
     setLogoFile(null);
     setLogoPreview(null);
   };
@@ -298,9 +354,10 @@ export default function AdminTrainingCenters() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <Tabs defaultValue="basic">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="basic">Información Básica</TabsTrigger>
                   <TabsTrigger value="branding">Personalización</TabsTrigger>
+                  {!editingCenter && <TabsTrigger value="license">Licencia</TabsTrigger>}
                 </TabsList>
                 
                 <TabsContent value="basic" className="space-y-4">
@@ -414,6 +471,96 @@ export default function AdminTrainingCenters() {
                     />
                   </div>
                 </TabsContent>
+
+                {!editingCenter && (
+                  <TabsContent value="license" className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <input
+                        type="checkbox"
+                        id="create_license"
+                        checked={licenseData.create_license}
+                        onChange={(e) => setLicenseData({ ...licenseData, create_license: e.target.checked })}
+                        className="h-4 w-4 rounded border-input"
+                      />
+                      <Label htmlFor="create_license" className="cursor-pointer">
+                        Crear licencia inicial para este centro
+                      </Label>
+                    </div>
+
+                    {licenseData.create_license && (
+                      <>
+                        <div>
+                          <Label htmlFor="license_type">Tipo de Licencia</Label>
+                          <Select
+                            value={licenseData.license_type}
+                            onValueChange={(value) => setLicenseData({ ...licenseData, license_type: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="basic">Básica</SelectItem>
+                              <SelectItem value="professional">Profesional</SelectItem>
+                              <SelectItem value="enterprise">Enterprise</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <Label htmlFor="max_students">Máx. Alumnos</Label>
+                            <Input
+                              id="max_students"
+                              type="number"
+                              value={licenseData.max_students}
+                              onChange={(e) => setLicenseData({ ...licenseData, max_students: parseInt(e.target.value) })}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="max_teachers">Máx. Profesores</Label>
+                            <Input
+                              id="max_teachers"
+                              type="number"
+                              value={licenseData.max_teachers}
+                              onChange={(e) => setLicenseData({ ...licenseData, max_teachers: parseInt(e.target.value) })}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="max_courses">Máx. Cursos</Label>
+                            <Input
+                              id="max_courses"
+                              type="number"
+                              value={licenseData.max_courses}
+                              onChange={(e) => setLicenseData({ ...licenseData, max_courses: parseInt(e.target.value) })}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="duration_months">Duración (meses)</Label>
+                            <Input
+                              id="duration_months"
+                              type="number"
+                              value={licenseData.duration_months}
+                              onChange={(e) => setLicenseData({ ...licenseData, duration_months: parseInt(e.target.value) })}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="price">Precio (€)</Label>
+                            <Input
+                              id="price"
+                              type="number"
+                              step="0.01"
+                              value={licenseData.price}
+                              onChange={(e) => setLicenseData({ ...licenseData, price: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </TabsContent>
+                )}
               </Tabs>
 
               <div className="flex justify-end gap-2 pt-4">
