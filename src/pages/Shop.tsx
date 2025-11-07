@@ -4,9 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, ShoppingCart, TrendingDown } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Package, ShoppingCart, TrendingDown, Calculator, TrendingUp, Percent } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const hoursPacks = [
   {
@@ -44,51 +47,64 @@ const hoursPacks = [
   },
 ];
 
-const competitorPrices = [
-  {
-    name: "ADR Formación",
-    prices: {
-      small: "2.400€ / 2.000h",
-      medium: "5.500€ / 5.000h",
-      large: "10.000€ / 10.000h",
-      xlarge: "18.000€ / 20.000h"
-    },
-    pricePerHour: "0.90€ - 1.20€/hora"
-  },
-  {
-    name: "Vértice Formación",
-    prices: {
-      small: "2.200€ / 2.000h",
-      medium: "5.000€ / 5.000h",
-      large: "9.500€ / 10.000h",
-      xlarge: "17.500€ / 20.000h"
-    },
-    pricePerHour: "0.85€ - 1.10€/hora"
-  },
-  {
-    name: "TalentCloud (Nosotros)",
-    prices: {
-      small: "1.900€ / 2.000h",
-      medium: "4.000€ / 5.000h",
-      large: "7.000€ / 10.000h",
-      xlarge: "12.000€ / 20.000h"
-    },
-    pricePerHour: "0.60€ - 0.95€/hora",
-    highlight: true
-  }
+// Función para calcular precio basado en horas
+const calculatePrice = (hours: number) => {
+  if (hours <= 2000) return { pricePerHour: 0.95, total: hours * 0.95 };
+  if (hours <= 5000) return { pricePerHour: 0.80, total: hours * 0.80 };
+  if (hours <= 10000) return { pricePerHour: 0.70, total: hours * 0.70 };
+  return { pricePerHour: 0.60, total: hours * 0.60 };
+};
+
+// Precio estándar del mercado (promedio de competidores)
+const calculateMarketPrice = (hours: number) => {
+  if (hours <= 2000) return hours * 1.10;
+  if (hours <= 5000) return hours * 1.00;
+  if (hours <= 10000) return hours * 0.90;
+  return hours * 0.85;
+};
+
+// Precios para compra por volumen (por licencia)
+const volumePricing = [
+  { min: 1, max: 9, pricePerLicense: 1.50 },
+  { min: 10, max: 24, pricePerLicense: 1.30 },
+  { min: 25, max: 49, pricePerLicense: 1.10 },
+  { min: 50, max: 99, pricePerLicense: 0.90 },
+  { min: 100, max: 199, pricePerLicense: 0.75 },
+  { min: 200, max: Infinity, pricePerLicense: 0.65 }
 ];
+
+const getVolumePrice = (licenses: number, courseHours: number) => {
+  const tier = volumePricing.find(t => licenses >= t.min && licenses <= t.max);
+  if (!tier) return 0;
+  return licenses * courseHours * tier.pricePerLicense;
+};
+
+const getVolumePricePerHour = (licenses: number) => {
+  const tier = volumePricing.find(t => licenses >= t.min && licenses <= t.max);
+  return tier?.pricePerLicense || 1.50;
+};
 
 export default function Shop() {
   const { addToCart } = useCart();
+  const [calculatorHours, setCalculatorHours] = useState(5000);
+  const [volumeLicenses, setVolumeLicenses] = useState(25);
+  const [volumeCourseHours, setVolumeCourseHours] = useState(25);
 
   const handleAddPack = async (pack: typeof hoursPacks[0]) => {
-    // For now, we'll show a message that users should contact for custom packs
-    // In a real implementation, these would be products in the database
     toast.info(
       `Para adquirir ${pack.name}, contacta con nuestro equipo comercial en comercial@talentcloudsolution.es`,
       { duration: 5000 }
     );
   };
+
+  const ourPrice = calculatePrice(calculatorHours);
+  const marketPrice = calculateMarketPrice(calculatorHours);
+  const savings = marketPrice - ourPrice.total;
+  const savingsPercentage = ((savings / marketPrice) * 100).toFixed(0);
+
+  const volumeTotal = getVolumePrice(volumeLicenses, volumeCourseHours);
+  const volumePricePerLicense = volumeTotal / volumeLicenses;
+  const volumePricePerHour = getVolumePricePerHour(volumeLicenses);
 
   return (
     <main className="min-h-screen">
@@ -175,47 +191,109 @@ export default function Shop() {
                 ))}
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card className="bg-muted/50 border-primary/20">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Package className="w-5 h-5" />
-                      ¿Por qué comprar un pack de horas?
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2 text-muted-foreground">
-                      <li>✓ Flexibilidad total para usar las horas en cualquier curso del catálogo</li>
-                      <li>✓ Mejor precio por hora cuanto mayor es el pack</li>
-                      <li>✓ Ahorro significativo vs. compra individual</li>
-                      <li>✓ Válido durante 365 días desde la compra</li>
-                      <li>✓ Gestión centralizada de todas tus licencias</li>
-                    </ul>
-                  </CardContent>
-                </Card>
+              {/* Calculadora de Precios */}
+              <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="w-5 h-5" />
+                    Calculadora de Ahorro
+                  </CardTitle>
+                  <CardDescription>
+                    Ajusta las horas para ver tu ahorro comparado con el precio estándar del mercado
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="text-sm font-medium">Horas de formación</label>
+                      <Badge variant="secondary" className="text-lg px-3">
+                        {calculatorHours.toLocaleString()} horas
+                      </Badge>
+                    </div>
+                    <Slider
+                      value={[calculatorHours]}
+                      onValueChange={(value) => setCalculatorHours(value[0])}
+                      min={1000}
+                      max={25000}
+                      step={1000}
+                      className="mb-2"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>1.000h</span>
+                      <span>25.000h</span>
+                    </div>
+                  </div>
 
-                <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/30">
-                  <CardHeader>
-                    <CardTitle className="text-primary">🏆 Precios más competitivos</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {competitorPrices.map((competitor) => (
-                      <div 
-                        key={competitor.name} 
-                        className={`p-3 rounded-lg ${competitor.highlight ? 'bg-primary/20 border-2 border-primary' : 'bg-background/50'}`}
-                      >
-                        <div className="font-semibold flex items-center gap-2">
-                          {competitor.name}
-                          {competitor.highlight && <Badge className="text-xs">¡Mejor precio!</Badge>}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Card className="bg-background/50">
+                      <CardContent className="pt-6">
+                        <div className="text-sm text-muted-foreground mb-2">Precio mercado</div>
+                        <div className="text-2xl font-bold text-muted-foreground line-through">
+                          {marketPrice.toLocaleString('es-ES', { minimumFractionDigits: 2 })}€
                         </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          {competitor.pricePerHour}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-primary/20 border-primary">
+                      <CardContent className="pt-6">
+                        <div className="text-sm text-primary-foreground/80 mb-2">Tu precio TalentCloud</div>
+                        <div className="text-2xl font-bold text-primary">
+                          {ourPrice.total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}€
+                        </div>
+                        <div className="text-xs text-primary-foreground/80 mt-1">
+                          {ourPrice.pricePerHour}€/hora
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card className="bg-secondary/20 border-secondary">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-secondary" />
+                          <span className="font-semibold">Ahorro total</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-secondary">
+                            {savings.toLocaleString('es-ES', { minimumFractionDigits: 2 })}€
+                          </div>
+                          <Badge variant="secondary" className="mt-1">
+                            <Percent className="w-3 h-3 mr-1" />
+                            {savingsPercentage}% menos
+                          </Badge>
                         </div>
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="pt-4 border-t">
+                    <div className="text-sm text-muted-foreground mb-3">Ventajas incluidas:</div>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                        <span>Flexibilidad total en el uso de horas</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                        <span>Válido durante 365 días</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                        <span>Sin costes adicionales de mantenimiento</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                        <span>Soporte técnico incluido</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <Button className="w-full" size="lg" onClick={() => handleAddPack(hoursPacks[1])}>
+                    Solicitar Presupuesto Personalizado
+                  </Button>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="volume" className="space-y-8">
@@ -230,55 +308,119 @@ export default function Shop() {
                 </p>
               </div>
 
+              {/* Calculadora de Volumen */}
               <Card className="max-w-4xl mx-auto">
                 <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10">
-                  <CardTitle className="text-2xl text-center">
-                    Ejemplo de dos compras de la misma licencia
+                  <CardTitle className="text-2xl text-center flex items-center justify-center gap-2">
+                    <Calculator className="w-6 h-6" />
+                    Calculadora de Precio por Volumen
                   </CardTitle>
+                  <CardDescription className="text-center">
+                    Personaliza el número de licencias y horas para calcular tu precio
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="pt-8">
-                  <div className="text-center mb-6">
-                    <div className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold mb-6">
-                      Acción formativa: PowerPoint 2010 básico (25 horas)
+                <CardContent className="pt-8 space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium mb-3 block">Número de licencias</label>
+                      <Select value={volumeLicenses.toString()} onValueChange={(val) => setVolumeLicenses(Number(val))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5 licencias</SelectItem>
+                          <SelectItem value="10">10 licencias</SelectItem>
+                          <SelectItem value="25">25 licencias</SelectItem>
+                          <SelectItem value="50">50 licencias</SelectItem>
+                          <SelectItem value="100">100 licencias</SelectItem>
+                          <SelectItem value="200">200 licencias</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium mb-3 block">Horas del curso</label>
+                      <Select value={volumeCourseHours.toString()} onValueChange={(val) => setVolumeCourseHours(Number(val))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10 horas</SelectItem>
+                          <SelectItem value="15">15 horas</SelectItem>
+                          <SelectItem value="20">20 horas</SelectItem>
+                          <SelectItem value="25">25 horas</SelectItem>
+                          <SelectItem value="30">30 horas</SelectItem>
+                          <SelectItem value="40">40 horas</SelectItem>
+                          <SelectItem value="50">50 horas</SelectItem>
+                          <SelectItem value="60">60 horas</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <Card className="bg-muted/30">
-                      <CardContent className="pt-6 space-y-3">
-                        <div className="text-center">
-                          <div className="text-lg font-semibold">Compra de 10 licencias = 320 €</div>
-                          <div className="text-2xl font-bold text-primary my-3">32 €/licencia</div>
-                          <div className="text-sm text-muted-foreground">
-                            (25 horas × <span className="font-semibold text-primary">1,28 €/hora</span>)
+                  <Card className="bg-gradient-to-br from-primary/5 to-secondary/5">
+                    <CardContent className="pt-6">
+                      <div className="grid md:grid-cols-3 gap-4 text-center">
+                        <div>
+                          <div className="text-sm text-muted-foreground mb-2">Precio por hora</div>
+                          <div className="text-2xl font-bold text-primary">
+                            {volumePricePerHour.toFixed(2)}€
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-muted/30">
-                      <CardContent className="pt-6 space-y-3">
-                        <div className="text-center">
-                          <div className="text-lg font-semibold">Compra de 50 licencias = 975 €</div>
-                          <div className="text-2xl font-bold text-secondary my-3">19,50 €/licencia</div>
-                          <div className="text-sm text-muted-foreground">
-                            (25 horas × <span className="font-semibold text-secondary">0,78 €/hora</span>)
+                        <div>
+                          <div className="text-sm text-muted-foreground mb-2">Precio por licencia</div>
+                          <div className="text-2xl font-bold text-primary">
+                            {volumePricePerLicense.toFixed(2)}€
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                        <div>
+                          <div className="text-sm text-muted-foreground mb-2">Total</div>
+                          <div className="text-3xl font-bold text-primary">
+                            {volumeTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}€
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                  <div className="mt-8 text-center">
-                    <p className="text-muted-foreground mb-4">
-                      Desde la sección <Button variant="link" className="px-1" asChild>
-                        <a href="/catalog">catálogo</a>
-                      </Button> puedes acceder a la información del precio/hora: 
-                      solo tienes que seleccionar el curso e introducir el número de licencias que quieres comprar.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
+                  <Card className="bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Tabla de Descuentos por Volumen</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {volumePricing.map((tier, index) => (
+                          <div 
+                            key={index}
+                            className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                              volumeLicenses >= tier.min && volumeLicenses <= tier.max
+                                ? 'bg-primary/20 border-2 border-primary'
+                                : 'bg-background/50'
+                            }`}
+                          >
+                            <span className="font-medium">
+                              {tier.min} - {tier.max === Infinity ? '+' : tier.max} licencias
+                            </span>
+                            <div className="text-right">
+                              <Badge variant={volumeLicenses >= tier.min && volumeLicenses <= tier.max ? "default" : "secondary"}>
+                                {tier.pricePerLicense.toFixed(2)}€/hora
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="text-center space-y-4">
+                    <p className="text-muted-foreground">
                       Dispondrás de 365 días desde la fecha de la compra para consumir las licencias adquiridas.
                     </p>
+                    <Button size="lg" asChild>
+                      <a href="/client-portal/catalog">
+                        Ver Catálogo Completo de Cursos
+                      </a>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
