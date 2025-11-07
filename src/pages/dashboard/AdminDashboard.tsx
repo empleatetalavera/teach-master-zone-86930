@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Key, Package, AlertCircle, TrendingUp, CheckCircle2, Clock, Users, BookOpen, BarChart3, ArrowRight, Phone, Mail, MapPin, Building, FileText } from "lucide-react";
+import { Building2, Key, Package, AlertCircle, TrendingUp, CheckCircle2, Clock, Users, BookOpen, BarChart3, ArrowRight, Phone, Mail, MapPin, Building, FileText, Link2, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { Input } from "@/components/ui/input";
 
 interface DashboardStats {
   totalCenters: number;
@@ -59,6 +60,7 @@ const AdminDashboard = () => {
   const [centerInfo, setCenterInfo] = useState<CenterInfo | null>(null);
   const [centerCourses, setCenterCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedLink, setCopiedLink] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -225,6 +227,21 @@ const AdminDashboard = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const copyLoginLink = () => {
+    if (!centerInfo?.slug) return;
+    
+    const loginUrl = `${window.location.origin}/auth?center=${centerInfo.slug}`;
+    navigator.clipboard.writeText(loginUrl);
+    setCopiedLink(true);
+    
+    toast({
+      title: "Enlace copiado",
+      description: "El enlace de acceso ha sido copiado al portapapeles",
+    });
+    
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -388,6 +405,51 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
+
+          {/* Center Login Link */}
+          {centerInfo.slug && (
+            <div className="mt-6 pt-6 border-t border-border/50">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Link2 className="w-4 h-4" />
+                  Enlace de Acceso del Centro
+                </h3>
+              </div>
+              <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Este es el enlace único de acceso para su centro. Compártalo con sus alumnos y profesores para que accedan al campus con la imagen corporativa de su centro.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={`${window.location.origin}/auth?center=${centerInfo.slug}`}
+                    className="font-mono text-sm bg-background"
+                  />
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={copyLoginLink}
+                    className="shrink-0"
+                  >
+                    {copiedLink ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(`/auth?center=${centerInfo.slug}`, '_blank')}
+                  >
+                    Ver página de acceso
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Courses in SEPE */}
           {centerCourses.length > 0 && (
