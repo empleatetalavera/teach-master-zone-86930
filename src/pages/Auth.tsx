@@ -35,6 +35,30 @@ export default function Auth() {
   
   console.log('[Auth] Branding state:', { branding, loading: brandingLoading });
 
+  // Apply center colors to CSS variables
+  useEffect(() => {
+    if (branding && !brandingLoading) {
+      const root = document.documentElement;
+      
+      // Parse HSL values
+      const parsePrimaryColor = (hslString: string): string => {
+        const match = hslString.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+        if (match) {
+          return `${match[1]} ${match[2]}% ${match[3]}%`;
+        }
+        return hslString;
+      };
+      
+      const primaryColorValue = parsePrimaryColor(branding.primaryColor);
+      const secondaryColorValue = parsePrimaryColor(branding.secondaryColor);
+      
+      root.style.setProperty('--primary', primaryColorValue);
+      root.style.setProperty('--secondary', secondaryColorValue);
+      
+      console.log('[Auth] Applied colors:', { primaryColorValue, secondaryColorValue });
+    }
+  }, [branding, brandingLoading]);
+
   useEffect(() => {
     if (!loading && user && userRole) {
       // Redirect based on role

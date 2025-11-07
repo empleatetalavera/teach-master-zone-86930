@@ -48,12 +48,19 @@ export function useCenterBranding(centerSlug?: string | null) {
           .select('*')
           .eq('slug', centerSlug)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         console.log('[useCenterBranding] Query result:', { center, error });
 
-        if (error || !center) {
-          console.warn(`[useCenterBranding] Center not found for slug: ${centerSlug}`, error);
+        if (error) {
+          console.error('[useCenterBranding] Database error:', error);
+          setBranding(defaultBranding);
+          setLoading(false);
+          return;
+        }
+
+        if (!center) {
+          console.warn(`[useCenterBranding] Center not found for slug: ${centerSlug}`);
           setBranding(defaultBranding);
           setLoading(false);
           return;
