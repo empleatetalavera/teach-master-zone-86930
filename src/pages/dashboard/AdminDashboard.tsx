@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Key, Package, AlertCircle, TrendingUp, CheckCircle2, Clock, Users, BookOpen, BarChart3, ArrowRight } from "lucide-react";
+import { Building2, Key, Package, AlertCircle, TrendingUp, CheckCircle2, Clock, Users, BookOpen, BarChart3, ArrowRight, Phone, Mail, MapPin, Building, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
 
 interface DashboardStats {
   totalCenters: number;
@@ -27,6 +28,21 @@ interface RecentActivity {
   status?: string;
 }
 
+interface CenterInfo {
+  id: string;
+  name: string;
+  sepe_registry_number: string | null;
+  census_code: string | null;
+  cif: string | null;
+  address: string | null;
+  city: string | null;
+  postal_code: string | null;
+  province: string | null;
+  region: string | null;
+  phone: string | null;
+  email: string | null;
+}
+
 const AdminDashboard = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalCenters: 0,
@@ -39,9 +55,12 @@ const AdminDashboard = () => {
     completedOrders: 0,
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [centerInfo, setCenterInfo] = useState<CenterInfo | null>(null);
+  const [centerCourses, setCenterCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadDashboardData();
@@ -49,6 +68,33 @@ const AdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
+      // Fetch current user's training center
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("training_center_id")
+        .eq("id", user?.id)
+        .single();
+
+      if (profile?.training_center_id) {
+        const { data: center } = await supabase
+          .from("training_centers")
+          .select("*")
+          .eq("id", profile.training_center_id)
+          .single();
+
+        if (center) {
+          setCenterInfo(center as unknown as CenterInfo);
+
+          // Fetch courses for this center
+          const { data: courses } = await supabase
+            .from("courses")
+            .select("*")
+            .eq("training_center_id", profile.training_center_id);
+          
+          setCenterCourses(courses || []);
+        }
+      }
+
       // Fetch training centers
       const { data: centers, error: centersError } = await supabase
         .from("training_centers")
@@ -197,6 +243,150 @@ const AdminDashboard = () => {
           Gestión multi-centro y visión general de la plataforma
         </p>
       </div>
+
+      {/* Mi Centro Section */}
+      {centerInfo && (
+        <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <Building className="w-5 h-5" />
+              Mi Centro - {centerInfo.name}
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/dashboard/admin/center-settings")}
+            >
+              Editar
+            </Button>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* SEPE Registry Info */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                Registro SEPE
+              </h3>
+              <div className="space-y-2">
+                {centerInfo.sepe_registry_number && (
+                  <div className="flex items-start gap-2">
+                    <FileText className="w-4 h-4 mt-0.5 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Código SEPE</p>
+                      <p className="font-medium">{centerInfo.sepe_registry_number}</p>
+                    </div>
+                  </div>
+                )}
+                {centerInfo.cif && (
+                  <div className="flex items-start gap-2">
+                    <FileText className="w-4 h-4 mt-0.5 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">CIF</p>
+                      <p className="font-medium">{centerInfo.cif}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Contact Info */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                Contacto
+              </h3>
+              <div className="space-y-2">
+                {centerInfo.phone && (
+                  <div className="flex items-start gap-2">
+                    <Phone className="w-4 h-4 mt-0.5 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Teléfono</p>
+                      <p className="font-medium">{centerInfo.phone}</p>
+                    </div>
+                  </div>
+                )}
+                {centerInfo.email && (
+                  <div className="flex items-start gap-2">
+                    <Mail className="w-4 h-4 mt-0.5 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <p className="font-medium">{centerInfo.email}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Location Info */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                Ubicación
+              </h3>
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 mt-0.5 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Dirección</p>
+                  {centerInfo.address && <p className="font-medium">{centerInfo.address}</p>}
+                  {(centerInfo.postal_code || centerInfo.city) && (
+                    <p className="font-medium">
+                      {centerInfo.postal_code} {centerInfo.city}
+                    </p>
+                  )}
+                  {centerInfo.province && (
+                    <p className="text-sm text-muted-foreground">{centerInfo.province}</p>
+                  )}
+                  {centerInfo.region && (
+                    <p className="text-sm text-muted-foreground">{centerInfo.region}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Courses in SEPE */}
+          {centerCourses.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-border/50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Cursos del Centro ({centerCourses.length})
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/dashboard/admin/courses")}
+                >
+                  Ver todos
+                </Button>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {centerCourses.slice(0, 6).map((course) => (
+                  <div
+                    key={course.id}
+                    className="p-3 bg-background rounded-lg border border-border/50 hover:border-primary/50 transition-all"
+                  >
+                    <p className="font-medium text-sm line-clamp-2">{course.title}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant={course.is_active ? "default" : "secondary"} className="text-xs">
+                        {course.is_active ? "Activo" : "Inactivo"}
+                      </Badge>
+                      {course.duration_hours && (
+                        <span className="text-xs text-muted-foreground">
+                          {course.duration_hours}h
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {centerCourses.length > 6 && (
+                <p className="text-xs text-muted-foreground text-center mt-3">
+                  y {centerCourses.length - 6} cursos más
+                </p>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Quick Access Section */}
       <Card className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5">
