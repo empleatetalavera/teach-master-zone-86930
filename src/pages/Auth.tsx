@@ -25,10 +25,15 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const centerSlug = searchParams.get('center');
   
+  console.log('[Auth] Current URL search params:', window.location.search);
+  console.log('[Auth] Center slug extracted:', centerSlug);
+  
   const { signIn, signUp, resetPassword, user, userRole, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { branding, loading: brandingLoading } = useCenterBranding(centerSlug);
+  
+  console.log('[Auth] Branding state:', { branding, loading: brandingLoading });
 
   useEffect(() => {
     if (!loading && user && userRole) {

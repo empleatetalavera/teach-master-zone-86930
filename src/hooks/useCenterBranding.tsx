@@ -31,13 +31,18 @@ export function useCenterBranding(centerSlug?: string | null) {
 
   useEffect(() => {
     const loadCenterBranding = async () => {
+      console.log('[useCenterBranding] Starting load with slug:', centerSlug);
+      
       if (!centerSlug) {
+        console.log('[useCenterBranding] No slug provided, using default branding');
         setBranding(defaultBranding);
         setLoading(false);
         return;
       }
 
       try {
+        console.log('[useCenterBranding] Querying training_centers with slug:', centerSlug);
+        
         const { data: center, error } = await supabase
           .from('training_centers')
           .select('*')
@@ -45,8 +50,10 @@ export function useCenterBranding(centerSlug?: string | null) {
           .eq('is_active', true)
           .single();
 
+        console.log('[useCenterBranding] Query result:', { center, error });
+
         if (error || !center) {
-          console.warn(`Center not found for slug: ${centerSlug}`);
+          console.warn(`[useCenterBranding] Center not found for slug: ${centerSlug}`, error);
           setBranding(defaultBranding);
           setLoading(false);
           return;
@@ -62,9 +69,10 @@ export function useCenterBranding(centerSlug?: string | null) {
           slug: center.slug,
         };
 
+        console.log('[useCenterBranding] Center branding loaded successfully:', centerBranding);
         setBranding(centerBranding);
       } catch (error) {
-        console.error('Error loading center branding:', error);
+        console.error('[useCenterBranding] Error loading center branding:', error);
         setBranding(defaultBranding);
       } finally {
         setLoading(false);
