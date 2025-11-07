@@ -27,22 +27,16 @@ export const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <a
-              href="/#features"
+              href="/features"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Características
             </a>
             <a
-              href="/#benefits"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Beneficios
-            </a>
-            <a
               href="/shop"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Tienda
+              Tarifas
             </a>
             <ShoppingCartWidget />
             <Button variant="outline" asChild>
@@ -68,25 +62,18 @@ export const Navbar = () => {
           <div className="md:hidden py-4 border-t border-border/40">
             <div className="flex flex-col gap-4">
               <a
-                href="/#features"
+                href="/features"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Características
               </a>
               <a
-                href="/#benefits"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Beneficios
-              </a>
-              <a
                 href="/shop"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Tienda
+                Tarifas
               </a>
               <Button variant="outline" asChild className="w-full">
                 <a href="/demo">Ver Demo</a>

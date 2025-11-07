@@ -13,6 +13,7 @@ import { useSessionTracker } from "@/hooks/useSessionTracker";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import Platform from "./pages/Platform";
+import Features from "./pages/Features";
 import CaseStudies from "./pages/CaseStudies";
 import Documentation from "./pages/Documentation";
 import About from "./pages/About";
@@ -73,6 +74,7 @@ function AppRoutes() {
         <Route path="/" element={<Index />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/platform" element={<Platform />} />
+        <Route path="/features" element={<Features />} />
         <Route path="/case-studies" element={<CaseStudies />} />
         <Route path="/documentation" element={<Documentation />} />
         <Route path="/about" element={<About />} />

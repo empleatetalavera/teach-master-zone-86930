@@ -12,32 +12,70 @@ const hoursPacks = [
   {
     name: "PACK - One",
     hours: 2000,
-    pricePerHour: 0.80,
-    totalPrice: 1600,
+    pricePerHour: 0.95,
+    totalPrice: 1900,
     description: "Ideal para centros pequeños que están comenzando",
+    savings: "Ahorro del 5%"
   },
   {
     name: "PACK - Basic",
     hours: 5000,
-    pricePerHour: 0.66,
-    totalPrice: 3300,
+    pricePerHour: 0.80,
+    totalPrice: 4000,
     description: "Perfecto para centros en crecimiento",
     popular: true,
+    savings: "Ahorro del 20%"
   },
   {
     name: "PACK - Medium",
     hours: 10000,
-    pricePerHour: 0.56,
-    totalPrice: 5600,
+    pricePerHour: 0.70,
+    totalPrice: 7000,
     description: "Para centros con alta demanda",
+    savings: "Ahorro del 30%"
   },
   {
     name: "PACK - Plus",
     hours: 20000,
-    pricePerHour: 0.46,
-    totalPrice: 9200,
+    pricePerHour: 0.60,
+    totalPrice: 12000,
     description: "La mejor opción para grandes centros",
+    savings: "Ahorro del 40%"
   },
+];
+
+const competitorPrices = [
+  {
+    name: "ADR Formación",
+    prices: {
+      small: "2.400€ / 2.000h",
+      medium: "5.500€ / 5.000h",
+      large: "10.000€ / 10.000h",
+      xlarge: "18.000€ / 20.000h"
+    },
+    pricePerHour: "0.90€ - 1.20€/hora"
+  },
+  {
+    name: "Vértice Formación",
+    prices: {
+      small: "2.200€ / 2.000h",
+      medium: "5.000€ / 5.000h",
+      large: "9.500€ / 10.000h",
+      xlarge: "17.500€ / 20.000h"
+    },
+    pricePerHour: "0.85€ - 1.10€/hora"
+  },
+  {
+    name: "TalentCloud (Nosotros)",
+    prices: {
+      small: "1.900€ / 2.000h",
+      medium: "4.000€ / 5.000h",
+      large: "7.000€ / 10.000h",
+      xlarge: "12.000€ / 20.000h"
+    },
+    pricePerHour: "0.60€ - 0.95€/hora",
+    highlight: true
+  }
 ];
 
 export default function Shop() {
@@ -111,11 +149,17 @@ export default function Shop() {
                         <div className="text-lg font-semibold text-muted-foreground mt-2">
                           {pack.pricePerHour}€/hora
                         </div>
+                        {pack.savings && (
+                          <Badge variant="secondary" className="mt-2">
+                            {pack.savings}
+                          </Badge>
+                        )}
                       </div>
                       <div className="border-t pt-4">
                         <div className="text-center">
-                          <span className="text-sm text-muted-foreground">Precio:</span>
+                          <span className="text-sm text-muted-foreground">Precio Total:</span>
                           <div className="text-2xl font-bold">{pack.totalPrice.toLocaleString()}€</div>
+                          <div className="text-xs text-muted-foreground mt-1">IVA no incluido</div>
                         </div>
                       </div>
                       <Button 
@@ -124,30 +168,54 @@ export default function Shop() {
                         onClick={() => handleAddPack(pack)}
                       >
                         <ShoppingCart className="w-4 h-4 mr-2" />
-                        Añadir a la cesta
+                        Solicitar
                       </Button>
                     </CardContent>
                   </Card>
                 ))}
               </div>
 
-              <Card className="bg-muted/50 border-primary/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="w-5 h-5" />
-                    ¿Por qué comprar un pack de horas?
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-muted-foreground">
-                    <li>✓ Flexibilidad total para usar las horas en cualquier curso del catálogo</li>
-                    <li>✓ Mejor precio por hora cuanto mayor es el pack</li>
-                    <li>✓ Ahorro significativo vs. compra individual</li>
-                    <li>✓ Válido durante 365 días desde la compra</li>
-                    <li>✓ Gestión centralizada de todas tus licencias</li>
-                  </ul>
-                </CardContent>
-              </Card>
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="bg-muted/50 border-primary/20">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5" />
+                      ¿Por qué comprar un pack de horas?
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 text-muted-foreground">
+                      <li>✓ Flexibilidad total para usar las horas en cualquier curso del catálogo</li>
+                      <li>✓ Mejor precio por hora cuanto mayor es el pack</li>
+                      <li>✓ Ahorro significativo vs. compra individual</li>
+                      <li>✓ Válido durante 365 días desde la compra</li>
+                      <li>✓ Gestión centralizada de todas tus licencias</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/30">
+                  <CardHeader>
+                    <CardTitle className="text-primary">🏆 Precios más competitivos</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {competitorPrices.map((competitor) => (
+                      <div 
+                        key={competitor.name} 
+                        className={`p-3 rounded-lg ${competitor.highlight ? 'bg-primary/20 border-2 border-primary' : 'bg-background/50'}`}
+                      >
+                        <div className="font-semibold flex items-center gap-2">
+                          {competitor.name}
+                          {competitor.highlight && <Badge className="text-xs">¡Mejor precio!</Badge>}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {competitor.pricePerHour}
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="volume" className="space-y-8">
