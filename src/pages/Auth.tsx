@@ -107,46 +107,6 @@ export default function Auth() {
     setIsLoading(false);
   };
 
-  const handleDemoAccess = async (role: 'student' | 'teacher' | 'admin' | 'auditor') => {
-    setIsLoading(true);
-    try {
-      console.log(`Creating demo session for role: ${role}`);
-      
-      const { data, error } = await supabase.functions.invoke('create-demo-session', {
-        body: { role }
-      });
-
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error || 'Failed to create demo session');
-
-      console.log('Demo session created:', data);
-
-      // Set the session
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-      });
-
-      if (sessionError) throw sessionError;
-
-      toast({ 
-        title: 'Bienvenido', 
-        description: data.message || `Acceso como ${role} concedido` 
-      });
-      
-      // Navigate to appropriate dashboard
-      navigate(`/dashboard/${role}`);
-    } catch (error: any) {
-      console.error(`Error creating demo ${role}:`, error);
-      toast({ 
-        title: 'Error', 
-        description: error.message || `Error al acceder como ${role}`, 
-        variant: 'destructive' 
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -283,54 +243,14 @@ export default function Auth() {
                   "Iniciar Sesión"
                 )}
               </Button>
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="link"
-                  className="w-full"
-                  onClick={() => setMode('reset')}
-                >
-                  ¿Olvidaste tu contraseña?
-                </Button>
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() => handleDemoAccess('student')}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Alumno"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() => handleDemoAccess('teacher')}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Tutora"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() => handleDemoAccess('admin')}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Administrador"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() => handleDemoAccess('auditor')}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Auditor"}
-                  </Button>
-                </div>
-              </div>
+              <Button
+                type="button"
+                variant="link"
+                className="w-full"
+                onClick={() => setMode('reset')}
+              >
+                ¿Olvidaste tu contraseña?
+              </Button>
             </form>
           )}
 

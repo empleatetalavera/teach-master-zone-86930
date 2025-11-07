@@ -11,14 +11,22 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        navigate("/auth");
+        // User is not authenticated, redirect to auth
+        console.log("ProtectedRoute: No user, redirecting to /auth");
+        navigate("/auth", { replace: true });
+      } else if (!userRole) {
+        // User has no role assigned, redirect to auth
+        console.log("ProtectedRoute: No role assigned, redirecting to /auth");
+        navigate("/auth", { replace: true });
       } else if (role && userRole && role !== userRole) {
-        // Redirect to correct dashboard if accessing wrong role
-        navigate(`/dashboard/${userRole}`);
+        // User is accessing wrong dashboard, redirect to correct one
+        console.log(`ProtectedRoute: Wrong role, redirecting to /dashboard/${userRole}`);
+        navigate(`/dashboard/${userRole}`, { replace: true });
       }
     }
   }, [user, userRole, loading, navigate, role]);
 
+  // Show loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -27,7 +35,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  // Block access if no user or no role
+  if (!user || !userRole) {
     return null;
   }
 
