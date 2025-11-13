@@ -10,8 +10,8 @@ const platformPlans = [
   {
     name: "Plataforma Básica",
     description: "Alquiler de plataforma sin contenidos",
-    price: "Desde 99€",
-    period: "/mes",
+    price: "99€",
+    period: "cuota al mes",
     features: [
       "Hasta 50 alumnos",
       "Hasta 5 cursos simultáneos",
@@ -26,8 +26,8 @@ const platformPlans = [
   {
     name: "Plataforma + Contenidos",
     description: "Plataforma con acceso a catálogo SCORM",
-    price: "Desde 249€",
-    period: "/mes",
+    price: "249€",
+    period: "cuota al mes",
     features: [
       "Hasta 100 alumnos",
       "Cursos ilimitados",
@@ -44,8 +44,8 @@ const platformPlans = [
   {
     name: "Tarifa Plana Premium",
     description: "Todo incluido sin límites",
-    price: "Desde 499€",
-    period: "/mes",
+    price: "499€",
+    period: "cuota al mes",
     features: [
       "Alumnos ilimitados",
       "Cursos ilimitados",
