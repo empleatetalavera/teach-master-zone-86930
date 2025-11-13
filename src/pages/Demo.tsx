@@ -580,6 +580,43 @@ export default function Demo() {
               las funcionalidades de la plataforma.
             </p>
             
+            {/* Video Preview Section */}
+            <div className="mb-8 rounded-lg overflow-hidden shadow-2xl bg-card border">
+              <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center relative group">
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <div className="text-center space-y-4">
+                    <div className="w-20 h-20 mx-auto rounded-full bg-primary/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <svg className="w-10 h-10 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                      </svg>
+                    </div>
+                    <p className="text-white font-semibold">Ver Demo de la Plataforma</p>
+                    <p className="text-white/80 text-sm">Descubre cómo funciona el sistema completo</p>
+                  </div>
+                </div>
+                <img 
+                  src="/placeholder.svg" 
+                  alt="Vista previa de la plataforma" 
+                  className="w-full h-full object-cover opacity-50"
+                />
+              </div>
+            </div>
+            
+            {/* Features Preview Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {[
+                { icon: "📚", label: "Contenidos SCORM" },
+                { icon: "🎓", label: "Seguimiento SEPE" },
+                { icon: "🤖", label: "Asistente IA" },
+                { icon: "📊", label: "Analytics" }
+              ].map((feature, idx) => (
+                <Card key={idx} className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
+                  <div className="text-3xl mb-2 animate-pulse">{feature.icon}</div>
+                  <p className="text-sm font-medium">{feature.label}</p>
+                </Card>
+              ))}
+            </div>
+            
             <div className="bg-card border rounded-lg p-8 shadow-lg">
               <h2 className="text-2xl font-semibold mb-4">
                 ¿Quieres probar la plataforma?
