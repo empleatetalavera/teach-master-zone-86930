@@ -27,6 +27,12 @@ export const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <a
+              href="/"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Inicio
+            </a>
+            <a
               href="/features"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -61,6 +67,13 @@ export const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border/40">
             <div className="flex flex-col gap-4">
+              <a
+                href="/"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Inicio
+              </a>
               <a
                 href="/features"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
