@@ -56,7 +56,7 @@ const superAdminItems = [
 // Training Center Admin items (Center administrators)
 const adminItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
-  { title: "Centros Asociados", url: "/dashboard/admin/center-settings", icon: Building },
+  { title: "Mi Centro", url: "/dashboard/admin/center-settings", icon: Building },
   { title: "Facturación y Contabilidad", url: "/dashboard/admin/billing", icon: DollarSign },
   { title: "Trazabilidad SEPE", url: "/dashboard/admin/traceability", icon: Activity },
   { title: "Usuarios", url: "/dashboard/admin/users", icon: Users },
