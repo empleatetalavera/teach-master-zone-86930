@@ -125,8 +125,8 @@ export default function TeacherActivityGrading() {
       setPlagiarismReport(data.report);
       
       toast({
-        title: "Análisis completado",
-        description: "El informe de originalidad está listo",
+        title: "SafeAssign completado",
+        description: "El informe de originalidad está listo para revisar",
       });
     } catch (error: any) {
       console.error('Error checking plagiarism:', error);
@@ -203,9 +203,9 @@ export default function TeacherActivityGrading() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Calificar Actividades</h1>
+            <h1 className="text-3xl font-bold tracking-tight">SafeAssign - Calificar Actividades</h1>
             <p className="text-muted-foreground mt-2">
-              Revisa y califica las entregas de tus estudiantes
+              Revisa, verifica originalidad y califica las entregas de tus estudiantes
             </p>
           </div>
         </div>
@@ -320,7 +320,7 @@ export default function TeacherActivityGrading() {
                       className="gap-2"
                     >
                       <FileSearch className="h-4 w-4" />
-                      {checkingPlagiarism ? 'Analizando...' : 'Verificar Originalidad'}
+                      {checkingPlagiarism ? 'Analizando con SafeAssign...' : 'Verificar con SafeAssign'}
                     </Button>
                   </div>
                   <div className="border rounded-lg p-4 bg-muted/50 max-h-64 overflow-y-auto">

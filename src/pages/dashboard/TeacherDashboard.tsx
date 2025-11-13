@@ -109,8 +109,8 @@ const TeacherDashboard = () => {
               <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
             </div>
             <div className="text-left">
-              <p className="font-semibold text-base mb-1">Verificar Plagio</p>
-              <p className="text-sm text-muted-foreground">Análisis automático con IA</p>
+              <p className="font-semibold text-base mb-1">SafeAssign</p>
+              <p className="text-sm text-muted-foreground">Verificar originalidad de entregas</p>
             </div>
           </Button>
 
