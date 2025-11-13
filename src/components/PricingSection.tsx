@@ -160,8 +160,10 @@ export const PricingSection = () => {
                 <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                 <div className="mb-2">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-lg text-muted-foreground">/{plan.period}</span>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-4xl font-bold">{plan.price}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{plan.period}</p>
                 </div>
               </div>
 
@@ -261,8 +263,8 @@ export const PricingSection = () => {
             <p className="text-muted-foreground mb-6">
               Contacta con nuestro equipo comercial para obtener una solución a medida con descuentos por volumen
             </p>
-            <Button size="lg" variant="hero">
-              Solicitar Presupuesto Personalizado
+            <Button size="lg" variant="hero" asChild>
+              <a href="/contact">Solicitar Presupuesto Personalizado</a>
             </Button>
           </Card>
         </div>
