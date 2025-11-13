@@ -1,8 +1,5 @@
 project_id = "fkxbgifvwivlvpwxdzdb"
 
-[functions.update-center-email]
-verify_jwt = false
-
 [functions.ai-assistant]
 verify_jwt = true
 
