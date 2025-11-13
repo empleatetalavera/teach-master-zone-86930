@@ -16,7 +16,7 @@ const stats = [
   },
   {
     icon: Globe,
-    number: "Latinoamérica",
+    number: "España y Latinoamérica",
     label: "Alcance internacional",
     description: "Países de habla hispana"
   },
