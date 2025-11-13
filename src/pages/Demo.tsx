@@ -567,22 +567,52 @@ export default function Demo() {
       
       <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
+          <div className="text-center mb-12 max-w-3xl mx-auto">
             <Badge variant="secondary" className="mb-4">
-              Modo Demo
+              Demo Interactiva
             </Badge>
-            <h1 className="text-4xl font-bold mb-4">
-              Bienvenido a TalentCloudSolution
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+              Descubre TalentCloudSolution
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Explora nuestra plataforma con datos de ejemplo. Esta es una demostración interactiva 
-              de las capacidades del sistema.
+            <p className="text-lg text-muted-foreground mb-8">
+              La plataforma líder en formación profesional con certificación SEPE. 
+              Regístrate ahora para acceder a nuestra demo interactiva y explorar todas 
+              las funcionalidades de la plataforma.
             </p>
+            
+            <div className="bg-card border rounded-lg p-8 shadow-lg">
+              <h2 className="text-2xl font-semibold mb-4">
+                ¿Quieres probar la plataforma?
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Crea tu cuenta gratuita y accede inmediatamente a cursos demo, 
+                seguimiento SEPE, asistente IA, y todas las herramientas que necesitas 
+                para tu formación profesional.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  className="gap-2"
+                  onClick={() => window.location.href = '/auth'}
+                >
+                  <Award className="w-5 h-5" />
+                  Crear Cuenta Gratis
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => window.location.href = '/auth'}
+                >
+                  Ya tengo cuenta
+                </Button>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {stats.map((stat, index) => (
-              <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
+              <Card key={index} className="p-6 hover:shadow-lg transition-shadow opacity-60">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">
@@ -599,19 +629,31 @@ export default function Demo() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-6">Mis Cursos</h2>
+            <h2 className="text-2xl font-bold mb-2 text-center">Vista Previa de Cursos</h2>
+            <p className="text-center text-muted-foreground mb-6">
+              Regístrate para acceder a estos cursos y mucho más
+            </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {demoCourses.map((course) => (
                 <Card 
                   key={course.id}
-                  className="overflow-hidden hover:shadow-xl transition-all cursor-pointer group"
-                  onClick={() => setSelectedCourse(course.id)}
+                  className="overflow-hidden hover:shadow-xl transition-all cursor-not-allowed opacity-75 relative"
                 >
+                  <div className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex items-center justify-center">
+                    <div className="text-center p-6">
+                      <Button 
+                        size="lg"
+                        onClick={() => window.location.href = '/auth'}
+                      >
+                        Registrarse para acceder
+                      </Button>
+                    </div>
+                  </div>
                   <div className="relative overflow-hidden">
                     <img 
                       src={course.image} 
                       alt={course.title}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-48 object-cover"
                     />
                     <Badge className="absolute top-4 right-4">
                       {course.category}
