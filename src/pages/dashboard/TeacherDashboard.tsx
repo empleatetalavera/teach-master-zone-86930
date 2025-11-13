@@ -100,6 +100,23 @@ const TeacherDashboard = () => {
           <Button
             variant="outline"
             className="h-auto py-6 px-6 flex flex-col items-start gap-3 hover:bg-accent/10 hover:border-accent transition-all group"
+            onClick={() => navigate("/dashboard/teacher/grade-activities")}
+          >
+            <div className="w-full flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-lg flex items-center justify-center">
+                <ClipboardCheck className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-base mb-1">Verificar Plagio</p>
+              <p className="text-sm text-muted-foreground">Análisis automático con IA</p>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="h-auto py-6 px-6 flex flex-col items-start gap-3 hover:bg-accent/10 hover:border-accent transition-all group"
             onClick={() => navigate("/dashboard/teacher/reports")}
           >
             <div className="w-full flex items-center justify-between">
