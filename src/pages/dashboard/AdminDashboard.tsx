@@ -695,10 +695,21 @@ const AdminDashboard = () => {
             <div className="space-y-4">
               {recentActivity.map((activity) => {
                 const Icon = getActivityIcon(activity.type);
+                const navigateTo = () => {
+                  if (activity.type === "center") {
+                    navigate("/dashboard/admin/centers");
+                  } else if (activity.type === "license") {
+                    navigate("/dashboard/admin/licenses");
+                  } else if (activity.type === "order") {
+                    navigate("/dashboard/admin/orders");
+                  }
+                };
+                
                 return (
                   <div
                     key={activity.id}
-                    className="flex items-start gap-4 pb-4 border-b border-border/50 last:border-0"
+                    onClick={navigateTo}
+                    className="flex items-start gap-4 pb-4 border-b border-border/50 last:border-0 cursor-pointer hover:bg-muted/50 rounded-lg p-2 transition-colors"
                   >
                     <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
                       <Icon className="h-5 w-5 text-muted-foreground" />
@@ -715,6 +726,7 @@ const AdminDashboard = () => {
                         {activity.time}
                       </p>
                     </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   </div>
                 );
               })}
