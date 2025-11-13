@@ -161,7 +161,7 @@ export const PricingSection = () => {
                 <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                 <div className="mb-2">
                   <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-muted-foreground">{plan.period}</span>
+                  <span className="text-lg text-muted-foreground">/{plan.period}</span>
                 </div>
               </div>
 
