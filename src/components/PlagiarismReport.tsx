@@ -66,10 +66,10 @@ export function PlagiarismReport({ open, onOpenChange, report, loading }: Plagia
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSearch className="h-5 w-5" />
-            Informe de Originalidad
+            SafeAssign - Informe de Originalidad
           </DialogTitle>
           <DialogDescription>
-            Análisis automático de plagio y originalidad del contenido
+            Análisis automático de plagio y coincidencias del contenido
           </DialogDescription>
         </DialogHeader>
 
@@ -159,10 +159,10 @@ export function PlagiarismReport({ open, onOpenChange, report, loading }: Plagia
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription className="text-xs">
-                <strong>Nota:</strong> Este es un análisis automático basado en IA que busca patrones 
-                indicativos de plagio. Los resultados deben ser interpretados por el profesor como una 
-                herramienta de apoyo, no como una conclusión definitiva. Se recomienda realizar una 
-                revisión manual adicional cuando sea necesario.
+                <strong>Acerca de SafeAssign:</strong> Este es un análisis automático basado en IA que busca patrones 
+                indicativos de plagio y contenido no original. Los resultados de SafeAssign deben ser interpretados 
+                por el profesor como una herramienta de apoyo, no como una conclusión definitiva. Se recomienda realizar 
+                una revisión manual adicional cuando sea necesario.
               </AlertDescription>
             </Alert>
           </div>
