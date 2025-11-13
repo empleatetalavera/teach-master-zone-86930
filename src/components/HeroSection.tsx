@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import heroImage from "@/assets/hero-platform-dashboard.jpg";
+import heroImage from "@/assets/hero-professional-woman.jpg";
 
 export const HeroSection = () => {
   return (
@@ -44,7 +44,7 @@ export const HeroSection = () => {
                 <p className="text-sm text-muted-foreground">Años Experiencia</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-secondary">+10.000</p>
+                <p className="text-3xl font-bold text-secondary">+500</p>
                 <p className="text-sm text-muted-foreground">Contenidos SCORM</p>
               </div>
               <div>

@@ -10,7 +10,7 @@ const stats = [
   },
   {
     icon: BookMarked,
-    number: "+10.000",
+    number: "+500",
     label: "Contenidos SCORM",
     description: "Al mejor precio del mercado"
   },
@@ -69,7 +69,7 @@ export const ExperienceSection = () => {
           <div className="max-w-3xl mx-auto text-center space-y-4">
             <h3 className="text-2xl font-bold">Ofrecemos todos los recursos que necesitas</h3>
             <p className="text-lg text-muted-foreground">
-              Contamos con un amplio catálogo con más de <span className="font-semibold text-primary">10.000 contenidos 
+              Contamos con un amplio catálogo con más de <span className="font-semibold text-primary">500 contenidos 
               en formato SCORM</span> de distintos proveedores al mejor precio.
             </p>
             <p className="text-muted-foreground">
