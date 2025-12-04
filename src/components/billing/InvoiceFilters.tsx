@@ -38,12 +38,12 @@ export function InvoiceFilters({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Centro</Label>
-            <Select value={filterCenter} onValueChange={setFilterCenter}>
+            <Select value={filterCenter || "all"} onValueChange={(val) => setFilterCenter(val === "all" ? "" : val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Todos los centros" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los centros</SelectItem>
+                <SelectItem value="all">Todos los centros</SelectItem>
                 {centers.map((center) => (
                   <SelectItem key={center.id} value={center.id}>
                     {center.name}
@@ -55,12 +55,12 @@ export function InvoiceFilters({
 
           <div className="space-y-2">
             <Label>Estado</Label>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "all"} onValueChange={(val) => setFilterStatus(val === "all" ? "" : val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Todos los estados" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="pending">Pendiente</SelectItem>
                 <SelectItem value="paid">Pagada</SelectItem>
                 <SelectItem value="overdue">Vencida</SelectItem>
