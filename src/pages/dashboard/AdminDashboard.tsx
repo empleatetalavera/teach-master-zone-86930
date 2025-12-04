@@ -59,15 +59,18 @@ const AdminDashboard = () => {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [centerInfo, setCenterInfo] = useState<CenterInfo | null>(null);
   const [centerCourses, setCenterCourses] = useState<any[]>([]);
+  const [centerUsers, setCenterUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
+
+  const isSuperAdmin = userRole === 'super_admin';
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [user, userRole]);
 
   const loadDashboardData = async () => {
     try {
@@ -78,11 +81,13 @@ const AdminDashboard = () => {
         .eq("id", user?.id)
         .single();
 
-      if (profile?.training_center_id) {
+      const userCenterId = profile?.training_center_id;
+
+      if (userCenterId) {
         const { data: center } = await supabase
           .from("training_centers")
           .select("*")
-          .eq("id", profile.training_center_id)
+          .eq("id", userCenterId)
           .single();
 
         if (center) {
@@ -92,98 +97,135 @@ const AdminDashboard = () => {
           const { data: courses } = await supabase
             .from("courses")
             .select("*")
-            .eq("training_center_id", profile.training_center_id);
+            .eq("training_center_id", userCenterId);
           
           setCenterCourses(courses || []);
+
+          // Fetch users for this center
+          const { data: users } = await supabase
+            .from("profiles")
+            .select("*, user_roles(role)")
+            .eq("training_center_id", userCenterId);
+          
+          setCenterUsers(users || []);
         }
       }
 
-      // Fetch training centers
-      const { data: centers, error: centersError } = await supabase
-        .from("training_centers")
-        .select("*");
+      // For super_admin, fetch global stats. For regular admin, fetch only their center's data
+      if (isSuperAdmin) {
+        // Fetch all training centers
+        const { data: centers, error: centersError } = await supabase
+          .from("training_centers")
+          .select("*");
 
-      if (centersError) throw centersError;
+        if (centersError) throw centersError;
 
-      // Fetch licenses
-      const { data: licenses, error: licensesError } = await supabase
-        .from("licenses")
-        .select("*");
+        // Fetch all licenses
+        const { data: licenses, error: licensesError } = await supabase
+          .from("licenses")
+          .select("*");
 
-      if (licensesError) throw licensesError;
+        if (licensesError) throw licensesError;
 
-      // Fetch content orders
-      const { data: orders, error: ordersError } = await supabase
-        .from("content_orders")
-        .select("*, training_centers(name)");
+        // Fetch all content orders
+        const { data: orders, error: ordersError } = await supabase
+          .from("content_orders")
+          .select("*, training_centers(name)");
 
-      if (ordersError) throw ordersError;
+        if (ordersError) throw ordersError;
 
-      // Calculate stats
-      const now = new Date();
-      const activeLicenses = licenses?.filter(
-        (l) => l.is_active && new Date(l.end_date) > now
-      ) || [];
-      const expiredLicenses = licenses?.filter(
-        (l) => new Date(l.end_date) <= now
-      ) || [];
+        const now = new Date();
+        const activeLicenses = licenses?.filter(
+          (l) => l.is_active && new Date(l.end_date) > now
+        ) || [];
+        const expiredLicenses = licenses?.filter(
+          (l) => new Date(l.end_date) <= now
+        ) || [];
 
-      setStats({
-        totalCenters: centers?.length || 0,
-        activeCenters: centers?.filter((c) => c.is_active).length || 0,
-        totalLicenses: licenses?.length || 0,
-        activeLicenses: activeLicenses.length,
-        expiredLicenses: expiredLicenses.length,
-        totalOrders: orders?.length || 0,
-        pendingOrders: orders?.filter((o) => o.status === "pending").length || 0,
-        completedOrders: orders?.filter((o) => o.status === "completed").length || 0,
-      });
-
-      // Build recent activity
-      const activities: RecentActivity[] = [];
-
-      // Recent centers
-      centers?.slice(0, 2).forEach((center) => {
-        activities.push({
-          id: center.id,
-          type: "center",
-          title: "Nuevo centro registrado",
-          description: center.name,
-          time: new Date(center.created_at).toLocaleString(),
-          status: center.is_active ? "active" : "inactive",
+        setStats({
+          totalCenters: centers?.length || 0,
+          activeCenters: centers?.filter((c) => c.is_active).length || 0,
+          totalLicenses: licenses?.length || 0,
+          activeLicenses: activeLicenses.length,
+          expiredLicenses: expiredLicenses.length,
+          totalOrders: orders?.length || 0,
+          pendingOrders: orders?.filter((o) => o.status === "pending").length || 0,
+          completedOrders: orders?.filter((o) => o.status === "completed").length || 0,
         });
-      });
 
-      // Recent licenses
-      licenses?.slice(0, 2).forEach((license) => {
-        const isExpired = new Date(license.end_date) <= now;
-        activities.push({
-          id: license.id,
-          type: "license",
-          title: isExpired ? "Licencia vencida" : "Licencia activa",
-          description: `${license.license_type} - ${license.max_students} estudiantes`,
-          time: new Date(license.created_at).toLocaleString(),
-          status: isExpired ? "expired" : "active",
+        // Build recent activity for super_admin
+        const activities: RecentActivity[] = [];
+        centers?.slice(0, 2).forEach((center) => {
+          activities.push({
+            id: center.id,
+            type: "center",
+            title: "Nuevo centro registrado",
+            description: center.name,
+            time: new Date(center.created_at).toLocaleString(),
+            status: center.is_active ? "active" : "inactive",
+          });
         });
-      });
 
-      // Recent orders
-      orders?.slice(0, 3).forEach((order) => {
-        activities.push({
-          id: order.id,
-          type: "order",
-          title: `Pedido: ${order.title}`,
-          description: order.training_centers?.name || "Centro desconocido",
-          time: new Date(order.created_at).toLocaleString(),
-          status: order.status,
+        // Recent licenses
+        licenses?.slice(0, 2).forEach((license) => {
+          const isExpired = new Date(license.end_date) <= now;
+          activities.push({
+            id: license.id,
+            type: "license",
+            title: isExpired ? "Licencia vencida" : "Licencia activa",
+            description: `${license.license_type} - ${license.max_students} estudiantes`,
+            time: new Date(license.created_at).toLocaleString(),
+            status: isExpired ? "expired" : "active",
+          });
         });
-      });
 
-      // Sort by time
-      activities.sort(
-        (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
-      );
-      setRecentActivity(activities.slice(0, 6));
+        // Recent orders
+        orders?.slice(0, 3).forEach((order) => {
+          activities.push({
+            id: order.id,
+            type: "order",
+            title: `Pedido: ${order.title}`,
+            description: order.training_centers?.name || "Centro desconocido",
+            time: new Date(order.created_at).toLocaleString(),
+            status: order.status,
+          });
+        });
+
+        // Sort by time
+        activities.sort(
+          (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+        );
+        setRecentActivity(activities.slice(0, 6));
+      } else {
+        // Regular admin - show only their center's stats
+        if (userCenterId) {
+          const { data: licenses } = await supabase
+            .from("licenses")
+            .select("*")
+            .eq("training_center_id", userCenterId);
+
+          const { data: orders } = await supabase
+            .from("content_orders")
+            .select("*")
+            .eq("training_center_id", userCenterId);
+
+          const now = new Date();
+          const activeLicenses = licenses?.filter(
+            (l) => l.is_active && new Date(l.end_date) > now
+          ) || [];
+
+          setStats({
+            totalCenters: 1,
+            activeCenters: 1,
+            totalLicenses: licenses?.length || 0,
+            activeLicenses: activeLicenses.length,
+            expiredLicenses: licenses?.filter((l) => new Date(l.end_date) <= now).length || 0,
+            totalOrders: orders?.length || 0,
+            pendingOrders: orders?.filter((o) => o.status === "pending").length || 0,
+            completedOrders: orders?.filter((o) => o.status === "completed").length || 0,
+          });
+        }
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -256,11 +298,57 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Dashboard Administrador</h1>
+        <h1 className="text-3xl font-bold mb-2">
+          {isSuperAdmin ? "Dashboard TalentCloud" : `Dashboard - ${centerInfo?.name || "Administrador"}`}
+        </h1>
         <p className="text-muted-foreground">
-          Gestión multi-centro y visión general de la plataforma
+          {isSuperAdmin 
+            ? "Gestión multi-centro y visión general de la plataforma" 
+            : "Panel de control de tu centro de formación"}
         </p>
       </div>
+
+      {/* Center Stats for regular admins */}
+      {!isSuperAdmin && centerInfo && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Cursos</p>
+                <p className="text-2xl font-bold">{centerCourses.length}</p>
+              </div>
+              <BookOpen className="h-8 w-8 text-primary/50" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Usuarios</p>
+                <p className="text-2xl font-bold">{centerUsers.length}</p>
+              </div>
+              <Users className="h-8 w-8 text-secondary/50" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Licencias</p>
+                <p className="text-2xl font-bold">{stats.activeLicenses}</p>
+              </div>
+              <Key className="h-8 w-8 text-green-500/50" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pedidos</p>
+                <p className="text-2xl font-bold">{stats.totalOrders}</p>
+              </div>
+              <Package className="h-8 w-8 text-orange-500/50" />
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Mi Centro Section */}
       {centerInfo && (
@@ -554,65 +642,68 @@ const AdminDashboard = () => {
         </div>
       </Card>
 
-      {/* Main Stats Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="hover:shadow-lg transition-all duration-300 border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Centros de Formación</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCenters}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.activeCenters} activos
-            </p>
-          </CardContent>
-        </Card>
+      {/* Main Stats Grid - Only for Super Admin */}
+      {isSuperAdmin && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="hover:shadow-lg transition-all duration-300 border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Centros de Formación</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalCenters}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.activeCenters} activos
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Licencias Totales</CardTitle>
-            <Key className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalLicenses}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.activeLicenses} activas · {stats.expiredLicenses} vencidas
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-lg transition-all duration-300 border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Licencias Totales</CardTitle>
+              <Key className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalLicenses}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.activeLicenses} activas · {stats.expiredLicenses} vencidas
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pedidos Pendientes</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingOrders}</div>
-            <p className="text-xs text-muted-foreground">
-              de {stats.totalOrders} totales
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-lg transition-all duration-300 border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pedidos Pendientes</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.pendingOrders}</div>
+              <p className="text-xs text-muted-foreground">
+                de {stats.totalOrders} totales
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pedidos Completados</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.completedOrders}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.totalOrders > 0
-                ? Math.round((stats.completedOrders / stats.totalOrders) * 100)
-                : 0}
-              % tasa de completitud
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="hover:shadow-lg transition-all duration-300 border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pedidos Completados</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.completedOrders}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.totalOrders > 0
+                  ? Math.round((stats.completedOrders / stats.totalOrders) * 100)
+                  : 0}
+                % tasa de completitud
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      {/* Secondary Stats */}
+      {/* Secondary Stats - Only for Super Admin */}
+      {isSuperAdmin && (
       <div className="grid md:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
@@ -680,8 +771,10 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+      )}
 
-      {/* Recent Activity */}
+      {/* Recent Activity - Only for Super Admin */}
+      {isSuperAdmin && (
       <Card>
         <CardHeader>
           <CardTitle>Actividad Reciente</CardTitle>
@@ -734,6 +827,7 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 };
