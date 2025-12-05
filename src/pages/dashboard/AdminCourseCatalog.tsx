@@ -3,46 +3,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, BookOpen, Search, Building2, Check, X } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, BookOpen, Search, ChevronRight, Building2 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import CourseAssignmentPanel from "@/components/CourseAssignmentPanel";
 
 interface Course {
   id: string;
   title: string;
-  category: string;
-  course_type: string;
-  duration_hours: number;
+  category: string | null;
+  course_type: string | null;
+  duration_hours: number | null;
   is_active: boolean;
 }
 
-interface TrainingCenter {
-  id: string;
-  name: string;
-  slug: string;
-  is_active: boolean;
-}
-
-interface Assignment {
+interface AssignmentCount {
   course_id: string;
-  training_center_id: string;
-  is_active: boolean;
+  count: number;
 }
 
 export default function AdminCourseCatalog() {
-  const { user, userRole } = useAuth();
+  const { userRole } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState<string | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [centers, setCenters] = useState<TrainingCenter[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignmentCounts, setAssignmentCounts] = useState<AssignmentCount[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [totalCenters, setTotalCenters] = useState(0);
 
   useEffect(() => {
     if (userRole === 'super_admin') {
@@ -52,19 +42,27 @@ export default function AdminCourseCatalog() {
 
   const loadData = async () => {
     try {
-      const [coursesRes, centersRes, assignmentsRes] = await Promise.all([
+      const [coursesRes, assignmentsRes, centersRes] = await Promise.all([
         supabase.from("courses").select("id, title, category, course_type, duration_hours, is_active").order("title"),
-        supabase.from("training_centers").select("id, name, slug, is_active").eq("is_active", true).order("name"),
-        supabase.from("course_center_assignments").select("course_id, training_center_id, is_active")
+        supabase.from("course_center_assignments").select("course_id").eq("is_active", true),
+        supabase.from("training_centers").select("id", { count: "exact", head: true }).eq("is_active", true)
       ]);
 
       if (coursesRes.error) throw coursesRes.error;
-      if (centersRes.error) throw centersRes.error;
       if (assignmentsRes.error) throw assignmentsRes.error;
 
       setCourses(coursesRes.data || []);
-      setCenters(centersRes.data || []);
-      setAssignments(assignmentsRes.data || []);
+      setTotalCenters(centersRes.count || 0);
+
+      // Count assignments per course
+      const counts: Record<string, number> = {};
+      assignmentsRes.data?.forEach(a => {
+        counts[a.course_id] = (counts[a.course_id] || 0) + 1;
+      });
+      
+      setAssignmentCounts(
+        Object.entries(counts).map(([course_id, count]) => ({ course_id, count }))
+      );
     } catch (error: any) {
       console.error("Error loading data:", error);
       toast({
@@ -77,86 +75,23 @@ export default function AdminCourseCatalog() {
     }
   };
 
-  const isAssigned = (courseId: string, centerId: string): boolean => {
-    return assignments.some(a => 
-      a.course_id === courseId && 
-      a.training_center_id === centerId && 
-      a.is_active
-    );
+  const getAssignedCount = (courseId: string): number => {
+    return assignmentCounts.find(a => a.course_id === courseId)?.count || 0;
   };
 
-  const toggleAssignment = async (courseId: string, centerId: string) => {
-    const key = `${courseId}-${centerId}`;
-    setSaving(key);
-
-    try {
-      const existing = assignments.find(a => 
-        a.course_id === courseId && a.training_center_id === centerId
-      );
-
-      if (existing) {
-        // Update existing assignment
-        const { error } = await supabase
-          .from("course_center_assignments")
-          .update({ is_active: !existing.is_active })
-          .eq("course_id", courseId)
-          .eq("training_center_id", centerId);
-
-        if (error) throw error;
-
-        setAssignments(prev => prev.map(a => 
-          a.course_id === courseId && a.training_center_id === centerId
-            ? { ...a, is_active: !a.is_active }
-            : a
-        ));
-      } else {
-        // Create new assignment
-        const { error } = await supabase
-          .from("course_center_assignments")
-          .insert({
-            course_id: courseId,
-            training_center_id: centerId,
-            is_active: true,
-            assigned_by: user?.id
-          });
-
-        if (error) throw error;
-
-        setAssignments(prev => [...prev, {
-          course_id: courseId,
-          training_center_id: centerId,
-          is_active: true
-        }]);
-      }
-
-      toast({
-        title: "Asignación actualizada",
-        description: "Los cambios se han guardado correctamente",
-      });
-    } catch (error: any) {
-      console.error("Error toggling assignment:", error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const getAssignedCentersCount = (courseId: string): number => {
-    return assignments.filter(a => a.course_id === courseId && a.is_active).length;
-  };
-
-  const getAssignedCoursesCount = (centerId: string): number => {
-    return assignments.filter(a => a.training_center_id === centerId && a.is_active).length;
-  };
-
-  const filteredCourses = courses.filter(c => 
+  const filteredCourses = courses.filter(c =>
     c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleCourseClick = (course: Course) => {
+    setSelectedCourse(course);
+    setPanelOpen(true);
+  };
+
+  const handleAssignmentChange = () => {
+    loadData(); // Reload counts
+  };
 
   if (userRole !== 'super_admin') {
     return (
@@ -181,6 +116,8 @@ export default function AdminCourseCatalog() {
     );
   }
 
+  const totalAssignments = assignmentCounts.reduce((sum, a) => sum + a.count, 0);
+
   return (
     <div className="space-y-6">
       <div>
@@ -189,7 +126,7 @@ export default function AdminCourseCatalog() {
           Catálogo de Cursos
         </h1>
         <p className="text-muted-foreground">
-          Asigna cursos a los centros de formación
+          Asigna cursos a los centros de formación para facturación de licencias
         </p>
       </div>
 
@@ -204,141 +141,102 @@ export default function AdminCourseCatalog() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Centros Activos</CardDescription>
-            <CardTitle className="text-3xl">{centers.length}</CardTitle>
+            <CardTitle className="text-3xl">{totalCenters}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Asignaciones Activas</CardDescription>
-            <CardTitle className="text-3xl">{assignments.filter(a => a.is_active).length}</CardTitle>
+            <CardDescription>Licencias Activas</CardDescription>
+            <CardTitle className="text-3xl">{totalAssignments}</CardTitle>
           </CardHeader>
         </Card>
       </div>
 
-      <Tabs defaultValue="by-course">
-        <TabsList>
-          <TabsTrigger value="by-course">Por Curso</TabsTrigger>
-          <TabsTrigger value="by-center">Por Centro</TabsTrigger>
-        </TabsList>
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar cursos..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
 
-        <TabsContent value="by-course" className="space-y-4">
-          {/* Search */}
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar cursos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Course List */}
-          <div className="grid gap-4">
-            {filteredCourses.map((course) => (
-              <Card key={course.id} className={selectedCourse?.id === course.id ? "ring-2 ring-primary" : ""}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{course.title}</CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-1">
-                        {course.category && <Badge variant="outline">{course.category}</Badge>}
+      {/* Course Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Curso</TableHead>
+                <TableHead>Categoría</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Duración</TableHead>
+                <TableHead className="text-center">Centros Asignados</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCourses.map((course) => {
+                const assignedCount = getAssignedCount(course.id);
+                return (
+                  <TableRow 
+                    key={course.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleCourseClick(course)}
+                  >
+                    <TableCell className="font-medium max-w-[300px]">
+                      <div className="truncate">{course.title}</div>
+                    </TableCell>
+                    <TableCell>
+                      {course.category ? (
+                        <Badge variant="outline">{course.category}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {course.course_type ? (
                         <Badge variant="secondary">{course.course_type}</Badge>
-                        <span>{course.duration_hours}h</span>
-                      </CardDescription>
-                    </div>
-                    <Badge variant={getAssignedCentersCount(course.id) > 0 ? "default" : "secondary"}>
-                      {getAssignedCentersCount(course.id)} centros
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-3">
-                    {centers.map((center) => {
-                      const assigned = isAssigned(course.id, center.id);
-                      const isSaving = saving === `${course.id}-${center.id}`;
-                      
-                      return (
-                        <div
-                          key={center.id}
-                          className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
-                            assigned ? "bg-primary/10 border-primary" : "bg-muted/50"
-                          }`}
-                        >
-                          <Switch
-                            checked={assigned}
-                            onCheckedChange={() => toggleAssignment(course.id, center.id)}
-                            disabled={isSaving}
-                          />
-                          <span className="text-sm font-medium">{center.name}</span>
-                          {isSaving && <Loader2 className="h-3 w-3 animate-spin" />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{course.duration_hours ? `${course.duration_hours}h` : "-"}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <Badge variant={assignedCount > 0 ? "default" : "secondary"}>
+                          {assignedCount} / {totalCenters}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {filteredCourses.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    No se encontraron cursos
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="by-center" className="space-y-4">
-          {/* Center List */}
-          <div className="grid gap-4">
-            {centers.map((center) => (
-              <Card key={center.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Building2 className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">{center.name}</CardTitle>
-                        <CardDescription>{center.slug}</CardDescription>
-                      </div>
-                    </div>
-                    <Badge variant={getAssignedCoursesCount(center.id) > 0 ? "default" : "secondary"}>
-                      {getAssignedCoursesCount(center.id)} cursos
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {courses.map((course) => {
-                      const assigned = isAssigned(course.id, center.id);
-                      const isSaving = saving === `${course.id}-${center.id}`;
-                      
-                      return (
-                        <div
-                          key={course.id}
-                          className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            {assigned ? (
-                              <Check className="h-4 w-4 text-primary" />
-                            ) : (
-                              <X className="h-4 w-4 text-muted-foreground" />
-                            )}
-                            <span className={assigned ? "font-medium" : "text-muted-foreground"}>
-                              {course.title}
-                            </span>
-                          </div>
-                          <Switch
-                            checked={assigned}
-                            onCheckedChange={() => toggleAssignment(course.id, center.id)}
-                            disabled={isSaving}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      {/* Assignment Panel */}
+      <CourseAssignmentPanel
+        course={selectedCourse}
+        open={panelOpen}
+        onOpenChange={setPanelOpen}
+        onAssignmentChange={handleAssignmentChange}
+      />
     </div>
   );
 }
