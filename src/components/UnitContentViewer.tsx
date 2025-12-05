@@ -1,14 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Video, FileText, Headphones, Code, FileQuestion, Presentation,
-  X, ExternalLink, Download, CheckCircle2, Loader2, Play
+  Video, FileText, Headphones, Layers, FileQuestion, Presentation,
+  X, ExternalLink, Download, CheckCircle2, Loader2, Play, Plus, Upload, Trash2
 } from "lucide-react";
 
 interface UnitContentViewerProps {
@@ -28,6 +31,7 @@ interface ContentItem {
   file_path: string | null;
   duration_minutes: number | null;
   content_type: string;
+  order_index?: number;
   progress?: number;
   completed?: boolean;
 }
@@ -36,7 +40,7 @@ const contentTypeConfig = {
   video: { icon: Video, label: "Video", color: "text-red-600", bgColor: "bg-red-100 dark:bg-red-900/30" },
   document: { icon: FileText, label: "Documento", color: "text-blue-600", bgColor: "bg-blue-100 dark:bg-blue-900/30" },
   audio: { icon: Headphones, label: "Audio", color: "text-purple-600", bgColor: "bg-purple-100 dark:bg-purple-900/30" },
-  scorm: { icon: Code, label: "SCORM", color: "text-green-600", bgColor: "bg-green-100 dark:bg-green-900/30" },
+  scorm: { icon: Layers, label: "Contenido Interactivo", color: "text-green-600", bgColor: "bg-green-100 dark:bg-green-900/30" },
   exercise: { icon: FileQuestion, label: "Ejercicio", color: "text-amber-600", bgColor: "bg-amber-100 dark:bg-amber-900/30" },
   presentation: { icon: Presentation, label: "Presentación", color: "text-orange-600", bgColor: "bg-orange-100 dark:bg-orange-900/30" }
 };
@@ -49,12 +53,24 @@ export function UnitContentViewer({
   contentType,
   enrollmentId
 }: UnitContentViewerProps) {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState<ContentItem[]>([]);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // New content form state
+  const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newUrl, setNewUrl] = useState("");
+  const [newDuration, setNewDuration] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const isTeacherOrAdmin = userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin';
 
   const config = contentTypeConfig[contentType];
   const Icon = config.icon;
@@ -68,7 +84,6 @@ export function UnitContentViewer({
   const loadContent = async () => {
     setLoading(true);
     try {
-      // Load content items for this unit and type
       const { data: contentData, error } = await supabase
         .from("unit_interactive_content")
         .select("*")
@@ -79,7 +94,6 @@ export function UnitContentViewer({
 
       if (error) throw error;
 
-      // Load progress for each content item
       if (user && enrollmentId && contentData && contentData.length > 0) {
         const contentIds = contentData.map(c => c.id);
         const { data: progressData } = await supabase
@@ -114,13 +128,112 @@ export function UnitContentViewer({
     }
   };
 
+  const handleAddContent = async () => {
+    if (!newTitle.trim()) {
+      toast({
+        title: "Error",
+        description: "El título es obligatorio",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      let fileUrl = newUrl;
+
+      // Upload file if selected
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${unitId}/${contentType}/${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('course-content')
+          .upload(fileName, selectedFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('course-content')
+          .getPublicUrl(fileName);
+
+        fileUrl = urlData.publicUrl;
+      }
+
+      const maxOrder = content.length > 0 ? Math.max(...content.map(c => c.order_index || 0)) : 0;
+
+      const { error } = await supabase
+        .from("unit_interactive_content")
+        .insert({
+          formative_unit_id: unitId,
+          content_type: contentType,
+          title: newTitle,
+          description: newDescription || null,
+          content_url: fileUrl || null,
+          duration_minutes: newDuration ? parseInt(newDuration) : null,
+          order_index: maxOrder + 1,
+          is_active: true
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Contenido añadido",
+        description: `${config.label} añadido correctamente`,
+      });
+
+      // Reset form
+      setNewTitle("");
+      setNewDescription("");
+      setNewUrl("");
+      setNewDuration("");
+      setSelectedFile(null);
+      setShowAddForm(false);
+      
+      // Reload content
+      loadContent();
+    } catch (error: any) {
+      console.error("Error adding content:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo añadir el contenido",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteContent = async (contentId: string) => {
+    try {
+      const { error } = await supabase
+        .from("unit_interactive_content")
+        .update({ is_active: false })
+        .eq("id", contentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Contenido eliminado",
+        description: "El contenido ha sido eliminado",
+      });
+
+      loadContent();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el contenido",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handlePlayContent = (item: ContentItem) => {
     setSelectedContent(item);
     setPlaying(true);
     
-    // Update progress tracking
     if (user && enrollmentId) {
-      updateProgress(item.id, 10); // Start with 10% progress
+      updateProgress(item.id, 10);
     }
   };
 
@@ -130,7 +243,6 @@ export function UnitContentViewer({
     try {
       await updateProgress(item.id, 100, true);
       
-      // Update local state
       setContent(prev => prev.map(c => 
         c.id === item.id ? { ...c, progress: 100, completed: true } : c
       ));
@@ -169,6 +281,18 @@ export function UnitContentViewer({
     }
   };
 
+  const getAcceptedFileTypes = () => {
+    switch (contentType) {
+      case 'video': return "video/*";
+      case 'audio': return "audio/*";
+      case 'document': return ".pdf,.doc,.docx";
+      case 'presentation': return ".ppt,.pptx,.pdf";
+      case 'scorm': return ".zip";
+      case 'exercise': return ".pdf,.doc,.docx,.html";
+      default: return "*";
+    }
+  };
+
   const renderContentPlayer = () => {
     if (!selectedContent) return null;
 
@@ -178,12 +302,19 @@ export function UnitContentViewer({
       return (
         <div className="aspect-video bg-black rounded-lg overflow-hidden">
           {url ? (
-            <iframe 
-              src={url} 
-              className="w-full h-full"
-              allowFullScreen
-              allow="autoplay; encrypted-media"
-            />
+            url.includes('youtube') || url.includes('vimeo') ? (
+              <iframe 
+                src={url} 
+                className="w-full h-full"
+                allowFullScreen
+                allow="autoplay; encrypted-media"
+              />
+            ) : (
+              <video controls className="w-full h-full">
+                <source src={url} />
+                Tu navegador no soporta el elemento de video.
+              </video>
+            )
           ) : (
             <div className="flex items-center justify-center h-full text-white">
               <p>URL de video no disponible</p>
@@ -236,7 +367,7 @@ export function UnitContentViewer({
             />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">Contenido SCORM no disponible</p>
+              <p className="text-muted-foreground">Contenido interactivo no disponible</p>
             </div>
           )}
         </div>
@@ -261,6 +392,90 @@ export function UnitContentViewer({
     return null;
   };
 
+  const renderAddForm = () => (
+    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold">Añadir {config.label}</h4>
+        <Button variant="ghost" size="sm" onClick={() => setShowAddForm(false)}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="space-y-3">
+        <div>
+          <Label htmlFor="title">Título *</Label>
+          <Input
+            id="title"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder={`Título del ${config.label.toLowerCase()}`}
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="description">Descripción</Label>
+          <Textarea
+            id="description"
+            value={newDescription}
+            onChange={(e) => setNewDescription(e.target.value)}
+            placeholder="Descripción opcional"
+            rows={2}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="duration">Duración (minutos)</Label>
+          <Input
+            id="duration"
+            type="number"
+            value={newDuration}
+            onChange={(e) => setNewDuration(e.target.value)}
+            placeholder="Ej: 15"
+          />
+        </div>
+
+        <div>
+          <Label>URL del contenido</Label>
+          <Input
+            value={newUrl}
+            onChange={(e) => setNewUrl(e.target.value)}
+            placeholder={contentType === 'video' ? "https://youtube.com/... o URL directa" : "URL del contenido"}
+          />
+        </div>
+
+        <div className="relative">
+          <Label>O subir archivo</Label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={getAcceptedFileTypes()}
+            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full mt-1"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            {selectedFile ? selectedFile.name : "Seleccionar archivo"}
+          </Button>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <Button onClick={handleAddContent} disabled={saving} className="flex-1">
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+            Añadir
+          </Button>
+          <Button variant="outline" onClick={() => setShowAddForm(false)}>
+            Cancelar
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -279,14 +494,6 @@ export function UnitContentViewer({
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : content.length === 0 ? (
-          <div className="text-center py-12">
-            <Icon className={`h-16 w-16 mx-auto mb-4 ${config.color} opacity-50`} />
-            <p className="text-lg font-medium mb-2">No hay contenido disponible</p>
-            <p className="text-sm text-muted-foreground">
-              El tutor aún no ha añadido {config.label.toLowerCase()} a esta unidad
-            </p>
           </div>
         ) : playing && selectedContent ? (
           <div className="space-y-4">
@@ -316,46 +523,82 @@ export function UnitContentViewer({
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            {content.map((item) => (
-              <div 
-                key={item.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <div className={`p-2 ${config.bgColor} rounded`}>
-                    <Icon className={`h-5 w-5 ${config.color}`} />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{item.title}</h4>
-                    {item.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-1">{item.description}</p>
-                    )}
-                    {item.duration_minutes && (
-                      <p className="text-xs text-muted-foreground">{item.duration_minutes} min</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  {item.completed ? (
-                    <Badge variant="default" className="bg-green-500">
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Completado
-                    </Badge>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Progress value={item.progress || 0} className="w-20" />
-                      <span className="text-xs text-muted-foreground">{item.progress || 0}%</span>
-                    </div>
-                  )}
-                  <Button onClick={() => handlePlayContent(item)}>
-                    <Play className="h-4 w-4 mr-1" />
-                    {item.completed ? "Ver" : "Iniciar"}
-                  </Button>
-                </div>
+          <div className="space-y-4">
+            {/* Add button for teachers/admins */}
+            {isTeacherOrAdmin && !showAddForm && (
+              <Button onClick={() => setShowAddForm(true)} variant="outline" className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Añadir {config.label}
+              </Button>
+            )}
+
+            {/* Add form */}
+            {showAddForm && renderAddForm()}
+
+            {/* Content list */}
+            {content.length === 0 && !showAddForm ? (
+              <div className="text-center py-12">
+                <Icon className={`h-16 w-16 mx-auto mb-4 ${config.color} opacity-50`} />
+                <p className="text-lg font-medium mb-2">No hay contenido disponible</p>
+                <p className="text-sm text-muted-foreground">
+                  {isTeacherOrAdmin 
+                    ? `Añade ${config.label.toLowerCase()} usando el botón de arriba`
+                    : `El tutor aún no ha añadido ${config.label.toLowerCase()} a esta unidad`
+                  }
+                </p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-3">
+                {content.map((item) => (
+                  <div 
+                    key={item.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className={`p-2 ${config.bgColor} rounded`}>
+                        <Icon className={`h-5 w-5 ${config.color}`} />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{item.title}</h4>
+                        {item.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-1">{item.description}</p>
+                        )}
+                        {item.duration_minutes && (
+                          <p className="text-xs text-muted-foreground">{item.duration_minutes} min</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      {item.completed ? (
+                        <Badge variant="default" className="bg-green-500">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Completado
+                        </Badge>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Progress value={item.progress || 0} className="w-20" />
+                          <span className="text-xs text-muted-foreground">{item.progress || 0}%</span>
+                        </div>
+                      )}
+                      <Button onClick={() => handlePlayContent(item)}>
+                        <Play className="h-4 w-4 mr-1" />
+                        {item.completed ? "Ver" : "Iniciar"}
+                      </Button>
+                      {isTeacherOrAdmin && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleDeleteContent(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </DialogContent>
