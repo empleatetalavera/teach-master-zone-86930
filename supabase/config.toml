@@ -13,7 +13,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.seed-demo-users]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-demo-session]
 verify_jwt = false
@@ -21,14 +21,11 @@ verify_jwt = false
 [functions.assign-user-role]
 verify_jwt = true
 
-[functions.setup-first-admin]
-verify_jwt = false
-
-[functions.create-test-user]
-verify_jwt = false
-
 [functions.check-plagiarism]
 verify_jwt = true
 
-[functions.setup-center-passwords]
-verify_jwt = false
+[functions.check-invoice-status]
+verify_jwt = true
+
+[functions.create-user]
+verify_jwt = true

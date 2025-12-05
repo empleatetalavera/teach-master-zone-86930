@@ -6,8 +6,11 @@ const corsHeaders = {
 };
 
 interface DemoSessionRequest {
-  role: 'student' | 'teacher' | 'admin' | 'auditor';
+  role: 'student' | 'teacher';
 }
+
+// Only allow non-privileged roles for demo accounts
+const ALLOWED_DEMO_ROLES = ['student', 'teacher'];
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -20,8 +23,19 @@ Deno.serve(async (req) => {
 
     const { role } = await req.json() as DemoSessionRequest;
 
-    if (!['student', 'teacher', 'admin', 'auditor'].includes(role)) {
-      throw new Error('Invalid role specified');
+    // Security: Only allow student and teacher roles for demo accounts
+    if (!ALLOWED_DEMO_ROLES.includes(role)) {
+      console.warn(`Attempted to create demo account with unauthorized role: ${role}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Only student and teacher roles are available for demo accounts'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        }
+      );
     }
 
     // Initialize Supabase admin client
