@@ -33,7 +33,11 @@ import {
   Video,
   File,
   Eye,
-  Settings
+  Settings,
+  Map,
+  ListChecks,
+  MessagesSquare,
+  Link2
 } from "lucide-react";
 
 interface Course {
@@ -54,6 +58,9 @@ interface Module {
   order_index: number;
   duration_minutes: number;
   is_active: boolean;
+  concept_map_url: string | null;
+  objectives: string | null;
+  forum_enabled: boolean;
 }
 
 interface Evaluation {
@@ -107,7 +114,10 @@ export default function CourseContentEditor() {
     description: "",
     content: "",
     duration_hours: 1,
-    is_active: true
+    is_active: true,
+    concept_map_url: "",
+    objectives: "",
+    forum_enabled: true
   });
 
   const [evaluationForm, setEvaluationForm] = useState({
@@ -213,7 +223,10 @@ export default function CourseContentEditor() {
             description: moduleForm.description,
             content: moduleForm.content,
             duration_minutes: Math.round(moduleForm.duration_hours * 60),
-            is_active: moduleForm.is_active
+            is_active: moduleForm.is_active,
+            concept_map_url: moduleForm.concept_map_url || null,
+            objectives: moduleForm.objectives || null,
+            forum_enabled: moduleForm.forum_enabled
           })
           .eq("id", editingModule.id);
 
@@ -229,7 +242,10 @@ export default function CourseContentEditor() {
             content: moduleForm.content,
             duration_minutes: Math.round(moduleForm.duration_hours * 60),
             is_active: moduleForm.is_active,
-            order_index: modules.length + 1
+            order_index: modules.length + 1,
+            concept_map_url: moduleForm.concept_map_url || null,
+            objectives: moduleForm.objectives || null,
+            forum_enabled: moduleForm.forum_enabled
           });
 
         if (error) throw error;
@@ -270,7 +286,10 @@ export default function CourseContentEditor() {
       description: module.description || "",
       content: module.content || "",
       duration_hours: module.duration_minutes ? module.duration_minutes / 60 : 1,
-      is_active: module.is_active
+      is_active: module.is_active,
+      concept_map_url: module.concept_map_url || "",
+      objectives: module.objectives || "",
+      forum_enabled: module.forum_enabled ?? true
     });
     setModuleDialogOpen(true);
   };
@@ -282,7 +301,10 @@ export default function CourseContentEditor() {
       description: "",
       content: "",
       duration_hours: 1,
-      is_active: true
+      is_active: true,
+      concept_map_url: "",
+      objectives: "",
+      forum_enabled: true
     });
   };
 
@@ -606,13 +628,34 @@ export default function CourseContentEditor() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="module-content">Contenido del Módulo</Label>
+                <Label htmlFor="module-content">Temario / Contenido</Label>
                 <Textarea
                   id="module-content"
                   value={moduleForm.content}
                   onChange={(e) => setModuleForm({ ...moduleForm, content: e.target.value })}
                   placeholder="Contenido formativo, texto, HTML..."
                   rows={6}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="module-objectives">Objetivos del Módulo</Label>
+                <Textarea
+                  id="module-objectives"
+                  value={moduleForm.objectives}
+                  onChange={(e) => setModuleForm({ ...moduleForm, objectives: e.target.value })}
+                  placeholder="Lista de objetivos de aprendizaje..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="module-concept-map">URL Mapa Conceptual</Label>
+                <Input
+                  id="module-concept-map"
+                  value={moduleForm.concept_map_url}
+                  onChange={(e) => setModuleForm({ ...moduleForm, concept_map_url: e.target.value })}
+                  placeholder="https://... o ruta del archivo"
                 />
               </div>
 
@@ -637,6 +680,18 @@ export default function CourseContentEditor() {
                     onCheckedChange={(checked) => setModuleForm({ ...moduleForm, is_active: checked })}
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <MessagesSquare className="h-4 w-4 text-primary" />
+                  <Label htmlFor="module-forum">Habilitar Foro del Módulo</Label>
+                </div>
+                <Switch
+                  id="module-forum"
+                  checked={moduleForm.forum_enabled}
+                  onCheckedChange={(checked) => setModuleForm({ ...moduleForm, forum_enabled: checked })}
+                />
               </div>
             </div>
             <DialogFooter>
@@ -708,10 +763,22 @@ export default function CourseContentEditor() {
                             <CardDescription className="mt-1">
                               {module.description || "Sin descripción"}
                             </CardDescription>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {module.duration_minutes ? (module.duration_minutes / 60).toFixed(1) : 0}h
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Map className="h-3 w-3" />
+                                {module.concept_map_url ? "✓" : "—"}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Target className="h-3 w-3" />
+                                {module.objectives ? "✓" : "—"}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MessagesSquare className="h-3 w-3" />
+                                {module.forum_enabled ? "✓" : "—"}
                               </span>
                               <span className="flex items-center gap-1">
                                 <CheckSquare className="h-3 w-3" />
@@ -738,134 +805,225 @@ export default function CourseContentEditor() {
                   
                   <CollapsibleContent>
                     <CardContent className="pt-0 border-t bg-muted/20">
-                      <div className="grid lg:grid-cols-2 gap-4 pt-4">
-                        {/* Evaluaciones del Módulo */}
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium flex items-center gap-2">
-                              <CheckSquare className="h-4 w-4 text-primary" />
-                              Tests / Evaluaciones
-                            </h4>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => openAddEvaluationForModule(module.id)}
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Añadir
-                            </Button>
+                      {/* Secciones del Módulo */}
+                      <div className="space-y-4 pt-4">
+                        
+                        {/* Fila 1: Mapa Conceptual y Objetivos */}
+                        <div className="grid lg:grid-cols-2 gap-4">
+                          {/* Mapa Conceptual */}
+                          <div className="bg-background rounded-lg p-4 border">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium flex items-center gap-2 text-sm">
+                                <Map className="h-4 w-4 text-primary" />
+                                Mapa Conceptual
+                              </h4>
+                              <Button variant="ghost" size="sm" onClick={() => handleEditModule(module)}>
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            {module.concept_map_url ? (
+                              <a 
+                                href={module.concept_map_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary hover:underline flex items-center gap-1"
+                              >
+                                <Link2 className="h-3 w-3" />
+                                Ver mapa conceptual
+                              </a>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">Sin mapa conceptual configurado</p>
+                            )}
                           </div>
-                          
-                          {moduleEvaluations.length === 0 ? (
-                            <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
-                              Sin evaluaciones. Añade un test para este módulo.
+
+                          {/* Objetivos */}
+                          <div className="bg-background rounded-lg p-4 border">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium flex items-center gap-2 text-sm">
+                                <Target className="h-4 w-4 text-primary" />
+                                Objetivos
+                              </h4>
+                              <Button variant="ghost" size="sm" onClick={() => handleEditModule(module)}>
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
                             </div>
-                          ) : (
-                            <div className="space-y-2">
-                              {moduleEvaluations.map(evaluation => (
-                                <div 
-                                  key={evaluation.id} 
-                                  className={`bg-background rounded-lg p-3 border ${!evaluation.is_active ? 'opacity-60' : ''}`}
-                                >
-                                  <div className="flex items-start justify-between">
-                                    <div>
-                                      <p className="font-medium text-sm">{evaluation.title}</p>
-                                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                        <span>Mín: {evaluation.passing_score}%</span>
-                                        <span>Intentos: {evaluation.max_attempts}</span>
-                                        {evaluation.time_limit_minutes && (
-                                          <span>{evaluation.time_limit_minutes} min</span>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className="flex gap-1">
-                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditEvaluation(evaluation)}>
-                                        <Edit2 className="h-3 w-3" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteEvaluation(evaluation.id)}>
-                                        <Trash2 className="h-3 w-3 text-destructive" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                            {module.objectives ? (
+                              <p className="text-xs text-muted-foreground line-clamp-3">{module.objectives}</p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">Sin objetivos definidos</p>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Actividades del Módulo */}
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-primary" />
-                              Actividades
-                            </h4>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => openAddActivityForModule(module.id)}
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Añadir
-                            </Button>
-                          </div>
-                          
-                          {moduleActivities.length === 0 ? (
-                            <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
-                              Sin actividades. Añade una tarea para este módulo.
+                        {/* Fila 2: Temario y Foro */}
+                        <div className="grid lg:grid-cols-2 gap-4">
+                          {/* Temario / Contenido */}
+                          <div className="bg-background rounded-lg p-4 border">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium flex items-center gap-2 text-sm">
+                                <BookOpen className="h-4 w-4 text-primary" />
+                                Temario / Manual
+                              </h4>
+                              <Button variant="ghost" size="sm" onClick={() => handleEditModule(module)}>
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
                             </div>
-                          ) : (
-                            <div className="space-y-2">
-                              {moduleActivities.map(activity => (
-                                <div 
-                                  key={activity.id} 
-                                  className={`bg-background rounded-lg p-3 border ${!activity.is_active ? 'opacity-60' : ''}`}
-                                >
-                                  <div className="flex items-start justify-between">
-                                    <div>
-                                      <p className="font-medium text-sm">{activity.title}</p>
-                                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                        <span>Punt: {activity.max_score}</span>
-                                        <span>
-                                          {activity.submission_type === 'file' ? 'Archivo' : 
-                                           activity.submission_type === 'text' ? 'Texto' : 'URL'}
-                                        </span>
-                                        {activity.due_date && (
-                                          <span>Límite: {new Date(activity.due_date).toLocaleDateString('es-ES')}</span>
-                                        )}
+                            {module.content ? (
+                              <p className="text-xs text-muted-foreground line-clamp-3">{module.content.substring(0, 150)}...</p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">Sin contenido de temario</p>
+                            )}
+                          </div>
+
+                          {/* Foro */}
+                          <div className="bg-background rounded-lg p-4 border">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium flex items-center gap-2 text-sm">
+                                <MessagesSquare className="h-4 w-4 text-primary" />
+                                Foro del Módulo
+                              </h4>
+                              <Badge variant={module.forum_enabled ? "default" : "secondary"}>
+                                {module.forum_enabled ? "Activo" : "Desactivado"}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {module.forum_enabled 
+                                ? "Los estudiantes pueden participar en discusiones" 
+                                : "Foro desactivado para este módulo"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Fila 3: Tests y Actividades */}
+                        <div className="grid lg:grid-cols-2 gap-4">
+                          {/* Evaluaciones del Módulo */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium flex items-center gap-2">
+                                <CheckSquare className="h-4 w-4 text-primary" />
+                                Tests / Evaluaciones
+                              </h4>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => openAddEvaluationForModule(module.id)}
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Añadir
+                              </Button>
+                            </div>
+                            
+                            {moduleEvaluations.length === 0 ? (
+                              <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
+                                Sin evaluaciones. Añade un test para este módulo.
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {moduleEvaluations.map(evaluation => (
+                                  <div 
+                                    key={evaluation.id} 
+                                    className={`bg-background rounded-lg p-3 border ${!evaluation.is_active ? 'opacity-60' : ''}`}
+                                  >
+                                    <div className="flex items-start justify-between">
+                                      <div>
+                                        <p className="font-medium text-sm">{evaluation.title}</p>
+                                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                          <span>Mín: {evaluation.passing_score}%</span>
+                                          <span>Intentos: {evaluation.max_attempts}</span>
+                                          {evaluation.time_limit_minutes && (
+                                            <span>{evaluation.time_limit_minutes} min</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-1">
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditEvaluation(evaluation)}>
+                                          <Edit2 className="h-3 w-3" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteEvaluation(evaluation.id)}>
+                                          <Trash2 className="h-3 w-3 text-destructive" />
+                                        </Button>
                                       </div>
                                     </div>
-                                    <div className="flex gap-1">
-                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditActivity(activity)}>
-                                        <Edit2 className="h-3 w-3" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteActivity(activity.id)}>
-                                        <Trash2 className="h-3 w-3 text-destructive" />
-                                      </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Actividades del Módulo */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-primary" />
+                                Actividades
+                              </h4>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => openAddActivityForModule(module.id)}
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Añadir
+                              </Button>
+                            </div>
+                            
+                            {moduleActivities.length === 0 ? (
+                              <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
+                                Sin actividades. Añade una tarea para este módulo.
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {moduleActivities.map(activity => (
+                                  <div 
+                                    key={activity.id} 
+                                    className={`bg-background rounded-lg p-3 border ${!activity.is_active ? 'opacity-60' : ''}`}
+                                  >
+                                    <div className="flex items-start justify-between">
+                                      <div>
+                                        <p className="font-medium text-sm">{activity.title}</p>
+                                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                          <span>Punt: {activity.max_score}</span>
+                                          <span>
+                                            {activity.submission_type === 'file' ? 'Archivo' : 
+                                             activity.submission_type === 'text' ? 'Texto' : 'URL'}
+                                          </span>
+                                          {activity.due_date && (
+                                            <span>Límite: {new Date(activity.due_date).toLocaleDateString('es-ES')}</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-1">
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditActivity(activity)}>
+                                          <Edit2 className="h-3 w-3" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteActivity(activity.id)}>
+                                          <Trash2 className="h-3 w-3 text-destructive" />
+                                        </Button>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Recursos del Módulo */}
-                      <div className="mt-4 pt-4 border-t">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium flex items-center gap-2">
-                            <File className="h-4 w-4 text-primary" />
-                            Recursos y Material
-                          </h4>
-                          <Button variant="outline" size="sm">
-                            <Upload className="h-3 w-3 mr-1" />
-                            Subir
-                          </Button>
-                        </div>
-                        <div className="bg-background rounded-lg p-4 border border-dashed text-center text-sm text-muted-foreground">
-                          <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          Arrastra archivos aquí o haz clic en "Subir"
+                        {/* Recursos del Módulo */}
+                        <div className="pt-4 border-t">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-medium flex items-center gap-2">
+                              <File className="h-4 w-4 text-primary" />
+                              Recursos y Material
+                            </h4>
+                            <Button variant="outline" size="sm">
+                              <Upload className="h-3 w-3 mr-1" />
+                              Subir
+                            </Button>
+                          </div>
+                          <div className="bg-background rounded-lg p-4 border border-dashed text-center text-sm text-muted-foreground">
+                            <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            Arrastra archivos aquí o haz clic en "Subir"
+                          </div>
                         </div>
                       </div>
                     </CardContent>
