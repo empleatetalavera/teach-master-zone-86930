@@ -93,9 +93,10 @@ export default function AdminCourses() {
       setUserTrainingCenterId(centerId);
 
       let allCourses: any[] = [];
+      let centerEnrollmentCounts: Record<string, number> = {};
 
       if (superAdmin) {
-        // Super admin sees all courses
+        // Super admin sees all courses with global enrollment counts
         const { data: coursesData, error } = await supabase
           .from("courses")
           .select(`
@@ -110,12 +111,20 @@ export default function AdminCourses() {
       } else if (centerId) {
         // Center admin: get courses owned by center + courses assigned to center
         
-        // 1. Get courses owned by center (training_center_id = centerId)
+        // 1. Get students that belong to this center
+        const { data: centerStudents, error: studentsError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("training_center_id", centerId);
+
+        if (studentsError) throw studentsError;
+        const centerStudentIds = (centerStudents || []).map(s => s.id);
+
+        // 2. Get courses owned by center (training_center_id = centerId)
         const { data: ownedCourses, error: ownedError } = await supabase
           .from("courses")
           .select(`
             *,
-            enrollments:enrollments(count),
             modules:modules(count)
           `)
           .eq("training_center_id", centerId)
@@ -123,7 +132,7 @@ export default function AdminCourses() {
 
         if (ownedError) throw ownedError;
 
-        // 2. Get courses assigned to center via course_center_assignments
+        // 3. Get courses assigned to center via course_center_assignments
         const { data: assignments, error: assignError } = await supabase
           .from("course_center_assignments")
           .select("course_id")
@@ -140,7 +149,6 @@ export default function AdminCourses() {
             .from("courses")
             .select(`
               *,
-              enrollments:enrollments(count),
               modules:modules(count)
             `)
             .in("id", assignedCourseIds)
@@ -154,12 +162,32 @@ export default function AdminCourses() {
         const ownedIds = new Set((ownedCourses || []).map(c => c.id));
         const uniqueAssigned = assignedCourses.filter(c => !ownedIds.has(c.id));
         allCourses = [...(ownedCourses || []), ...uniqueAssigned];
+
+        // 4. Get enrollments only for students belonging to this center
+        const allCourseIds = allCourses.map(c => c.id);
+        if (allCourseIds.length > 0 && centerStudentIds.length > 0) {
+          const { data: enrollments, error: enrollError } = await supabase
+            .from("enrollments")
+            .select("course_id, user_id")
+            .in("course_id", allCourseIds)
+            .in("user_id", centerStudentIds);
+
+          if (enrollError) throw enrollError;
+
+          // Count enrollments per course (only center students)
+          (enrollments || []).forEach(e => {
+            centerEnrollmentCounts[e.course_id] = (centerEnrollmentCounts[e.course_id] || 0) + 1;
+          });
+        }
       }
 
       const transformedCourses = allCourses.map((course: any) => ({
         ...course,
         _count: {
-          enrollments: course.enrollments?.[0]?.count || 0,
+          // For center admins, use center-specific count; for super admin, use global count
+          enrollments: centerId && !superAdmin 
+            ? (centerEnrollmentCounts[course.id] || 0)
+            : (course.enrollments?.[0]?.count || 0),
           modules: course.modules?.[0]?.count || 0,
         },
       }));
