@@ -86,6 +86,18 @@ interface Activity {
   is_active: boolean;
 }
 
+interface FormativeUnit {
+  id: string;
+  module_id: string;
+  title: string;
+  description: string | null;
+  content: string | null;
+  objectives: string | null;
+  order_index: number;
+  duration_hours: number | null;
+  is_active: boolean;
+}
+
 export default function CourseContentEditor() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -97,15 +109,19 @@ export default function CourseContentEditor() {
   const [modules, setModules] = useState<Module[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [formativeUnits, setFormativeUnits] = useState<FormativeUnit[]>([]);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
+  const [expandedUnits, setExpandedUnits] = useState<string[]>([]);
   
   // Dialog states
   const [moduleDialogOpen, setModuleDialogOpen] = useState(false);
   const [evaluationDialogOpen, setEvaluationDialogOpen] = useState(false);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
+  const [unitDialogOpen, setUnitDialogOpen] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [editingEvaluation, setEditingEvaluation] = useState<Evaluation | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [editingUnit, setEditingUnit] = useState<FormativeUnit | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
 
   // Form states
@@ -138,6 +154,15 @@ export default function CourseContentEditor() {
     submission_type: "file",
     max_score: 100,
     due_date: "",
+    is_active: true
+  });
+
+  const [unitForm, setUnitForm] = useState({
+    title: "",
+    description: "",
+    content: "",
+    objectives: "",
+    duration_hours: 1,
     is_active: true
   });
 
@@ -189,6 +214,19 @@ export default function CourseContentEditor() {
 
       if (activitiesError) throw activitiesError;
       setActivities(activitiesData || []);
+
+      // Load formative units for all modules
+      if (modulesData && modulesData.length > 0) {
+        const moduleIds = modulesData.map(m => m.id);
+        const { data: unitsData, error: unitsError } = await supabase
+          .from("formative_units")
+          .select("*")
+          .in("module_id", moduleIds)
+          .order("order_index");
+
+        if (unitsError) throw unitsError;
+        setFormativeUnits(unitsData || []);
+      }
 
     } catch (error: any) {
       console.error("Error loading course:", error);
@@ -504,6 +542,119 @@ export default function CourseContentEditor() {
     setActivityForm(prev => ({ ...prev, module_id: moduleId }));
     setActivityDialogOpen(true);
   };
+
+  // Formative Unit functions
+  const handleSaveUnit = async () => {
+    if (!unitForm.title.trim() || !selectedModuleId) {
+      toast.error("El título es obligatorio");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const moduleUnits = formativeUnits.filter(u => u.module_id === selectedModuleId);
+      
+      if (editingUnit) {
+        const { error } = await supabase
+          .from("formative_units")
+          .update({
+            title: unitForm.title,
+            description: unitForm.description || null,
+            content: unitForm.content || null,
+            objectives: unitForm.objectives || null,
+            duration_hours: unitForm.duration_hours,
+            is_active: unitForm.is_active
+          })
+          .eq("id", editingUnit.id);
+
+        if (error) throw error;
+        toast.success("Unidad formativa actualizada");
+      } else {
+        const { error } = await supabase
+          .from("formative_units")
+          .insert({
+            module_id: selectedModuleId,
+            title: unitForm.title,
+            description: unitForm.description || null,
+            content: unitForm.content || null,
+            objectives: unitForm.objectives || null,
+            duration_hours: unitForm.duration_hours,
+            is_active: unitForm.is_active,
+            order_index: moduleUnits.length + 1
+          });
+
+        if (error) throw error;
+        toast.success("Unidad formativa creada");
+      }
+
+      setUnitDialogOpen(false);
+      resetUnitForm();
+      loadCourseData();
+    } catch (error: any) {
+      toast.error("Error al guardar la unidad formativa");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteUnit = async (unitId: string) => {
+    if (!confirm("¿Estás seguro de eliminar esta unidad formativa?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("formative_units")
+        .delete()
+        .eq("id", unitId);
+
+      if (error) throw error;
+      toast.success("Unidad formativa eliminada");
+      loadCourseData();
+    } catch (error: any) {
+      toast.error("Error al eliminar la unidad formativa");
+    }
+  };
+
+  const handleEditUnit = (unit: FormativeUnit) => {
+    setEditingUnit(unit);
+    setSelectedModuleId(unit.module_id);
+    setUnitForm({
+      title: unit.title,
+      description: unit.description || "",
+      content: unit.content || "",
+      objectives: unit.objectives || "",
+      duration_hours: unit.duration_hours || 1,
+      is_active: unit.is_active
+    });
+    setUnitDialogOpen(true);
+  };
+
+  const resetUnitForm = () => {
+    setEditingUnit(null);
+    setUnitForm({
+      title: "",
+      description: "",
+      content: "",
+      objectives: "",
+      duration_hours: 1,
+      is_active: true
+    });
+  };
+
+  const openAddUnitForModule = (moduleId: string) => {
+    setSelectedModuleId(moduleId);
+    resetUnitForm();
+    setUnitDialogOpen(true);
+  };
+
+  const toggleUnit = (unitId: string) => {
+    setExpandedUnits(prev => 
+      prev.includes(unitId) 
+        ? prev.filter(id => id !== unitId)
+        : [...prev, unitId]
+    );
+  };
+
+  const getModuleUnits = (moduleId: string) => formativeUnits.filter(u => u.module_id === moduleId);
 
   if (loading) {
     return (
@@ -892,6 +1043,97 @@ export default function CourseContentEditor() {
                                 : "Foro desactivado para este módulo"}
                             </p>
                           </div>
+                        </div>
+
+                        {/* Unidades Formativas - Submenu desplegable */}
+                        <div className="border-t pt-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-medium flex items-center gap-2">
+                              <ListChecks className="h-4 w-4 text-primary" />
+                              Unidades Formativas
+                            </h4>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openAddUnitForModule(module.id)}
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Añadir Unidad
+                            </Button>
+                          </div>
+                          
+                          {getModuleUnits(module.id).length === 0 ? (
+                            <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
+                              Sin unidades formativas. Añade la primera unidad a este módulo.
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {getModuleUnits(module.id).map((unit, unitIndex) => {
+                                const isUnitExpanded = expandedUnits.includes(unit.id);
+                                return (
+                                  <Collapsible 
+                                    key={unit.id} 
+                                    open={isUnitExpanded} 
+                                    onOpenChange={() => toggleUnit(unit.id)}
+                                  >
+                                    <div className={`bg-background rounded-lg border ${!unit.is_active ? 'opacity-60' : ''}`}>
+                                      <CollapsibleTrigger asChild>
+                                        <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/30 transition-colors">
+                                          <div className="flex items-center gap-3">
+                                            {isUnitExpanded ? (
+                                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                            ) : (
+                                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                            )}
+                                            <span className="font-mono text-xs text-muted-foreground">{index + 1}.{unitIndex + 1}</span>
+                                            <span className="font-medium text-sm">{unit.title}</span>
+                                            {unit.duration_hours && (
+                                              <Badge variant="outline" className="text-xs">
+                                                {unit.duration_hours}h
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditUnit(unit)}>
+                                              <Edit2 className="h-3 w-3" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteUnit(unit.id)}>
+                                              <Trash2 className="h-3 w-3 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </CollapsibleTrigger>
+                                      <CollapsibleContent>
+                                        <div className="px-3 pb-3 pt-0 space-y-2 border-t bg-muted/10">
+                                          {unit.objectives && (
+                                            <div className="pt-2">
+                                              <p className="text-xs font-medium text-muted-foreground mb-1">Objetivos:</p>
+                                              <p className="text-xs">{unit.objectives}</p>
+                                            </div>
+                                          )}
+                                          {unit.description && (
+                                            <div>
+                                              <p className="text-xs font-medium text-muted-foreground mb-1">Descripción:</p>
+                                              <p className="text-xs">{unit.description}</p>
+                                            </div>
+                                          )}
+                                          {unit.content && (
+                                            <div>
+                                              <p className="text-xs font-medium text-muted-foreground mb-1">Contenido:</p>
+                                              <p className="text-xs line-clamp-3">{unit.content.substring(0, 200)}...</p>
+                                            </div>
+                                          )}
+                                          {!unit.objectives && !unit.description && !unit.content && (
+                                            <p className="text-xs text-muted-foreground pt-2">Sin contenido detallado</p>
+                                          )}
+                                        </div>
+                                      </CollapsibleContent>
+                                    </div>
+                                  </Collapsible>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
 
                         {/* Fila 3: Tests y Actividades */}
@@ -1310,6 +1552,99 @@ export default function CourseContentEditor() {
               Cancelar
             </Button>
             <Button onClick={handleSaveActivity} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Formative Unit Dialog */}
+      <Dialog open={unitDialogOpen} onOpenChange={(open) => {
+        setUnitDialogOpen(open);
+        if (!open) resetUnitForm();
+      }}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingUnit ? "Editar Unidad Formativa" : "Nueva Unidad Formativa"}
+            </DialogTitle>
+            <DialogDescription>
+              Define el contenido de esta unidad formativa dentro del módulo
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="unit-title">Título *</Label>
+              <Input
+                id="unit-title"
+                value={unitForm.title}
+                onChange={(e) => setUnitForm({ ...unitForm, title: e.target.value })}
+                placeholder="Ej: UF1 - Introducción al tema"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="unit-description">Descripción</Label>
+              <Textarea
+                id="unit-description"
+                value={unitForm.description}
+                onChange={(e) => setUnitForm({ ...unitForm, description: e.target.value })}
+                placeholder="Descripción breve de la unidad..."
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="unit-objectives">Objetivos</Label>
+              <Textarea
+                id="unit-objectives"
+                value={unitForm.objectives}
+                onChange={(e) => setUnitForm({ ...unitForm, objectives: e.target.value })}
+                placeholder="Objetivos de aprendizaje..."
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="unit-content">Contenido</Label>
+              <Textarea
+                id="unit-content"
+                value={unitForm.content}
+                onChange={(e) => setUnitForm({ ...unitForm, content: e.target.value })}
+                placeholder="Contenido del temario..."
+                rows={4}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="unit-duration">Duración (horas)</Label>
+                <Input
+                  id="unit-duration"
+                  type="number"
+                  step="0.5"
+                  min="0.5"
+                  value={unitForm.duration_hours}
+                  onChange={(e) => setUnitForm({ ...unitForm, duration_hours: parseFloat(e.target.value) || 1 })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="unit-active">Activa</Label>
+                <Switch
+                  id="unit-active"
+                  checked={unitForm.is_active}
+                  onCheckedChange={(checked) => setUnitForm({ ...unitForm, is_active: checked })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUnitDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveUnit} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
               Guardar
             </Button>
