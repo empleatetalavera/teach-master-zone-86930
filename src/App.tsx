@@ -111,6 +111,7 @@ function AppRoutes() {
           <Route path="admin/course-settings" element={<AdminCourseSettings />} />
           <Route path="admin/course-settings/:courseId" element={<AdminCourseSettings />} />
           <Route path="admin/test-notifications" element={<TestNotifications />} />
+          <Route path="admin/reports" element={<TeacherReports />} />
           <Route path="teacher" element={<TeacherDashboard />} />
           <Route path="teacher/courses" element={<TeacherCourses />} />
           <Route path="teacher/courses/:courseId" element={<CourseDetailSEPE />} />
