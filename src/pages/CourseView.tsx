@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Code } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -47,6 +47,21 @@ interface Module {
   evaluations?: any[];
   activities?: any[];
   scorm_content?: any[];
+  formative_units?: FormativeUnit[];
+}
+
+interface FormativeUnit {
+  id: string;
+  module_id: string;
+  title: string;
+  description: string | null;
+  content: string | null;
+  objectives: string | null;
+  order_index: number;
+  duration_hours: number | null;
+  is_active: boolean;
+  evaluations?: any[];
+  activities?: any[];
 }
 
 export default function CourseView() {
@@ -114,21 +129,55 @@ export default function CourseView() {
 
       if (modulesError) throw modulesError;
 
+      // Load formative units for all modules
+      const moduleIds = modulesData.map(m => m.id);
+      const { data: formativeUnitsData } = await supabase
+        .from("formative_units")
+        .select("*")
+        .in("module_id", moduleIds)
+        .eq("is_active", true)
+        .order("order_index");
+
+      // Load evaluations and activities with formative_unit_id
+      const { data: allEvaluations } = await supabase
+        .from("evaluations")
+        .select("*")
+        .eq("course_id", courseId)
+        .eq("is_active", true);
+
+      const { data: allActivities } = await supabase
+        .from("development_activities")
+        .select("*")
+        .eq("course_id", courseId)
+        .eq("is_active", true);
+
       // Load progress for each module
       const modulesWithProgress = await Promise.all(
         modulesData.map(async (module) => {
-          const [evaluations, activities, scormContent, progress] = await Promise.all([
-            supabase.from("evaluations").select("*").eq("module_id", module.id),
-            supabase.from("development_activities").select("*").eq("module_id", module.id),
+          const [scormContent, progress] = await Promise.all([
             supabase.from("module_scorm_content").select("*, scorm_packages(*)").eq("module_id", module.id),
             supabase.from("module_progress").select("*").eq("module_id", module.id).eq("enrollment_id", user!.id).maybeSingle()
           ]);
 
+          // Get formative units for this module
+          const moduleUnits = (formativeUnitsData || [])
+            .filter(u => u.module_id === module.id)
+            .map(unit => ({
+              ...unit,
+              evaluations: (allEvaluations || []).filter(e => e.formative_unit_id === unit.id),
+              activities: (allActivities || []).filter(a => a.formative_unit_id === unit.id)
+            }));
+
+          // Module-level evaluations and activities (not assigned to any UF)
+          const moduleEvaluations = (allEvaluations || []).filter(e => e.module_id === module.id && !e.formative_unit_id);
+          const moduleActivities = (allActivities || []).filter(a => a.module_id === module.id && !a.formative_unit_id);
+
           return {
             ...module,
-            evaluations: evaluations.data || [],
-            activities: activities.data || [],
+            evaluations: moduleEvaluations,
+            activities: moduleActivities,
             scorm_content: scormContent.data || [],
+            formative_units: moduleUnits,
             completed: progress.data?.completed || false,
             progress: progress.data?.completed ? 100 : 0
           };
@@ -685,22 +734,151 @@ export default function CourseView() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <CardContent className="space-y-4 pt-4">
-                        {/* Module Content */}
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start"
-                          onClick={() => navigate(`/course/${courseId}/module/${module.id}`)}
-                        >
-                          <PlayCircle className="h-4 w-4 mr-2" />
-                          Ver contenido del módulo
-                        </Button>
+                        {/* Formative Units */}
+                        {module.formative_units && module.formative_units.length > 0 && (
+                          <div className="space-y-3">
+                            <h4 className="font-semibold flex items-center gap-2">
+                              <ListChecks className="h-4 w-4 text-primary" />
+                              Unidades Formativas ({module.formative_units.length})
+                            </h4>
+                            <Accordion type="multiple" className="space-y-2">
+                              {module.formative_units.map((unit, unitIndex) => (
+                                <AccordionItem key={unit.id} value={unit.id} className="border rounded-lg bg-muted/30">
+                                  <AccordionTrigger className="hover:no-underline px-4 py-3">
+                                    <div className="flex items-center gap-3 w-full pr-4">
+                                      <span className="font-mono text-xs text-muted-foreground bg-background px-2 py-1 rounded">
+                                        {index + 1}.{unitIndex + 1}
+                                      </span>
+                                      <div className="text-left flex-1">
+                                        <p className="font-medium text-sm">{unit.title}</p>
+                                        {unit.duration_hours && (
+                                          <p className="text-xs text-muted-foreground">{unit.duration_hours}h</p>
+                                        )}
+                                      </div>
+                                      <Progress value={0} className="w-16 h-2" />
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="px-4 pb-4">
+                                    <div className="space-y-3">
+                                      {/* Unit description */}
+                                      {unit.description && (
+                                        <p className="text-sm text-muted-foreground">{unit.description}</p>
+                                      )}
+                                      
+                                      {/* Interactive Content Grid */}
+                                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <div className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded">
+                                              <Video className="h-4 w-4 text-red-600" />
+                                            </div>
+                                            <span className="text-sm font-medium">Video</span>
+                                          </div>
+                                          <Progress value={0} className="h-1.5" />
+                                        </div>
+                                        
+                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded">
+                                              <FileText className="h-4 w-4 text-blue-600" />
+                                            </div>
+                                            <span className="text-sm font-medium">Documento</span>
+                                          </div>
+                                          <Progress value={0} className="h-1.5" />
+                                        </div>
+                                        
+                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded">
+                                              <Headphones className="h-4 w-4 text-purple-600" />
+                                            </div>
+                                            <span className="text-sm font-medium">Audio</span>
+                                          </div>
+                                          <Progress value={0} className="h-1.5" />
+                                        </div>
+                                        
+                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded">
+                                              <Code className="h-4 w-4 text-green-600" />
+                                            </div>
+                                            <span className="text-sm font-medium">SCORM</span>
+                                          </div>
+                                          <Progress value={0} className="h-1.5" />
+                                        </div>
+                                        
+                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded">
+                                              <FileQuestion className="h-4 w-4 text-amber-600" />
+                                            </div>
+                                            <span className="text-sm font-medium">Ejercicio</span>
+                                          </div>
+                                          <Progress value={0} className="h-1.5" />
+                                        </div>
+                                      </div>
 
-                        {/* Evaluations */}
+                                      {/* Unit Tests */}
+                                      {unit.evaluations && unit.evaluations.length > 0 && (
+                                        <div className="space-y-2 pt-2 border-t">
+                                          <p className="text-xs font-medium text-muted-foreground">Tests ({unit.evaluations.length})</p>
+                                          {unit.evaluations.map((evaluation: any) => (
+                                            <Button
+                                              key={evaluation.id}
+                                              variant="outline"
+                                              size="sm"
+                                              className="w-full justify-start text-xs"
+                                            >
+                                              <CheckCircle2 className="h-3 w-3 mr-2" />
+                                              {evaluation.title}
+                                            </Button>
+                                          ))}
+                                        </div>
+                                      )}
+
+                                      {/* Unit Activities */}
+                                      {unit.activities && unit.activities.length > 0 && (
+                                        <div className="space-y-2 pt-2 border-t">
+                                          <p className="text-xs font-medium text-muted-foreground">Actividades ({unit.activities.length})</p>
+                                          {unit.activities.map((activity: any) => (
+                                            <Button
+                                              key={activity.id}
+                                              variant="outline"
+                                              size="sm"
+                                              className="w-full justify-start text-xs"
+                                            >
+                                              <FileText className="h-3 w-3 mr-2" />
+                                              {activity.title}
+                                            </Button>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              ))}
+                            </Accordion>
+                          </div>
+                        )}
+
+                        {/* Module Content Button (if no UFs) */}
+                        {(!module.formative_units || module.formative_units.length === 0) && (
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start"
+                            onClick={() => navigate(`/course/${courseId}/module/${module.id}`)}
+                          >
+                            <PlayCircle className="h-4 w-4 mr-2" />
+                            Ver contenido del módulo
+                          </Button>
+                        )}
+
+                        {/* Module-level Evaluations */}
                         {module.evaluations && module.evaluations.length > 0 && (
                           <div className="space-y-2">
-                            <h4 className="font-semibold flex items-center gap-2">
+                            <h4 className="font-semibold flex items-center gap-2 text-sm">
                               <FileText className="h-4 w-4" />
-                              Evaluaciones ({module.evaluations.length})
+                              Evaluaciones del Módulo ({module.evaluations.length})
                             </h4>
                             {module.evaluations.map((evaluation: any) => (
                               <Button
@@ -715,12 +893,12 @@ export default function CourseView() {
                           </div>
                         )}
 
-                        {/* Development Activities */}
+                        {/* Module-level Activities */}
                         {module.activities && module.activities.length > 0 && (
                           <div className="space-y-2">
-                            <h4 className="font-semibold flex items-center gap-2">
+                            <h4 className="font-semibold flex items-center gap-2 text-sm">
                               <FileText className="h-4 w-4" />
-                              Actividades ({module.activities.length})
+                              Actividades del Módulo ({module.activities.length})
                             </h4>
                             {module.activities.map((activity: any) => (
                               <Button
@@ -738,7 +916,7 @@ export default function CourseView() {
                         {/* SCORM Content */}
                         {module.scorm_content && module.scorm_content.length > 0 && (
                           <div className="space-y-2">
-                            <h4 className="font-semibold flex items-center gap-2">
+                            <h4 className="font-semibold flex items-center gap-2 text-sm">
                               <PlayCircle className="h-4 w-4" />
                               Contenido SCORM ({module.scorm_content.length})
                             </h4>
