@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Search, Building2, Check, X } from "lucide-react";
+import { Loader2, Search, Building2, Save } from "lucide-react";
 
 interface Course {
   id: string;
@@ -46,10 +46,12 @@ export default function CourseAssignmentPanel({
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [centers, setCenters] = useState<TrainingCenter[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [originalAssignments, setOriginalAssignments] = useState<Assignment[]>([]);
+  const [pendingSelections, setPendingSelections] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (open && course) {
@@ -60,6 +62,7 @@ export default function CourseAssignmentPanel({
   const loadData = async () => {
     if (!course) return;
     setLoading(true);
+    setHasChanges(false);
     try {
       const [centersRes, assignmentsRes] = await Promise.all([
         supabase
@@ -77,7 +80,15 @@ export default function CourseAssignmentPanel({
       if (assignmentsRes.error) throw assignmentsRes.error;
 
       setCenters(centersRes.data || []);
-      setAssignments(assignmentsRes.data || []);
+      setOriginalAssignments(assignmentsRes.data || []);
+      
+      // Initialize pending selections with currently active assignments
+      const activeIds = new Set(
+        (assignmentsRes.data || [])
+          .filter(a => a.is_active)
+          .map(a => a.training_center_id)
+      );
+      setPendingSelections(activeIds);
     } catch (error: any) {
       console.error("Error loading data:", error);
       toast({
@@ -90,68 +101,91 @@ export default function CourseAssignmentPanel({
     }
   };
 
-  const isAssigned = (centerId: string): boolean => {
-    return assignments.some(a => 
-      a.training_center_id === centerId && a.is_active
-    );
+  const isSelected = (centerId: string): boolean => {
+    return pendingSelections.has(centerId);
   };
 
-  const toggleAssignment = async (centerId: string) => {
+  const toggleSelection = (centerId: string) => {
+    setPendingSelections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(centerId)) {
+        newSet.delete(centerId);
+      } else {
+        newSet.add(centerId);
+      }
+      return newSet;
+    });
+    setHasChanges(true);
+  };
+
+  const handleSave = async () => {
     if (!course) return;
-    setSaving(centerId);
+    setSaving(true);
 
     try {
-      const existing = assignments.find(a => 
-        a.training_center_id === centerId
+      const currentActiveIds = new Set(
+        originalAssignments.filter(a => a.is_active).map(a => a.training_center_id)
       );
 
-      if (existing) {
-        const { error } = await supabase
-          .from("course_center_assignments")
-          .update({ is_active: !existing.is_active })
-          .eq("course_id", course.id)
-          .eq("training_center_id", centerId);
+      // Find centers to activate (in pending but not originally active)
+      const toActivate = [...pendingSelections].filter(id => !currentActiveIds.has(id));
+      
+      // Find centers to deactivate (originally active but not in pending)
+      const toDeactivate = [...currentActiveIds].filter(id => !pendingSelections.has(id));
 
-        if (error) throw error;
-
-        setAssignments(prev => prev.map(a => 
-          a.training_center_id === centerId
-            ? { ...a, is_active: !a.is_active }
-            : a
-        ));
-      } else {
-        const { error } = await supabase
-          .from("course_center_assignments")
-          .insert({
-            course_id: course.id,
-            training_center_id: centerId,
-            is_active: true,
-            assigned_by: user?.id
-          });
-
-        if (error) throw error;
-
-        setAssignments(prev => [...prev, {
-          course_id: course.id,
-          training_center_id: centerId,
-          is_active: true
-        }]);
+      // Process activations
+      for (const centerId of toActivate) {
+        const existing = originalAssignments.find(a => a.training_center_id === centerId);
+        
+        if (existing) {
+          // Update existing to active
+          const { error } = await supabase
+            .from("course_center_assignments")
+            .update({ is_active: true })
+            .eq("course_id", course.id)
+            .eq("training_center_id", centerId);
+          if (error) throw error;
+        } else {
+          // Create new assignment
+          const { error } = await supabase
+            .from("course_center_assignments")
+            .insert({
+              course_id: course.id,
+              training_center_id: centerId,
+              is_active: true,
+              assigned_by: user?.id
+            });
+          if (error) throw error;
+        }
       }
 
-      onAssignmentChange();
+      // Process deactivations
+      for (const centerId of toDeactivate) {
+        const { error } = await supabase
+          .from("course_center_assignments")
+          .update({ is_active: false })
+          .eq("course_id", course.id)
+          .eq("training_center_id", centerId);
+        if (error) throw error;
+      }
+
       toast({
-        title: "Asignación actualizada",
-        description: "Los cambios se han guardado correctamente",
+        title: "Cambios guardados",
+        description: `${toActivate.length} activados, ${toDeactivate.length} desactivados`,
       });
+
+      setHasChanges(false);
+      onAssignmentChange();
+      onOpenChange(false);
     } catch (error: any) {
-      console.error("Error toggling assignment:", error);
+      console.error("Error saving assignments:", error);
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
     } finally {
-      setSaving(null);
+      setSaving(false);
     }
   };
 
@@ -160,29 +194,19 @@ export default function CourseAssignmentPanel({
     c.slug?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const assignedCount = assignments.filter(a => a.is_active).length;
-
-  const handleSelectAll = async () => {
-    if (!course) return;
-    const unassignedCenters = centers.filter(c => !isAssigned(c.id));
-    
-    for (const center of unassignedCenters) {
-      await toggleAssignment(center.id);
-    }
+  const handleSelectAll = () => {
+    setPendingSelections(new Set(centers.map(c => c.id)));
+    setHasChanges(true);
   };
 
-  const handleDeselectAll = async () => {
-    if (!course) return;
-    const assignedCenters = centers.filter(c => isAssigned(c.id));
-    
-    for (const center of assignedCenters) {
-      await toggleAssignment(center.id);
-    }
+  const handleDeselectAll = () => {
+    setPendingSelections(new Set());
+    setHasChanges(true);
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg">
+      <SheetContent className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-xl">{course?.title}</SheetTitle>
           <SheetDescription className="flex items-center gap-2">
@@ -192,13 +216,20 @@ export default function CourseAssignmentPanel({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-4">
+        <div className="flex-1 mt-6 space-y-4 overflow-hidden flex flex-col">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-muted-foreground" />
               <span className="font-medium">Centros Asignados</span>
-              <Badge>{assignedCount} / {centers.length}</Badge>
+              <Badge variant={hasChanges ? "destructive" : "default"}>
+                {pendingSelections.size} / {centers.length}
+              </Badge>
             </div>
+            {hasChanges && (
+              <Badge variant="outline" className="text-amber-600 border-amber-600">
+                Sin guardar
+              </Badge>
+            )}
           </div>
 
           {/* Search */}
@@ -214,20 +245,10 @@ export default function CourseAssignmentPanel({
 
           {/* Bulk actions */}
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSelectAll}
-              disabled={loading}
-            >
+            <Button variant="outline" size="sm" onClick={handleSelectAll} disabled={loading}>
               Seleccionar todos
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleDeselectAll}
-              disabled={loading}
-            >
+            <Button variant="outline" size="sm" onClick={handleDeselectAll} disabled={loading}>
               Deseleccionar todos
             </Button>
           </div>
@@ -238,40 +259,24 @@ export default function CourseAssignmentPanel({
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <ScrollArea className="h-[calc(100vh-320px)]">
+            <ScrollArea className="flex-1">
               <div className="space-y-2 pr-4">
                 {filteredCenters.map((center) => {
-                  const assigned = isAssigned(center.id);
-                  const isSaving = saving === center.id;
+                  const selected = isSelected(center.id);
 
                   return (
                     <div
                       key={center.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer hover:bg-muted/50 ${
-                        assigned ? "bg-primary/5 border-primary/30" : "border-border"
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer hover:bg-muted/50 ${
+                        selected ? "bg-primary/5 border-primary/30" : "border-border"
                       }`}
-                      onClick={() => !isSaving && toggleAssignment(center.id)}
+                      onClick={() => toggleSelection(center.id)}
                     >
-                      <div className="flex items-center gap-3">
-                        <Checkbox 
-                          checked={assigned} 
-                          disabled={isSaving}
-                          onCheckedChange={() => toggleAssignment(center.id)}
-                        />
-                        <div>
-                          <p className="font-medium">{center.name}</p>
-                          {center.slug && (
-                            <p className="text-xs text-muted-foreground">{center.slug}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isSaving ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : assigned ? (
-                          <Check className="h-4 w-4 text-primary" />
-                        ) : (
-                          <X className="h-4 w-4 text-muted-foreground" />
+                      <Checkbox checked={selected} />
+                      <div className="flex-1">
+                        <p className="font-medium">{center.name}</p>
+                        {center.slug && (
+                          <p className="text-xs text-muted-foreground">{center.slug}</p>
                         )}
                       </div>
                     </div>
@@ -286,6 +291,32 @@ export default function CourseAssignmentPanel({
             </ScrollArea>
           )}
         </div>
+
+        <SheetFooter className="mt-4 pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={saving}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !hasChanges}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Guardando...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Guardar cambios
+              </>
+            )}
+          </Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
