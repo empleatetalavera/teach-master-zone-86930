@@ -82,6 +82,8 @@ export default function AdminCourses() {
   const [loadingEnrolled, setLoadingEnrolled] = useState(false);
   const [viewSearchTerm, setViewSearchTerm] = useState("");
   const [unenrollingStudent, setUnenrollingStudent] = useState<string | null>(null);
+  const [enrollByEmail, setEnrollByEmail] = useState("");
+  const [enrollingByEmail, setEnrollingByEmail] = useState(false);
   
   // Tutor assignment state
   const [tutorSheetOpen, setTutorSheetOpen] = useState(false);
@@ -660,7 +662,96 @@ export default function AdminCourses() {
     setSelectedCourseForView(course);
     setViewStudentsSheetOpen(true);
     setViewSearchTerm("");
+    setEnrollByEmail("");
     loadEnrolledStudents(course.id);
+  };
+
+  const handleEnrollByEmail = async () => {
+    if (!selectedCourseForView || !enrollByEmail.trim()) return;
+    
+    setEnrollingByEmail(true);
+    try {
+      // Search for user by email in auth via profiles (we need to find user_id)
+      // Since we can't directly query auth.users, we'll use a workaround
+      // First check if user exists by trying to find them in profiles via a pattern match
+      // Actually, we need to query the users table or use an edge function
+      
+      // Alternative: Use supabase admin to find user by email
+      // For now, let's search in profiles and match by the email stored there
+      // But profiles don't have email... we need to search differently
+      
+      // We'll need to use the create-user edge function pattern or query enrollments differently
+      // Let's try using RPC or checking if user exists by querying auth metadata
+      
+      // Simplest approach: Use the auth.users() admin API via edge function
+      // Or we can search all profiles and cross-reference with user_roles
+      
+      // For MVP, let's search all users with student role in the center
+      const { data: centerStudents, error: studentsError } = await supabase
+        .from("profiles")
+        .select("id, full_name, training_center_id")
+        .eq("training_center_id", userTrainingCenterId);
+      
+      if (studentsError) throw studentsError;
+      
+      // We need to find the user by email - but we don't have email in profiles
+      // Let's call the edge function to search by email
+      const { data: searchResult, error: searchError } = await supabase.functions.invoke('search-user-by-email', {
+        body: { email: enrollByEmail.trim().toLowerCase() }
+      });
+      
+      if (searchError || !searchResult?.user_id) {
+        // Fallback: Try to find user that matches the email pattern in auth
+        throw new Error("No se encontró ningún usuario con ese email");
+      }
+      
+      const userId = searchResult.user_id;
+      
+      // Check if already enrolled
+      const { data: existingEnrollment } = await supabase
+        .from("enrollments")
+        .select("id")
+        .eq("course_id", selectedCourseForView.id)
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      if (existingEnrollment) {
+        toast({
+          title: "Usuario ya matriculado",
+          description: "Este usuario ya está matriculado en el curso",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Enroll the user
+      const { error: enrollError } = await supabase
+        .from("enrollments")
+        .insert({
+          user_id: userId,
+          course_id: selectedCourseForView.id,
+        });
+      
+      if (enrollError) throw enrollError;
+      
+      toast({
+        title: "Alumno matriculado",
+        description: `El usuario ha sido matriculado correctamente`,
+      });
+      
+      setEnrollByEmail("");
+      loadEnrolledStudents(selectedCourseForView.id);
+      loadUserAndCourses(); // Refresh counts
+    } catch (error: any) {
+      console.error("Error enrolling by email:", error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo matricular al usuario",
+        variant: "destructive",
+      });
+    } finally {
+      setEnrollingByEmail(false);
+    }
   };
 
   const filteredEnrolledStudents = enrolledStudents.filter(s =>
@@ -1335,6 +1426,36 @@ export default function AdminCourses() {
           </SheetHeader>
 
           <div className="mt-6 space-y-4">
+            {/* Enroll by Email */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Matricular por email</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="email@ejemplo.com"
+                  value={enrollByEmail}
+                  onChange={(e) => setEnrollByEmail(e.target.value)}
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && enrollByEmail.trim()) {
+                      handleEnrollByEmail();
+                    }
+                  }}
+                />
+                <Button
+                  onClick={handleEnrollByEmail}
+                  disabled={enrollingByEmail || !enrollByEmail.trim()}
+                  size="sm"
+                >
+                  {enrollingByEmail ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <UserPlus className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
