@@ -71,6 +71,8 @@ interface Module {
   concept_map_url: string | null;
   objectives: string | null;
   forum_enabled: boolean;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 interface Evaluation {
@@ -108,6 +110,8 @@ interface FormativeUnit {
   order_index: number;
   duration_hours: number | null;
   is_active: boolean;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 export default function CourseContentEditor() {
@@ -147,7 +151,9 @@ export default function CourseContentEditor() {
     is_visible_to_students: true,
     concept_map_url: "",
     objectives: "",
-    forum_enabled: true
+    forum_enabled: true,
+    start_date: "",
+    end_date: ""
   });
 
   const [evaluationForm, setEvaluationForm] = useState({
@@ -179,7 +185,9 @@ export default function CourseContentEditor() {
     content: "",
     objectives: "",
     duration_hours: 1,
-    is_active: true
+    is_active: true,
+    start_date: "",
+    end_date: ""
   });
 
   useEffect(() => {
@@ -281,7 +289,9 @@ export default function CourseContentEditor() {
             is_visible_to_students: moduleForm.is_visible_to_students,
             concept_map_url: moduleForm.concept_map_url || null,
             objectives: moduleForm.objectives || null,
-            forum_enabled: moduleForm.forum_enabled
+            forum_enabled: moduleForm.forum_enabled,
+            start_date: moduleForm.start_date || null,
+            end_date: moduleForm.end_date || null
           })
           .eq("id", editingModule.id);
 
@@ -301,7 +311,9 @@ export default function CourseContentEditor() {
             order_index: modules.length + 1,
             concept_map_url: moduleForm.concept_map_url || null,
             objectives: moduleForm.objectives || null,
-            forum_enabled: moduleForm.forum_enabled
+            forum_enabled: moduleForm.forum_enabled,
+            start_date: moduleForm.start_date || null,
+            end_date: moduleForm.end_date || null
           });
 
         if (error) throw error;
@@ -346,7 +358,9 @@ export default function CourseContentEditor() {
       is_visible_to_students: module.is_visible_to_students ?? true,
       concept_map_url: module.concept_map_url || "",
       objectives: module.objectives || "",
-      forum_enabled: module.forum_enabled ?? true
+      forum_enabled: module.forum_enabled ?? true,
+      start_date: module.start_date ? module.start_date.split('T')[0] : "",
+      end_date: module.end_date ? module.end_date.split('T')[0] : ""
     });
     setModuleDialogOpen(true);
   };
@@ -362,7 +376,9 @@ export default function CourseContentEditor() {
       is_visible_to_students: true,
       concept_map_url: "",
       objectives: "",
-      forum_enabled: true
+      forum_enabled: true,
+      start_date: "",
+      end_date: ""
     });
   };
 
@@ -605,7 +621,9 @@ export default function CourseContentEditor() {
             content: unitForm.content || null,
             objectives: unitForm.objectives || null,
             duration_hours: unitForm.duration_hours,
-            is_active: unitForm.is_active
+            is_active: unitForm.is_active,
+            start_date: unitForm.start_date || null,
+            end_date: unitForm.end_date || null
           })
           .eq("id", editingUnit.id);
 
@@ -622,7 +640,9 @@ export default function CourseContentEditor() {
             objectives: unitForm.objectives || null,
             duration_hours: unitForm.duration_hours,
             is_active: unitForm.is_active,
-            order_index: moduleUnits.length + 1
+            order_index: moduleUnits.length + 1,
+            start_date: unitForm.start_date || null,
+            end_date: unitForm.end_date || null
           });
 
         if (error) throw error;
@@ -665,7 +685,9 @@ export default function CourseContentEditor() {
       content: unit.content || "",
       objectives: unit.objectives || "",
       duration_hours: unit.duration_hours || 1,
-      is_active: unit.is_active
+      is_active: unit.is_active,
+      start_date: unit.start_date ? unit.start_date.split('T')[0] : "",
+      end_date: unit.end_date ? unit.end_date.split('T')[0] : ""
     });
     setUnitDialogOpen(true);
   };
@@ -678,7 +700,9 @@ export default function CourseContentEditor() {
       content: "",
       objectives: "",
       duration_hours: 1,
-      is_active: true
+      is_active: true,
+      start_date: "",
+      end_date: ""
     });
   };
 
@@ -852,6 +876,33 @@ export default function CourseContentEditor() {
                   onChange={(e) => setModuleForm({ ...moduleForm, concept_map_url: e.target.value })}
                   placeholder="https://... o ruta del archivo"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                <div className="space-y-2">
+                  <Label htmlFor="module-start-date" className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" />
+                    Fecha de Inicio
+                  </Label>
+                  <Input
+                    id="module-start-date"
+                    type="date"
+                    value={moduleForm.start_date}
+                    onChange={(e) => setModuleForm({ ...moduleForm, start_date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="module-end-date" className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" />
+                    Fecha de Fin
+                  </Label>
+                  <Input
+                    id="module-end-date"
+                    type="date"
+                    value={moduleForm.end_date}
+                    onChange={(e) => setModuleForm({ ...moduleForm, end_date: e.target.value })}
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1770,6 +1821,33 @@ export default function CourseContentEditor() {
                 placeholder="Contenido del temario..."
                 rows={4}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="space-y-2">
+                <Label htmlFor="unit-start-date" className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Fecha de Inicio
+                </Label>
+                <Input
+                  id="unit-start-date"
+                  type="date"
+                  value={unitForm.start_date}
+                  onChange={(e) => setUnitForm({ ...unitForm, start_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="unit-end-date" className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Fecha de Fin
+                </Label>
+                <Input
+                  id="unit-end-date"
+                  type="date"
+                  value={unitForm.end_date}
+                  onChange={(e) => setUnitForm({ ...unitForm, end_date: e.target.value })}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
