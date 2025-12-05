@@ -28,7 +28,7 @@ export default function Auth() {
   console.log('[Auth] Current URL search params:', window.location.search);
   console.log('[Auth] Center slug extracted:', centerSlug);
   
-  const { signIn, signUp, resetPassword, user, userRole, loading } = useAuth();
+  const { signIn, signUp, resetPassword, signOut, user, userRole, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { branding, loading: brandingLoading } = useCenterBranding(centerSlug);
@@ -59,10 +59,13 @@ export default function Auth() {
     }
   }, [branding, brandingLoading]);
 
+  // Only auto-redirect if user logs in fresh (not when already on page with session)
+  const [shouldAutoRedirect, setShouldAutoRedirect] = useState(false);
+
   useEffect(() => {
-    if (!loading && user && userRole) {
+    // Enable auto-redirect only after a successful login action
+    if (!loading && user && userRole && shouldAutoRedirect) {
       // Redirect based on role
-      // super_admin and admin both go to admin dashboard
       if (userRole === "super_admin" || userRole === "admin") {
         navigate("/dashboard/admin");
       } else if (userRole === "teacher") {
@@ -75,7 +78,7 @@ export default function Auth() {
         navigate("/dashboard/inspector");
       }
     }
-  }, [user, userRole, loading, navigate]);
+  }, [user, userRole, loading, navigate, shouldAutoRedirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,6 +128,7 @@ export default function Auth() {
           variant: "destructive",
         });
       } else {
+        setShouldAutoRedirect(true);
         toast({
           title: "Bienvenido",
           description: "Has iniciado sesión correctamente",
@@ -214,7 +218,45 @@ export default function Auth() {
           </div>
         </CardHeader>
         <CardContent>
-          {mode === 'reset' ? (
+          {/* Show options if user is already logged in */}
+          {user && userRole ? (
+            <div className="space-y-4">
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground mb-2">Ya tienes una sesión activa como:</p>
+                <p className="font-medium">{user.email}</p>
+                <p className="text-xs text-muted-foreground capitalize">({userRole})</p>
+              </div>
+              <Button 
+                className="w-full" 
+                onClick={() => {
+                  if (userRole === "super_admin" || userRole === "admin") {
+                    navigate("/dashboard/admin");
+                  } else if (userRole === "teacher") {
+                    navigate("/dashboard/teacher");
+                  } else if (userRole === "student") {
+                    navigate("/dashboard/student");
+                  } else {
+                    navigate("/dashboard/" + userRole);
+                  }
+                }}
+              >
+                Ir al Panel de Control
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={async () => {
+                  await signOut();
+                  toast({
+                    title: "Sesión cerrada",
+                    description: "Has cerrado sesión correctamente",
+                  });
+                }}
+              >
+                Cerrar Sesión y Usar Otra Cuenta
+              </Button>
+            </div>
+          ) : mode === 'reset' ? (
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="reset-email">Correo electrónico</Label>
