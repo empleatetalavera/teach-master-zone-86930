@@ -16,6 +16,7 @@ interface InvoiceFiltersProps {
   filterDateTo: string;
   setFilterDateTo: (value: string) => void;
   onClear: () => void;
+  showCenterFilter?: boolean;
 }
 
 export function InvoiceFilters({
@@ -28,30 +29,33 @@ export function InvoiceFilters({
   setFilterDateFrom,
   filterDateTo,
   setFilterDateTo,
-  onClear
+  onClear,
+  showCenterFilter = true
 }: InvoiceFiltersProps) {
   const hasFilters = filterCenter || filterStatus || filterDateFrom || filterDateTo;
 
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label>Centro</Label>
-            <Select value={filterCenter || "all"} onValueChange={(val) => setFilterCenter(val === "all" ? "" : val)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos los centros" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los centros</SelectItem>
-                {centers.map((center) => (
-                  <SelectItem key={center.id} value={center.id}>
-                    {center.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className={`grid grid-cols-1 gap-4 ${showCenterFilter ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+          {showCenterFilter && (
+            <div className="space-y-2">
+              <Label>Centro</Label>
+              <Select value={filterCenter || "all"} onValueChange={(val) => setFilterCenter(val === "all" ? "" : val)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos los centros" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los centros</SelectItem>
+                  {centers.map((center) => (
+                    <SelectItem key={center.id} value={center.id}>
+                      {center.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Estado</Label>

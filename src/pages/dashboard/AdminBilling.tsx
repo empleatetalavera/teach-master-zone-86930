@@ -114,7 +114,7 @@ interface TaxConfiguration {
 }
 
 export default function AdminBilling() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [centers, setCenters] = useState<TrainingCenter[]>([]);
   const [licenses, setLicenses] = useState<License[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -124,6 +124,10 @@ export default function AdminBilling() {
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
   const [taxConfigs, setTaxConfigs] = useState<TaxConfiguration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userCenterId, setUserCenterId] = useState<string | null>(null);
+  
+  // Check if user is super_admin (platform admin) or center admin
+  const isSuperAdmin = userRole === 'super_admin';
   
   // Dialog states
   const [centerDialogOpen, setCenterDialogOpen] = useState(false);
@@ -173,21 +177,58 @@ export default function AdminBilling() {
     features: "",
   });
 
+  // Get user's training center ID if they're a center admin
   useEffect(() => {
-    loadData();
-  }, []);
+    const getUserCenterId = async () => {
+      if (!user || isSuperAdmin) {
+        loadData();
+        return;
+      }
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('training_center_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.training_center_id) {
+        setUserCenterId(profile.training_center_id);
+      }
+      loadData(profile?.training_center_id);
+    };
+    
+    getUserCenterId();
+  }, [user, isSuperAdmin]);
 
-  const loadData = async () => {
+  const loadData = async (centerId?: string | null) => {
     setLoading(true);
     try {
+      const effectiveCenterId = centerId || userCenterId;
+      
+      // Build queries based on whether user is super_admin or center admin
+      let centersQuery = supabase.from("training_centers").select("*").order("created_at", { ascending: false });
+      let licensesQuery = supabase.from("licenses").select("*, training_centers(name)").order("created_at", { ascending: false });
+      let invoicesQuery = supabase.from("invoices").select("*, training_centers(name)").order("issue_date", { ascending: false });
+      let paymentsQuery = supabase.from("payment_history").select("*, training_centers(name), invoices(invoice_number)").order("payment_date", { ascending: false });
+      let templatesQuery = supabase.from("invoice_templates").select("*").order("created_at", { ascending: false });
+      
+      // Filter by center if not super_admin
+      if (!isSuperAdmin && effectiveCenterId) {
+        centersQuery = centersQuery.eq("id", effectiveCenterId);
+        licensesQuery = licensesQuery.eq("training_center_id", effectiveCenterId);
+        invoicesQuery = invoicesQuery.eq("training_center_id", effectiveCenterId);
+        paymentsQuery = paymentsQuery.eq("training_center_id", effectiveCenterId);
+        templatesQuery = templatesQuery.or(`training_center_id.eq.${effectiveCenterId},training_center_id.is.null`);
+      }
+      
       const [centersRes, licensesRes, invoicesRes, plansRes, notificationsRes, templatesRes, paymentsRes, taxesRes] = await Promise.all([
-        supabase.from("training_centers").select("*").order("created_at", { ascending: false }),
-        supabase.from("licenses").select("*, training_centers(name)").order("created_at", { ascending: false }),
-        supabase.from("invoices").select("*, training_centers(name)").order("issue_date", { ascending: false }),
+        centersQuery,
+        licensesQuery,
+        invoicesQuery,
         supabase.from("pricing_plans").select("*").order("base_price", { ascending: true }),
-        supabase.from("notifications").select("*").in("type", ["invoice_overdue", "invoice_due_soon", "invoice_reminder"]).order("created_at", { ascending: false }).limit(50),
-        supabase.from("invoice_templates").select("*").order("created_at", { ascending: false }),
-        supabase.from("payment_history").select("*, training_centers(name), invoices(invoice_number)").order("payment_date", { ascending: false }),
+        user ? supabase.from("notifications").select("*").eq("user_id", user.id).in("type", ["invoice_overdue", "invoice_due_soon", "invoice_reminder"]).order("created_at", { ascending: false }).limit(50) : Promise.resolve({ data: [] }),
+        templatesQuery,
+        paymentsQuery,
         supabase.from("tax_configurations").select("*").order("created_at", { ascending: false }),
       ]);
 
@@ -381,11 +422,15 @@ export default function AdminBilling() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Centros Activos</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {isSuperAdmin ? "Centros Activos" : "Mi Centro"}
+            </CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{centers.filter(c => c.is_active).length}</div>
+            <div className="text-2xl font-bold">
+              {isSuperAdmin ? centers.filter(c => c.is_active).length : centers[0]?.name || "-"}
+            </div>
           </CardContent>
         </Card>
 
@@ -430,9 +475,9 @@ export default function AdminBilling() {
         </Card>
       </div>
 
-      <Tabs defaultValue="centers" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="centers">Centros</TabsTrigger>
+      <Tabs defaultValue={isSuperAdmin ? "centers" : "invoices"} className="space-y-4">
+        <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-7' : 'grid-cols-4'}`}>
+          {isSuperAdmin && <TabsTrigger value="centers">Centros</TabsTrigger>}
           <TabsTrigger value="invoices">Facturas</TabsTrigger>
           <TabsTrigger value="templates">
             <Receipt className="h-4 w-4 mr-2" />
@@ -442,17 +487,20 @@ export default function AdminBilling() {
             <History className="h-4 w-4 mr-2" />
             Pagos
           </TabsTrigger>
-          <TabsTrigger value="taxes">
-            <Percent className="h-4 w-4 mr-2" />
-            Impuestos
-          </TabsTrigger>
-          <TabsTrigger value="pricing">Tarifas</TabsTrigger>
+          {isSuperAdmin && (
+            <TabsTrigger value="taxes">
+              <Percent className="h-4 w-4 mr-2" />
+              Impuestos
+            </TabsTrigger>
+          )}
+          {isSuperAdmin && <TabsTrigger value="pricing">Tarifas</TabsTrigger>}
           <TabsTrigger value="notifications">
             <Bell className="h-4 w-4 mr-2" />
             Notificaciones
           </TabsTrigger>
         </TabsList>
 
+        {isSuperAdmin && (
         <TabsContent value="centers" className="space-y-4">
           <Card>
             <CardHeader>
@@ -559,6 +607,7 @@ export default function AdminBilling() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
         <TabsContent value="invoices" className="space-y-4">
           <InvoiceFilters
@@ -577,6 +626,7 @@ export default function AdminBilling() {
               setFilterDateFrom("");
               setFilterDateTo("");
             }}
+            showCenterFilter={isSuperAdmin}
           />
           
           <Card>
@@ -745,10 +795,13 @@ export default function AdminBilling() {
           />
         </TabsContent>
 
+        {isSuperAdmin && (
         <TabsContent value="taxes" className="space-y-4">
           <TaxManager taxes={taxConfigs} onUpdate={loadData} />
         </TabsContent>
+        )}
 
+        {isSuperAdmin && (
         <TabsContent value="pricing" className="space-y-4">
           <Card>
             <CardHeader>
@@ -932,6 +985,7 @@ export default function AdminBilling() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
         <TabsContent value="notifications" className="space-y-4">
           <Card>
