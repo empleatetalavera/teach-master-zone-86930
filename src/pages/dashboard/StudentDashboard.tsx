@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import StudentProfileCompletion from "@/components/StudentProfileCompletion";
 
 interface Enrollment {
   id: string;
@@ -27,41 +28,61 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
 
   useEffect(() => {
     const loadStudentData = async () => {
       if (!user?.id) return;
 
       try {
-        // Fetch student's enrollments with course data
-        const { data: enrollmentsData, error } = await supabase
-          .from('enrollments')
-          .select(`
-            id,
-            progress_percentage,
-            completed_at,
-            course:courses (
+        // Check if profile is complete (has DNI and required documents)
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('dni_nie, full_name, phone')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const { data: docs } = await supabase
+          .from('student_documents')
+          .select('document_type')
+          .eq('user_id', user.id)
+          .eq('document_type', 'dni');
+
+        const hasRequiredProfile = profileData?.dni_nie && profileData?.full_name && profileData?.phone;
+        const hasRequiredDocs = docs && docs.length > 0;
+
+        setProfileComplete(hasRequiredProfile && hasRequiredDocs);
+
+        // If profile is complete, load enrollments
+        if (hasRequiredProfile && hasRequiredDocs) {
+          const { data: enrollmentsData, error } = await supabase
+            .from('enrollments')
+            .select(`
               id,
-              title,
-              duration_hours
-            )
-          `)
-          .eq('user_id', user.id);
+              progress_percentage,
+              completed_at,
+              course:courses (
+                id,
+                title,
+                duration_hours
+              )
+            `)
+            .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Error loading enrollments:', error);
-          return;
+          if (error) {
+            console.error('Error loading enrollments:', error);
+            return;
+          }
+
+          const validEnrollments = (enrollmentsData || [])
+            .filter(e => e.course !== null)
+            .map(e => ({
+              ...e,
+              course: e.course as { id: string; title: string; duration_hours: number | null }
+            }));
+
+          setEnrollments(validEnrollments);
         }
-
-        // Transform data and filter out null courses
-        const validEnrollments = (enrollmentsData || [])
-          .filter(e => e.course !== null)
-          .map(e => ({
-            ...e,
-            course: e.course as { id: string; title: string; duration_hours: number | null }
-          }));
-
-        setEnrollments(validEnrollments);
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -71,6 +92,13 @@ const StudentDashboard = () => {
 
     loadStudentData();
   }, [user?.id]);
+
+  const handleProfileComplete = () => {
+    setProfileComplete(true);
+    setLoading(true);
+    // Reload to fetch enrollments
+    window.location.reload();
+  };
 
   // Calculate real stats
   const activeCourses = enrollments.filter(e => !e.completed_at).length;
@@ -128,6 +156,11 @@ const StudentDashboard = () => {
         </div>
       </div>
     );
+  }
+
+  // Show profile completion form if profile is not complete
+  if (profileComplete === false) {
+    return <StudentProfileCompletion onComplete={handleProfileComplete} />;
   }
 
   return (
