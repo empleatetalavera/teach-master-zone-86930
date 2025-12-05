@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Upload, User, FileText, Briefcase, GraduationCap, CheckCircle, XCircle, Clock, ArrowRight, FileDown, Calendar } from "lucide-react";
+import { Loader2, Upload, User, FileText, Briefcase, GraduationCap, CheckCircle, XCircle, Clock, ArrowRight, ArrowLeft, FileDown, Calendar, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 
@@ -622,6 +622,18 @@ export default function Profile() {
           </Card>
         )}
         
+        {/* Back to Dashboard button */}
+        <div className="flex items-center gap-3 mb-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate(userRole === 'student' ? '/dashboard/student' : userRole === 'teacher' ? '/dashboard/teacher' : '/dashboard/admin')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Volver al Inicio
+          </Button>
+        </div>
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
