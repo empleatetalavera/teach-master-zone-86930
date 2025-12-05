@@ -78,13 +78,18 @@ serve(async (req) => {
     }
 
     // Check if user has admin or super_admin role
+    console.log(`Checking role for user: ${user.id}`);
+    
     const { data: roleData, error: roleError } = await supabaseClient
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .single();
 
+    console.log(`Role check result: ${JSON.stringify(roleData)}, error: ${roleError?.message}`);
+
     if (roleError || !roleData || (roleData.role !== "admin" && roleData.role !== "super_admin")) {
+      console.log(`Permission denied: roleError=${roleError?.message}, roleData=${JSON.stringify(roleData)}`);
       return new Response(
         JSON.stringify({ error: "No tienes permisos de administrador" }),
         {
