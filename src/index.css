@@ -40,15 +40,15 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Sidebar colors */
-    --sidebar-background: 174 62% 47%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 174 62% 47%;
-    --sidebar-accent: 174 70% 42%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 174 50% 40%;
-    --sidebar-ring: 174 62% 60%;
+    /* Sidebar colors - White background */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 210 20% 20%;
+    --sidebar-primary: 174 62% 47%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 174 20% 96%;
+    --sidebar-accent-foreground: 210 20% 20%;
+    --sidebar-border: 210 15% 90%;
+    --sidebar-ring: 174 62% 47%;
 
     /* TalentCloud Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(174 62% 47%), hsl(174 62% 60%));
@@ -93,15 +93,15 @@ All colors MUST be HSL.
     --input: 210 15% 18%;
     --ring: 174 62% 47%;
 
-    /* Sidebar colors dark */
-    --sidebar-background: 174 50% 38%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 174 62% 47%;
-    --sidebar-accent: 174 70% 42%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 174 50% 32%;
-    --sidebar-ring: 174 62% 60%;
+    /* Sidebar colors dark - Dark background */
+    --sidebar-background: 210 15% 15%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 174 62% 47%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 15% 20%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 210 15% 22%;
+    --sidebar-ring: 174 62% 47%;
   }
 }
 
