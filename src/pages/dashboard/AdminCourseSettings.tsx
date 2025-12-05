@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, GraduationCap } from "lucide-react";
 import { CourseSettings } from "@/components/CourseSettings";
+import CourseScheduleManager from "@/components/CourseScheduleManager";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminCourseSettings() {
   const { courseId } = useParams();
@@ -149,20 +151,33 @@ export default function AdminCourseSettings() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : selectedCourse ? (
-        <CourseSettings
-          courseId={selectedCourse.id}
-          initialData={{
-            video_url: selectedCourse.video_url,
-            objectives: selectedCourse.objectives,
-            specific_objectives: selectedCourse.specific_objectives,
-            concept_map_url: selectedCourse.concept_map_url,
-            support_email: selectedCourse.support_email,
-            support_phone: selectedCourse.support_phone,
-            tutor_cv_url: selectedCourse.tutor_cv_url,
-            campus_guide_url: selectedCourse.campus_guide_url,
-          }}
-          onUpdate={() => loadCourseDetails(selectedCourse.id)}
-        />
+        <Tabs defaultValue="settings" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="settings">Configuración General</TabsTrigger>
+            <TabsTrigger value="schedule">Cronograma</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="settings">
+            <CourseSettings
+              courseId={selectedCourse.id}
+              initialData={{
+                video_url: selectedCourse.video_url,
+                objectives: selectedCourse.objectives,
+                specific_objectives: selectedCourse.specific_objectives,
+                concept_map_url: selectedCourse.concept_map_url,
+                support_email: selectedCourse.support_email,
+                support_phone: selectedCourse.support_phone,
+                tutor_cv_url: selectedCourse.tutor_cv_url,
+                campus_guide_url: selectedCourse.campus_guide_url,
+              }}
+              onUpdate={() => loadCourseDetails(selectedCourse.id)}
+            />
+          </TabsContent>
+
+          <TabsContent value="schedule">
+            <CourseScheduleManager courseId={selectedCourse.id} />
+          </TabsContent>
+        </Tabs>
       ) : (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
