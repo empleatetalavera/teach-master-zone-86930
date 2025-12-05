@@ -52,20 +52,17 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Create client with user's token to verify they're authenticated
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    // Create admin client for all operations
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
+        autoRefreshToken: false,
         persistSession: false,
-      },
-      global: {
-        headers: {
-          Authorization: authHeader,
-        },
       },
     });
 
-    // Verify the user is authenticated and has admin role
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    // Verify the user is authenticated using the token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !user) {
       return new Response(
@@ -80,7 +77,7 @@ serve(async (req) => {
     // Check if user has admin or super_admin role
     console.log(`Checking role for user: ${user.id}`);
     
-    const { data: roleData, error: roleError } = await supabaseClient
+    const { data: roleData, error: roleError } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
@@ -100,14 +97,6 @@ serve(async (req) => {
     }
 
     const isSuperAdmin = roleData.role === "super_admin";
-
-    // Create admin client to create new user
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
 
     // Get the admin's training center if they're a center admin
     let effectiveTrainingCenterId = trainingCenterId;

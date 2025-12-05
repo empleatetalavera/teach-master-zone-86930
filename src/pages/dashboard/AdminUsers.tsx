@@ -148,44 +148,34 @@ const AdminUsers = () => {
       setLoading(true);
       const effectiveCenterId = centerId || userCenterId;
       
-      // Get all user_roles with profile info
+      // Get all user_roles
       const { data: userRoles, error } = await supabase
         .from("user_roles")
-        .select(`
-          user_id,
-          role,
-          created_at,
-          profiles (
-            full_name,
-            training_center_id
-          )
-        `)
+        .select("user_id, role, created_at")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      // Get emails from auth.users (need admin access)
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+      // Get all profiles separately (no FK relationship)
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, training_center_id");
 
-      if (authError) {
-        console.error("Error fetching auth users:", authError);
-        toast({
-          title: "Advertencia",
-          description: "No se pudieron cargar algunos datos de usuarios. Funcionalidad limitada.",
-          variant: "destructive",
-        });
-      }
+      // Create a map for quick lookup
+      const profileMap = new Map(
+        (profiles || []).map((p: any) => [p.id, p])
+      );
 
       // Combine data
       let usersWithRoles: UserWithRole[] = (userRoles || []).map((ur: any) => {
-        const authUser = authData?.users?.find((au: any) => au.id === ur.user_id);
+        const profile = profileMap.get(ur.user_id);
         return {
           id: ur.user_id,
-          email: authUser?.email || "N/A",
+          email: "Cargando...",
           role: ur.role,
           created_at: ur.created_at,
-          full_name: ur.profiles?.full_name,
-          training_center_id: ur.profiles?.training_center_id,
+          full_name: profile?.full_name,
+          training_center_id: profile?.training_center_id,
         };
       });
 
@@ -200,7 +190,7 @@ const AdminUsers = () => {
       console.error("Error loading users:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar los usuarios. Asegúrate de tener permisos de administrador.",
+        description: "No se pudieron cargar los usuarios.",
         variant: "destructive",
       });
     } finally {
