@@ -275,11 +275,17 @@ export default function Auth() {
                 variant="outline" 
                 className="w-full" 
                 onClick={async () => {
+                  // Store center slug before logout
+                  const centerSlugToKeep = userCenterSlug || urlCenterSlug;
                   await signOut();
                   toast({
                     title: "Sesión cerrada",
                     description: "Has cerrado sesión correctamente",
                   });
+                  // Redirect to center-specific login if we have a slug
+                  if (centerSlugToKeep) {
+                    navigate(`/auth?center=${centerSlugToKeep}`);
+                  }
                 }}
               >
                 Cerrar Sesión y Usar Otra Cuenta
