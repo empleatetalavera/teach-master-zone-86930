@@ -8,7 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Building2, Edit, Trash2, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { Plus, Building2, Edit, Trash2, ToggleLeft, ToggleRight, Loader2, Eye } from "lucide-react";
+import CenterDetailPanel from "@/components/CenterDetailPanel";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,6 +34,8 @@ export default function AdminTrainingCenters() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCenter, setEditingCenter] = useState<TrainingCenter | null>(null);
+  const [selectedCenter, setSelectedCenter] = useState<TrainingCenter | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -670,6 +674,17 @@ export default function AdminTrainingCenters() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => {
+                            setSelectedCenter(center);
+                            setIsDetailOpen(true);
+                          }}
+                          title="Ver detalles"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleToggleActive(center.id, center.is_active)}
                           title={center.is_active ? "Desactivar" : "Activar"}
                         >
@@ -702,6 +717,34 @@ export default function AdminTrainingCenters() {
           )}
         </CardContent>
       </Card>
+
+      {/* Panel de detalles del centro */}
+      <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-3">
+              {selectedCenter?.logo_url ? (
+                <img 
+                  src={selectedCenter.logo_url} 
+                  alt={selectedCenter.name}
+                  className="h-10 w-10 object-contain rounded"
+                />
+              ) : (
+                <Building2 className="h-6 w-6" />
+              )}
+              {selectedCenter?.name}
+            </SheetTitle>
+          </SheetHeader>
+          {selectedCenter && (
+            <div className="mt-6">
+              <CenterDetailPanel 
+                centerId={selectedCenter.id} 
+                centerName={selectedCenter.name}
+              />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
