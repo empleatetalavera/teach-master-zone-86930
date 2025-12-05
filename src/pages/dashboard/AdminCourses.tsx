@@ -48,6 +48,8 @@ export default function AdminCourses() {
   const [isCreating, setIsCreating] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [userTrainingCenterId, setUserTrainingCenterId] = useState<string | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   
   // New course form
   const [newCourse, setNewCourse] = useState({
@@ -60,12 +62,38 @@ export default function AdminCourses() {
   });
 
   useEffect(() => {
-    loadCourses();
+    loadUserAndCourses();
   }, []);
 
-  const loadCourses = async () => {
+  const loadUserAndCourses = async () => {
     try {
-      const { data: coursesData, error } = await supabase
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No autenticado");
+
+      // Check if super_admin
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "super_admin")
+        .maybeSingle();
+      
+      const superAdmin = !!roleData;
+      setIsSuperAdmin(superAdmin);
+
+      // Get user's training center
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("training_center_id")
+        .eq("id", user.id)
+        .single();
+
+      const centerId = profile?.training_center_id;
+      setUserTrainingCenterId(centerId);
+
+      // Load courses - filter by center unless super_admin
+      let query = supabase
         .from("courses")
         .select(`
           *,
@@ -74,9 +102,16 @@ export default function AdminCourses() {
         `)
         .order("created_at", { ascending: false });
 
+      // Only filter by training_center_id if not super_admin
+      if (!superAdmin && centerId) {
+        query = query.eq("training_center_id", centerId);
+      }
+
+      const { data: coursesData, error } = await query;
+
       if (error) throw error;
 
-      const transformedCourses = coursesData.map((course: any) => ({
+      const transformedCourses = (coursesData || []).map((course: any) => ({
         ...course,
         _count: {
           enrollments: course.enrollments?.[0]?.count || 0,
@@ -107,6 +142,15 @@ export default function AdminCourses() {
       return;
     }
 
+    if (!userTrainingCenterId && !isSuperAdmin) {
+      toast({
+        title: "Error",
+        description: "No tienes un centro de formación asignado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsCreating(true);
       
@@ -120,6 +164,7 @@ export default function AdminCourses() {
           duration_hours: newCourse.duration_hours || null,
           course_type: newCourse.course_type,
           is_active: true,
+          training_center_id: userTrainingCenterId, // Assign to user's center
         })
         .select()
         .single();
@@ -141,7 +186,7 @@ export default function AdminCourses() {
         course_type: "propio",
       });
       
-      loadCourses();
+      loadUserAndCourses();
       
       // Navigate to configure the new course
       if (data?.id) {
@@ -178,7 +223,7 @@ export default function AdminCourses() {
       });
 
       setCourseToDelete(null);
-      loadCourses();
+      loadUserAndCourses();
     } catch (error: any) {
       console.error("Error deleting course:", error);
       toast({
