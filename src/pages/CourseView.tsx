@@ -299,7 +299,17 @@ export default function CourseView() {
       <div className="container max-w-7xl mx-auto py-8 px-4">
         <Button
           variant="ghost"
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            const dashboardRoutes: Record<string, string> = {
+              'student': '/dashboard/student/courses',
+              'teacher': '/dashboard/teacher/courses',
+              'admin': '/dashboard/admin/courses',
+              'super_admin': '/dashboard/admin/courses',
+              'auditor': '/dashboard/auditor/courses',
+              'inspector': '/dashboard/auditor/courses'
+            };
+            navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
+          }}
           className="mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
