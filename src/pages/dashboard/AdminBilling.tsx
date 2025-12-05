@@ -21,6 +21,7 @@ import { InvoiceFilters } from "@/components/billing/InvoiceFilters";
 import { TemplatesManager } from "@/components/billing/TemplatesManager";
 import { PaymentHistory } from "@/components/billing/PaymentHistory";
 import { TaxManager } from "@/components/billing/TaxManager";
+import { StudentInvoiceGenerator } from "@/components/billing/StudentInvoiceGenerator";
 
 interface TrainingCenter {
   id: string;
@@ -475,10 +476,11 @@ export default function AdminBilling() {
         </Card>
       </div>
 
-      <Tabs defaultValue={isSuperAdmin ? "centers" : "invoices"} className="space-y-4">
-        <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-7' : 'grid-cols-4'}`}>
+      <Tabs defaultValue={isSuperAdmin ? "centers" : "student-invoices"} className="space-y-4">
+        <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-8' : 'grid-cols-5'}`}>
           {isSuperAdmin && <TabsTrigger value="centers">Centros</TabsTrigger>}
-          <TabsTrigger value="invoices">Facturas</TabsTrigger>
+          <TabsTrigger value="student-invoices">Fact. Alumnos</TabsTrigger>
+          <TabsTrigger value="invoices">Facturas Centro</TabsTrigger>
           <TabsTrigger value="templates">
             <Receipt className="h-4 w-4 mr-2" />
             Plantillas
@@ -499,6 +501,10 @@ export default function AdminBilling() {
             Notificaciones
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="student-invoices">
+          <StudentInvoiceGenerator />
+        </TabsContent>
 
         {isSuperAdmin && (
         <TabsContent value="centers" className="space-y-4">

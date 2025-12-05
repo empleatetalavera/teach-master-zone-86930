@@ -1,0 +1,588 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { UserPlus, FileText, Download, Mail, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import jsPDF from "jspdf";
+import { useAuth } from "@/lib/auth";
+
+interface Course {
+  id: string;
+  title: string;
+  training_center_id: string;
+}
+
+interface Student {
+  id: string;
+  full_name: string;
+  email?: string;
+  dni_nie?: string;
+}
+
+interface StudentInvoice {
+  id: string;
+  invoice_number: string;
+  amount: number;
+  tax_amount: number;
+  total_amount: number;
+  status: string;
+  issue_date: string;
+  due_date: string;
+  notes: string | null;
+  student_name?: string;
+  student_email?: string;
+  course_title?: string;
+}
+
+export function StudentInvoiceGenerator() {
+  const { user } = useAuth();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [invoices, setInvoices] = useState<StudentInvoice[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [centerInfo, setCenterInfo] = useState<any>(null);
+
+  const [form, setForm] = useState({
+    courseId: "",
+    studentId: "",
+    amount: "",
+    taxRate: "21",
+    concept: "",
+    dueDate: "",
+    notes: "",
+  });
+
+  useEffect(() => {
+    loadCourses();
+    loadInvoices();
+    loadCenterInfo();
+  }, []);
+
+  useEffect(() => {
+    if (form.courseId) {
+      loadStudents(form.courseId);
+    }
+  }, [form.courseId]);
+
+  const loadCenterInfo = async () => {
+    if (!user) return;
+    
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("training_center_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.training_center_id) {
+      const { data: center } = await supabase
+        .from("training_centers")
+        .select("*")
+        .eq("id", profile.training_center_id)
+        .single();
+      
+      if (center) setCenterInfo(center);
+    }
+  };
+
+  const loadCourses = async () => {
+    const { data } = await supabase
+      .from("courses")
+      .select("id, title, training_center_id")
+      .eq("is_active", true)
+      .order("title");
+
+    if (data) setCourses(data);
+  };
+
+  const loadStudents = async (courseId: string) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("user_id")
+      .eq("course_id", courseId);
+
+    if (enrollments && enrollments.length > 0) {
+      const userIds = enrollments.map((e) => e.user_id);
+      
+      // Get profiles with email from auth
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, dni_nie")
+        .in("id", userIds);
+
+      if (profiles) {
+        setStudents(
+          profiles.map((p) => ({
+            id: p.id,
+            full_name: p.full_name || "Sin nombre",
+            dni_nie: p.dni_nie || "",
+          }))
+        );
+      }
+    } else {
+      setStudents([]);
+    }
+  };
+
+  const loadInvoices = async () => {
+    // For now, we'll store student invoices in a simple way
+    // In a real implementation, you'd have a dedicated student_invoices table
+    const { data } = await supabase
+      .from("invoices")
+      .select("*")
+      .not("notes", "is", null)
+      .ilike("notes", "%alumno:%")
+      .order("issue_date", { ascending: false })
+      .limit(50);
+
+    if (data) {
+      // Parse student invoices from notes
+      const studentInvoices: StudentInvoice[] = [];
+      for (const inv of data) {
+        if (inv.notes?.includes("alumno:")) {
+          const match = inv.notes.match(/alumno:([^|]+)\|curso:([^|]+)\|email:([^|]*)/);
+          if (match) {
+            studentInvoices.push({
+              ...inv,
+              student_name: match[1],
+              course_title: match[2],
+              student_email: match[3] || undefined,
+            });
+          }
+        }
+      }
+      setInvoices(studentInvoices);
+    }
+  };
+
+  const handleCreateInvoice = async () => {
+    if (!form.courseId || !form.studentId || !form.amount || !form.dueDate) {
+      toast.error("Completa todos los campos obligatorios");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const amount = parseFloat(form.amount);
+      const taxRate = parseFloat(form.taxRate) / 100;
+      const taxAmount = amount * taxRate;
+      const totalAmount = amount + taxAmount;
+
+      const student = students.find((s) => s.id === form.studentId);
+      const course = courses.find((c) => c.id === form.courseId);
+
+      // Get student email from auth
+      const { data: authUser } = await supabase.auth.admin.getUserById(form.studentId).catch(() => ({ data: null }));
+      const studentEmail = authUser?.user?.email || "";
+
+      const invoiceNumber = `FALUM-${Date.now()}`;
+      const notes = `alumno:${student?.full_name}|curso:${course?.title}|email:${studentEmail}|concepto:${form.concept}|notas:${form.notes}`;
+
+      // Use current center or first available
+      const centerId = centerInfo?.id || courses.find(c => c.id === form.courseId)?.training_center_id;
+
+      if (!centerId) {
+        toast.error("No se pudo determinar el centro de formación");
+        return;
+      }
+
+      const { error } = await supabase.from("invoices").insert([
+        {
+          invoice_number: invoiceNumber,
+          training_center_id: centerId,
+          due_date: form.dueDate,
+          amount,
+          tax_amount: taxAmount,
+          total_amount: totalAmount,
+          status: "pending",
+          notes,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast.success("Factura creada exitosamente");
+      setDialogOpen(false);
+      loadInvoices();
+      setForm({
+        courseId: "",
+        studentId: "",
+        amount: "",
+        taxRate: "21",
+        concept: "",
+        dueDate: "",
+        notes: "",
+      });
+    } catch (error: any) {
+      toast.error("Error al crear factura: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generatePDF = (invoice: StudentInvoice) => {
+    const doc = new jsPDF();
+
+    // Header
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("FACTURA", 105, 25, { align: "center" });
+
+    // Center info
+    if (centerInfo) {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(centerInfo.name || "Centro de Formación", 20, 40);
+      if (centerInfo.cif) doc.text(`CIF: ${centerInfo.cif}`, 20, 46);
+      if (centerInfo.address) doc.text(centerInfo.address, 20, 52);
+      if (centerInfo.city) doc.text(`${centerInfo.postal_code || ""} ${centerInfo.city}`, 20, 58);
+      if (centerInfo.contact_email) doc.text(centerInfo.contact_email, 20, 64);
+      if (centerInfo.contact_phone) doc.text(`Tel: ${centerInfo.contact_phone}`, 20, 70);
+    }
+
+    // Invoice details
+    doc.setFontSize(11);
+    doc.text(`Nº Factura: ${invoice.invoice_number}`, 130, 40);
+    doc.text(`Fecha: ${format(new Date(invoice.issue_date), "dd/MM/yyyy")}`, 130, 46);
+    doc.text(`Vencimiento: ${format(new Date(invoice.due_date), "dd/MM/yyyy")}`, 130, 52);
+
+    // Customer info
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("DATOS DEL ALUMNO", 20, 90);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Nombre: ${invoice.student_name || "N/A"}`, 20, 98);
+    if (invoice.student_email) {
+      doc.text(`Email: ${invoice.student_email}`, 20, 104);
+    }
+
+    // Concept
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("CONCEPTO", 20, 120);
+
+    // Table header
+    doc.setFillColor(59, 130, 246);
+    doc.rect(20, 128, 170, 10, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.text("Descripción", 25, 134);
+    doc.text("Importe", 160, 134);
+
+    // Table content
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "normal");
+    const conceptText = invoice.course_title || "Formación";
+    doc.text(conceptText, 25, 145);
+    doc.text(`${invoice.amount.toFixed(2)} €`, 160, 145);
+
+    // Totals
+    doc.setFont("helvetica", "normal");
+    doc.text("Base Imponible:", 120, 165);
+    doc.text(`${invoice.amount.toFixed(2)} €`, 160, 165);
+
+    doc.text(`IVA (21%):`, 120, 172);
+    doc.text(`${invoice.tax_amount.toFixed(2)} €`, 160, 172);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("TOTAL:", 120, 182);
+    doc.text(`${invoice.total_amount.toFixed(2)} €`, 160, 182);
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "Esta factura ha sido generada electrónicamente y es válida sin firma.",
+      105,
+      280,
+      { align: "center" }
+    );
+
+    doc.save(`factura-alumno-${invoice.invoice_number}.pdf`);
+    toast.success("Factura descargada");
+  };
+
+  const handleSendEmail = (invoice: StudentInvoice) => {
+    if (!invoice.student_email) {
+      toast.error("El alumno no tiene email registrado");
+      return;
+    }
+
+    // For now, just generate the PDF and show instructions
+    generatePDF(invoice);
+    toast.info(
+      `PDF generado. Envía manualmente a: ${invoice.student_email}`,
+      { duration: 5000 }
+    );
+  };
+
+  const getStatusBadge = (status: string) => {
+    const config: Record<string, { variant: "default" | "secondary" | "destructive"; label: string }> = {
+      pending: { variant: "secondary", label: "Pendiente" },
+      paid: { variant: "default", label: "Pagada" },
+      overdue: { variant: "destructive", label: "Vencida" },
+    };
+    const c = config[status] || { variant: "secondary", label: status };
+    return <Badge variant={c.variant}>{c.label}</Badge>;
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Facturas a Alumnos
+            </CardTitle>
+            <CardDescription>
+              Genera facturas para alumnos de cursos privados
+            </CardDescription>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <FileText className="mr-2 h-4 w-4" />
+                Nueva Factura
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Generar Factura a Alumno</DialogTitle>
+                <DialogDescription>
+                  Selecciona el curso y alumno para generar la factura
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Curso *</Label>
+                  <Select
+                    value={form.courseId}
+                    onValueChange={(v) => setForm({ ...form, courseId: v, studentId: "" })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un curso" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {courses.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Alumno *</Label>
+                  <Select
+                    value={form.studentId}
+                    onValueChange={(v) => setForm({ ...form, studentId: v })}
+                    disabled={!form.courseId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un alumno" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.full_name} {s.dni_nie && `(${s.dni_nie})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Concepto</Label>
+                  <Input
+                    value={form.concept}
+                    onChange={(e) => setForm({ ...form, concept: e.target.value })}
+                    placeholder="Ej: Matrícula curso formación"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Importe (€) *</Label>
+                    <Input
+                      type="number"
+                      value={form.amount}
+                      onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>IVA (%)</Label>
+                    <Select
+                      value={form.taxRate}
+                      onValueChange={(v) => setForm({ ...form, taxRate: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">0% (Exento)</SelectItem>
+                        <SelectItem value="10">10%</SelectItem>
+                        <SelectItem value="21">21%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Fecha de vencimiento *</Label>
+                  <Input
+                    type="date"
+                    value={form.dueDate}
+                    onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Notas adicionales</Label>
+                  <Textarea
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                    placeholder="Notas opcionales..."
+                    rows={2}
+                  />
+                </div>
+
+                {form.amount && (
+                  <div className="rounded-lg bg-muted p-3 text-sm">
+                    <div className="flex justify-between">
+                      <span>Base imponible:</span>
+                      <span>{parseFloat(form.amount || "0").toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>IVA ({form.taxRate}%):</span>
+                      <span>
+                        {(parseFloat(form.amount || "0") * (parseFloat(form.taxRate) / 100)).toFixed(2)} €
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-bold mt-1 pt-1 border-t">
+                      <span>Total:</span>
+                      <span>
+                        {(parseFloat(form.amount || "0") * (1 + parseFloat(form.taxRate) / 100)).toFixed(2)} €
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreateInvoice} disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Crear Factura
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {invoices.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No hay facturas de alumnos generadas
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nº Factura</TableHead>
+                <TableHead>Alumno</TableHead>
+                <TableHead>Curso</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {invoices.map((invoice) => (
+                <TableRow key={invoice.id}>
+                  <TableCell className="font-mono text-sm">
+                    {invoice.invoice_number}
+                  </TableCell>
+                  <TableCell>{invoice.student_name || "N/A"}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {invoice.course_title || "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(invoice.issue_date), "dd/MM/yyyy")}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {invoice.total_amount.toFixed(2)} €
+                  </TableCell>
+                  <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => generatePDF(invoice)}
+                        title="Descargar PDF"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSendEmail(invoice)}
+                        title="Enviar por email"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
