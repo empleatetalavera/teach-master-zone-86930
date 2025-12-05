@@ -138,7 +138,14 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   // Don't render children until branding is initialized to prevent flash
   if (!initialized || branding === null) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse flex flex-col items-center gap-2">
+          <div className="h-12 w-12 rounded-full bg-muted"></div>
+          <div className="h-4 w-24 rounded bg-muted"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
