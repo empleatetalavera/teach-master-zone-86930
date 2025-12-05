@@ -11,8 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, BookOpen, Clock, Users, Settings, Eye, Loader2, GraduationCap, Award, FileCheck, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, BookOpen, Clock, Users, Settings, Eye, Loader2, GraduationCap, Award, FileCheck, Edit, Trash2, UserPlus, Check, X } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Course {
   id: string;
@@ -28,6 +31,13 @@ interface Course {
     enrollments: number;
     modules: number;
   };
+}
+
+interface CenterStudent {
+  id: string;
+  full_name: string;
+  email: string;
+  isEnrolled: boolean;
 }
 
 const courseTypes = [
@@ -50,6 +60,14 @@ export default function AdminCourses() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [userTrainingCenterId, setUserTrainingCenterId] = useState<string | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  
+  // Enrollment state
+  const [enrollmentSheetOpen, setEnrollmentSheetOpen] = useState(false);
+  const [selectedCourseForEnrollment, setSelectedCourseForEnrollment] = useState<Course | null>(null);
+  const [centerStudents, setCenterStudents] = useState<CenterStudent[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [savingEnrollments, setSavingEnrollments] = useState(false);
+  const [studentSearchTerm, setStudentSearchTerm] = useState("");
   
   // New course form
   const [newCourse, setNewCourse] = useState({
@@ -309,6 +327,149 @@ export default function AdminCourses() {
     }
   };
 
+  // Load center students for enrollment
+  const loadCenterStudents = async (courseId: string) => {
+    if (!userTrainingCenterId) return;
+    
+    setLoadingStudents(true);
+    try {
+      // Get students from this center
+      const { data: students, error: studentsError } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("training_center_id", userTrainingCenterId);
+
+      if (studentsError) throw studentsError;
+
+      // Filter to only include users with student role
+      const { data: studentRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "student");
+
+      if (rolesError) throw rolesError;
+
+      const studentUserIds = new Set((studentRoles || []).map(r => r.user_id));
+      const centerStudentProfiles = (students || []).filter(s => studentUserIds.has(s.id));
+
+      // Get current enrollments for this course
+      const { data: enrollments, error: enrollError } = await supabase
+        .from("enrollments")
+        .select("user_id")
+        .eq("course_id", courseId);
+
+      if (enrollError) throw enrollError;
+
+      const enrolledIds = new Set((enrollments || []).map(e => e.user_id));
+
+      // Get emails from auth (we'll use profile id as email fallback)
+      const studentsWithEnrollment: CenterStudent[] = centerStudentProfiles.map(s => ({
+        id: s.id,
+        full_name: s.full_name || "Sin nombre",
+        email: "", // We don't have direct access to auth emails
+        isEnrolled: enrolledIds.has(s.id),
+      }));
+
+      setCenterStudents(studentsWithEnrollment);
+    } catch (error: any) {
+      console.error("Error loading students:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los estudiantes",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const handleOpenEnrollment = (course: Course) => {
+    setSelectedCourseForEnrollment(course);
+    setEnrollmentSheetOpen(true);
+    setStudentSearchTerm("");
+    loadCenterStudents(course.id);
+  };
+
+  const toggleStudentEnrollment = (studentId: string) => {
+    setCenterStudents(prev => 
+      prev.map(s => 
+        s.id === studentId ? { ...s, isEnrolled: !s.isEnrolled } : s
+      )
+    );
+  };
+
+  const handleSaveEnrollments = async () => {
+    if (!selectedCourseForEnrollment) return;
+    
+    setSavingEnrollments(true);
+    try {
+      const courseId = selectedCourseForEnrollment.id;
+      
+      // Get current enrollments
+      const { data: currentEnrollments, error: fetchError } = await supabase
+        .from("enrollments")
+        .select("id, user_id")
+        .eq("course_id", courseId);
+
+      if (fetchError) throw fetchError;
+
+      const currentEnrolledIds = new Set((currentEnrollments || []).map(e => e.user_id));
+      
+      // Determine who to enroll and unenroll
+      const toEnroll = centerStudents.filter(s => s.isEnrolled && !currentEnrolledIds.has(s.id));
+      const toUnenroll = centerStudents.filter(s => !s.isEnrolled && currentEnrolledIds.has(s.id));
+
+      // Enroll new students
+      if (toEnroll.length > 0) {
+        const { error: enrollError } = await supabase
+          .from("enrollments")
+          .insert(toEnroll.map(s => ({
+            user_id: s.id,
+            course_id: courseId,
+          })));
+
+        if (enrollError) throw enrollError;
+      }
+
+      // Unenroll students
+      if (toUnenroll.length > 0) {
+        const enrollmentIdsToDelete = (currentEnrollments || [])
+          .filter(e => toUnenroll.some(s => s.id === e.user_id))
+          .map(e => e.id);
+
+        if (enrollmentIdsToDelete.length > 0) {
+          const { error: unenrollError } = await supabase
+            .from("enrollments")
+            .delete()
+            .in("id", enrollmentIdsToDelete);
+
+          if (unenrollError) throw unenrollError;
+        }
+      }
+
+      toast({
+        title: "Matriculaciones actualizadas",
+        description: `${toEnroll.length} matriculados, ${toUnenroll.length} desmatriculados`,
+      });
+
+      setEnrollmentSheetOpen(false);
+      loadUserAndCourses(); // Refresh counts
+    } catch (error: any) {
+      console.error("Error saving enrollments:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingEnrollments(false);
+    }
+  };
+
+  const filteredStudents = centerStudents.filter(s =>
+    s.full_name.toLowerCase().includes(studentSearchTerm.toLowerCase())
+  );
+
   const filteredCourses = courses.filter((course) => {
     const matchesSearch = 
       course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -540,7 +701,7 @@ export default function AdminCourses() {
                           <span>{course._count?.enrollments || 0} estudiantes</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button
                           variant="outline"
                           size="sm"
@@ -549,6 +710,16 @@ export default function AdminCourses() {
                           <Eye className="h-4 w-4 mr-2" />
                           Ver
                         </Button>
+                        {!isSuperAdmin && userTrainingCenterId && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleOpenEnrollment(course)}
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Matricular
+                          </Button>
+                        )}
                         <Button
                           variant="default"
                           size="sm"
@@ -744,6 +915,116 @@ export default function AdminCourses() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Enrollment Sheet */}
+      <Sheet open={enrollmentSheetOpen} onOpenChange={setEnrollmentSheetOpen}>
+        <SheetContent className="sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Matricular Alumnos
+            </SheetTitle>
+            <SheetDescription>
+              {selectedCourseForEnrollment?.title}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar alumno..."
+                value={studentSearchTerm}
+                onChange={(e) => setStudentSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Student List */}
+            {loadingStudents ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {centerStudents.length === 0 
+                  ? "No hay alumnos en tu centro. Crea alumnos primero en la sección Usuarios."
+                  : "No se encontraron alumnos con ese nombre"
+                }
+              </div>
+            ) : (
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="space-y-2">
+                  {filteredStudents.map((student) => (
+                    <div
+                      key={student.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                        student.isEnrolled 
+                          ? "bg-primary/10 border-primary/30" 
+                          : "hover:bg-muted/50"
+                      }`}
+                      onClick={() => toggleStudentEnrollment(student.id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={student.isEnrolled}
+                          onCheckedChange={() => toggleStudentEnrollment(student.id)}
+                        />
+                        <div>
+                          <p className="font-medium">{student.full_name}</p>
+                        </div>
+                      </div>
+                      {student.isEnrolled && (
+                        <Badge variant="secondary" className="gap-1">
+                          <Check className="h-3 w-3" />
+                          Matriculado
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+
+            {/* Stats */}
+            <div className="flex items-center justify-between text-sm text-muted-foreground border-t pt-4">
+              <span>
+                {centerStudents.filter(s => s.isEnrolled).length} de {centerStudents.length} alumnos seleccionados
+              </span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setEnrollmentSheetOpen(false)}
+                disabled={savingEnrollments}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleSaveEnrollments}
+                disabled={savingEnrollments}
+              >
+                {savingEnrollments ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Guardar Cambios
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
