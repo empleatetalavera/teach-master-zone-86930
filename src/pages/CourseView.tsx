@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Code, Presentation } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { TimeTrackingReport } from "@/components/TimeTrackingReport";
 import { QualityAuditView } from "@/components/QualityAuditView";
 import { UnitContentViewer } from "@/components/UnitContentViewer";
+import { UnitActivityManager } from "@/components/UnitActivityManager";
 
 interface Course {
   id: string;
@@ -88,11 +89,20 @@ export default function CourseView() {
   const [selectedUnitTitle, setSelectedUnitTitle] = useState<string>("");
   const [selectedContentType, setSelectedContentType] = useState<'video' | 'document' | 'audio' | 'scorm' | 'exercise' | 'presentation'>('video');
 
+  // Activity manager state
+  const [activityManagerOpen, setActivityManagerOpen] = useState(false);
+
   const openContentViewer = (unitId: string, unitTitle: string, contentType: 'video' | 'document' | 'audio' | 'scorm' | 'exercise' | 'presentation') => {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
     setSelectedContentType(contentType);
     setContentViewerOpen(true);
+  };
+
+  const openActivityManager = (unitId: string, unitTitle: string) => {
+    setSelectedUnitId(unitId);
+    setSelectedUnitTitle(unitTitle);
+    setActivityManagerOpen(true);
   };
 
   useEffect(() => {
@@ -826,9 +836,9 @@ export default function CourseView() {
                                         >
                                           <div className="flex items-center gap-2 mb-2">
                                             <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded">
-                                              <Code className="h-4 w-4 text-green-600" />
+                                              <Layers className="h-4 w-4 text-green-600" />
                                             </div>
-                                            <span className="text-sm font-medium">SCORM</span>
+                                            <span className="text-sm font-medium">Interactivo</span>
                                           </div>
                                           <Progress value={0} className="h-1.5" />
                                         </div>
@@ -887,10 +897,25 @@ export default function CourseView() {
                                       )}
 
                                       {/* Unit Activities */}
-                                      {unit.activities && unit.activities.length > 0 && (
-                                        <div className="space-y-2 pt-2 border-t">
-                                          <p className="text-xs font-medium text-muted-foreground">Actividades ({unit.activities.length})</p>
-                                          {unit.activities.map((activity: any) => (
+                                      <div className="space-y-2 pt-2 border-t">
+                                        <div className="flex items-center justify-between">
+                                          <p className="text-xs font-medium text-muted-foreground">
+                                            Actividades ({unit.activities?.length || 0})
+                                          </p>
+                                          {(userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin') && (
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 text-xs"
+                                              onClick={() => openActivityManager(unit.id, unit.title)}
+                                            >
+                                              <Plus className="h-3 w-3 mr-1" />
+                                              Añadir
+                                            </Button>
+                                          )}
+                                        </div>
+                                        {unit.activities && unit.activities.length > 0 ? (
+                                          unit.activities.map((activity: any) => (
                                             <Button
                                               key={activity.id}
                                               variant="outline"
@@ -901,16 +926,17 @@ export default function CourseView() {
                                                   title: "Actividad: " + activity.title,
                                                   description: "Accediendo a la actividad...",
                                                 });
-                                                // Navigate to activity page when available
                                                 navigate(`/course/${courseId}/activity/${activity.id}`);
                                               }}
                                             >
                                               <FileText className="h-3 w-3 mr-2" />
                                               {activity.title}
                                             </Button>
-                                          ))}
-                                        </div>
-                                      )}
+                                          ))
+                                        ) : (
+                                          <p className="text-xs text-muted-foreground italic">Sin actividades</p>
+                                        )}
+                                      </div>
                                     </div>
                                   </AccordionContent>
                                 </AccordionItem>
@@ -1276,6 +1302,15 @@ export default function CourseView() {
         unitTitle={selectedUnitTitle}
         contentType={selectedContentType}
         enrollmentId={enrollment?.id}
+      />
+
+      {/* Activity Manager Dialog */}
+      <UnitActivityManager
+        open={activityManagerOpen}
+        onOpenChange={setActivityManagerOpen}
+        unitId={selectedUnitId}
+        unitTitle={selectedUnitTitle}
+        courseId={courseId || ""}
       />
     </div>
   );
