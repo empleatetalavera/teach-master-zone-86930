@@ -548,10 +548,21 @@ export default function CourseView() {
                       </Button>
                     </>
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <MapIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>Guía del campus no disponible</p>
-                      <p className="text-sm">Contacta con tu tutor si necesitas ayuda</p>
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground text-center">
+                        Consulta la guía completa del campus virtual con instrucciones detalladas para SEPE.
+                      </p>
+                      <Button asChild className="w-full">
+                        <a 
+                          href="/campus-guide" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2"
+                        >
+                          <MapIcon className="h-4 w-4" />
+                          Ver Guía del Campus Virtual
+                        </a>
+                      </Button>
                     </div>
                   )}
                 </CardContent>

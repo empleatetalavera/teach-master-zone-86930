@@ -30,6 +30,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import CourseView from "./pages/CourseView";
 import ModuleView from "./pages/ModuleView";
+import CampusGuide from "./pages/CampusGuide";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import AdminTrainingCenters from "./pages/dashboard/AdminTrainingCenters";
 import AdminLicenses from "./pages/dashboard/AdminLicenses";
@@ -95,6 +96,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/course/:courseId" element={<ProtectedRoute><CourseView /></ProtectedRoute>} />
         <Route path="/course/:courseId/module/:moduleId" element={<ProtectedRoute><ModuleView /></ProtectedRoute>} />
+        <Route path="/campus-guide" element={<CampusGuide />} />
         
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="admin" element={<AdminDashboard />} />
