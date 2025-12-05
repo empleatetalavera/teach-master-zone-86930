@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -339,13 +339,14 @@ export default function CourseView() {
                   {course.description}
                 </CardDescription>
               </div>
-              {(userRole === 'admin' || userRole === 'teacher') && (
+              {(userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin') && (
                 <Button 
-                  onClick={() => navigate(userRole === 'teacher' ? `/dashboard/teacher/courses/${courseId}/edit` : `/dashboard/admin/courses/${courseId}/content`)}
-                  className="flex items-center gap-2"
+                  onClick={() => navigate(`/dashboard/admin/courses/${courseId}/content`)}
+                  variant="default"
+                  className="flex items-center gap-2 bg-primary hover:bg-primary/90"
                 >
-                  <FileText className="h-4 w-4" />
-                  Editar Contenido
+                  <Settings className="h-4 w-4" />
+                  Modo Edición
                 </Button>
               )}
             </div>
