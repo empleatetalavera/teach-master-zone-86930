@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, BookOpen, Clock, Users, Settings, Eye, Loader2, GraduationCap, Award, FileCheck } from "lucide-react";
+import { Plus, Search, BookOpen, Clock, Users, Settings, Eye, Loader2, GraduationCap, Award, FileCheck, Edit } from "lucide-react";
 
 interface Course {
   id: string;
@@ -397,12 +397,20 @@ export default function AdminCourses() {
                           Ver
                         </Button>
                         <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => navigate(`/dashboard/admin/courses/${course.id}/edit`)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </Button>
+                        <Button
                           variant="outline"
                           size="sm"
                           onClick={() => navigate(`/dashboard/admin/course-settings/${course.id}`)}
                         >
                           <Settings className="h-4 w-4 mr-2" />
-                          Configurar
+                          Config
                         </Button>
                       </div>
                     </div>

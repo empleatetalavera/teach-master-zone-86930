@@ -43,6 +43,7 @@ import AdminSupport from "./pages/dashboard/AdminSupport";
 import AdminCourseSettings from "./pages/dashboard/AdminCourseSettings";
 import AdminCourses from "./pages/dashboard/AdminCourses";
 import AdminCourseCreator from "./pages/dashboard/AdminCourseCreator";
+import CourseContentEditor from "./pages/dashboard/CourseContentEditor";
 import CenterSettings from "./pages/dashboard/CenterSettings";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import TeacherCourses from "./pages/dashboard/TeacherCourses";
@@ -108,6 +109,7 @@ function AppRoutes() {
           <Route path="admin/settings" element={<AdminSettings />} />
           <Route path="admin/courses" element={<AdminCourses />} />
           <Route path="admin/courses/create" element={<AdminCourseCreator />} />
+          <Route path="admin/courses/:courseId/edit" element={<CourseContentEditor />} />
           <Route path="admin/course-settings" element={<AdminCourseSettings />} />
           <Route path="admin/course-settings/:courseId" element={<AdminCourseSettings />} />
           <Route path="admin/test-notifications" element={<TestNotifications />} />
@@ -115,6 +117,7 @@ function AppRoutes() {
           <Route path="teacher" element={<TeacherDashboard />} />
           <Route path="teacher/courses" element={<TeacherCourses />} />
           <Route path="teacher/courses/:courseId" element={<CourseDetailSEPE />} />
+          <Route path="teacher/courses/:courseId/edit" element={<CourseContentEditor />} />
           <Route path="teacher/students" element={<TeacherStudents />} />
           <Route path="teacher/students/:studentId" element={<TeacherStudentDetail />} />
           <Route path="teacher/reports" element={<TeacherReports />} />
