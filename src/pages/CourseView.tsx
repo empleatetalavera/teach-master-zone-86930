@@ -753,6 +753,8 @@ export default function CourseView() {
               courseStartDate={course.start_date}
               courseEndDate={course.end_date}
               modules={modules}
+              events={[...events, ...tutorials]}
+              exams={exams}
             />
           </TabsContent>
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Clock, BookOpen, ListChecks, ChevronDown, ChevronRight } from "lucide-react";
+import { Calendar, Clock, BookOpen, ListChecks, ChevronDown, ChevronRight, FileText, Users, Video } from "lucide-react";
 import { format, differenceInDays, isAfter, isBefore, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -24,6 +24,24 @@ interface Module {
   formative_units?: FormativeUnit[];
 }
 
+interface CourseEvent {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time?: string | null;
+  event_type: string;
+  location?: string | null;
+  meeting_url?: string | null;
+}
+
+interface Evaluation {
+  id: string;
+  title: string;
+  time_limit_minutes?: number | null;
+  formative_unit_id?: string | null;
+  module_id?: string | null;
+}
+
 interface CourseScheduleProps {
   courseTitle: string;
   courseStartDate?: string | null;
@@ -42,11 +60,40 @@ interface CourseScheduleProps {
       duration_hours?: number | null;
     }[];
   }[];
+  events?: CourseEvent[];
+  exams?: Evaluation[];
 }
 
-export function CourseSchedule({ courseTitle, courseStartDate, courseEndDate, modules }: CourseScheduleProps) {
+export function CourseSchedule({ courseTitle, courseStartDate, courseEndDate, modules, events = [], exams = [] }: CourseScheduleProps) {
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const today = new Date();
+
+  const getEventTypeIcon = (type: string) => {
+    switch (type) {
+      case 'tutorial':
+        return <Users className="h-4 w-4" />;
+      case 'live_session':
+      case 'webinar':
+        return <Video className="h-4 w-4" />;
+      default:
+        return <Calendar className="h-4 w-4" />;
+    }
+  };
+
+  const getEventTypeLabel = (type: string) => {
+    switch (type) {
+      case 'tutorial':
+        return 'Tutoría';
+      case 'live_session':
+        return 'Sesión en Vivo';
+      case 'webinar':
+        return 'Webinar';
+      case 'exam':
+        return 'Examen';
+      default:
+        return 'Evento';
+    }
+  };
 
   const toggleModule = (moduleId: string) => {
     setExpandedModules(prev => 
@@ -244,6 +291,96 @@ export function CourseSchedule({ courseTitle, courseStartDate, courseEndDate, mo
           <div className="text-center py-8 text-muted-foreground">
             <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>No hay módulos programados</p>
+          </div>
+        )}
+
+        {/* Events & Tutorials Section */}
+        {events.length > 0 && (
+          <div className="mt-6 pt-6 border-t">
+            <h4 className="font-medium mb-3 flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              Tutorías y Sesiones
+            </h4>
+            <div className="space-y-2">
+              {events.map((event) => {
+                const eventDate = new Date(event.start_time);
+                const isPast = isBefore(eventDate, today);
+                const isToday = format(eventDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+                
+                return (
+                  <div 
+                    key={event.id}
+                    className={`p-3 rounded-lg border flex items-center gap-3 ${
+                      isToday ? 'border-primary bg-primary/5' : 
+                      isPast ? 'bg-muted/30 opacity-60' : ''
+                    }`}
+                  >
+                    <div className={`p-2 rounded-full ${
+                      isToday ? 'bg-primary text-primary-foreground' :
+                      isPast ? 'bg-muted' : 'bg-secondary/20'
+                    }`}>
+                      {getEventTypeIcon(event.event_type)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{event.title}</span>
+                        <Badge variant={isToday ? 'default' : isPast ? 'secondary' : 'outline'} className="text-xs">
+                          {getEventTypeLabel(event.event_type)}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {format(eventDate, "EEEE d 'de' MMMM, HH:mm", { locale: es })}
+                        {event.location && <span className="ml-2">📍 {event.location}</span>}
+                      </div>
+                    </div>
+                    {event.meeting_url && !isPast && (
+                      <a 
+                        href={event.meeting_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Unirse
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Exams Section */}
+        {exams.length > 0 && (
+          <div className="mt-6 pt-6 border-t">
+            <h4 className="font-medium mb-3 flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              Evaluaciones Programadas
+            </h4>
+            <div className="space-y-2">
+              {exams.map((exam) => (
+                <div 
+                  key={exam.id}
+                  className="p-3 rounded-lg border flex items-center gap-3 bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800"
+                >
+                  <div className="p-2 rounded-full bg-orange-500/20">
+                    <FileText className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium text-sm">{exam.title}</span>
+                    {exam.time_limit_minutes && (
+                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {exam.time_limit_minutes} minutos
+                      </div>
+                    )}
+                  </div>
+                  <Badge variant="outline" className="border-orange-300 text-orange-700 dark:text-orange-400">
+                    Examen
+                  </Badge>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </CardContent>
