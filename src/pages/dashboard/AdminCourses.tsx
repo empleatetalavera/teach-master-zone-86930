@@ -660,7 +660,7 @@ export default function AdminCourses() {
               </Card>
             ) : (
               filteredCourses.map((course) => (
-                <Card key={course.id} className="hover:shadow-lg transition-all">
+                <Card key={course.id}>
                   <CardHeader>
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
