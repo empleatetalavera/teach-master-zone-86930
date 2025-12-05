@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, BookOpen, Clock, Users, Settings, Eye, Loader2, GraduationCap, Award, FileCheck, Edit } from "lucide-react";
+import { Plus, Search, BookOpen, Clock, Users, Settings, Eye, Loader2, GraduationCap, Award, FileCheck, Edit, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Course {
   id: string;
@@ -45,6 +46,8 @@ export default function AdminCourses() {
   const [activeTab, setActiveTab] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // New course form
   const [newCourse, setNewCourse] = useState({
@@ -153,6 +156,38 @@ export default function AdminCourses() {
       });
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!courseToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      const { error } = await supabase
+        .from("courses")
+        .delete()
+        .eq("id", courseToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Curso eliminado",
+        description: `El curso "${courseToDelete.title}" ha sido eliminado correctamente`,
+      });
+
+      setCourseToDelete(null);
+      loadCourses();
+    } catch (error: any) {
+      console.error("Error deleting course:", error);
+      toast({
+        title: "Error al eliminar curso",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -412,6 +447,13 @@ export default function AdminCourses() {
                           <Settings className="h-4 w-4 mr-2" />
                           Config
                         </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setCourseToDelete(course)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -421,6 +463,39 @@ export default function AdminCourses() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!courseToDelete} onOpenChange={(open) => !open && setCourseToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar curso?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el curso 
+              <span className="font-semibold"> "{courseToDelete?.title}"</span> y todos sus datos asociados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCourse}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Eliminar
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Create Course Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
