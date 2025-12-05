@@ -1382,6 +1382,7 @@ export type Database = {
           forum_enabled: boolean | null
           id: string
           is_active: boolean | null
+          is_visible_to_students: boolean | null
           objectives: string | null
           order_index: number
           title: string
@@ -1397,6 +1398,7 @@ export type Database = {
           forum_enabled?: boolean | null
           id?: string
           is_active?: boolean | null
+          is_visible_to_students?: boolean | null
           objectives?: string | null
           order_index: number
           title: string
@@ -1412,6 +1414,7 @@ export type Database = {
           forum_enabled?: boolean | null
           id?: string
           is_active?: boolean | null
+          is_visible_to_students?: boolean | null
           objectives?: string | null
           order_index?: number
           title?: string
