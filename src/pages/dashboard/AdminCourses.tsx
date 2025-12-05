@@ -75,6 +75,13 @@ export default function AdminCourses() {
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [savingEnrollments, setSavingEnrollments] = useState(false);
   
+  // View enrolled students state
+  const [viewStudentsSheetOpen, setViewStudentsSheetOpen] = useState(false);
+  const [selectedCourseForView, setSelectedCourseForView] = useState<Course | null>(null);
+  const [enrolledStudents, setEnrolledStudents] = useState<{id: string; full_name: string; enrolled_at: string; progress: number}[]>([]);
+  const [loadingEnrolled, setLoadingEnrolled] = useState(false);
+  const [viewSearchTerm, setViewSearchTerm] = useState("");
+  
   // Tutor assignment state
   const [tutorSheetOpen, setTutorSheetOpen] = useState(false);
   const [selectedCourseForTutor, setSelectedCourseForTutor] = useState<Course | null>(null);
@@ -568,6 +575,66 @@ export default function AdminCourses() {
     }
   };
 
+  // Load enrolled students for viewing
+  const loadEnrolledStudents = async (courseId: string) => {
+    setLoadingEnrolled(true);
+    try {
+      // Get enrollments for this course
+      const { data: enrollments, error: enrollError } = await supabase
+        .from("enrollments")
+        .select("id, user_id, enrolled_at, progress_percentage")
+        .eq("course_id", courseId);
+
+      if (enrollError) throw enrollError;
+
+      if (!enrollments || enrollments.length === 0) {
+        setEnrolledStudents([]);
+        setLoadingEnrolled(false);
+        return;
+      }
+
+      // Get profiles for enrolled users
+      const userIds = enrollments.map(e => e.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+
+      if (profilesError) throw profilesError;
+
+      const profileMap = new Map((profiles || []).map(p => [p.id, p.full_name]));
+
+      const studentsData = enrollments.map(e => ({
+        id: e.user_id,
+        full_name: profileMap.get(e.user_id) || "Sin nombre",
+        enrolled_at: e.enrolled_at || "",
+        progress: e.progress_percentage || 0
+      }));
+
+      setEnrolledStudents(studentsData);
+    } catch (error: any) {
+      console.error("Error loading enrolled students:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los alumnos matriculados",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingEnrolled(false);
+    }
+  };
+
+  const handleViewEnrolledStudents = (course: Course) => {
+    setSelectedCourseForView(course);
+    setViewStudentsSheetOpen(true);
+    setViewSearchTerm("");
+    loadEnrolledStudents(course.id);
+  };
+
+  const filteredEnrolledStudents = enrolledStudents.filter(s =>
+    s.full_name.toLowerCase().includes(viewSearchTerm.toLowerCase())
+  );
+
   const filteredCourses = courses.filter((course) => {
     const matchesSearch = 
       course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -794,9 +861,12 @@ export default function AdminCourses() {
                           <BookOpen className="h-4 w-4" />
                           <span>{course._count?.modules || 0} módulos</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div 
+                          className="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => handleViewEnrolledStudents(course)}
+                        >
                           <Users className="h-4 w-4" />
-                          <span>{course._count?.enrollments || 0} estudiantes</span>
+                          <span className="underline">{course._count?.enrollments || 0} estudiantes</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
@@ -1213,6 +1283,88 @@ export default function AdminCourses() {
                     Guardar
                   </>
                 )}
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* View Enrolled Students Sheet */}
+      <Sheet open={viewStudentsSheetOpen} onOpenChange={setViewStudentsSheetOpen}>
+        <SheetContent className="sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Alumnos Matriculados
+            </SheetTitle>
+            <SheetDescription>
+              {selectedCourseForView?.title}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar alumno..."
+                value={viewSearchTerm}
+                onChange={(e) => setViewSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center justify-between text-sm border-b pb-3">
+              <span className="text-muted-foreground">Total matriculados:</span>
+              <Badge variant="secondary">{enrolledStudents.length}</Badge>
+            </div>
+
+            {/* Student List */}
+            {loadingEnrolled ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : filteredEnrolledStudents.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {enrolledStudents.length === 0 
+                  ? "No hay alumnos matriculados en este curso"
+                  : "No se encontraron alumnos con ese nombre"
+                }
+              </div>
+            ) : (
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="space-y-2">
+                  {filteredEnrolledStudents.map((student) => (
+                    <div
+                      key={student.id}
+                      className="flex items-center justify-between p-3 rounded-lg border"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">{student.full_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Matriculado: {student.enrolled_at ? new Date(student.enrolled_at).toLocaleDateString('es-ES') : 'N/A'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant={student.progress >= 100 ? "default" : "secondary"}>
+                          {student.progress}%
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+
+            {/* Close Button */}
+            <div className="pt-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setViewStudentsSheetOpen(false)}
+              >
+                Cerrar
               </Button>
             </div>
           </div>
