@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2, Building2 } from "lucide-react";
 import { UserRoleManager } from "@/components/UserRoleManager";
+import { useAuth } from "@/lib/auth";
 
 interface UserWithRole {
   id: string;
@@ -18,9 +19,11 @@ interface UserWithRole {
   role: string;
   created_at: string;
   full_name?: string;
+  training_center_id?: string;
 }
 
 const AdminUsers = () => {
+  const { user, userRole } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +32,9 @@ const AdminUsers = () => {
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [userCenterId, setUserCenterId] = useState<string | null>(null);
+  
+  const isSuperAdmin = userRole === 'super_admin';
   
   // New user form state
   const [newUserEmail, setNewUserEmail] = useState("");
@@ -41,9 +47,30 @@ const AdminUsers = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadUsers();
-    loadTrainingCenters();
-  }, []);
+    const loadUserCenter = async () => {
+      if (!user || isSuperAdmin) {
+        loadUsers();
+        loadTrainingCenters();
+        return;
+      }
+      
+      // Get center admin's training center
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('training_center_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.training_center_id) {
+        setUserCenterId(profile.training_center_id);
+      }
+      
+      loadUsers(profile?.training_center_id);
+      loadTrainingCenters();
+    };
+    
+    loadUserCenter();
+  }, [user, isSuperAdmin]);
 
   useEffect(() => {
     // Filter users based on search term
@@ -60,9 +87,10 @@ const AdminUsers = () => {
     }
   }, [searchTerm, users]);
 
-  const loadUsers = async () => {
+  const loadUsers = async (centerId?: string | null) => {
     try {
       setLoading(true);
+      const effectiveCenterId = centerId || userCenterId;
       
       // Get all user_roles with profile info
       const { data: userRoles, error } = await supabase
@@ -72,7 +100,8 @@ const AdminUsers = () => {
           role,
           created_at,
           profiles (
-            full_name
+            full_name,
+            training_center_id
           )
         `)
         .order("created_at", { ascending: false });
@@ -92,7 +121,7 @@ const AdminUsers = () => {
       }
 
       // Combine data
-      const usersWithRoles: UserWithRole[] = (userRoles || []).map((ur: any) => {
+      let usersWithRoles: UserWithRole[] = (userRoles || []).map((ur: any) => {
         const authUser = authData?.users?.find((au: any) => au.id === ur.user_id);
         return {
           id: ur.user_id,
@@ -100,8 +129,14 @@ const AdminUsers = () => {
           role: ur.role,
           created_at: ur.created_at,
           full_name: ur.profiles?.full_name,
+          training_center_id: ur.profiles?.training_center_id,
         };
       });
+
+      // Filter by center if center admin
+      if (!isSuperAdmin && effectiveCenterId) {
+        usersWithRoles = usersWithRoles.filter(u => u.training_center_id === effectiveCenterId);
+      }
 
       setUsers(usersWithRoles);
       setFilteredUsers(usersWithRoles);
@@ -257,7 +292,7 @@ const AdminUsers = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={loadUsers} variant="outline">
+          <Button onClick={() => loadUsers()} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
           </Button>
@@ -478,11 +513,12 @@ const AdminUsers = () => {
                 <SelectContent>
                   <SelectItem value="student">Alumno</SelectItem>
                   <SelectItem value="teacher">Profesor</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
+                  {isSuperAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                 </SelectContent>
               </Select>
             </div>
 
+            {isSuperAdmin && (
             <div className="space-y-2">
               <Label htmlFor="training-center">
                 <Building2 className="inline-block w-4 h-4 mr-1" />
@@ -509,6 +545,15 @@ const AdminUsers = () => {
                 El usuario verá el branding del centro seleccionado
               </p>
             </div>
+            )}
+
+            {!isSuperAdmin && userCenterId && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  El usuario será asignado automáticamente a tu centro de formación
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button
