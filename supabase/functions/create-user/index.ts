@@ -77,14 +77,14 @@ serve(async (req) => {
       );
     }
 
-    // Check if user has admin role
+    // Check if user has admin or super_admin role
     const { data: roleData, error: roleError } = await supabaseClient
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .single();
 
-    if (roleError || !roleData || roleData.role !== "admin") {
+    if (roleError || !roleData || (roleData.role !== "admin" && roleData.role !== "super_admin")) {
       return new Response(
         JSON.stringify({ error: "No tienes permisos de administrador" }),
         {
@@ -94,6 +94,8 @@ serve(async (req) => {
       );
     }
 
+    const isSuperAdmin = roleData.role === "super_admin";
+
     // Create admin client to create new user
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -101,6 +103,34 @@ serve(async (req) => {
         persistSession: false,
       },
     });
+
+    // Get the admin's training center if they're a center admin
+    let effectiveTrainingCenterId = trainingCenterId;
+    
+    if (!isSuperAdmin) {
+      // Center admins can only create users for their own center
+      const { data: adminProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("training_center_id")
+        .eq("id", user.id)
+        .single();
+      
+      if (adminProfile?.training_center_id) {
+        effectiveTrainingCenterId = adminProfile.training_center_id;
+        console.log(`Center admin creating user for their center: ${effectiveTrainingCenterId}`);
+      }
+      
+      // Center admins cannot create other admins or super_admins
+      if (role === "admin" || role === "super_admin") {
+        return new Response(
+          JSON.stringify({ error: "No tienes permisos para crear administradores" }),
+          {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
 
     // Create the new user with admin client
     const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -152,25 +182,24 @@ serve(async (req) => {
       );
     }
 
-    // Create profile if full name provided
-    if (fullName || trainingCenterId) {
-      const profileData: any = {
-        id: authData.user.id,
-      };
-      
-      if (fullName) profileData.full_name = fullName;
-      if (trainingCenterId) profileData.training_center_id = trainingCenterId;
+    // Create/update profile with training center
+    const profileData: any = {
+      id: authData.user.id,
+    };
+    
+    if (fullName) profileData.full_name = fullName;
+    if (effectiveTrainingCenterId) profileData.training_center_id = effectiveTrainingCenterId;
 
-      const { error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .insert(profileData);
+    // Use upsert to handle potential profile already created by trigger
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .upsert(profileData, { onConflict: 'id' });
 
-      if (profileError) {
-        console.error("Error creating profile:", profileError);
-      }
+    if (profileError) {
+      console.error("Error creating/updating profile:", profileError);
     }
 
-    console.log(`User created successfully: ${email} with role ${role}${trainingCenterId ? ` and training center ${trainingCenterId}` : ''}`);
+    console.log(`User created successfully: ${email} with role ${role}${effectiveTrainingCenterId ? ` and training center ${effectiveTrainingCenterId}` : ''}`);
 
     return new Response(
       JSON.stringify({ 
