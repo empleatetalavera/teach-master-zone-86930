@@ -30,14 +30,17 @@ const defaultBranding: BrandingConfig = {
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
 
 export function BrandingProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [branding, setBranding] = useState<BrandingConfig>(defaultBranding);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   const loadBranding = async () => {
     if (!user) {
       setBranding(defaultBranding);
+      applyBrandingToDOM(defaultBranding);
       setLoading(false);
+      setInitialized(true);
       return;
     }
 
@@ -51,7 +54,9 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
       if (profileError || !profile?.training_center_id) {
         setBranding(defaultBranding);
+        applyBrandingToDOM(defaultBranding);
         setLoading(false);
+        setInitialized(true);
         return;
       }
 
@@ -65,7 +70,9 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
       if (centerError || !center) {
         setBranding(defaultBranding);
+        applyBrandingToDOM(defaultBranding);
         setLoading(false);
+        setInitialized(true);
         return;
       }
 
@@ -84,8 +91,10 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error loading branding:', error);
       setBranding(defaultBranding);
+      applyBrandingToDOM(defaultBranding);
     } finally {
       setLoading(false);
+      setInitialized(true);
     }
   };
 
@@ -120,8 +129,16 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    loadBranding();
-  }, [user]);
+    // Wait for auth to finish loading before loading branding
+    if (!authLoading) {
+      loadBranding();
+    }
+  }, [user, authLoading]);
+
+  // Don't render children until branding is initialized to prevent flash
+  if (!initialized && authLoading) {
+    return null;
+  }
 
   return (
     <BrandingContext.Provider value={{ branding, loading, refreshBranding }}>
