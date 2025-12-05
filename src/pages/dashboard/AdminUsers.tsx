@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2, Building2 } from "lucide-react";
+import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2, Building2, Copy, CheckCircle2, Key, Mail, User } from "lucide-react";
 import { UserRoleManager } from "@/components/UserRoleManager";
 import { useAuth } from "@/lib/auth";
 
@@ -21,6 +21,26 @@ interface UserWithRole {
   full_name?: string;
   training_center_id?: string;
 }
+
+interface CreatedUserCredentials {
+  email: string;
+  password: string;
+  fullName?: string;
+  role: string;
+}
+
+// Generate a secure random password
+const generatePassword = (): string => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const specialChars = '!@#$%&*';
+  let password = '';
+  for (let i = 0; i < 8; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  password += specialChars.charAt(Math.floor(Math.random() * specialChars.length));
+  password += Math.floor(Math.random() * 10);
+  return password;
+};
 
 const AdminUsers = () => {
   const { user, userRole } = useAuth();
@@ -34,6 +54,11 @@ const AdminUsers = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [userCenterId, setUserCenterId] = useState<string | null>(null);
   
+  // Credentials modal state
+  const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false);
+  const [createdUserCredentials, setCreatedUserCredentials] = useState<CreatedUserCredentials | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  
   const isSuperAdmin = userRole === 'super_admin';
   
   // New user form state
@@ -45,6 +70,37 @@ const AdminUsers = () => {
   const [trainingCenters, setTrainingCenters] = useState<Array<{ id: string; name: string }>>([]);
   
   const { toast } = useToast();
+  
+  // Auto-generate password when dialog opens
+  useEffect(() => {
+    if (isCreateDialogOpen && !newUserPassword) {
+      setNewUserPassword(generatePassword());
+    }
+  }, [isCreateDialogOpen]);
+  
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+      toast({
+        title: "Copiado",
+        description: `${field} copiado al portapapeles`,
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "No se pudo copiar al portapapeles",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const copyAllCredentials = async () => {
+    if (!createdUserCredentials) return;
+    const text = `Credenciales de acceso a la plataforma:\n\nEmail: ${createdUserCredentials.email}\nContraseña: ${createdUserCredentials.password}${createdUserCredentials.fullName ? `\nNombre: ${createdUserCredentials.fullName}` : ''}`;
+    await copyToClipboard(text, 'credenciales');
+  };
 
   useEffect(() => {
     const loadUserCenter = async () => {
@@ -243,10 +299,17 @@ const AdminUsers = () => {
       if (error) throw error;
       if (!data.success) throw new Error(data.error || 'Error al crear usuario');
 
-      toast({
-        title: "Usuario creado",
-        description: `Usuario ${newUserEmail} creado exitosamente con rol ${getRoleLabel(newUserRole)}`,
+      // Store credentials and show modal
+      setCreatedUserCredentials({
+        email: newUserEmail,
+        password: newUserPassword,
+        fullName: newUserFullName || undefined,
+        role: newUserRole,
       });
+      
+      // Close create dialog and open credentials dialog
+      setIsCreateDialogOpen(false);
+      setIsCredentialsDialogOpen(true);
 
       // Reset form
       setNewUserEmail("");
@@ -254,7 +317,6 @@ const AdminUsers = () => {
       setNewUserFullName("");
       setNewUserRole("student");
       setNewUserTrainingCenter("");
-      setIsCreateDialogOpen(false);
 
       // Reload users
       loadUsers();
@@ -455,12 +517,21 @@ const AdminUsers = () => {
       </Dialog>
 
       {/* Create User Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+        setIsCreateDialogOpen(open);
+        if (!open) {
+          setNewUserEmail("");
+          setNewUserPassword("");
+          setNewUserFullName("");
+          setNewUserRole("student");
+          setNewUserTrainingCenter("");
+        }
+      }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Crear Nuevo Usuario</DialogTitle>
             <CardDescription>
-              Crea un nuevo usuario y asigna su rol inicial
+              Crea un nuevo usuario y asigna su rol inicial. Las credenciales se mostrarán al finalizar.
             </CardDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -477,15 +548,31 @@ const AdminUsers = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña *</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={newUserPassword}
-                onChange={(e) => setNewUserPassword(e.target.value)}
-                disabled={isCreating}
-              />
+              <Label htmlFor="password">Contraseña * (auto-generada)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="password"
+                  type="text"
+                  placeholder="Mínimo 6 caracteres"
+                  value={newUserPassword}
+                  onChange={(e) => setNewUserPassword(e.target.value)}
+                  disabled={isCreating}
+                  className="font-mono"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNewUserPassword(generatePassword())}
+                  disabled={isCreating}
+                  title="Generar nueva contraseña"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                La contraseña se mostrará después de crear el usuario para que puedas compartirla
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -585,6 +672,112 @@ const AdminUsers = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credentials Dialog - Shows after user creation */}
+      <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="h-5 w-5" />
+              Usuario Creado Exitosamente
+            </DialogTitle>
+            <CardDescription>
+              Copia las credenciales y compártelas con el usuario por email, WhatsApp o el medio que prefieras.
+            </CardDescription>
+          </DialogHeader>
+          
+          {createdUserCredentials && (
+            <div className="space-y-4 py-4">
+              <div className="bg-muted rounded-lg p-4 space-y-3">
+                {createdUserCredentials.fullName && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Nombre:</span>
+                      <span className="text-sm">{createdUserCredentials.fullName}</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Email:</span>
+                    <span className="text-sm font-mono">{createdUserCredentials.email}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(createdUserCredentials.email, 'Email')}
+                  >
+                    {copiedField === 'Email' ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Key className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Contraseña:</span>
+                    <span className="text-sm font-mono bg-background px-2 py-1 rounded">{createdUserCredentials.password}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(createdUserCredentials.password, 'Contraseña')}
+                  >
+                    {copiedField === 'Contraseña' ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="flex items-center gap-2 pt-2">
+                  <Badge variant="secondary">{getRoleLabel(createdUserCredentials.role)}</Badge>
+                </div>
+              </div>
+              
+              <div className="flex justify-between gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={copyAllCredentials}
+                >
+                  {copiedField === 'credenciales' ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                      Copiado
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copiar Todo
+                    </>
+                  )}
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => {
+                    setIsCredentialsDialogOpen(false);
+                    setCreatedUserCredentials(null);
+                  }}
+                >
+                  Cerrar
+                </Button>
+              </div>
+              
+              <p className="text-xs text-muted-foreground text-center">
+                Recuerda informar al usuario que puede cambiar su contraseña después de iniciar sesión.
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
