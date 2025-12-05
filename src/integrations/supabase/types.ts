@@ -1303,37 +1303,46 @@ export type Database = {
       }
       modules: {
         Row: {
+          concept_map_url: string | null
           content: string | null
           course_id: string
           created_at: string | null
           description: string | null
           duration_minutes: number | null
+          forum_enabled: boolean | null
           id: string
           is_active: boolean | null
+          objectives: string | null
           order_index: number
           title: string
           updated_at: string | null
         }
         Insert: {
+          concept_map_url?: string | null
           content?: string | null
           course_id: string
           created_at?: string | null
           description?: string | null
           duration_minutes?: number | null
+          forum_enabled?: boolean | null
           id?: string
           is_active?: boolean | null
+          objectives?: string | null
           order_index: number
           title: string
           updated_at?: string | null
         }
         Update: {
+          concept_map_url?: string | null
           content?: string | null
           course_id?: string
           created_at?: string | null
           description?: string | null
           duration_minutes?: number | null
+          forum_enabled?: boolean | null
           id?: string
           is_active?: boolean | null
+          objectives?: string | null
           order_index?: number
           title?: string
           updated_at?: string | null
