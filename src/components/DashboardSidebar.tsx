@@ -45,6 +45,7 @@ import { useAuth } from "@/lib/auth";
 const superAdminItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
   { title: "Centros de Formación", url: "/dashboard/admin/centers", icon: Building2 },
+  { title: "Cursos", url: "/dashboard/admin/courses", icon: BookOpen },
   { title: "Licencias", url: "/dashboard/admin/licenses", icon: Key },
   { title: "Facturación Global", url: "/dashboard/admin/billing", icon: DollarSign },
   { title: "Pedidos de Contenido", url: "/dashboard/admin/orders", icon: Package },
