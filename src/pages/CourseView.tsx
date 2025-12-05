@@ -33,6 +33,7 @@ interface Course {
   tutor_id?: string;
   tutor_cv_url?: string;
   campus_guide_url?: string;
+  training_center_id?: string;
 }
 
 interface Module {
@@ -63,6 +64,7 @@ export default function CourseView() {
   const [exams, setExams] = useState<any[]>([]);
   const [studentName, setStudentName] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("intro");
+  const [centerSlug, setCenterSlug] = useState<string | null>(null);
 
   useEffect(() => {
     if (courseId && user) {
@@ -89,6 +91,19 @@ export default function CourseView() {
           : []
       };
       setCourse(parsedCourse as Course);
+
+      // Load center slug if course has a training center
+      if (courseData.training_center_id) {
+        const { data: centerData } = await supabase
+          .from("training_centers")
+          .select("slug")
+          .eq("id", courseData.training_center_id)
+          .single();
+        
+        if (centerData?.slug) {
+          setCenterSlug(centerData.slug);
+        }
+      }
 
       // Load modules
       const { data: modulesData, error: modulesError } = await supabase
@@ -554,7 +569,7 @@ export default function CourseView() {
                       </p>
                       <Button asChild className="w-full">
                         <a 
-                          href="/campus-guide" 
+                          href={centerSlug ? `/campus-guide?center=${centerSlug}` : "/campus-guide"} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="flex items-center gap-2"
