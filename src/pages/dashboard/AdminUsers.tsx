@@ -7,9 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2, Building2, Copy, CheckCircle2, Key, Mail, User } from "lucide-react";
+import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2, Building2, Copy, CheckCircle2, Key, Mail, User, GraduationCap, Calendar, Clock, X, AlertTriangle } from "lucide-react";
 import { UserRoleManager } from "@/components/UserRoleManager";
 import { useAuth } from "@/lib/auth";
 
@@ -27,6 +30,17 @@ interface CreatedUserCredentials {
   password: string;
   fullName?: string;
   role: string;
+}
+
+interface StudentEnrollment {
+  enrollment_id: string;
+  course_id: string;
+  course_title: string;
+  enrolled_at: string;
+  progress: number;
+  course_end_date: string | null;
+  days_remaining: number | null;
+  is_expired: boolean;
 }
 
 // Generate a secure random password
@@ -58,6 +72,13 @@ const AdminUsers = () => {
   const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false);
   const [createdUserCredentials, setCreatedUserCredentials] = useState<CreatedUserCredentials | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  
+  // Enrollment management state
+  const [enrollmentSheetOpen, setEnrollmentSheetOpen] = useState(false);
+  const [selectedUserForEnrollments, setSelectedUserForEnrollments] = useState<UserWithRole | null>(null);
+  const [userEnrollments, setUserEnrollments] = useState<StudentEnrollment[]>([]);
+  const [loadingEnrollments, setLoadingEnrollments] = useState(false);
+  const [unenrollingId, setUnenrollingId] = useState<string | null>(null);
   
   const isSuperAdmin = userRole === 'super_admin';
   
@@ -253,6 +274,93 @@ const AdminUsers = () => {
     loadUsers();
   };
 
+  // Load enrollments for a specific user
+  const loadUserEnrollments = async (userId: string) => {
+    setLoadingEnrollments(true);
+    try {
+      // Get enrollments with course info
+      const { data: enrollments, error: enrollError } = await supabase
+        .from("enrollments")
+        .select(`
+          id,
+          course_id,
+          enrolled_at,
+          progress_percentage,
+          courses (
+            id,
+            title,
+            end_date
+          )
+        `)
+        .eq("user_id", userId);
+
+      if (enrollError) throw enrollError;
+
+      const today = new Date();
+      const enrichedEnrollments: StudentEnrollment[] = (enrollments || []).map((e: any) => {
+        const endDate = e.courses?.end_date ? new Date(e.courses.end_date) : null;
+        const daysRemaining = endDate ? Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
+        
+        return {
+          enrollment_id: e.id,
+          course_id: e.course_id,
+          course_title: e.courses?.title || "Curso desconocido",
+          enrolled_at: e.enrolled_at,
+          progress: e.progress_percentage || 0,
+          course_end_date: e.courses?.end_date,
+          days_remaining: daysRemaining,
+          is_expired: daysRemaining !== null && daysRemaining < 0
+        };
+      });
+
+      setUserEnrollments(enrichedEnrollments);
+    } catch (error: any) {
+      console.error("Error loading enrollments:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las matrículas",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingEnrollments(false);
+    }
+  };
+
+  const handleOpenEnrollmentPanel = (user: UserWithRole) => {
+    setSelectedUserForEnrollments(user);
+    setEnrollmentSheetOpen(true);
+    loadUserEnrollments(user.id);
+  };
+
+  const handleUnenrollUser = async (enrollmentId: string, courseTitle: string) => {
+    setUnenrollingId(enrollmentId);
+    try {
+      const { error } = await supabase
+        .from("enrollments")
+        .delete()
+        .eq("id", enrollmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Baja realizada",
+        description: `Se ha dado de baja del curso "${courseTitle}"`,
+      });
+
+      // Refresh enrollments
+      setUserEnrollments(prev => prev.filter(e => e.enrollment_id !== enrollmentId));
+    } catch (error: any) {
+      console.error("Error unenrolling:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUnenrollingId(null);
+    }
+  };
+
   const handleCreateUser = async () => {
     if (!newUserEmail || !newUserPassword) {
       toast({
@@ -439,7 +547,18 @@ const AdminUsers = () => {
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.email}</TableCell>
-                      <TableCell>{user.full_name || "-"}</TableCell>
+                      <TableCell>
+                        {user.role === 'student' ? (
+                          <button
+                            className="text-left hover:text-primary hover:underline cursor-pointer transition-colors"
+                            onClick={() => handleOpenEnrollmentPanel(user)}
+                          >
+                            {user.full_name || "-"}
+                          </button>
+                        ) : (
+                          user.full_name || "-"
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={getRoleBadgeVariant(user.role)}>
                           {getRoleLabel(user.role)}
@@ -770,6 +889,129 @@ const AdminUsers = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Enrollment Management Sheet */}
+      <Sheet open={enrollmentSheetOpen} onOpenChange={setEnrollmentSheetOpen}>
+        <SheetContent className="sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" />
+              Panel de Matrículas
+            </SheetTitle>
+            <SheetDescription>
+              {selectedUserForEnrollments?.full_name || selectedUserForEnrollments?.email}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-4">
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">Cursos matriculados</p>
+                <p className="text-2xl font-bold">{userEnrollments.length}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-xs text-muted-foreground">Cursos expirados</p>
+                <p className="text-2xl font-bold text-destructive">
+                  {userEnrollments.filter(e => e.is_expired).length}
+                </p>
+              </div>
+            </div>
+
+            {/* Enrollments List */}
+            {loadingEnrollments ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : userEnrollments.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Este usuario no está matriculado en ningún curso
+              </div>
+            ) : (
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="space-y-3">
+                  {userEnrollments.map((enrollment) => (
+                    <div
+                      key={enrollment.enrollment_id}
+                      className={`p-4 rounded-lg border ${enrollment.is_expired ? 'border-destructive/50 bg-destructive/5' : ''}`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h4 className="font-medium text-sm leading-tight">{enrollment.course_title}</h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                          onClick={() => handleUnenrollUser(enrollment.enrollment_id, enrollment.course_title)}
+                          disabled={unenrollingId === enrollment.enrollment_id}
+                        >
+                          {unenrollingId === enrollment.enrollment_id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <X className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Progreso</span>
+                          <span>{enrollment.progress}%</span>
+                        </div>
+                        <Progress value={enrollment.progress} className="h-2" />
+                      </div>
+
+                      <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>Inicio: {enrollment.enrolled_at ? new Date(enrollment.enrolled_at).toLocaleDateString('es-ES') : 'N/A'}</span>
+                        </div>
+                        {enrollment.course_end_date && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>Fin: {new Date(enrollment.course_end_date).toLocaleDateString('es-ES')}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {enrollment.days_remaining !== null && (
+                        <div className="mt-2">
+                          {enrollment.is_expired ? (
+                            <Badge variant="destructive" className="gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              Expirado hace {Math.abs(enrollment.days_remaining)} días
+                            </Badge>
+                          ) : enrollment.days_remaining <= 7 ? (
+                            <Badge variant="secondary" className="gap-1 bg-yellow-500/20 text-yellow-700">
+                              <Clock className="h-3 w-3" />
+                              {enrollment.days_remaining} días restantes
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="gap-1">
+                              <Clock className="h-3 w-3" />
+                              {enrollment.days_remaining} días restantes
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+
+            {/* Close Button */}
+            <div className="pt-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setEnrollmentSheetOpen(false)}
+              >
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
