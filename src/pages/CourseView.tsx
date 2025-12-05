@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Code } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Code, Presentation } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -15,6 +15,7 @@ import { GradesSection } from "@/components/GradesSection";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TimeTrackingReport } from "@/components/TimeTrackingReport";
 import { QualityAuditView } from "@/components/QualityAuditView";
+import { UnitContentViewer } from "@/components/UnitContentViewer";
 
 interface Course {
   id: string;
@@ -80,6 +81,19 @@ export default function CourseView() {
   const [studentName, setStudentName] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("intro");
   const [centerSlug, setCenterSlug] = useState<string | null>(null);
+  
+  // Content viewer state
+  const [contentViewerOpen, setContentViewerOpen] = useState(false);
+  const [selectedUnitId, setSelectedUnitId] = useState<string>("");
+  const [selectedUnitTitle, setSelectedUnitTitle] = useState<string>("");
+  const [selectedContentType, setSelectedContentType] = useState<'video' | 'document' | 'audio' | 'scorm' | 'exercise' | 'presentation'>('video');
+
+  const openContentViewer = (unitId: string, unitTitle: string, contentType: 'video' | 'document' | 'audio' | 'scorm' | 'exercise' | 'presentation') => {
+    setSelectedUnitId(unitId);
+    setSelectedUnitTitle(unitTitle);
+    setSelectedContentType(contentType);
+    setContentViewerOpen(true);
+  };
 
   useEffect(() => {
     if (courseId && user) {
@@ -767,7 +781,10 @@ export default function CourseView() {
                                       
                                       {/* Interactive Content Grid */}
                                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                        <div 
+                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                          onClick={() => openContentViewer(unit.id, unit.title, 'video')}
+                                        >
                                           <div className="flex items-center gap-2 mb-2">
                                             <div className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded">
                                               <Video className="h-4 w-4 text-red-600" />
@@ -777,7 +794,10 @@ export default function CourseView() {
                                           <Progress value={0} className="h-1.5" />
                                         </div>
                                         
-                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                        <div 
+                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                          onClick={() => openContentViewer(unit.id, unit.title, 'document')}
+                                        >
                                           <div className="flex items-center gap-2 mb-2">
                                             <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded">
                                               <FileText className="h-4 w-4 text-blue-600" />
@@ -787,7 +807,10 @@ export default function CourseView() {
                                           <Progress value={0} className="h-1.5" />
                                         </div>
                                         
-                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                        <div 
+                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                          onClick={() => openContentViewer(unit.id, unit.title, 'audio')}
+                                        >
                                           <div className="flex items-center gap-2 mb-2">
                                             <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded">
                                               <Headphones className="h-4 w-4 text-purple-600" />
@@ -797,7 +820,10 @@ export default function CourseView() {
                                           <Progress value={0} className="h-1.5" />
                                         </div>
                                         
-                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                        <div 
+                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                          onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
+                                        >
                                           <div className="flex items-center gap-2 mb-2">
                                             <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded">
                                               <Code className="h-4 w-4 text-green-600" />
@@ -807,12 +833,28 @@ export default function CourseView() {
                                           <Progress value={0} className="h-1.5" />
                                         </div>
                                         
-                                        <div className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors">
+                                        <div 
+                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                          onClick={() => openContentViewer(unit.id, unit.title, 'exercise')}
+                                        >
                                           <div className="flex items-center gap-2 mb-2">
                                             <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded">
                                               <FileQuestion className="h-4 w-4 text-amber-600" />
                                             </div>
                                             <span className="text-sm font-medium">Ejercicio</span>
+                                          </div>
+                                          <Progress value={0} className="h-1.5" />
+                                        </div>
+                                        
+                                        <div 
+                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                          onClick={() => openContentViewer(unit.id, unit.title, 'presentation')}
+                                        >
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded">
+                                              <Presentation className="h-4 w-4 text-orange-600" />
+                                            </div>
+                                            <span className="text-sm font-medium">Presentación</span>
                                           </div>
                                           <Progress value={0} className="h-1.5" />
                                         </div>
@@ -828,6 +870,14 @@ export default function CourseView() {
                                               variant="outline"
                                               size="sm"
                                               className="w-full justify-start text-xs"
+                                              onClick={() => {
+                                                toast({
+                                                  title: "Test: " + evaluation.title,
+                                                  description: "Accediendo al test de evaluación...",
+                                                });
+                                                // Navigate to evaluation page when available
+                                                navigate(`/course/${courseId}/evaluation/${evaluation.id}`);
+                                              }}
                                             >
                                               <CheckCircle2 className="h-3 w-3 mr-2" />
                                               {evaluation.title}
@@ -846,6 +896,14 @@ export default function CourseView() {
                                               variant="outline"
                                               size="sm"
                                               className="w-full justify-start text-xs"
+                                              onClick={() => {
+                                                toast({
+                                                  title: "Actividad: " + activity.title,
+                                                  description: "Accediendo a la actividad...",
+                                                });
+                                                // Navigate to activity page when available
+                                                navigate(`/course/${courseId}/activity/${activity.id}`);
+                                              }}
                                             >
                                               <FileText className="h-3 w-3 mr-2" />
                                               {activity.title}
@@ -886,6 +944,7 @@ export default function CourseView() {
                                 variant="outline"
                                 size="sm"
                                 className="w-full justify-start"
+                                onClick={() => navigate(`/course/${courseId}/evaluation/${evaluation.id}`)}
                               >
                                 {evaluation.title}
                               </Button>
@@ -906,6 +965,7 @@ export default function CourseView() {
                                 variant="outline"
                                 size="sm"
                                 className="w-full justify-start"
+                                onClick={() => navigate(`/course/${courseId}/activity/${activity.id}`)}
                               >
                                 {activity.title}
                               </Button>
@@ -926,6 +986,7 @@ export default function CourseView() {
                                 variant="outline"
                                 size="sm"
                                 className="w-full justify-start"
+                                onClick={() => navigate(`/course/${courseId}/module/${module.id}`)}
                               >
                                 {scorm.scorm_packages?.title || "Paquete SCORM"}
                               </Button>
@@ -1206,6 +1267,16 @@ export default function CourseView() {
           </div>
         </div>
       </div>
+
+      {/* Content Viewer Dialog */}
+      <UnitContentViewer
+        open={contentViewerOpen}
+        onOpenChange={setContentViewerOpen}
+        unitId={selectedUnitId}
+        unitTitle={selectedUnitTitle}
+        contentType={selectedContentType}
+        enrollmentId={enrollment?.id}
+      />
     </div>
   );
 }
