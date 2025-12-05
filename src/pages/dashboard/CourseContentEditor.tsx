@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   ArrowLeft, 
   Plus, 
@@ -29,11 +28,12 @@ import {
   Loader2,
   Clock,
   Target,
-  ListChecks,
+  ChevronDown,
+  ChevronRight,
   Video,
   File,
-  Settings,
-  Eye
+  Eye,
+  Settings
 } from "lucide-react";
 
 interface Course {
@@ -90,6 +90,7 @@ export default function CourseContentEditor() {
   const [modules, setModules] = useState<Module[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [expandedModules, setExpandedModules] = useState<string[]>([]);
   
   // Dialog states
   const [moduleDialogOpen, setModuleDialogOpen] = useState(false);
@@ -98,6 +99,7 @@ export default function CourseContentEditor() {
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [editingEvaluation, setEditingEvaluation] = useState<Evaluation | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
 
   // Form states
   const [moduleForm, setModuleForm] = useState({
@@ -137,7 +139,6 @@ export default function CourseContentEditor() {
 
   const loadCourseData = async () => {
     try {
-      // Load course
       const { data: courseData, error: courseError } = await supabase
         .from("courses")
         .select("*")
@@ -152,7 +153,6 @@ export default function CourseContentEditor() {
           : []
       });
 
-      // Load modules
       const { data: modulesData, error: modulesError } = await supabase
         .from("modules")
         .select("*")
@@ -162,7 +162,6 @@ export default function CourseContentEditor() {
       if (modulesError) throw modulesError;
       setModules(modulesData || []);
 
-      // Load evaluations
       const { data: evaluationsData, error: evaluationsError } = await supabase
         .from("evaluations")
         .select("*")
@@ -172,7 +171,6 @@ export default function CourseContentEditor() {
       if (evaluationsError) throw evaluationsError;
       setEvaluations(evaluationsData || []);
 
-      // Load activities
       const { data: activitiesData, error: activitiesError } = await supabase
         .from("development_activities")
         .select("*")
@@ -188,6 +186,14 @@ export default function CourseContentEditor() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleModule = (moduleId: string) => {
+    setExpandedModules(prev => 
+      prev.includes(moduleId) 
+        ? prev.filter(id => id !== moduleId)
+        : [...prev, moduleId]
+    );
   };
 
   // Module functions
@@ -465,6 +471,18 @@ export default function CourseContentEditor() {
     });
   };
 
+  const openAddEvaluationForModule = (moduleId: string) => {
+    setSelectedModuleId(moduleId);
+    setEvaluationForm(prev => ({ ...prev, module_id: moduleId }));
+    setEvaluationDialogOpen(true);
+  };
+
+  const openAddActivityForModule = (moduleId: string) => {
+    setSelectedModuleId(moduleId);
+    setActivityForm(prev => ({ ...prev, module_id: moduleId }));
+    setActivityDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -489,6 +507,9 @@ export default function CourseContentEditor() {
       default: return 'Curso Propio';
     }
   };
+
+  const getModuleEvaluations = (moduleId: string) => evaluations.filter(e => e.module_id === moduleId);
+  const getModuleActivities = (moduleId: string) => activities.filter(a => a.module_id === moduleId);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -532,638 +553,609 @@ export default function CourseContentEditor() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="modules" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="modules" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            Módulos ({modules.length})
-          </TabsTrigger>
-          <TabsTrigger value="evaluations" className="flex items-center gap-2">
-            <CheckSquare className="h-4 w-4" />
-            Evaluaciones ({evaluations.length})
-          </TabsTrigger>
-          <TabsTrigger value="activities" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Actividades ({activities.length})
-          </TabsTrigger>
-          <TabsTrigger value="resources" className="flex items-center gap-2">
-            <File className="h-4 w-4" />
-            Recursos
-          </TabsTrigger>
-        </TabsList>
-
-        {/* MÓDULOS */}
-        <TabsContent value="modules" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">Unidades Formativas / Módulos</h2>
-              <p className="text-sm text-muted-foreground">
-                Organiza el contenido del curso en módulos o unidades formativas
-              </p>
-            </div>
-            <Dialog open={moduleDialogOpen} onOpenChange={(open) => {
-              setModuleDialogOpen(open);
-              if (!open) resetModuleForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Añadir Módulo
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingModule ? "Editar Módulo" : "Nuevo Módulo"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {editingModule ? "Modifica los datos del módulo" : "Crea un nuevo módulo o unidad formativa"}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="module-title">Título del Módulo *</Label>
-                    <Input
-                      id="module-title"
-                      value={moduleForm.title}
-                      onChange={(e) => setModuleForm({ ...moduleForm, title: e.target.value })}
-                      placeholder="Ej: MF0123_2 - Nombre del módulo"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Para certificados de profesionalidad, usa el formato: MF0000_X - Nombre
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="module-description">Descripción</Label>
-                    <Textarea
-                      id="module-description"
-                      value={moduleForm.description}
-                      onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })}
-                      placeholder="Describe los objetivos y contenidos del módulo..."
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="module-content">Contenido del Módulo</Label>
-                    <Textarea
-                      id="module-content"
-                      value={moduleForm.content}
-                      onChange={(e) => setModuleForm({ ...moduleForm, content: e.target.value })}
-                      placeholder="Contenido formativo, texto, HTML..."
-                      rows={6}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="module-duration">Duración (minutos)</Label>
-                      <Input
-                        id="module-duration"
-                        type="number"
-                        value={moduleForm.duration_minutes}
-                        onChange={(e) => setModuleForm({ ...moduleForm, duration_minutes: parseInt(e.target.value) || 60 })}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between space-y-2">
-                      <Label htmlFor="module-active">Módulo Activo</Label>
-                      <Switch
-                        id="module-active"
-                        checked={moduleForm.is_active}
-                        onCheckedChange={(checked) => setModuleForm({ ...moduleForm, is_active: checked })}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setModuleDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSaveModule} disabled={saving}>
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Guardando...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-2" />
-                        Guardar
-                      </>
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {modules.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="py-12 text-center">
-                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="font-medium mb-2">Sin módulos</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Comienza añadiendo el primer módulo o unidad formativa
-                </p>
-                <Button onClick={() => setModuleDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Añadir Primer Módulo
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {modules.map((module, index) => (
-                <Card key={module.id} className={!module.is_active ? 'opacity-60' : ''}>
-                  <CardContent className="py-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <GripVertical className="h-5 w-5 cursor-move" />
-                        <span className="font-mono text-sm">{index + 1}</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{module.title}</h3>
-                          {!module.is_active && (
-                            <Badge variant="secondary">Inactivo</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {module.description || "Sin descripción"}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {module.duration_minutes} min
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <CheckSquare className="h-3 w-3" />
-                            {evaluations.filter(e => e.module_id === module.id).length} evaluaciones
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FileText className="h-3 w-3" />
-                            {activities.filter(a => a.module_id === module.id).length} actividades
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEditModule(module)}>
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteModule(module.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* EVALUACIONES */}
-        <TabsContent value="evaluations" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">Evaluaciones y Tests</h2>
-              <p className="text-sm text-muted-foreground">
-                Crea exámenes y pruebas para evaluar el aprendizaje (mínimo 50% para aprobar según SEPE)
-              </p>
-            </div>
-            <Dialog open={evaluationDialogOpen} onOpenChange={(open) => {
-              setEvaluationDialogOpen(open);
-              if (!open) resetEvaluationForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Añadir Evaluación
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingEvaluation ? "Editar Evaluación" : "Nueva Evaluación"}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="eval-title">Título *</Label>
-                    <Input
-                      id="eval-title"
-                      value={evaluationForm.title}
-                      onChange={(e) => setEvaluationForm({ ...evaluationForm, title: e.target.value })}
-                      placeholder="Ej: Examen Final - Módulo 1"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="eval-description">Descripción</Label>
-                    <Textarea
-                      id="eval-description"
-                      value={evaluationForm.description}
-                      onChange={(e) => setEvaluationForm({ ...evaluationForm, description: e.target.value })}
-                      placeholder="Instrucciones para el alumno..."
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="eval-module">Módulo Asociado</Label>
-                    <Select 
-                      value={evaluationForm.module_id} 
-                      onValueChange={(value) => setEvaluationForm({ ...evaluationForm, module_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un módulo (opcional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Sin módulo específico</SelectItem>
-                        {modules.map(m => (
-                          <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="eval-passing">Nota Mínima (%)</Label>
-                      <Input
-                        id="eval-passing"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={evaluationForm.passing_score}
-                        onChange={(e) => setEvaluationForm({ ...evaluationForm, passing_score: parseInt(e.target.value) || 50 })}
-                      />
-                      <p className="text-xs text-muted-foreground">SEPE: mínimo 50%</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="eval-attempts">Intentos Máx.</Label>
-                      <Input
-                        id="eval-attempts"
-                        type="number"
-                        min="1"
-                        value={evaluationForm.max_attempts}
-                        onChange={(e) => setEvaluationForm({ ...evaluationForm, max_attempts: parseInt(e.target.value) || 3 })}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="eval-time">Tiempo (min)</Label>
-                      <Input
-                        id="eval-time"
-                        type="number"
-                        value={evaluationForm.time_limit_minutes}
-                        onChange={(e) => setEvaluationForm({ ...evaluationForm, time_limit_minutes: parseInt(e.target.value) || 60 })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="eval-active">Evaluación Activa</Label>
-                    <Switch
-                      id="eval-active"
-                      checked={evaluationForm.is_active}
-                      onCheckedChange={(checked) => setEvaluationForm({ ...evaluationForm, is_active: checked })}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setEvaluationDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSaveEvaluation} disabled={saving}>
-                    {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                    Guardar
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {evaluations.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="py-12 text-center">
-                <CheckSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="font-medium mb-2">Sin evaluaciones</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Añade exámenes y tests para evaluar a los alumnos
-                </p>
-                <Button onClick={() => setEvaluationDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Añadir Primera Evaluación
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {evaluations.map((evaluation) => (
-                <Card key={evaluation.id} className={!evaluation.is_active ? 'opacity-60' : ''}>
-                  <CardContent className="py-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{evaluation.title}</h3>
-                          {!evaluation.is_active && <Badge variant="secondary">Inactivo</Badge>}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {evaluation.description || "Sin descripción"}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span>Nota mínima: {evaluation.passing_score}%</span>
-                          <span>Intentos: {evaluation.max_attempts}</span>
-                          {evaluation.time_limit_minutes && (
-                            <span>Tiempo: {evaluation.time_limit_minutes} min</span>
-                          )}
-                          {evaluation.module_id && (
-                            <Badge variant="outline" className="text-xs">
-                              {modules.find(m => m.id === evaluation.module_id)?.title}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEditEvaluation(evaluation)}>
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteEvaluation(evaluation.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* ACTIVIDADES */}
-        <TabsContent value="activities" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">Actividades de Desarrollo</h2>
-              <p className="text-sm text-muted-foreground">
-                Tareas y ejercicios prácticos que los alumnos deben entregar
-              </p>
-            </div>
-            <Dialog open={activityDialogOpen} onOpenChange={(open) => {
-              setActivityDialogOpen(open);
-              if (!open) resetActivityForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Añadir Actividad
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingActivity ? "Editar Actividad" : "Nueva Actividad"}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="act-title">Título *</Label>
-                    <Input
-                      id="act-title"
-                      value={activityForm.title}
-                      onChange={(e) => setActivityForm({ ...activityForm, title: e.target.value })}
-                      placeholder="Ej: Práctica 1 - Análisis de caso"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="act-description">Descripción</Label>
-                    <Textarea
-                      id="act-description"
-                      value={activityForm.description}
-                      onChange={(e) => setActivityForm({ ...activityForm, description: e.target.value })}
-                      placeholder="Describe brevemente la actividad..."
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="act-instructions">Instrucciones Detalladas</Label>
-                    <Textarea
-                      id="act-instructions"
-                      value={activityForm.instructions}
-                      onChange={(e) => setActivityForm({ ...activityForm, instructions: e.target.value })}
-                      placeholder="Instrucciones paso a paso para completar la actividad..."
-                      rows={4}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="act-module">Módulo Asociado</Label>
-                      <Select 
-                        value={activityForm.module_id} 
-                        onValueChange={(value) => setActivityForm({ ...activityForm, module_id: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona un módulo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">Sin módulo específico</SelectItem>
-                          {modules.map(m => (
-                            <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="act-type">Tipo de Entrega</Label>
-                      <Select 
-                        value={activityForm.submission_type} 
-                        onValueChange={(value) => setActivityForm({ ...activityForm, submission_type: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="file">Archivo</SelectItem>
-                          <SelectItem value="text">Texto</SelectItem>
-                          <SelectItem value="url">Enlace URL</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="act-score">Puntuación Máxima</Label>
-                      <Input
-                        id="act-score"
-                        type="number"
-                        value={activityForm.max_score}
-                        onChange={(e) => setActivityForm({ ...activityForm, max_score: parseInt(e.target.value) || 100 })}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="act-due">Fecha Límite</Label>
-                      <Input
-                        id="act-due"
-                        type="datetime-local"
-                        value={activityForm.due_date}
-                        onChange={(e) => setActivityForm({ ...activityForm, due_date: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="act-active">Actividad Activa</Label>
-                    <Switch
-                      id="act-active"
-                      checked={activityForm.is_active}
-                      onCheckedChange={(checked) => setActivityForm({ ...activityForm, is_active: checked })}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setActivityDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSaveActivity} disabled={saving}>
-                    {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                    Guardar
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {activities.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="py-12 text-center">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="font-medium mb-2">Sin actividades</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Añade tareas prácticas para los alumnos
-                </p>
-                <Button onClick={() => setActivityDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Añadir Primera Actividad
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {activities.map((activity) => (
-                <Card key={activity.id} className={!activity.is_active ? 'opacity-60' : ''}>
-                  <CardContent className="py-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{activity.title}</h3>
-                          {!activity.is_active && <Badge variant="secondary">Inactivo</Badge>}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {activity.description || "Sin descripción"}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span>Puntuación: {activity.max_score}</span>
-                          <span>Entrega: {activity.submission_type === 'file' ? 'Archivo' : activity.submission_type === 'text' ? 'Texto' : 'URL'}</span>
-                          {activity.due_date && (
-                            <span>Límite: {new Date(activity.due_date).toLocaleDateString('es-ES')}</span>
-                          )}
-                          {activity.module_id && (
-                            <Badge variant="outline" className="text-xs">
-                              {modules.find(m => m.id === activity.module_id)?.title}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEditActivity(activity)}>
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteActivity(activity.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* RECURSOS */}
-        <TabsContent value="resources" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recursos y Material Complementario</CardTitle>
-              <CardDescription>
-                Sube archivos, vídeos y material de apoyo para los alumnos
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="font-medium mb-2">Subir Recursos</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Arrastra archivos aquí o haz clic para seleccionar
-                </p>
-                <Button variant="outline">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Seleccionar Archivos
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2">
-                  PDF, Word, PowerPoint, vídeos (máx. 100MB)
+      {/* Add Module Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Unidades Formativas / Módulos</h2>
+          <p className="text-sm text-muted-foreground">
+            Haz clic en cada módulo para expandir y gestionar su contenido
+          </p>
+        </div>
+        <Dialog open={moduleDialogOpen} onOpenChange={(open) => {
+          setModuleDialogOpen(open);
+          if (!open) resetModuleForm();
+        }}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Añadir Módulo
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingModule ? "Editar Módulo" : "Nuevo Módulo"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingModule ? "Modifica los datos del módulo" : "Crea un nuevo módulo o unidad formativa"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="module-title">Título del Módulo *</Label>
+                <Input
+                  id="module-title"
+                  value={moduleForm.title}
+                  onChange={(e) => setModuleForm({ ...moduleForm, title: e.target.value })}
+                  placeholder="Ej: MF0123_2 - Nombre del módulo"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Para certificados de profesionalidad, usa el formato: MF0000_X - Nombre
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4 mt-6">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                      <Video className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-base">Contenido SCORM</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Sube paquetes SCORM para contenido interactivo
-                    </p>
-                    <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/admin/scorm')}>
-                      Gestionar SCORM
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-base">Chat del Curso</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      El chat está habilitado automáticamente para tutorías
-                    </p>
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      Activo
-                    </Badge>
-                  </CardContent>
-                </Card>
+              <div className="space-y-2">
+                <Label htmlFor="module-description">Descripción</Label>
+                <Textarea
+                  id="module-description"
+                  value={moduleForm.description}
+                  onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })}
+                  placeholder="Describe los objetivos y contenidos del módulo..."
+                  rows={3}
+                />
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+              <div className="space-y-2">
+                <Label htmlFor="module-content">Contenido del Módulo</Label>
+                <Textarea
+                  id="module-content"
+                  value={moduleForm.content}
+                  onChange={(e) => setModuleForm({ ...moduleForm, content: e.target.value })}
+                  placeholder="Contenido formativo, texto, HTML..."
+                  rows={6}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="module-duration">Duración (minutos)</Label>
+                  <Input
+                    id="module-duration"
+                    type="number"
+                    value={moduleForm.duration_minutes}
+                    onChange={(e) => setModuleForm({ ...moduleForm, duration_minutes: parseInt(e.target.value) || 60 })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between space-y-2">
+                  <Label htmlFor="module-active">Módulo Activo</Label>
+                  <Switch
+                    id="module-active"
+                    checked={moduleForm.is_active}
+                    onCheckedChange={(checked) => setModuleForm({ ...moduleForm, is_active: checked })}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setModuleDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveModule} disabled={saving}>
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Guardar
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Modules List - Collapsible */}
+      {modules.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center">
+            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="font-medium mb-2">Sin módulos</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Comienza añadiendo el primer módulo o unidad formativa
+            </p>
+            <Button onClick={() => setModuleDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Añadir Primer Módulo
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {modules.map((module, index) => {
+            const moduleEvaluations = getModuleEvaluations(module.id);
+            const moduleActivities = getModuleActivities(module.id);
+            const isExpanded = expandedModules.includes(module.id);
+
+            return (
+              <Card key={module.id} className={`${!module.is_active ? 'opacity-60' : ''} overflow-hidden`}>
+                <Collapsible open={isExpanded} onOpenChange={() => toggleModule(module.id)}>
+                  <CollapsibleTrigger asChild>
+                    <div className="cursor-pointer">
+                      <CardHeader className="pb-3 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start gap-4">
+                          <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5" />
+                            )}
+                            <span className="font-mono text-sm font-bold">{index + 1}</span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-lg">{module.title}</CardTitle>
+                              {!module.is_active && (
+                                <Badge variant="secondary">Inactivo</Badge>
+                              )}
+                            </div>
+                            <CardDescription className="mt-1">
+                              {module.description || "Sin descripción"}
+                            </CardDescription>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {module.duration_minutes} min
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <CheckSquare className="h-3 w-3" />
+                                {moduleEvaluations.length} tests
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <FileText className="h-3 w-3" />
+                                {moduleActivities.length} actividades
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditModule(module)}>
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteModule(module.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </div>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    <CardContent className="pt-0 border-t bg-muted/20">
+                      <div className="grid lg:grid-cols-2 gap-4 pt-4">
+                        {/* Evaluaciones del Módulo */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium flex items-center gap-2">
+                              <CheckSquare className="h-4 w-4 text-primary" />
+                              Tests / Evaluaciones
+                            </h4>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openAddEvaluationForModule(module.id)}
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Añadir
+                            </Button>
+                          </div>
+                          
+                          {moduleEvaluations.length === 0 ? (
+                            <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
+                              Sin evaluaciones. Añade un test para este módulo.
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {moduleEvaluations.map(evaluation => (
+                                <div 
+                                  key={evaluation.id} 
+                                  className={`bg-background rounded-lg p-3 border ${!evaluation.is_active ? 'opacity-60' : ''}`}
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <p className="font-medium text-sm">{evaluation.title}</p>
+                                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                        <span>Mín: {evaluation.passing_score}%</span>
+                                        <span>Intentos: {evaluation.max_attempts}</span>
+                                        {evaluation.time_limit_minutes && (
+                                          <span>{evaluation.time_limit_minutes} min</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditEvaluation(evaluation)}>
+                                        <Edit2 className="h-3 w-3" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteEvaluation(evaluation.id)}>
+                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Actividades del Módulo */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-primary" />
+                              Actividades
+                            </h4>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openAddActivityForModule(module.id)}
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Añadir
+                            </Button>
+                          </div>
+                          
+                          {moduleActivities.length === 0 ? (
+                            <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
+                              Sin actividades. Añade una tarea para este módulo.
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {moduleActivities.map(activity => (
+                                <div 
+                                  key={activity.id} 
+                                  className={`bg-background rounded-lg p-3 border ${!activity.is_active ? 'opacity-60' : ''}`}
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <p className="font-medium text-sm">{activity.title}</p>
+                                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                        <span>Punt: {activity.max_score}</span>
+                                        <span>
+                                          {activity.submission_type === 'file' ? 'Archivo' : 
+                                           activity.submission_type === 'text' ? 'Texto' : 'URL'}
+                                        </span>
+                                        {activity.due_date && (
+                                          <span>Límite: {new Date(activity.due_date).toLocaleDateString('es-ES')}</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditActivity(activity)}>
+                                        <Edit2 className="h-3 w-3" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteActivity(activity.id)}>
+                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Recursos del Módulo */}
+                      <div className="mt-4 pt-4 border-t">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium flex items-center gap-2">
+                            <File className="h-4 w-4 text-primary" />
+                            Recursos y Material
+                          </h4>
+                          <Button variant="outline" size="sm">
+                            <Upload className="h-3 w-3 mr-1" />
+                            Subir
+                          </Button>
+                        </div>
+                        <div className="bg-background rounded-lg p-4 border border-dashed text-center text-sm text-muted-foreground">
+                          <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          Arrastra archivos aquí o haz clic en "Subir"
+                        </div>
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* General Resources Section */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Recursos Generales del Curso
+          </CardTitle>
+          <CardDescription>
+            Material complementario disponible para todo el curso
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Video className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-base">Contenido SCORM</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Sube paquetes SCORM para contenido interactivo
+                </p>
+                <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/admin/scorm')}>
+                  Gestionar SCORM
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-base">Chat del Curso</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-3">
+                  El chat está habilitado automáticamente para tutorías
+                </p>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  Activo
+                </Badge>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Evaluation Dialog */}
+      <Dialog open={evaluationDialogOpen} onOpenChange={(open) => {
+        setEvaluationDialogOpen(open);
+        if (!open) resetEvaluationForm();
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingEvaluation ? "Editar Evaluación" : "Nueva Evaluación"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="eval-title">Título *</Label>
+              <Input
+                id="eval-title"
+                value={evaluationForm.title}
+                onChange={(e) => setEvaluationForm({ ...evaluationForm, title: e.target.value })}
+                placeholder="Ej: Examen Final - Módulo 1"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="eval-description">Descripción</Label>
+              <Textarea
+                id="eval-description"
+                value={evaluationForm.description}
+                onChange={(e) => setEvaluationForm({ ...evaluationForm, description: e.target.value })}
+                placeholder="Instrucciones para el alumno..."
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="eval-module">Módulo Asociado</Label>
+              <Select 
+                value={evaluationForm.module_id} 
+                onValueChange={(value) => setEvaluationForm({ ...evaluationForm, module_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un módulo (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sin módulo específico</SelectItem>
+                  {modules.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="eval-passing">Nota Mínima (%)</Label>
+                <Input
+                  id="eval-passing"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={evaluationForm.passing_score}
+                  onChange={(e) => setEvaluationForm({ ...evaluationForm, passing_score: parseInt(e.target.value) || 50 })}
+                />
+                <p className="text-xs text-muted-foreground">SEPE: mínimo 50%</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eval-attempts">Intentos Máx.</Label>
+                <Input
+                  id="eval-attempts"
+                  type="number"
+                  min="1"
+                  value={evaluationForm.max_attempts}
+                  onChange={(e) => setEvaluationForm({ ...evaluationForm, max_attempts: parseInt(e.target.value) || 3 })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eval-time">Tiempo (min)</Label>
+                <Input
+                  id="eval-time"
+                  type="number"
+                  value={evaluationForm.time_limit_minutes}
+                  onChange={(e) => setEvaluationForm({ ...evaluationForm, time_limit_minutes: parseInt(e.target.value) || 60 })}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="eval-active">Evaluación Activa</Label>
+              <Switch
+                id="eval-active"
+                checked={evaluationForm.is_active}
+                onCheckedChange={(checked) => setEvaluationForm({ ...evaluationForm, is_active: checked })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEvaluationDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEvaluation} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Activity Dialog */}
+      <Dialog open={activityDialogOpen} onOpenChange={(open) => {
+        setActivityDialogOpen(open);
+        if (!open) resetActivityForm();
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingActivity ? "Editar Actividad" : "Nueva Actividad"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="act-title">Título *</Label>
+              <Input
+                id="act-title"
+                value={activityForm.title}
+                onChange={(e) => setActivityForm({ ...activityForm, title: e.target.value })}
+                placeholder="Ej: Práctica 1 - Análisis de caso"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="act-description">Descripción</Label>
+              <Textarea
+                id="act-description"
+                value={activityForm.description}
+                onChange={(e) => setActivityForm({ ...activityForm, description: e.target.value })}
+                placeholder="Describe brevemente la actividad..."
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="act-instructions">Instrucciones Detalladas</Label>
+              <Textarea
+                id="act-instructions"
+                value={activityForm.instructions}
+                onChange={(e) => setActivityForm({ ...activityForm, instructions: e.target.value })}
+                placeholder="Instrucciones paso a paso para completar la actividad..."
+                rows={4}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="act-module">Módulo Asociado</Label>
+                <Select 
+                  value={activityForm.module_id} 
+                  onValueChange={(value) => setActivityForm({ ...activityForm, module_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un módulo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Sin módulo específico</SelectItem>
+                    {modules.map(m => (
+                      <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="act-type">Tipo de Entrega</Label>
+                <Select 
+                  value={activityForm.submission_type} 
+                  onValueChange={(value) => setActivityForm({ ...activityForm, submission_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="file">Archivo</SelectItem>
+                    <SelectItem value="text">Texto</SelectItem>
+                    <SelectItem value="url">Enlace URL</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="act-score">Puntuación Máxima</Label>
+                <Input
+                  id="act-score"
+                  type="number"
+                  value={activityForm.max_score}
+                  onChange={(e) => setActivityForm({ ...activityForm, max_score: parseInt(e.target.value) || 100 })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="act-due">Fecha Límite</Label>
+                <Input
+                  id="act-due"
+                  type="datetime-local"
+                  value={activityForm.due_date}
+                  onChange={(e) => setActivityForm({ ...activityForm, due_date: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="act-active">Actividad Activa</Label>
+              <Switch
+                id="act-active"
+                checked={activityForm.is_active}
+                onCheckedChange={(checked) => setActivityForm({ ...activityForm, is_active: checked })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActivityDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveActivity} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
