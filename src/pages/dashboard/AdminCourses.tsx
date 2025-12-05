@@ -78,9 +78,10 @@ export default function AdminCourses() {
   // View enrolled students state
   const [viewStudentsSheetOpen, setViewStudentsSheetOpen] = useState(false);
   const [selectedCourseForView, setSelectedCourseForView] = useState<Course | null>(null);
-  const [enrolledStudents, setEnrolledStudents] = useState<{id: string; full_name: string; enrolled_at: string; progress: number}[]>([]);
+  const [enrolledStudents, setEnrolledStudents] = useState<{id: string; enrollment_id: string; full_name: string; enrolled_at: string; progress: number}[]>([]);
   const [loadingEnrolled, setLoadingEnrolled] = useState(false);
   const [viewSearchTerm, setViewSearchTerm] = useState("");
+  const [unenrollingStudent, setUnenrollingStudent] = useState<string | null>(null);
   
   // Tutor assignment state
   const [tutorSheetOpen, setTutorSheetOpen] = useState(false);
@@ -606,6 +607,7 @@ export default function AdminCourses() {
 
       const studentsData = enrollments.map(e => ({
         id: e.user_id,
+        enrollment_id: e.id,
         full_name: profileMap.get(e.user_id) || "Sin nombre",
         enrolled_at: e.enrolled_at || "",
         progress: e.progress_percentage || 0
@@ -621,6 +623,36 @@ export default function AdminCourses() {
       });
     } finally {
       setLoadingEnrolled(false);
+    }
+  };
+
+  const handleUnenrollStudent = async (enrollmentId: string, studentName: string) => {
+    setUnenrollingStudent(enrollmentId);
+    try {
+      const { error } = await supabase
+        .from("enrollments")
+        .delete()
+        .eq("id", enrollmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Alumno dado de baja",
+        description: `${studentName} ha sido dado de baja del curso`,
+      });
+
+      // Refresh the list
+      setEnrolledStudents(prev => prev.filter(s => s.enrollment_id !== enrollmentId));
+      loadUserAndCourses(); // Refresh counts
+    } catch (error: any) {
+      console.error("Error unenrolling student:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUnenrollingStudent(null);
     }
   };
 
@@ -1337,19 +1369,32 @@ export default function AdminCourses() {
                 <div className="space-y-2">
                   {filteredEnrolledStudents.map((student) => (
                     <div
-                      key={student.id}
-                      className="flex items-center justify-between p-3 rounded-lg border"
+                      key={student.enrollment_id}
+                      className="flex items-center justify-between p-3 rounded-lg border gap-3"
                     >
-                      <div className="flex-1">
-                        <p className="font-medium">{student.full_name}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{student.full_name}</p>
                         <p className="text-xs text-muted-foreground">
                           Matriculado: {student.enrolled_at ? new Date(student.enrolled_at).toLocaleDateString('es-ES') : 'N/A'}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="flex items-center gap-2">
                         <Badge variant={student.progress >= 100 ? "default" : "secondary"}>
                           {student.progress}%
                         </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleUnenrollStudent(student.enrollment_id, student.full_name)}
+                          disabled={unenrollingStudent === student.enrollment_id}
+                        >
+                          {unenrollingStudent === student.enrollment_id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <X className="h-4 w-4" />
+                          )}
+                        </Button>
                       </div>
                     </div>
                   ))}
