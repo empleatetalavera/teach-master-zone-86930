@@ -33,6 +33,7 @@ import {
   Video,
   File,
   Eye,
+  EyeOff,
   Settings,
   Map,
   ListChecks,
@@ -66,6 +67,7 @@ interface Module {
   order_index: number;
   duration_minutes: number;
   is_active: boolean;
+  is_visible_to_students: boolean;
   concept_map_url: string | null;
   objectives: string | null;
   forum_enabled: boolean;
@@ -142,6 +144,7 @@ export default function CourseContentEditor() {
     content: "",
     duration_hours: 1,
     is_active: true,
+    is_visible_to_students: true,
     concept_map_url: "",
     objectives: "",
     forum_enabled: true
@@ -275,6 +278,7 @@ export default function CourseContentEditor() {
             content: moduleForm.content,
             duration_minutes: Math.round(moduleForm.duration_hours * 60),
             is_active: moduleForm.is_active,
+            is_visible_to_students: moduleForm.is_visible_to_students,
             concept_map_url: moduleForm.concept_map_url || null,
             objectives: moduleForm.objectives || null,
             forum_enabled: moduleForm.forum_enabled
@@ -293,6 +297,7 @@ export default function CourseContentEditor() {
             content: moduleForm.content,
             duration_minutes: Math.round(moduleForm.duration_hours * 60),
             is_active: moduleForm.is_active,
+            is_visible_to_students: moduleForm.is_visible_to_students,
             order_index: modules.length + 1,
             concept_map_url: moduleForm.concept_map_url || null,
             objectives: moduleForm.objectives || null,
@@ -338,6 +343,7 @@ export default function CourseContentEditor() {
       content: module.content || "",
       duration_hours: module.duration_minutes ? module.duration_minutes / 60 : 1,
       is_active: module.is_active,
+      is_visible_to_students: module.is_visible_to_students ?? true,
       concept_map_url: module.concept_map_url || "",
       objectives: module.objectives || "",
       forum_enabled: module.forum_enabled ?? true
@@ -353,6 +359,7 @@ export default function CourseContentEditor() {
       content: "",
       duration_hours: 1,
       is_active: true,
+      is_visible_to_students: true,
       concept_map_url: "",
       objectives: "",
       forum_enabled: true
@@ -881,6 +888,21 @@ export default function CourseContentEditor() {
                   onCheckedChange={(checked) => setModuleForm({ ...moduleForm, forum_enabled: checked })}
                 />
               </div>
+
+              <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-amber-600" />
+                  <div>
+                    <Label htmlFor="module-visible" className="text-amber-800 dark:text-amber-200">Visible para Estudiantes</Label>
+                    <p className="text-xs text-amber-600 dark:text-amber-400">Desactiva para ocultar el módulo hasta que esté listo</p>
+                  </div>
+                </div>
+                <Switch
+                  id="module-visible"
+                  checked={moduleForm.is_visible_to_students}
+                  onCheckedChange={(checked) => setModuleForm({ ...moduleForm, is_visible_to_students: checked })}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setModuleDialogOpen(false)}>
@@ -951,6 +973,12 @@ export default function CourseContentEditor() {
                               <CardTitle className="text-lg">{module.title}</CardTitle>
                               {!module.is_active && (
                                 <Badge variant="secondary">Inactivo</Badge>
+                              )}
+                              {module.is_visible_to_students === false && (
+                                <Badge variant="outline" className="border-amber-500 text-amber-600">
+                                  <EyeOff className="h-3 w-3 mr-1" />
+                                  Oculto
+                                </Badge>
                               )}
                             </div>
                             <CardDescription className="mt-1">
