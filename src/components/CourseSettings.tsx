@@ -19,6 +19,7 @@ interface CourseSettingsProps {
     support_email?: string;
     support_phone?: string;
     tutor_cv_url?: string;
+    campus_guide_url?: string;
   };
   onUpdate?: () => void;
 }
@@ -29,6 +30,7 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
   const [videoUrl, setVideoUrl] = useState(initialData?.video_url || "");
   const [conceptMapUrl, setConceptMapUrl] = useState(initialData?.concept_map_url || "");
   const [tutorCvUrl, setTutorCvUrl] = useState(initialData?.tutor_cv_url || "");
+  const [campusGuideUrl, setCampusGuideUrl] = useState(initialData?.campus_guide_url || "");
   const [specificObjectives, setSpecificObjectives] = useState<string[]>(
     initialData?.specific_objectives || []
   );
@@ -230,6 +232,70 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
     }
   };
 
+  const handleCampusGuideUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast({
+        title: "Error",
+        description: "Por favor selecciona un archivo PDF",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "El archivo no puede superar los 20MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileName = `${courseId}-campus-guide-${Date.now()}.pdf`;
+      const filePath = `campus-guides/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("course-images")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("course-images")
+        .getPublicUrl(filePath);
+
+      setCampusGuideUrl(publicUrl);
+
+      const { error: updateError } = await supabase
+        .from("courses")
+        .update({ campus_guide_url: publicUrl })
+        .eq("id", courseId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Guía subida",
+        description: "La guía del campus se ha guardado correctamente",
+      });
+
+      onUpdate?.();
+    } catch (error: any) {
+      console.error("Error uploading campus guide:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const addObjective = async () => {
     if (!newObjective.trim()) return;
 
@@ -344,6 +410,46 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
             />
             <p className="text-xs text-muted-foreground mt-2">
               Tamaño máximo: 100MB. Formatos aceptados: MP4, WebM, MOV
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Guía del Campus Virtual</CardTitle>
+          <CardDescription>Sube la guía de uso del campus en PDF para los alumnos</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {campusGuideUrl && (
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm">Guía del campus subida</span>
+                </div>
+                <Button asChild variant="outline" size="sm">
+                  <a href={campusGuideUrl} target="_blank" rel="noopener noreferrer">
+                    Ver PDF
+                  </a>
+                </Button>
+              </div>
+            </div>
+          )}
+          <div>
+            <Label htmlFor="campus-guide-upload">
+              {campusGuideUrl ? "Cambiar guía" : "Subir guía"}
+            </Label>
+            <Input
+              id="campus-guide-upload"
+              type="file"
+              accept="application/pdf"
+              onChange={handleCampusGuideUpload}
+              disabled={uploading}
+              className="mt-2"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Tamaño máximo: 20MB. Solo archivos PDF con imágenes incluidas
             </p>
           </div>
         </CardContent>

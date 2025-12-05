@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -32,6 +32,7 @@ interface Course {
   support_phone?: string;
   tutor_id?: string;
   tutor_cv_url?: string;
+  campus_guide_url?: string;
 }
 
 interface Module {
@@ -511,27 +512,95 @@ export default function CourseView() {
                 </CardContent>
               </Card>
 
-              {course.tutor_cv_url && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Curriculum del Docente</CardTitle>
-                    <CardDescription>CV del profesional que imparte este curso</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild className="w-full">
-                      <a 
-                        href={course.tutor_cv_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <FileDown className="h-4 w-4" />
-                        Descargar CV del Docente
-                      </a>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Guía del Campus */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <MapIcon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>Guía del Campus Virtual</CardTitle>
+                      <CardDescription>Manual de usuario con instrucciones detalladas</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {course.campus_guide_url ? (
+                    <>
+                      <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                        <iframe
+                          src={`${course.campus_guide_url}#toolbar=1&navpanes=0`}
+                          className="w-full h-full"
+                          title="Guía del Campus"
+                        />
+                      </div>
+                      <Button asChild className="w-full">
+                        <a 
+                          href={course.campus_guide_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2"
+                        >
+                          <FileDown className="h-4 w-4" />
+                          Descargar Guía del Campus (PDF)
+                        </a>
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <MapIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>Guía del campus no disponible</p>
+                      <p className="text-sm">Contacta con tu tutor si necesitas ayuda</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* CV del Docente */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <GraduationCap className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>Curriculum del Docente</CardTitle>
+                      <CardDescription>Conoce al profesional que imparte este curso</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {course.tutor_cv_url ? (
+                    <>
+                      <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                        <iframe
+                          src={`${course.tutor_cv_url}#toolbar=1&navpanes=0`}
+                          className="w-full h-full"
+                          title="CV del Docente"
+                        />
+                      </div>
+                      <Button asChild className="w-full">
+                        <a 
+                          href={course.tutor_cv_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2"
+                        >
+                          <FileDown className="h-4 w-4" />
+                          Descargar CV del Docente (PDF)
+                        </a>
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <User className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>CV del docente no disponible</p>
+                      <p className="text-sm">Contacta con soporte para más información</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
           </TabsContent>
 
           <TabsContent value="grades" className="space-y-4">

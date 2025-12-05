@@ -454,6 +454,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          campus_guide_url: string | null
           category: string | null
           concept_map_url: string | null
           course_type: string | null
@@ -476,6 +477,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          campus_guide_url?: string | null
           category?: string | null
           concept_map_url?: string | null
           course_type?: string | null
@@ -498,6 +500,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          campus_guide_url?: string | null
           category?: string | null
           concept_map_url?: string | null
           course_type?: string | null

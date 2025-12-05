@@ -158,6 +158,8 @@ export default function AdminCourseSettings() {
             concept_map_url: selectedCourse.concept_map_url,
             support_email: selectedCourse.support_email,
             support_phone: selectedCourse.support_phone,
+            tutor_cv_url: selectedCourse.tutor_cv_url,
+            campus_guide_url: selectedCourse.campus_guide_url,
           }}
           onUpdate={() => loadCourseDetails(selectedCourse.id)}
         />
