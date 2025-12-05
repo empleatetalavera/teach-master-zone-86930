@@ -92,26 +92,71 @@ export default function AdminCourses() {
       const centerId = profile?.training_center_id;
       setUserTrainingCenterId(centerId);
 
-      // Load courses - filter by center unless super_admin
-      let query = supabase
-        .from("courses")
-        .select(`
-          *,
-          enrollments:enrollments(count),
-          modules:modules(count)
-        `)
-        .order("created_at", { ascending: false });
+      let allCourses: any[] = [];
 
-      // Only filter by training_center_id if not super_admin
-      if (!superAdmin && centerId) {
-        query = query.eq("training_center_id", centerId);
+      if (superAdmin) {
+        // Super admin sees all courses
+        const { data: coursesData, error } = await supabase
+          .from("courses")
+          .select(`
+            *,
+            enrollments:enrollments(count),
+            modules:modules(count)
+          `)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        allCourses = coursesData || [];
+      } else if (centerId) {
+        // Center admin: get courses owned by center + courses assigned to center
+        
+        // 1. Get courses owned by center (training_center_id = centerId)
+        const { data: ownedCourses, error: ownedError } = await supabase
+          .from("courses")
+          .select(`
+            *,
+            enrollments:enrollments(count),
+            modules:modules(count)
+          `)
+          .eq("training_center_id", centerId)
+          .order("created_at", { ascending: false });
+
+        if (ownedError) throw ownedError;
+
+        // 2. Get courses assigned to center via course_center_assignments
+        const { data: assignments, error: assignError } = await supabase
+          .from("course_center_assignments")
+          .select("course_id")
+          .eq("training_center_id", centerId)
+          .eq("is_active", true);
+
+        if (assignError) throw assignError;
+
+        const assignedCourseIds = (assignments || []).map(a => a.course_id);
+        
+        let assignedCourses: any[] = [];
+        if (assignedCourseIds.length > 0) {
+          const { data: assigned, error: assignedCoursesError } = await supabase
+            .from("courses")
+            .select(`
+              *,
+              enrollments:enrollments(count),
+              modules:modules(count)
+            `)
+            .in("id", assignedCourseIds)
+            .order("created_at", { ascending: false });
+
+          if (assignedCoursesError) throw assignedCoursesError;
+          assignedCourses = assigned || [];
+        }
+
+        // Merge and deduplicate
+        const ownedIds = new Set((ownedCourses || []).map(c => c.id));
+        const uniqueAssigned = assignedCourses.filter(c => !ownedIds.has(c.id));
+        allCourses = [...(ownedCourses || []), ...uniqueAssigned];
       }
 
-      const { data: coursesData, error } = await query;
-
-      if (error) throw error;
-
-      const transformedCourses = (coursesData || []).map((course: any) => ({
+      const transformedCourses = allCourses.map((course: any) => ({
         ...course,
         _count: {
           enrollments: course.enrollments?.[0]?.count || 0,
