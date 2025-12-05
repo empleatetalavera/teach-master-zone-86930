@@ -456,6 +456,7 @@ export type Database = {
         Row: {
           category: string | null
           concept_map_url: string | null
+          course_type: string | null
           created_at: string | null
           description: string | null
           duration_hours: number | null
@@ -477,6 +478,7 @@ export type Database = {
         Insert: {
           category?: string | null
           concept_map_url?: string | null
+          course_type?: string | null
           created_at?: string | null
           description?: string | null
           duration_hours?: number | null
@@ -498,6 +500,7 @@ export type Database = {
         Update: {
           category?: string | null
           concept_map_url?: string | null
+          course_type?: string | null
           created_at?: string | null
           description?: string | null
           duration_hours?: number | null

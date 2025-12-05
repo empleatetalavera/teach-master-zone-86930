@@ -6,8 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, BookOpen, Clock, Users, Settings, Eye } from "lucide-react";
-import { Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Search, BookOpen, Clock, Users, Settings, Eye, Loader2, GraduationCap, Award, FileCheck } from "lucide-react";
 
 interface Course {
   id: string;
@@ -18,11 +22,19 @@ interface Course {
   duration_hours: number;
   is_active: boolean;
   created_at: string;
+  course_type: string;
   _count?: {
     enrollments: number;
     modules: number;
   };
 }
+
+const courseTypes = [
+  { value: "all", label: "Todos", icon: BookOpen },
+  { value: "propio", label: "Cursos Propios", icon: BookOpen },
+  { value: "cfc", label: "Cursos CFC", icon: FileCheck },
+  { value: "certificado_profesional", label: "Certificados Profesionales", icon: Award },
+];
 
 export default function AdminCourses() {
   const navigate = useNavigate();
@@ -30,6 +42,19 @@ export default function AdminCourses() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  
+  // New course form
+  const [newCourse, setNewCourse] = useState({
+    title: "",
+    description: "",
+    category: "",
+    level: "beginner",
+    duration_hours: 0,
+    course_type: "propio",
+  });
 
   useEffect(() => {
     loadCourses();
@@ -48,7 +73,6 @@ export default function AdminCourses() {
 
       if (error) throw error;
 
-      // Transform data to include counts
       const transformedCourses = coursesData.map((course: any) => ({
         ...course,
         _count: {
@@ -70,11 +94,78 @@ export default function AdminCourses() {
     }
   };
 
-  const filteredCourses = courses.filter((course) =>
-    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleCreateCourse = async () => {
+    if (!newCourse.title) {
+      toast({
+        title: "Error",
+        description: "El título es obligatorio",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      
+      const { data, error } = await supabase
+        .from("courses")
+        .insert({
+          title: newCourse.title,
+          description: newCourse.description || null,
+          category: newCourse.category || null,
+          level: newCourse.level,
+          duration_hours: newCourse.duration_hours || null,
+          course_type: newCourse.course_type,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Curso creado",
+        description: `El curso "${newCourse.title}" ha sido creado correctamente`,
+      });
+
+      setIsCreateDialogOpen(false);
+      setNewCourse({
+        title: "",
+        description: "",
+        category: "",
+        level: "beginner",
+        duration_hours: 0,
+        course_type: "propio",
+      });
+      
+      loadCourses();
+      
+      // Navigate to configure the new course
+      if (data?.id) {
+        navigate(`/dashboard/admin/course-settings/${data.id}`);
+      }
+    } catch (error: any) {
+      console.error("Error creating course:", error);
+      toast({
+        title: "Error al crear curso",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const filteredCourses = courses.filter((course) => {
+    const matchesSearch = 
+      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.category?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = activeTab === "all" || course.course_type === activeTab;
+    
+    return matchesSearch && matchesType;
+  });
 
   const getLevelColor = (level: string) => {
     switch (level) {
@@ -102,6 +193,43 @@ export default function AdminCourses() {
     }
   };
 
+  const getCourseTypeLabel = (type: string) => {
+    switch (type) {
+      case "propio":
+        return "Curso Propio";
+      case "cfc":
+        return "CFC";
+      case "certificado_profesional":
+        return "Cert. Profesional";
+      default:
+        return type;
+    }
+  };
+
+  const getCourseTypeBadgeVariant = (type: string) => {
+    switch (type) {
+      case "propio":
+        return "secondary";
+      case "cfc":
+        return "default";
+      case "certificado_profesional":
+        return "destructive";
+      default:
+        return "outline";
+    }
+  };
+
+  const getCourseCounts = () => {
+    return {
+      all: courses.length,
+      propio: courses.filter(c => c.course_type === "propio").length,
+      cfc: courses.filter(c => c.course_type === "cfc").length,
+      certificado_profesional: courses.filter(c => c.course_type === "certificado_profesional").length,
+    };
+  };
+
+  const counts = getCourseCounts();
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -114,143 +242,307 @@ export default function AdminCourses() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Certificados de Profesionalidad</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <GraduationCap className="h-8 w-8" />
+            Gestión de Cursos
+          </h1>
           <p className="text-muted-foreground">
-            Gestiona los certificados de profesionalidad de la plataforma
+            Gestiona cursos propios, CFC y certificados de profesionalidad
           </p>
         </div>
-        <Button onClick={() => navigate("/dashboard/admin/courses/create")} className="gap-2">
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          Crear Certificado de Profesionalidad
+          Crear Curso
         </Button>
       </div>
 
-      {/* Search */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar cursos por título, descripción o categoría..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          {courseTypes.map((type) => {
+            const Icon = type.icon;
+            return (
+              <TabsTrigger key={type.value} value={type.value} className="gap-2">
+                <Icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{type.label}</span>
+                <Badge variant="secondary" className="ml-1">
+                  {counts[type.value as keyof typeof counts]}
+                </Badge>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Total Certificados</CardDescription>
-            <CardTitle className="text-3xl">{courses.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Certificados Activos</CardDescription>
-            <CardTitle className="text-3xl text-primary">
-              {courses.filter((c) => c.is_active).length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Total Estudiantes</CardDescription>
-            <CardTitle className="text-3xl text-secondary">
-              {courses.reduce((sum, c) => sum + (c._count?.enrollments || 0), 0)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Total Módulos</CardDescription>
-            <CardTitle className="text-3xl">
-              {courses.reduce((sum, c) => sum + (c._count?.modules || 0), 0)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Courses List */}
-      <div className="grid gap-4">
-        {filteredCourses.length === 0 ? (
+        <TabsContent value={activeTab} className="space-y-6 mt-6">
+          {/* Search */}
           <Card>
-            <CardContent className="py-12 text-center">
-              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                {searchTerm
-                  ? "No se encontraron cursos con ese criterio"
-                  : "No hay cursos creados. Crea tu primer curso."}
-              </p>
+            <CardContent className="pt-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar cursos por título, descripción o categoría..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </CardContent>
           </Card>
-        ) : (
-          filteredCourses.map((course) => (
-            <Card key={course.id} className="hover:shadow-lg transition-all">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={getLevelColor(course.level)}>
-                        {getLevelLabel(course.level)}
-                      </Badge>
-                      {course.category && (
-                        <Badge variant="outline">{course.category}</Badge>
-                      )}
-                      {!course.is_active && (
-                        <Badge variant="secondary">Inactivo</Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-xl mb-2">{course.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {course.description}
-                    </CardDescription>
-                  </div>
-                </div>
+
+          {/* Stats */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription>Total Cursos</CardDescription>
+                <CardTitle className="text-3xl">{filteredCourses.length}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span>{course.duration_hours || 0} horas</span>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription>Cursos Activos</CardDescription>
+                <CardTitle className="text-3xl text-primary">
+                  {filteredCourses.filter((c) => c.is_active).length}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription>Total Estudiantes</CardDescription>
+                <CardTitle className="text-3xl text-secondary">
+                  {filteredCourses.reduce((sum, c) => sum + (c._count?.enrollments || 0), 0)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription>Total Módulos</CardDescription>
+                <CardTitle className="text-3xl">
+                  {filteredCourses.reduce((sum, c) => sum + (c._count?.modules || 0), 0)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+
+          {/* Courses List */}
+          <div className="grid gap-4">
+            {filteredCourses.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    {searchTerm
+                      ? "No se encontraron cursos con ese criterio"
+                      : "No hay cursos creados en esta categoría."}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => setIsCreateDialogOpen(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Crear primer curso
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              filteredCourses.map((course) => (
+                <Card key={course.id} className="hover:shadow-lg transition-all">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <Badge variant={getCourseTypeBadgeVariant(course.course_type) as any}>
+                            {getCourseTypeLabel(course.course_type)}
+                          </Badge>
+                          <Badge className={getLevelColor(course.level)}>
+                            {getLevelLabel(course.level)}
+                          </Badge>
+                          {course.category && (
+                            <Badge variant="outline">{course.category}</Badge>
+                          )}
+                          {!course.is_active && (
+                            <Badge variant="secondary">Inactivo</Badge>
+                          )}
+                        </div>
+                        <CardTitle className="text-xl mb-2">{course.title}</CardTitle>
+                        <CardDescription className="line-clamp-2">
+                          {course.description}
+                        </CardDescription>
+                      </div>
                     </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>{course.duration_hours || 0} horas</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4" />
+                          <span>{course._count?.modules || 0} módulos</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          <span>{course._count?.enrollments || 0} estudiantes</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/course/${course.id}`)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/dashboard/admin/course-settings/${course.id}`)}
+                        >
+                          <Settings className="h-4 w-4 mr-2" />
+                          Configurar
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Create Course Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Crear Nuevo Curso</DialogTitle>
+            <DialogDescription>
+              Completa la información básica del curso. Podrás añadir módulos y contenido después.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="course-type">Tipo de Curso *</Label>
+              <Select
+                value={newCourse.course_type}
+                onValueChange={(value) => setNewCourse({ ...newCourse, course_type: value })}
+              >
+                <SelectTrigger id="course-type">
+                  <SelectValue placeholder="Selecciona el tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="propio">
                     <div className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4" />
-                      <span>{course._count?.modules || 0} módulos</span>
+                      Curso Propio
                     </div>
+                  </SelectItem>
+                  <SelectItem value="cfc">
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      <span>{course._count?.enrollments || 0} estudiantes</span>
+                      <FileCheck className="h-4 w-4" />
+                      Curso CFC
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/course/${course.id}`)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/dashboard/admin/course-settings/${course.id}`)}
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configurar
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+                  </SelectItem>
+                  <SelectItem value="certificado_profesional">
+                    <div className="flex items-center gap-2">
+                      <Award className="h-4 w-4" />
+                      Certificado de Profesionalidad
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="title">Título del Curso *</Label>
+              <Input
+                id="title"
+                value={newCourse.title}
+                onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
+                placeholder="Ej: Gestión Administrativa"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Descripción</Label>
+              <Textarea
+                id="description"
+                value={newCourse.description}
+                onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
+                placeholder="Describe el contenido y objetivos del curso..."
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Categoría</Label>
+                <Input
+                  id="category"
+                  value={newCourse.category}
+                  onChange={(e) => setNewCourse({ ...newCourse, category: e.target.value })}
+                  placeholder="Ej: Administración"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duración (horas)</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  value={newCourse.duration_hours || ""}
+                  onChange={(e) => setNewCourse({ ...newCourse, duration_hours: parseInt(e.target.value) || 0 })}
+                  placeholder="Ej: 60"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="level">Nivel</Label>
+              <Select
+                value={newCourse.level}
+                onValueChange={(value) => setNewCourse({ ...newCourse, level: value })}
+              >
+                <SelectTrigger id="level">
+                  <SelectValue placeholder="Selecciona el nivel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Principiante</SelectItem>
+                  <SelectItem value="intermediate">Intermedio</SelectItem>
+                  <SelectItem value="advanced">Avanzado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+                disabled={isCreating}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleCreateCourse} disabled={isCreating}>
+                {isCreating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creando...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Crear Curso
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
