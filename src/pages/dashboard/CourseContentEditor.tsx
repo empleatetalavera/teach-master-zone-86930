@@ -68,6 +68,7 @@ interface Evaluation {
   title: string;
   description: string;
   module_id: string | null;
+  formative_unit_id: string | null;
   passing_score: number;
   max_attempts: number;
   time_limit_minutes: number | null;
@@ -80,6 +81,7 @@ interface Activity {
   description: string;
   instructions: string;
   module_id: string | null;
+  formative_unit_id: string | null;
   submission_type: string;
   max_score: number;
   due_date: string | null;
@@ -123,6 +125,7 @@ export default function CourseContentEditor() {
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editingUnit, setEditingUnit] = useState<FormativeUnit | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
   // Form states
   const [moduleForm, setModuleForm] = useState({
@@ -140,6 +143,7 @@ export default function CourseContentEditor() {
     title: "",
     description: "",
     module_id: "",
+    formative_unit_id: "",
     passing_score: 50,
     max_attempts: 3,
     time_limit_minutes: 60,
@@ -151,6 +155,7 @@ export default function CourseContentEditor() {
     description: "",
     instructions: "",
     module_id: "",
+    formative_unit_id: "",
     submission_type: "file",
     max_score: 100,
     due_date: "",
@@ -360,6 +365,7 @@ export default function CourseContentEditor() {
         title: evaluationForm.title,
         description: evaluationForm.description,
         module_id: evaluationForm.module_id || null,
+        formative_unit_id: evaluationForm.formative_unit_id || null,
         passing_score: evaluationForm.passing_score,
         max_attempts: evaluationForm.max_attempts,
         time_limit_minutes: evaluationForm.time_limit_minutes || null,
@@ -416,6 +422,7 @@ export default function CourseContentEditor() {
       title: evaluation.title,
       description: evaluation.description || "",
       module_id: evaluation.module_id || "",
+      formative_unit_id: evaluation.formative_unit_id || "",
       passing_score: evaluation.passing_score,
       max_attempts: evaluation.max_attempts || 3,
       time_limit_minutes: evaluation.time_limit_minutes || 60,
@@ -426,10 +433,12 @@ export default function CourseContentEditor() {
 
   const resetEvaluationForm = () => {
     setEditingEvaluation(null);
+    setSelectedUnitId(null);
     setEvaluationForm({
       title: "",
       description: "",
       module_id: "",
+      formative_unit_id: "",
       passing_score: 50,
       max_attempts: 3,
       time_limit_minutes: 60,
@@ -452,6 +461,7 @@ export default function CourseContentEditor() {
         description: activityForm.description,
         instructions: activityForm.instructions,
         module_id: activityForm.module_id || null,
+        formative_unit_id: activityForm.formative_unit_id || null,
         submission_type: activityForm.submission_type,
         max_score: activityForm.max_score,
         due_date: activityForm.due_date || null,
@@ -509,6 +519,7 @@ export default function CourseContentEditor() {
       description: activity.description || "",
       instructions: activity.instructions || "",
       module_id: activity.module_id || "",
+      formative_unit_id: activity.formative_unit_id || "",
       submission_type: activity.submission_type || "file",
       max_score: activity.max_score || 100,
       due_date: activity.due_date || "",
@@ -519,16 +530,32 @@ export default function CourseContentEditor() {
 
   const resetActivityForm = () => {
     setEditingActivity(null);
+    setSelectedUnitId(null);
     setActivityForm({
       title: "",
       description: "",
       instructions: "",
       module_id: "",
+      formative_unit_id: "",
       submission_type: "file",
       max_score: 100,
       due_date: "",
       is_active: true
     });
+  };
+
+  const openAddEvaluationForUnit = (moduleId: string, unitId: string) => {
+    setSelectedModuleId(moduleId);
+    setSelectedUnitId(unitId);
+    setEvaluationForm(prev => ({ ...prev, module_id: moduleId, formative_unit_id: unitId }));
+    setEvaluationDialogOpen(true);
+  };
+
+  const openAddActivityForUnit = (moduleId: string, unitId: string) => {
+    setSelectedModuleId(moduleId);
+    setSelectedUnitId(unitId);
+    setActivityForm(prev => ({ ...prev, module_id: moduleId, formative_unit_id: unitId }));
+    setActivityDialogOpen(true);
   };
 
   const openAddEvaluationForModule = (moduleId: string) => {
@@ -681,8 +708,10 @@ export default function CourseContentEditor() {
     }
   };
 
-  const getModuleEvaluations = (moduleId: string) => evaluations.filter(e => e.module_id === moduleId);
-  const getModuleActivities = (moduleId: string) => activities.filter(a => a.module_id === moduleId);
+  const getModuleEvaluations = (moduleId: string) => evaluations.filter(e => e.module_id === moduleId && !e.formative_unit_id);
+  const getModuleActivities = (moduleId: string) => activities.filter(a => a.module_id === moduleId && !a.formative_unit_id);
+  const getUnitEvaluations = (unitId: string) => evaluations.filter(e => e.formative_unit_id === unitId);
+  const getUnitActivities = (unitId: string) => activities.filter(a => a.formative_unit_id === unitId);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -885,8 +914,13 @@ export default function CourseContentEditor() {
       ) : (
         <div className="space-y-3">
           {modules.map((module, index) => {
-            const moduleEvaluations = getModuleEvaluations(module.id);
-            const moduleActivities = getModuleActivities(module.id);
+            const moduleUnits = getModuleUnits(module.id);
+            const totalEvaluations = evaluations.filter(e => 
+              e.module_id === module.id || moduleUnits.some(u => u.id === e.formative_unit_id)
+            ).length;
+            const totalActivities = activities.filter(a => 
+              a.module_id === module.id || moduleUnits.some(u => u.id === a.formative_unit_id)
+            ).length;
             const isExpanded = expandedModules.includes(module.id);
 
             return (
@@ -933,11 +967,15 @@ export default function CourseContentEditor() {
                               </span>
                               <span className="flex items-center gap-1">
                                 <CheckSquare className="h-3 w-3" />
-                                {moduleEvaluations.length} tests
+                                {totalEvaluations} tests
                               </span>
                               <span className="flex items-center gap-1">
                                 <FileText className="h-3 w-3" />
-                                {moduleActivities.length} actividades
+                                {totalActivities} actividades
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <ListChecks className="h-3 w-3" />
+                                {moduleUnits.length} UFs
                               </span>
                             </div>
                           </div>
@@ -1092,6 +1130,16 @@ export default function CourseContentEditor() {
                                                 {unit.duration_hours}h
                                               </Badge>
                                             )}
+                                            <span className="text-xs text-muted-foreground flex items-center gap-2">
+                                              <span className="flex items-center gap-1">
+                                                <CheckSquare className="h-3 w-3" />
+                                                {getUnitEvaluations(unit.id).length}
+                                              </span>
+                                              <span className="flex items-center gap-1">
+                                                <FileText className="h-3 w-3" />
+                                                {getUnitActivities(unit.id).length}
+                                              </span>
+                                            </span>
                                           </div>
                                           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditUnit(unit)}>
@@ -1104,28 +1152,122 @@ export default function CourseContentEditor() {
                                         </div>
                                       </CollapsibleTrigger>
                                       <CollapsibleContent>
-                                        <div className="px-3 pb-3 pt-0 space-y-2 border-t bg-muted/10">
-                                          {unit.objectives && (
-                                            <div className="pt-2">
-                                              <p className="text-xs font-medium text-muted-foreground mb-1">Objetivos:</p>
-                                              <p className="text-xs">{unit.objectives}</p>
+                                        <div className="px-3 pb-3 pt-0 space-y-3 border-t bg-muted/10">
+                                          {/* Info de la UF */}
+                                          {(unit.objectives || unit.description || unit.content) && (
+                                            <div className="pt-2 space-y-2">
+                                              {unit.objectives && (
+                                                <div>
+                                                  <p className="text-xs font-medium text-muted-foreground mb-1">Objetivos:</p>
+                                                  <p className="text-xs">{unit.objectives}</p>
+                                                </div>
+                                              )}
+                                              {unit.description && (
+                                                <div>
+                                                  <p className="text-xs font-medium text-muted-foreground mb-1">Descripción:</p>
+                                                  <p className="text-xs">{unit.description}</p>
+                                                </div>
+                                              )}
+                                              {unit.content && (
+                                                <div>
+                                                  <p className="text-xs font-medium text-muted-foreground mb-1">Contenido:</p>
+                                                  <p className="text-xs line-clamp-3">{unit.content.substring(0, 200)}...</p>
+                                                </div>
+                                              )}
                                             </div>
                                           )}
-                                          {unit.description && (
-                                            <div>
-                                              <p className="text-xs font-medium text-muted-foreground mb-1">Descripción:</p>
-                                              <p className="text-xs">{unit.description}</p>
+
+                                          {/* Tests de la UF */}
+                                          <div className="pt-2 border-t">
+                                            <div className="flex items-center justify-between mb-2">
+                                              <span className="text-xs font-medium flex items-center gap-1.5">
+                                                <CheckSquare className="h-3 w-3 text-primary" />
+                                                Tests ({getUnitEvaluations(unit.id).length})
+                                              </span>
+                                              <Button 
+                                                variant="ghost" 
+                                                size="sm"
+                                                className="h-6 text-xs"
+                                                onClick={() => openAddEvaluationForUnit(module.id, unit.id)}
+                                              >
+                                                <Plus className="h-3 w-3 mr-1" />
+                                                Añadir
+                                              </Button>
                                             </div>
-                                          )}
-                                          {unit.content && (
-                                            <div>
-                                              <p className="text-xs font-medium text-muted-foreground mb-1">Contenido:</p>
-                                              <p className="text-xs line-clamp-3">{unit.content.substring(0, 200)}...</p>
+                                            {getUnitEvaluations(unit.id).length === 0 ? (
+                                              <p className="text-xs text-muted-foreground">Sin tests</p>
+                                            ) : (
+                                              <div className="space-y-1">
+                                                {getUnitEvaluations(unit.id).map(evaluation => (
+                                                  <div 
+                                                    key={evaluation.id} 
+                                                    className={`flex items-center justify-between bg-background rounded p-2 border text-xs ${!evaluation.is_active ? 'opacity-60' : ''}`}
+                                                  >
+                                                    <div>
+                                                      <span className="font-medium">{evaluation.title}</span>
+                                                      <span className="text-muted-foreground ml-2">
+                                                        Mín: {evaluation.passing_score}%
+                                                      </span>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditEvaluation(evaluation)}>
+                                                        <Edit2 className="h-3 w-3" />
+                                                      </Button>
+                                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteEvaluation(evaluation.id)}>
+                                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                                      </Button>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+
+                                          {/* Actividades de la UF */}
+                                          <div className="pt-2 border-t">
+                                            <div className="flex items-center justify-between mb-2">
+                                              <span className="text-xs font-medium flex items-center gap-1.5">
+                                                <FileText className="h-3 w-3 text-primary" />
+                                                Actividades ({getUnitActivities(unit.id).length})
+                                              </span>
+                                              <Button 
+                                                variant="ghost" 
+                                                size="sm"
+                                                className="h-6 text-xs"
+                                                onClick={() => openAddActivityForUnit(module.id, unit.id)}
+                                              >
+                                                <Plus className="h-3 w-3 mr-1" />
+                                                Añadir
+                                              </Button>
                                             </div>
-                                          )}
-                                          {!unit.objectives && !unit.description && !unit.content && (
-                                            <p className="text-xs text-muted-foreground pt-2">Sin contenido detallado</p>
-                                          )}
+                                            {getUnitActivities(unit.id).length === 0 ? (
+                                              <p className="text-xs text-muted-foreground">Sin actividades</p>
+                                            ) : (
+                                              <div className="space-y-1">
+                                                {getUnitActivities(unit.id).map(activity => (
+                                                  <div 
+                                                    key={activity.id} 
+                                                    className={`flex items-center justify-between bg-background rounded p-2 border text-xs ${!activity.is_active ? 'opacity-60' : ''}`}
+                                                  >
+                                                    <div>
+                                                      <span className="font-medium">{activity.title}</span>
+                                                      <span className="text-muted-foreground ml-2">
+                                                        Punt: {activity.max_score}
+                                                      </span>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditActivity(activity)}>
+                                                        <Edit2 className="h-3 w-3" />
+                                                      </Button>
+                                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteActivity(activity.id)}>
+                                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                                      </Button>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
                                       </CollapsibleContent>
                                     </div>
@@ -1134,120 +1276,6 @@ export default function CourseContentEditor() {
                               })}
                             </div>
                           )}
-                        </div>
-
-                        {/* Fila 3: Tests y Actividades */}
-                        <div className="grid lg:grid-cols-2 gap-4">
-                          {/* Evaluaciones del Módulo */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium flex items-center gap-2">
-                                <CheckSquare className="h-4 w-4 text-primary" />
-                                Tests / Evaluaciones
-                              </h4>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => openAddEvaluationForModule(module.id)}
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                Añadir
-                              </Button>
-                            </div>
-                            
-                            {moduleEvaluations.length === 0 ? (
-                              <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
-                                Sin evaluaciones. Añade un test para este módulo.
-                              </div>
-                            ) : (
-                              <div className="space-y-2">
-                                {moduleEvaluations.map(evaluation => (
-                                  <div 
-                                    key={evaluation.id} 
-                                    className={`bg-background rounded-lg p-3 border ${!evaluation.is_active ? 'opacity-60' : ''}`}
-                                  >
-                                    <div className="flex items-start justify-between">
-                                      <div>
-                                        <p className="font-medium text-sm">{evaluation.title}</p>
-                                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                          <span>Mín: {evaluation.passing_score}%</span>
-                                          <span>Intentos: {evaluation.max_attempts}</span>
-                                          {evaluation.time_limit_minutes && (
-                                            <span>{evaluation.time_limit_minutes} min</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <div className="flex gap-1">
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditEvaluation(evaluation)}>
-                                          <Edit2 className="h-3 w-3" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteEvaluation(evaluation.id)}>
-                                          <Trash2 className="h-3 w-3 text-destructive" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Actividades del Módulo */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-primary" />
-                                Actividades
-                              </h4>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => openAddActivityForModule(module.id)}
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                Añadir
-                              </Button>
-                            </div>
-                            
-                            {moduleActivities.length === 0 ? (
-                              <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
-                                Sin actividades. Añade una tarea para este módulo.
-                              </div>
-                            ) : (
-                              <div className="space-y-2">
-                                {moduleActivities.map(activity => (
-                                  <div 
-                                    key={activity.id} 
-                                    className={`bg-background rounded-lg p-3 border ${!activity.is_active ? 'opacity-60' : ''}`}
-                                  >
-                                    <div className="flex items-start justify-between">
-                                      <div>
-                                        <p className="font-medium text-sm">{activity.title}</p>
-                                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                          <span>Punt: {activity.max_score}</span>
-                                          <span>
-                                            {activity.submission_type === 'file' ? 'Archivo' : 
-                                             activity.submission_type === 'text' ? 'Texto' : 'URL'}
-                                          </span>
-                                          {activity.due_date && (
-                                            <span>Límite: {new Date(activity.due_date).toLocaleDateString('es-ES')}</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <div className="flex gap-1">
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditActivity(activity)}>
-                                          <Edit2 className="h-3 w-3" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteActivity(activity.id)}>
-                                          <Trash2 className="h-3 w-3 text-destructive" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
                         </div>
 
                         {/* Recursos del Módulo */}

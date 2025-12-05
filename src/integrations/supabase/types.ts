@@ -540,6 +540,7 @@ export type Database = {
           created_at: string | null
           description: string
           due_date: string | null
+          formative_unit_id: string | null
           id: string
           instructions: string | null
           is_active: boolean | null
@@ -558,6 +559,7 @@ export type Database = {
           created_at?: string | null
           description: string
           due_date?: string | null
+          formative_unit_id?: string | null
           id?: string
           instructions?: string | null
           is_active?: boolean | null
@@ -576,6 +578,7 @@ export type Database = {
           created_at?: string | null
           description?: string
           due_date?: string | null
+          formative_unit_id?: string | null
           id?: string
           instructions?: string | null
           is_active?: boolean | null
@@ -593,6 +596,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_activities_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
             referencedColumns: ["id"]
           },
           {
@@ -707,6 +717,7 @@ export type Database = {
           course_id: string
           created_at: string | null
           description: string | null
+          formative_unit_id: string | null
           id: string
           is_active: boolean | null
           max_attempts: number | null
@@ -720,6 +731,7 @@ export type Database = {
           course_id: string
           created_at?: string | null
           description?: string | null
+          formative_unit_id?: string | null
           id?: string
           is_active?: boolean | null
           max_attempts?: number | null
@@ -733,6 +745,7 @@ export type Database = {
           course_id?: string
           created_at?: string | null
           description?: string | null
+          formative_unit_id?: string | null
           id?: string
           is_active?: boolean | null
           max_attempts?: number | null
@@ -748,6 +761,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluations_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
             referencedColumns: ["id"]
           },
           {
