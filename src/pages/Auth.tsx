@@ -21,19 +21,48 @@ export default function Auth() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [resetEmail, setResetEmail] = useState("");
+  const [userCenterSlug, setUserCenterSlug] = useState<string | null>(null);
   
   const [searchParams] = useSearchParams();
-  const centerSlug = searchParams.get('center');
-  
-  console.log('[Auth] Current URL search params:', window.location.search);
-  console.log('[Auth] Center slug extracted:', centerSlug);
+  const urlCenterSlug = searchParams.get('center');
   
   const { signIn, signUp, resetPassword, signOut, user, userRole, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { branding, loading: brandingLoading } = useCenterBranding(centerSlug);
   
-  console.log('[Auth] Branding state:', { branding, loading: brandingLoading });
+  // Get user's center slug if logged in
+  useEffect(() => {
+    const fetchUserCenter = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('training_center_id')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.training_center_id) {
+          const { data: center } = await supabase
+            .from('training_centers')
+            .select('slug')
+            .eq('id', profile.training_center_id)
+            .single();
+          
+          if (center?.slug) {
+            setUserCenterSlug(center.slug);
+          }
+        }
+      } else {
+        setUserCenterSlug(null);
+      }
+    };
+    
+    fetchUserCenter();
+  }, [user]);
+  
+  // Use user's center slug if logged in, otherwise use URL parameter
+  const effectiveCenterSlug = user ? userCenterSlug : urlCenterSlug;
+  
+  const { branding, loading: brandingLoading } = useCenterBranding(effectiveCenterSlug);
 
   // Apply center colors to CSS variables
   useEffect(() => {
