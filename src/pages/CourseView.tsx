@@ -90,6 +90,7 @@ export default function CourseView() {
   const [tutorials, setTutorials] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
   const [studentName, setStudentName] = useState<string>("");
+  const [tutorProfile, setTutorProfile] = useState<{ full_name: string; avatar_url?: string } | null>(null);
   const [activeTab, setActiveTab] = useState<string>("intro");
   const [centerSlug, setCenterSlug] = useState<string | null>(null);
   
@@ -305,6 +306,19 @@ export default function CourseView() {
       if (profileData) {
         setStudentName(profileData.full_name || "Usuario");
       }
+
+      // Load tutor profile if course has tutor_id
+      if (courseData.tutor_id) {
+        const { data: tutorData } = await supabase
+          .from("profiles")
+          .select("full_name, avatar_url")
+          .eq("id", courseData.tutor_id)
+          .single();
+        
+        if (tutorData) {
+          setTutorProfile(tutorData);
+        }
+      }
     } catch (error: any) {
       console.error("Error loading course:", error);
       toast({
@@ -501,7 +515,7 @@ export default function CourseView() {
         </Card>
 
         {/* Course Content Tabs */}
-        <div className="grid lg:grid-cols-[200px_1fr_320px] gap-6">
+        <div className="grid lg:grid-cols-[200px_1fr_280px] gap-6">
           {/* Left Sidebar - Navigation */}
           <div className="hidden lg:block">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4" orientation="vertical">
@@ -1270,22 +1284,22 @@ export default function CourseView() {
           <div className="hidden lg:block space-y-4 sticky top-4 h-fit">
             {/* Tu Tutor */}
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Tu Tutor</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-xl">
-                    MG
+                  <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {tutorProfile?.full_name ? tutorProfile.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'TU'}
                   </div>
                   <div>
-                    <p className="font-semibold text-lg">María González</p>
-                    <p className="text-sm text-muted-foreground">Tutora especializada</p>
+                    <p className="font-semibold">{tutorProfile?.full_name || 'Tutor del curso'}</p>
+                    <p className="text-xs text-muted-foreground">Tutor/a especializado/a</p>
                   </div>
                 </div>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button className="w-full" variant="outline">
+                    <Button className="w-full" variant="outline" size="sm">
                       <MessageSquare className="w-4 h-4 mr-2" />
                       Enviar mensaje
                     </Button>
@@ -1294,28 +1308,88 @@ export default function CourseView() {
                     <TutorMessaging 
                       courseId={courseId!}
                       tutorId={course.tutor_id || ''}
-                      supportEmail={course.support_email || 'maria.gonzalez@talentcloud.demo'}
-                      supportPhone={course.support_phone || '+34 925 123 456'}
+                      supportEmail={course.support_email || ''}
+                      supportPhone={course.support_phone || ''}
                     />
                   </PopoverContent>
                 </Popover>
               </CardContent>
             </Card>
 
+            {/* Progreso del Curso */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  Mi Progreso
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-primary">{enrollment?.progress_percentage || 0}%</p>
+                  <p className="text-xs text-muted-foreground">completado</p>
+                </div>
+                <Progress value={enrollment?.progress_percentage || 0} className="h-2" />
+                <div className="grid grid-cols-2 gap-2 text-xs text-center">
+                  <div className="p-2 bg-muted/50 rounded">
+                    <p className="font-medium">{modules.length}</p>
+                    <p className="text-muted-foreground">Módulos</p>
+                  </div>
+                  <div className="p-2 bg-muted/50 rounded">
+                    <p className="font-medium">{course.duration_hours}h</p>
+                    <p className="text-muted-foreground">Duración</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Cronograma Mini */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  Cronograma
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {modules.slice(0, 3).map((module, idx) => (
+                  <div key={module.id} className="flex items-center gap-2 text-xs">
+                    <div className={`w-2 h-2 rounded-full ${module.progress === 100 ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                    <span className="truncate flex-1">{module.title}</span>
+                    {module.start_date && (
+                      <span className="text-muted-foreground whitespace-nowrap">
+                        {new Date(module.start_date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                      </span>
+                    )}
+                  </div>
+                ))}
+                {modules.length > 3 && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full text-xs h-7"
+                    onClick={() => setActiveTab('schedule')}
+                  >
+                    Ver cronograma completo
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Próxima Evaluación */}
             {nextEvaluation && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Próxima Evaluación</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Próxima Evaluación</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
                   <div>
-                    <p className="text-base font-medium mb-2">
+                    <p className="text-sm font-medium mb-1 line-clamp-2">
                       {nextEvaluation.title}
                     </p>
-                    <p className="text-4xl font-bold text-primary">5 días</p>
+                    <p className="text-2xl font-bold text-primary">5 días</p>
                   </div>
-                  <Button className="w-full bg-primary">
+                  <Button className="w-full bg-primary" size="sm">
                     Preparar examen
                   </Button>
                 </CardContent>
