@@ -106,7 +106,7 @@ export default function CourseContentEditor() {
     title: "",
     description: "",
     content: "",
-    duration_minutes: 60,
+    duration_hours: 1,
     is_active: true
   });
 
@@ -212,7 +212,7 @@ export default function CourseContentEditor() {
             title: moduleForm.title,
             description: moduleForm.description,
             content: moduleForm.content,
-            duration_minutes: moduleForm.duration_minutes,
+            duration_minutes: Math.round(moduleForm.duration_hours * 60),
             is_active: moduleForm.is_active
           })
           .eq("id", editingModule.id);
@@ -227,7 +227,7 @@ export default function CourseContentEditor() {
             title: moduleForm.title,
             description: moduleForm.description,
             content: moduleForm.content,
-            duration_minutes: moduleForm.duration_minutes,
+            duration_minutes: Math.round(moduleForm.duration_hours * 60),
             is_active: moduleForm.is_active,
             order_index: modules.length + 1
           });
@@ -269,7 +269,7 @@ export default function CourseContentEditor() {
       title: module.title,
       description: module.description || "",
       content: module.content || "",
-      duration_minutes: module.duration_minutes || 60,
+      duration_hours: module.duration_minutes ? module.duration_minutes / 60 : 1,
       is_active: module.is_active
     });
     setModuleDialogOpen(true);
@@ -281,7 +281,7 @@ export default function CourseContentEditor() {
       title: "",
       description: "",
       content: "",
-      duration_minutes: 60,
+      duration_hours: 1,
       is_active: true
     });
   };
@@ -618,12 +618,14 @@ export default function CourseContentEditor() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="module-duration">Duración (minutos)</Label>
+                  <Label htmlFor="module-duration">Duración (horas)</Label>
                   <Input
                     id="module-duration"
                     type="number"
-                    value={moduleForm.duration_minutes}
-                    onChange={(e) => setModuleForm({ ...moduleForm, duration_minutes: parseInt(e.target.value) || 60 })}
+                    step="0.5"
+                    min="0.5"
+                    value={moduleForm.duration_hours}
+                    onChange={(e) => setModuleForm({ ...moduleForm, duration_hours: parseFloat(e.target.value) || 1 })}
                   />
                 </div>
 
@@ -709,7 +711,7 @@ export default function CourseContentEditor() {
                             <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                {module.duration_minutes} min
+                                {module.duration_minutes ? (module.duration_minutes / 60).toFixed(1) : 0}h
                               </span>
                               <span className="flex items-center gap-1">
                                 <CheckSquare className="h-3 w-3" />
