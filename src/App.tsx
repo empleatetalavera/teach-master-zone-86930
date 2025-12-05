@@ -48,6 +48,7 @@ import AdminCourses from "./pages/dashboard/AdminCourses";
 import AdminCourseCreator from "./pages/dashboard/AdminCourseCreator";
 import AdminCourseEdit from "./pages/dashboard/AdminCourseEdit";
 import CourseContentEditor from "./pages/dashboard/CourseContentEditor";
+import AdminCourseCatalog from "./pages/dashboard/AdminCourseCatalog";
 import CenterSettings from "./pages/dashboard/CenterSettings";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import TeacherCourses from "./pages/dashboard/TeacherCourses";
@@ -115,6 +116,7 @@ function AppRoutes() {
           <Route path="admin/support" element={<AdminSupport />} />
           <Route path="admin/settings" element={<AdminSettings />} />
           <Route path="admin/courses" element={<AdminCourses />} />
+          <Route path="admin/course-catalog" element={<AdminCourseCatalog />} />
           <Route path="admin/courses/create" element={<AdminCourseCreator />} />
           <Route path="admin/courses/:courseId/edit" element={<AdminCourseEdit />} />
           <Route path="admin/courses/:courseId/content" element={<CourseContentEditor />} />

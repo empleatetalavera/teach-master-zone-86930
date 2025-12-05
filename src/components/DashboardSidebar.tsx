@@ -22,7 +22,8 @@ import {
   Activity,
   Headphones,
   Bell,
-  DollarSign
+  DollarSign,
+  Layers
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
@@ -45,6 +46,7 @@ import { useAuth } from "@/lib/auth";
 const superAdminItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
   { title: "Centros de Formación", url: "/dashboard/admin/centers", icon: Building2 },
+  { title: "Catálogo de Cursos", url: "/dashboard/admin/course-catalog", icon: Layers },
   { title: "Cursos", url: "/dashboard/admin/courses", icon: BookOpen },
   { title: "Licencias", url: "/dashboard/admin/licenses", icon: Key },
   { title: "Facturación Global", url: "/dashboard/admin/billing", icon: DollarSign },

@@ -393,6 +393,51 @@ export type Database = {
           },
         ]
       }
+      course_center_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          course_id: string
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          training_center_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          course_id: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          training_center_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          course_id?: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          training_center_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_center_assignments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_center_assignments_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "training_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_events: {
         Row: {
           course_id: string
