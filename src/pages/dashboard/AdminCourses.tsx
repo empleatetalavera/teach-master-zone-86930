@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, BookOpen, Clock, Users, Settings, Eye, Loader2, GraduationCap, Award, FileCheck, Edit, Trash2, UserPlus, Check, X } from "lucide-react";
+import { Plus, Search, BookOpen, Clock, Users, Settings, Eye, Loader2, GraduationCap, Award, FileCheck, Edit, Trash2, UserPlus, Check, X, UserCog } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,6 +27,8 @@ interface Course {
   is_active: boolean;
   created_at: string;
   course_type: string;
+  tutor_id: string | null;
+  tutor_name?: string | null;
   _count?: {
     enrollments: number;
     modules: number;
@@ -38,6 +40,11 @@ interface CenterStudent {
   full_name: string;
   email: string;
   isEnrolled: boolean;
+}
+
+interface CenterTeacher {
+  id: string;
+  full_name: string;
 }
 
 const courseTypes = [
@@ -67,6 +74,14 @@ export default function AdminCourses() {
   const [centerStudents, setCenterStudents] = useState<CenterStudent[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [savingEnrollments, setSavingEnrollments] = useState(false);
+  
+  // Tutor assignment state
+  const [tutorSheetOpen, setTutorSheetOpen] = useState(false);
+  const [selectedCourseForTutor, setSelectedCourseForTutor] = useState<Course | null>(null);
+  const [centerTeachers, setCenterTeachers] = useState<CenterTeacher[]>([]);
+  const [loadingTeachers, setLoadingTeachers] = useState(false);
+  const [savingTutor, setSavingTutor] = useState(false);
+  const [selectedTutorId, setSelectedTutorId] = useState<string | null>(null);
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
   
   // New course form
@@ -470,6 +485,89 @@ export default function AdminCourses() {
     s.full_name.toLowerCase().includes(studentSearchTerm.toLowerCase())
   );
 
+  // Load center teachers for tutor assignment
+  const loadCenterTeachers = async (course: Course) => {
+    if (!userTrainingCenterId) return;
+    
+    setLoadingTeachers(true);
+    try {
+      // Get teachers from this center
+      const { data: teachers, error: teachersError } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("training_center_id", userTrainingCenterId);
+
+      if (teachersError) throw teachersError;
+
+      // Filter to only include users with teacher role
+      const { data: teacherRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "teacher");
+
+      if (rolesError) throw rolesError;
+
+      const teacherUserIds = new Set((teacherRoles || []).map(r => r.user_id));
+      const centerTeacherProfiles = (teachers || []).filter(t => teacherUserIds.has(t.id));
+
+      setCenterTeachers(centerTeacherProfiles.map(t => ({
+        id: t.id,
+        full_name: t.full_name || "Sin nombre"
+      })));
+
+      // Set current tutor if exists
+      setSelectedTutorId(course.tutor_id);
+    } catch (error: any) {
+      console.error("Error loading teachers:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los profesores",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingTeachers(false);
+    }
+  };
+
+  const handleOpenTutorAssignment = (course: Course) => {
+    setSelectedCourseForTutor(course);
+    setTutorSheetOpen(true);
+    loadCenterTeachers(course);
+  };
+
+  const handleSaveTutor = async () => {
+    if (!selectedCourseForTutor) return;
+    
+    setSavingTutor(true);
+    try {
+      const { error } = await supabase
+        .from("courses")
+        .update({ tutor_id: selectedTutorId })
+        .eq("id", selectedCourseForTutor.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Tutor asignado",
+        description: selectedTutorId 
+          ? "El tutor ha sido asignado correctamente" 
+          : "El tutor ha sido desasignado",
+      });
+
+      setTutorSheetOpen(false);
+      loadUserAndCourses(); // Refresh
+    } catch (error: any) {
+      console.error("Error saving tutor:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingTutor(false);
+    }
+  };
+
   const filteredCourses = courses.filter((course) => {
     const matchesSearch = 
       course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -718,6 +816,16 @@ export default function AdminCourses() {
                           >
                             <UserPlus className="h-4 w-4 mr-2" />
                             Matricular
+                          </Button>
+                        )}
+                        {!isSuperAdmin && userTrainingCenterId && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenTutorAssignment(course)}
+                          >
+                            <UserCog className="h-4 w-4 mr-2" />
+                            Tutor
                           </Button>
                         )}
                         <Button
@@ -1018,6 +1126,91 @@ export default function AdminCourses() {
                   <>
                     <Check className="h-4 w-4 mr-2" />
                     Guardar Cambios
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Tutor Assignment Sheet */}
+      <Sheet open={tutorSheetOpen} onOpenChange={setTutorSheetOpen}>
+        <SheetContent className="sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <UserCog className="h-5 w-5" />
+              Asignar Tutor
+            </SheetTitle>
+            <SheetDescription>
+              {selectedCourseForTutor?.title}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-4">
+            {loadingTeachers ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : centerTeachers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No hay profesores en tu centro. Crea profesores primero en la sección Usuarios.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Label>Seleccionar Tutor</Label>
+                <Select 
+                  value={selectedTutorId || "none"} 
+                  onValueChange={(val) => setSelectedTutorId(val === "none" ? null : val)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tutor..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin tutor asignado</SelectItem>
+                    {centerTeachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {selectedTutorId && (
+                  <div className="p-4 rounded-lg border bg-primary/5">
+                    <p className="text-sm font-medium">Tutor seleccionado:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {centerTeachers.find(t => t.id === selectedTutorId)?.full_name}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setTutorSheetOpen(false)}
+                disabled={savingTutor}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleSaveTutor}
+                disabled={savingTutor || loadingTeachers}
+              >
+                {savingTutor ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Guardar
                   </>
                 )}
               </Button>
