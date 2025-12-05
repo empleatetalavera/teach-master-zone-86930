@@ -17,6 +17,9 @@ import { TimeTrackingReport } from "@/components/TimeTrackingReport";
 import { QualityAuditView } from "@/components/QualityAuditView";
 import { UnitContentViewer } from "@/components/UnitContentViewer";
 import { UnitActivityManager } from "@/components/UnitActivityManager";
+import { CourseSchedule } from "@/components/CourseSchedule";
+import { CourseCalendar } from "@/components/CourseCalendar";
+import { GradeBreakdown } from "@/components/GradeBreakdown";
 
 interface Course {
   id: string;
@@ -36,6 +39,9 @@ interface Course {
   tutor_cv_url?: string;
   campus_guide_url?: string;
   training_center_id?: string;
+  start_date?: string;
+  end_date?: string;
+  enable_grade_breakdown?: boolean;
 }
 
 interface Module {
@@ -44,6 +50,8 @@ interface Module {
   description: string;
   order_index: number;
   duration_minutes: number;
+  start_date?: string | null;
+  end_date?: string | null;
   completed?: boolean;
   progress?: number;
   evaluations?: any[];
@@ -62,6 +70,8 @@ interface FormativeUnit {
   order_index: number;
   duration_hours: number | null;
   is_active: boolean;
+  start_date?: string | null;
+  end_date?: string | null;
   evaluations?: any[];
   activities?: any[];
 }
@@ -497,6 +507,7 @@ export default function CourseView() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4" orientation="vertical">
               <TabsList className="flex flex-col h-fit w-full sticky top-4">
                 <TabsTrigger value="intro" className="w-full justify-start">Inicio</TabsTrigger>
+                <TabsTrigger value="schedule" className="w-full justify-start">Cronograma</TabsTrigger>
                 <TabsTrigger value="modules" className="w-full justify-start">Módulos</TabsTrigger>
                 <TabsTrigger value="grades" className="w-full justify-start">Calificaciones</TabsTrigger>
                 <TabsTrigger value="exams" className="w-full justify-start">Exámenes</TabsTrigger>
@@ -722,8 +733,21 @@ export default function CourseView() {
               </Card>
           </TabsContent>
 
+          <TabsContent value="schedule" className="space-y-4">
+            <CourseSchedule
+              courseTitle={course.title}
+              courseStartDate={course.start_date}
+              courseEndDate={course.end_date}
+              modules={modules}
+            />
+          </TabsContent>
+
           <TabsContent value="grades" className="space-y-4">
-            <GradesSection courseId={courseId!} enrollmentId={enrollment?.id} />
+            <GradeBreakdown 
+              courseId={courseId!} 
+              enrollmentId={enrollment?.id || ''} 
+              enableBreakdown={course.enable_grade_breakdown}
+            />
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
@@ -1141,10 +1165,17 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-4">
+            <CourseCalendar
+              modules={modules}
+              courseStartDate={course.start_date}
+              courseEndDate={course.end_date}
+            />
+
+            {/* Events list */}
             <Card>
               <CardHeader>
                 <CardTitle>Próximos eventos</CardTitle>
-                <CardDescription>Fechas importantes del curso</CardDescription>
+                <CardDescription>Eventos y tutorías programadas</CardDescription>
               </CardHeader>
               <CardContent>
                 {events.length === 0 ? (

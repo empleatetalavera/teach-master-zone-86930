@@ -461,11 +461,14 @@ export type Database = {
           created_at: string | null
           description: string | null
           duration_hours: number | null
+          enable_grade_breakdown: boolean | null
+          end_date: string | null
           id: string
           is_active: boolean | null
           level: string | null
           objectives: string | null
           specific_objectives: Json | null
+          start_date: string | null
           support_email: string | null
           support_phone: string | null
           thumbnail_url: string | null
@@ -484,11 +487,14 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_hours?: number | null
+          enable_grade_breakdown?: boolean | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           level?: string | null
           objectives?: string | null
           specific_objectives?: Json | null
+          start_date?: string | null
           support_email?: string | null
           support_phone?: string | null
           thumbnail_url?: string | null
@@ -507,11 +513,14 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_hours?: number | null
+          enable_grade_breakdown?: boolean | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           level?: string | null
           objectives?: string | null
           specific_objectives?: Json | null
+          start_date?: string | null
           support_email?: string | null
           support_phone?: string | null
           thumbnail_url?: string | null
@@ -823,11 +832,13 @@ export type Database = {
           created_at: string | null
           description: string | null
           duration_hours: number | null
+          end_date: string | null
           id: string
           is_active: boolean | null
           module_id: string
           objectives: string | null
           order_index: number
+          start_date: string | null
           title: string
           updated_at: string | null
         }
@@ -836,11 +847,13 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_hours?: number | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           module_id: string
           objectives?: string | null
           order_index?: number
+          start_date?: string | null
           title: string
           updated_at?: string | null
         }
@@ -849,11 +862,13 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_hours?: number | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           module_id?: string
           objectives?: string | null
           order_index?: number
+          start_date?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -1379,12 +1394,14 @@ export type Database = {
           created_at: string | null
           description: string | null
           duration_minutes: number | null
+          end_date: string | null
           forum_enabled: boolean | null
           id: string
           is_active: boolean | null
           is_visible_to_students: boolean | null
           objectives: string | null
           order_index: number
+          start_date: string | null
           title: string
           updated_at: string | null
         }
@@ -1395,12 +1412,14 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_minutes?: number | null
+          end_date?: string | null
           forum_enabled?: boolean | null
           id?: string
           is_active?: boolean | null
           is_visible_to_students?: boolean | null
           objectives?: string | null
           order_index: number
+          start_date?: string | null
           title: string
           updated_at?: string | null
         }
@@ -1411,12 +1430,14 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_minutes?: number | null
+          end_date?: string | null
           forum_enabled?: boolean | null
           id?: string
           is_active?: boolean | null
           is_visible_to_students?: boolean | null
           objectives?: string | null
           order_index?: number
+          start_date?: string | null
           title?: string
           updated_at?: string | null
         }
