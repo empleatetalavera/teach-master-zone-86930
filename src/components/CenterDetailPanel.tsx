@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, BookOpen, GraduationCap, UserCheck, Calendar, TrendingUp, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Users, BookOpen, GraduationCap, TrendingUp, Loader2, ToggleLeft, ToggleRight, UserX, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -54,6 +57,7 @@ export default function CenterDetailPanel({ centerId, centerName }: CenterDetail
   });
   const [users, setUsers] = useState<UserData[]>([]);
   const [courses, setCourses] = useState<CourseData[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadCenterData();
@@ -170,6 +174,104 @@ export default function CenterDetailPanel({ centerId, centerName }: CenterDetail
     );
   };
 
+  const handleToggleCourse = async (courseId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("courses")
+        .update({ is_active: !currentStatus })
+        .eq("id", courseId);
+
+      if (error) throw error;
+
+      setCourses(prev => prev.map(c => 
+        c.id === courseId ? { ...c, is_active: !currentStatus } : c
+      ));
+      
+      setStats(prev => ({
+        ...prev,
+        activeCourses: !currentStatus 
+          ? prev.activeCourses + 1 
+          : prev.activeCourses - 1
+      }));
+
+      toast({
+        title: !currentStatus ? "Curso activado" : "Curso desactivado",
+        description: "El estado del curso ha sido actualizado",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveUserRole = async (userId: string, role: string) => {
+    if (!confirm(`¿Está seguro de eliminar el rol "${role}" de este usuario?`)) return;
+    
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .eq("role", role as any);
+
+      if (error) throw error;
+
+      setUsers(prev => prev.map(u => 
+        u.id === userId ? { ...u, role: "sin rol" } : u
+      ));
+
+      // Update stats
+      if (role === 'student') {
+        setStats(prev => ({ ...prev, totalStudents: prev.totalStudents - 1 }));
+      } else if (role === 'teacher') {
+        setStats(prev => ({ ...prev, totalTeachers: prev.totalTeachers - 1 }));
+      } else if (role === 'admin') {
+        setStats(prev => ({ ...prev, totalAdmins: prev.totalAdmins - 1 }));
+      }
+
+      toast({
+        title: "Rol eliminado",
+        description: "El usuario ya no tiene acceso con ese rol",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveFromCenter = async (userId: string) => {
+    if (!confirm("¿Está seguro de desvincular este usuario del centro?")) return;
+    
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ training_center_id: null })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      setStats(prev => ({ ...prev, totalUsers: prev.totalUsers - 1 }));
+
+      toast({
+        title: "Usuario desvinculado",
+        description: "El usuario ya no pertenece a este centro",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -268,6 +370,7 @@ export default function CenterDetailPanel({ centerId, centerName }: CenterDetail
                         <TableHead>Nombre</TableHead>
                         <TableHead>Rol</TableHead>
                         <TableHead>Fecha Registro</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -281,6 +384,29 @@ export default function CenterDetailPanel({ centerId, centerName }: CenterDetail
                             {user.created_at
                               ? format(new Date(user.created_at), "dd MMM yyyy", { locale: es })
                               : "-"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              {user.role !== "sin rol" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveUserRole(user.id, user.role)}
+                                  title="Quitar rol"
+                                >
+                                  <UserX className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveFromCenter(user.id)}
+                                title="Desvincular del centro"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <UserX className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -310,13 +436,14 @@ export default function CenterDetailPanel({ centerId, centerName }: CenterDetail
                         <TableHead>Curso</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead>Periodo</TableHead>
-                        <TableHead className="text-right">Matrículas</TableHead>
+                        <TableHead>Matrículas</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {courses.map((course) => (
                         <TableRow key={course.id}>
-                          <TableCell className="font-medium max-w-[200px] truncate">
+                          <TableCell className="font-medium max-w-[150px] truncate">
                             {course.title}
                           </TableCell>
                           <TableCell>
@@ -329,8 +456,22 @@ export default function CenterDetailPanel({ centerId, centerName }: CenterDetail
                               ? `${format(new Date(course.start_date), "dd/MM/yy")} - ${format(new Date(course.end_date), "dd/MM/yy")}`
                               : "Sin fechas"}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell>
                             <Badge variant="outline">{course.enrollmentCount}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleCourse(course.id, course.is_active)}
+                              title={course.is_active ? "Desactivar curso" : "Activar curso"}
+                            >
+                              {course.is_active ? (
+                                <ToggleRight className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
