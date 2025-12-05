@@ -9,79 +9,99 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 15%;
+    --foreground: 210 20% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
+    --card-foreground: 210 20% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
+    --popover-foreground: 210 20% 20%;
 
-    /* Emplate Talavera Brand Colors - Teal/Turquoise */
-    --primary: 177 33% 52%;
+    /* TalentCloud Turquoise Brand Colors - SEPE Style */
+    --primary: 174 62% 47%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 177 33% 65%;
+    --primary-glow: 174 62% 60%;
 
-    --secondary: 177 40% 42%;
+    --secondary: 174 50% 38%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 177 15% 95%;
-    --muted-foreground: 177 10% 45%;
+    --muted: 174 20% 96%;
+    --muted-foreground: 174 15% 40%;
 
-    --accent: 177 50% 45%;
+    --accent: 174 70% 42%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 177 20% 88%;
-    --input: 177 20% 88%;
-    --ring: 177 33% 52%;
+    --border: 174 25% 88%;
+    --input: 174 25% 88%;
+    --ring: 174 62% 47%;
 
     --radius: 0.75rem;
 
-    /* Emplate Talavera Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(177 33% 52%), hsl(177 33% 65%));
-    --gradient-secondary: linear-gradient(135deg, hsl(177 40% 42%), hsl(177 40% 55%));
-    --gradient-accent: linear-gradient(135deg, hsl(177 50% 45%), hsl(177 50% 60%));
-    --gradient-hero: linear-gradient(135deg, hsl(177 33% 52%) 0%, hsl(177 50% 45%) 100%);
+    /* Sidebar colors */
+    --sidebar-background: 174 62% 47%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 174 62% 47%;
+    --sidebar-accent: 174 70% 42%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 174 50% 40%;
+    --sidebar-ring: 174 62% 60%;
+
+    /* TalentCloud Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(174 62% 47%), hsl(174 62% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(174 50% 38%), hsl(174 50% 50%));
+    --gradient-accent: linear-gradient(135deg, hsl(174 70% 42%), hsl(174 70% 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(174 62% 47%) 0%, hsl(174 70% 42%) 100%);
     
-    --shadow-soft: 0 2px 8px hsl(177 33% 52% / 0.08);
-    --shadow-medium: 0 4px 16px hsl(177 33% 52% / 0.12);
-    --shadow-large: 0 8px 32px hsl(177 33% 52% / 0.16);
+    --shadow-soft: 0 2px 8px hsl(174 62% 47% / 0.08);
+    --shadow-medium: 0 4px 16px hsl(174 62% 47% / 0.12);
+    --shadow-large: 0 8px 32px hsl(174 62% 47% / 0.16);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 0 0% 10%;
+    --background: 210 15% 10%;
     --foreground: 0 0% 95%;
 
-    --card: 0 0% 12%;
+    --card: 210 15% 12%;
     --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 12%;
+    --popover: 210 15% 12%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 177 33% 52%;
+    --primary: 174 62% 47%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 177 33% 65%;
+    --primary-glow: 174 62% 60%;
 
-    --secondary: 177 40% 42%;
+    --secondary: 174 50% 38%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 177 10% 65%;
+    --muted: 210 15% 18%;
+    --muted-foreground: 174 20% 65%;
 
-    --accent: 177 50% 45%;
+    --accent: 174 70% 42%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 63% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 177 33% 52%;
+    --border: 210 15% 18%;
+    --input: 210 15% 18%;
+    --ring: 174 62% 47%;
+
+    /* Sidebar colors dark */
+    --sidebar-background: 174 50% 38%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 174 62% 47%;
+    --sidebar-accent: 174 70% 42%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 174 50% 32%;
+    --sidebar-ring: 174 62% 60%;
   }
 }
 
