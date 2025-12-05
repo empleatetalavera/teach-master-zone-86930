@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Key, Edit, Trash2, Calendar } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Key, Edit, Building2, Check, X, AlertCircle, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,26 +25,32 @@ interface License {
   is_active: boolean;
   price: number | null;
   notes: string | null;
-  training_centers: {
-    name: string;
-  };
 }
 
-interface TrainingCenter {
+interface Invoice {
+  id: string;
+  status: string;
+  total_amount: number;
+  due_date: string;
+}
+
+interface CenterWithLicense {
   id: string;
   name: string;
+  is_active: boolean;
+  license: License | null;
+  latestInvoice: Invoice | null;
 }
 
 export default function AdminLicenses() {
-  const [licenses, setLicenses] = useState<License[]>([]);
-  const [centers, setCenters] = useState<TrainingCenter[]>([]);
+  const [centersWithLicenses, setCentersWithLicenses] = useState<CenterWithLicense[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLicense, setEditingLicense] = useState<License | null>(null);
+  const [selectedCenterId, setSelectedCenterId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
-    training_center_id: "",
     license_type: "professional",
     max_students: 50,
     max_teachers: 5,
@@ -61,22 +68,52 @@ export default function AdminLicenses() {
 
   const loadData = async () => {
     try {
-      const [licensesRes, centersRes] = await Promise.all([
-        supabase
-          .from("licenses")
-          .select("*, training_centers(name)")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("training_centers")
-          .select("id, name")
-          .eq("is_active", true),
-      ]);
+      // Load all training centers
+      const { data: centers, error: centersError } = await supabase
+        .from("training_centers")
+        .select("id, name, is_active")
+        .order("name");
 
-      if (licensesRes.error) throw licensesRes.error;
-      if (centersRes.error) throw centersRes.error;
+      if (centersError) throw centersError;
 
-      setLicenses(licensesRes.data || []);
-      setCenters(centersRes.data || []);
+      // Load all licenses
+      const { data: licenses, error: licensesError } = await supabase
+        .from("licenses")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (licensesError) throw licensesError;
+
+      // Load latest invoices for each center
+      const { data: invoices, error: invoicesError } = await supabase
+        .from("invoices")
+        .select("id, training_center_id, status, total_amount, due_date")
+        .order("created_at", { ascending: false });
+
+      if (invoicesError) throw invoicesError;
+
+      // Map centers with their licenses and invoices
+      const mapped: CenterWithLicense[] = (centers || []).map((center) => {
+        const centerLicenses = (licenses || []).filter(
+          (l) => l.training_center_id === center.id
+        );
+        const activeLicense = centerLicenses.find((l) => l.is_active) || centerLicenses[0] || null;
+        
+        const centerInvoices = (invoices || []).filter(
+          (i) => i.training_center_id === center.id
+        );
+        const latestInvoice = centerInvoices[0] || null;
+
+        return {
+          id: center.id,
+          name: center.name,
+          is_active: center.is_active,
+          license: activeLicense,
+          latestInvoice,
+        };
+      });
+
+      setCentersWithLicenses(mapped);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -91,9 +128,26 @@ export default function AdminLicenses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!selectedCenterId && !editingLicense) {
+      toast({
+        title: "Error",
+        description: "Selecciona un centro de formación",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const submitData = {
-      ...formData,
+      training_center_id: editingLicense?.training_center_id || selectedCenterId,
+      license_type: formData.license_type,
+      max_students: formData.max_students,
+      max_teachers: formData.max_teachers,
+      max_courses: formData.max_courses,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
+      is_active: formData.is_active,
       price: formData.price ? parseFloat(formData.price) : null,
+      notes: formData.notes || null,
     };
 
     try {
@@ -126,10 +180,29 @@ export default function AdminLicenses() {
     }
   };
 
-  const handleEdit = (license: License) => {
-    setEditingLicense(license);
+  const handleCreateLicense = (centerId: string) => {
+    setSelectedCenterId(centerId);
+    setEditingLicense(null);
+    const today = new Date();
+    const nextYear = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
     setFormData({
-      training_center_id: license.training_center_id,
+      license_type: "professional",
+      max_students: 50,
+      max_teachers: 5,
+      max_courses: 10,
+      start_date: today.toISOString().split("T")[0],
+      end_date: nextYear.toISOString().split("T")[0],
+      is_active: true,
+      price: "",
+      notes: "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleEditLicense = (license: License) => {
+    setEditingLicense(license);
+    setSelectedCenterId(license.training_center_id);
+    setFormData({
       license_type: license.license_type,
       max_students: license.max_students,
       max_teachers: license.max_teachers,
@@ -143,17 +216,18 @@ export default function AdminLicenses() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("¿Está seguro de eliminar esta licencia?")) return;
-
+  const toggleLicenseStatus = async (license: License) => {
     try {
       const { error } = await supabase
         .from("licenses")
-        .delete()
-        .eq("id", id);
+        .update({ is_active: !license.is_active })
+        .eq("id", license.id);
 
       if (error) throw error;
-      toast({ title: "Licencia eliminada" });
+      
+      toast({ 
+        title: license.is_active ? "Licencia desactivada" : "Licencia activada" 
+      });
       loadData();
     } catch (error: any) {
       toast({
@@ -166,8 +240,8 @@ export default function AdminLicenses() {
 
   const resetForm = () => {
     setEditingLicense(null);
+    setSelectedCenterId(null);
     setFormData({
-      training_center_id: "",
       license_type: "professional",
       max_students: 50,
       max_teachers: 5,
@@ -194,6 +268,48 @@ export default function AdminLicenses() {
     return new Date(endDate) < new Date();
   };
 
+  const getPaymentStatusBadge = (invoice: Invoice | null) => {
+    if (!invoice) {
+      return <Badge variant="outline" className="text-muted-foreground">Sin factura</Badge>;
+    }
+    
+    switch (invoice.status) {
+      case "paid":
+        return <Badge className="bg-green-500 hover:bg-green-600"><Check className="h-3 w-3 mr-1" />Pagado</Badge>;
+      case "pending":
+        return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Pendiente</Badge>;
+      case "overdue":
+        return <Badge variant="destructive"><X className="h-3 w-3 mr-1" />Vencido</Badge>;
+      default:
+        return <Badge variant="outline">{invoice.status}</Badge>;
+    }
+  };
+
+  const getLicenseStatusBadge = (center: CenterWithLicense) => {
+    if (!center.license) {
+      return <Badge variant="outline" className="text-muted-foreground">Sin licencia</Badge>;
+    }
+    
+    if (!center.license.is_active) {
+      return <Badge variant="secondary">Inactiva</Badge>;
+    }
+    
+    if (isExpired(center.license.end_date)) {
+      return <Badge variant="destructive">Vencida</Badge>;
+    }
+    
+    return <Badge className="bg-green-500 hover:bg-green-600">Activa</Badge>;
+  };
+
+  // Stats
+  const totalCenters = centersWithLicenses.length;
+  const centersWithActiveLicense = centersWithLicenses.filter(
+    (c) => c.license?.is_active && !isExpired(c.license.end_date)
+  ).length;
+  const centersWithPendingPayment = centersWithLicenses.filter(
+    (c) => c.latestInvoice?.status === "pending"
+  ).length;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -201,247 +317,154 @@ export default function AdminLicenses() {
           <h1 className="text-3xl font-bold">Gestión de Licencias</h1>
           <p className="text-muted-foreground">Administra las licencias de los centros de formación</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) resetForm();
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Licencia
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingLicense ? "Editar Licencia" : "Nueva Licencia"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="training_center_id">Centro de Formación *</Label>
-                <Select
-                  value={formData.training_center_id}
-                  onValueChange={(value) => setFormData({ ...formData, training_center_id: value })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar centro" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {centers.map((center) => (
-                      <SelectItem key={center.id} value={center.id}>
-                        {center.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <p className="text-sm text-muted-foreground">Centros Totales</p>
+                <p className="text-2xl font-bold">{totalCenters}</p>
               </div>
-
+              <Building2 className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="license_type">Tipo de Licencia *</Label>
-                <Select
-                  value={formData.license_type}
-                  onValueChange={(value) => setFormData({ ...formData, license_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="basic">Básica</SelectItem>
-                    <SelectItem value="professional">Profesional</SelectItem>
-                    <SelectItem value="enterprise">Empresarial</SelectItem>
-                    <SelectItem value="custom">Personalizada</SelectItem>
-                  </SelectContent>
-                </Select>
+                <p className="text-sm text-muted-foreground">Licencias Activas</p>
+                <p className="text-2xl font-bold text-green-600">{centersWithActiveLicense}</p>
               </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="max_students">Máx. Estudiantes</Label>
-                  <Input
-                    id="max_students"
-                    type="number"
-                    value={formData.max_students}
-                    onChange={(e) => setFormData({ ...formData, max_students: parseInt(e.target.value) })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="max_teachers">Máx. Profesores</Label>
-                  <Input
-                    id="max_teachers"
-                    type="number"
-                    value={formData.max_teachers}
-                    onChange={(e) => setFormData({ ...formData, max_teachers: parseInt(e.target.value) })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="max_courses">Máx. Cursos</Label>
-                  <Input
-                    id="max_courses"
-                    type="number"
-                    value={formData.max_courses}
-                    onChange={(e) => setFormData({ ...formData, max_courses: parseInt(e.target.value) })}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start_date">Fecha de Inicio *</Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end_date">Fecha de Fin *</Label>
-                  <Input
-                    id="end_date"
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-
+              <Key className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="price">Precio (€)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
-                />
+                <p className="text-sm text-muted-foreground">Pagos Pendientes</p>
+                <p className="text-2xl font-bold text-destructive">{centersWithPendingPayment}</p>
               </div>
-
-              <div>
-                <Label htmlFor="notes">Notas</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Notas adicionales sobre la licencia"
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  {editingLicense ? "Actualizar" : "Crear"} Licencia
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              <CreditCard className="h-8 w-8 text-destructive" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>
-            <Key className="inline-block mr-2 h-5 w-5" />
-            Licencias Activas
+            <Building2 className="inline-block mr-2 h-5 w-5" />
+            Centros de Formación y Licencias
           </CardTitle>
           <CardDescription>
-            {licenses.length} licencias totales
+            Vista de todos los centros con su estado de licencia y pago
           </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8">Cargando...</div>
-          ) : licenses.length === 0 ? (
+          ) : centersWithLicenses.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No hay licencias registradas
+              No hay centros de formación registrados
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Centro</TableHead>
-                  <TableHead>Tipo</TableHead>
+                  <TableHead>Centro de Formación</TableHead>
+                  <TableHead>Tipo Licencia</TableHead>
+                  <TableHead>Estado Licencia</TableHead>
+                  <TableHead>Estado Pago</TableHead>
                   <TableHead>Límites</TableHead>
                   <TableHead>Vigencia</TableHead>
-                  <TableHead>Precio</TableHead>
-                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-center">Activa</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {licenses.map((license) => (
-                  <TableRow key={license.id}>
+                {centersWithLicenses.map((center) => (
+                  <TableRow key={center.id}>
                     <TableCell className="font-medium">
-                      {license.training_centers.name}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {getLicenseTypeLabel(license.license_type)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm space-y-1">
-                        <div>{license.max_students} estudiantes</div>
-                        <div className="text-muted-foreground">
-                          {license.max_teachers} profesores · {license.max_courses} cursos
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        {center.name}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm space-y-1">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(license.start_date).toLocaleDateString()}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(license.end_date).toLocaleDateString()}
-                        </div>
-                      </div>
+                      {center.license ? (
+                        <Badge variant="outline">
+                          {getLicenseTypeLabel(center.license.license_type)}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
-                      {license.price ? `€${license.price.toFixed(2)}` : "-"}
+                      {getLicenseStatusBadge(center)}
                     </TableCell>
                     <TableCell>
-                      <Badge 
-                        variant={
-                          !license.is_active ? "secondary" :
-                          isExpired(license.end_date) ? "destructive" : 
-                          "default"
-                        }
-                      >
-                        {!license.is_active ? "Inactiva" :
-                         isExpired(license.end_date) ? "Vencida" : 
-                         "Activa"}
-                      </Badge>
+                      {getPaymentStatusBadge(center.latestInvoice)}
+                    </TableCell>
+                    <TableCell>
+                      {center.license ? (
+                        <div className="text-sm">
+                          <div>{center.license.max_students} alumnos</div>
+                          <div className="text-muted-foreground text-xs">
+                            {center.license.max_teachers} prof. · {center.license.max_courses} cursos
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {center.license ? (
+                        <div className="text-sm">
+                          <div>{new Date(center.license.start_date).toLocaleDateString()}</div>
+                          <div className="text-muted-foreground text-xs">
+                            hasta {new Date(center.license.end_date).toLocaleDateString()}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {center.license ? (
+                        <Switch
+                          checked={center.license.is_active}
+                          onCheckedChange={() => toggleLicenseStatus(center.license!)}
+                        />
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      {center.license ? (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(license)}
+                          size="sm"
+                          onClick={() => handleEditLicense(center.license!)}
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4 mr-1" />
+                          Editar
                         </Button>
+                      ) : (
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(license.id)}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCreateLicense(center.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Plus className="h-4 w-4 mr-1" />
+                          Crear Licencia
                         </Button>
-                      </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -450,6 +473,143 @@ export default function AdminLicenses() {
           )}
         </CardContent>
       </Card>
+
+      {/* License Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) resetForm();
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingLicense ? "Editar Licencia" : "Nueva Licencia"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>Centro de Formación</Label>
+              <p className="text-sm font-medium mt-1">
+                {centersWithLicenses.find((c) => c.id === (editingLicense?.training_center_id || selectedCenterId))?.name}
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="license_type">Tipo de Licencia *</Label>
+              <Select
+                value={formData.license_type}
+                onValueChange={(value) => setFormData({ ...formData, license_type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Básica</SelectItem>
+                  <SelectItem value="professional">Profesional</SelectItem>
+                  <SelectItem value="enterprise">Empresarial</SelectItem>
+                  <SelectItem value="custom">Personalizada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="max_students">Máx. Estudiantes</Label>
+                <Input
+                  id="max_students"
+                  type="number"
+                  value={formData.max_students}
+                  onChange={(e) => setFormData({ ...formData, max_students: parseInt(e.target.value) })}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="max_teachers">Máx. Profesores</Label>
+                <Input
+                  id="max_teachers"
+                  type="number"
+                  value={formData.max_teachers}
+                  onChange={(e) => setFormData({ ...formData, max_teachers: parseInt(e.target.value) })}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="max_courses">Máx. Cursos</Label>
+                <Input
+                  id="max_courses"
+                  type="number"
+                  value={formData.max_courses}
+                  onChange={(e) => setFormData({ ...formData, max_courses: parseInt(e.target.value) })}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="start_date">Fecha de Inicio *</Label>
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={formData.start_date}
+                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="end_date">Fecha de Fin *</Label>
+                <Input
+                  id="end_date"
+                  type="date"
+                  value={formData.end_date}
+                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="price">Precio (€)</Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Notas</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Notas adicionales sobre la licencia"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+              <Label htmlFor="is_active">Licencia activa</Label>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                {editingLicense ? "Actualizar" : "Crear"} Licencia
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
