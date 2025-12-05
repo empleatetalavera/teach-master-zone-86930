@@ -2430,6 +2430,119 @@ export type Database = {
         }
         Relationships: []
       }
+      unit_content_progress: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          content_id: string
+          created_at: string | null
+          enrollment_id: string
+          id: string
+          last_position: string | null
+          progress_percentage: number | null
+          time_spent_seconds: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          content_id: string
+          created_at?: string | null
+          enrollment_id: string
+          id?: string
+          last_position?: string | null
+          progress_percentage?: number | null
+          time_spent_seconds?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          content_id?: string
+          created_at?: string | null
+          enrollment_id?: string
+          id?: string
+          last_position?: string | null
+          progress_percentage?: number | null
+          time_spent_seconds?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unit_content_progress_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "unit_interactive_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unit_content_progress_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unit_interactive_content: {
+        Row: {
+          content_type: string
+          content_url: string | null
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          file_path: string | null
+          formative_unit_id: string
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          order_index: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content_type: string
+          content_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          file_path?: string | null
+          formative_unit_id: string
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          order_index?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content_type?: string
+          content_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          file_path?: string | null
+          formative_unit_id?: string
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          order_index?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unit_interactive_content_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
