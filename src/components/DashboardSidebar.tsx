@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   BookOpen,
@@ -26,6 +27,7 @@ import {
   Layers
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -108,7 +110,35 @@ export function DashboardSidebar() {
   const { state } = useSidebar();
   const navigate = useNavigate();
   // Role derived from authenticated user
-  const { signOut, userRole } = useAuth();
+  const { signOut, userRole, user } = useAuth();
+  const [userCenterSlug, setUserCenterSlug] = useState<string | null>(null);
+
+  // Fetch user's center slug for logout redirect
+  useEffect(() => {
+    const fetchUserCenter = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('training_center_id')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.training_center_id) {
+          const { data: center } = await supabase
+            .from('training_centers')
+            .select('slug')
+            .eq('id', profile.training_center_id)
+            .single();
+          
+          if (center?.slug) {
+            setUserCenterSlug(center.slug);
+          }
+        }
+      }
+    };
+    
+    fetchUserCenter();
+  }, [user]);
 
   // Determine which menu items to show
   // super_admin gets platform management menu
@@ -136,8 +166,14 @@ export function DashboardSidebar() {
   const isCollapsed = state === "collapsed";
 
   const handleLogout = async () => {
+    const centerSlug = userCenterSlug;
     await signOut();
-    navigate("/auth");
+    // Redirect to center-specific login if user had a center
+    if (centerSlug) {
+      navigate(`/auth?center=${centerSlug}`);
+    } else {
+      navigate("/auth");
+    }
   };
 
   return (
