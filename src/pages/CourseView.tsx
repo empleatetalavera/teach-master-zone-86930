@@ -58,6 +58,10 @@ interface Module {
   activities?: any[];
   scorm_content?: any[];
   formative_units?: FormativeUnit[];
+  concept_map_url?: string | null;
+  objectives?: string | null;
+  content?: string | null;
+  forum_enabled?: boolean;
 }
 
 interface FormativeUnit {
@@ -767,304 +771,402 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
-            <h2 className="text-2xl font-bold">Módulos del curso</h2>
-            <Accordion type="multiple" className="space-y-4">
-              {modules.map((module, index) => (
-                <AccordionItem key={module.id} value={module.id} className="border rounded-lg">
-                  <Card>
-                    <AccordionTrigger className="hover:no-underline px-6">
-                      <div className="flex items-center justify-between w-full pr-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-bold">
-                            {index + 1}
-                          </div>
-                          <div className="text-left">
-                            <h3 className="font-semibold text-lg">{module.title}</h3>
-                            <p className="text-sm text-muted-foreground">{module.description}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-2">
-                            <Progress value={module.progress || 0} className="w-24" />
-                            <span className="text-sm font-medium">{module.progress || 0}%</span>
-                          </div>
-                          {module.completed && (
-                            <CheckCircle2 className="h-5 w-5 text-green-500" />
-                          )}
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">{module.duration_minutes} min</span>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <CardContent className="space-y-4 pt-4">
-                        {/* Formative Units */}
-                        {module.formative_units && module.formative_units.length > 0 && (
-                          <div className="space-y-3">
-                            <h4 className="font-semibold flex items-center gap-2">
-                              <ListChecks className="h-4 w-4 text-primary" />
-                              Unidades Formativas ({module.formative_units.length})
-                            </h4>
-                            <Accordion type="multiple" className="space-y-2">
-                              {module.formative_units.map((unit, unitIndex) => (
-                                <AccordionItem key={unit.id} value={unit.id} className="border rounded-lg bg-muted/30">
-                                  <AccordionTrigger className="hover:no-underline px-4 py-3">
-                                    <div className="flex items-center gap-3 w-full pr-4">
-                                      <span className="font-mono text-xs text-muted-foreground bg-background px-2 py-1 rounded">
-                                        {index + 1}.{unitIndex + 1}
-                                      </span>
-                                      <div className="text-left flex-1">
-                                        <p className="font-medium text-sm">{unit.title}</p>
-                                        {unit.duration_hours && (
-                                          <p className="text-xs text-muted-foreground">{unit.duration_hours}h</p>
-                                        )}
-                                      </div>
-                                      <Progress value={0} className="w-16 h-2" />
+            {/* SEPE Info Banner */}
+            <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <BookOpen className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-blue-900 dark:text-blue-100">Estructura SEPE</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Este curso cumple con los requisitos de la normativa SEPE: módulos formativos, 
+                      evaluaciones con nota mínima del 50%, actividades de desarrollo y control de tiempos.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div>
+              <h2 className="text-lg font-semibold">Unidades Formativas / Módulos</h2>
+              <p className="text-sm text-muted-foreground">
+                Haz clic en cada módulo para expandir y ver su contenido
+              </p>
+            </div>
+
+            {modules.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="py-12 text-center">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="font-medium mb-2">Sin módulos</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Este curso aún no tiene módulos configurados
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {modules.map((module, index) => {
+                  const moduleUnits = module.formative_units || [];
+                  const totalEvaluations = (module.evaluations?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.evaluations?.length || 0), 0);
+                  const totalActivities = (module.activities?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.activities?.length || 0), 0);
+
+                  return (
+                    <Accordion key={module.id} type="single" collapsible>
+                      <AccordionItem value={module.id} className="border rounded-lg overflow-hidden">
+                        <Card className="border-0 shadow-none">
+                          <AccordionTrigger className="hover:no-underline px-0">
+                            <CardHeader className="pb-3 hover:bg-muted/50 transition-colors w-full">
+                              <div className="flex items-start gap-4 w-full">
+                                <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                  <span className="font-mono text-sm font-bold bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center">{index + 1}</span>
+                                </div>
+                                <div className="flex-1 text-left">
+                                  <CardTitle className="text-lg">{module.title}</CardTitle>
+                                  <CardDescription className="mt-1">
+                                    {module.description || "Sin descripción"}
+                                  </CardDescription>
+                                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {module.duration_minutes ? (module.duration_minutes / 60).toFixed(1) : 0}h
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <CheckCircle2 className="h-3 w-3" />
+                                      {totalEvaluations} tests
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <FileText className="h-3 w-3" />
+                                      {totalActivities} actividades
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <ListChecks className="h-3 w-3" />
+                                      {moduleUnits.length} UFs
+                                    </span>
+                                    <div className="flex items-center gap-2 ml-auto">
+                                      <Progress value={module.progress || 0} className="w-20 h-2" />
+                                      <span className="font-medium">{module.progress || 0}%</span>
                                     </div>
-                                  </AccordionTrigger>
-                                  <AccordionContent className="px-4 pb-4">
-                                    <div className="space-y-3">
-                                      {/* Unit description */}
-                                      {unit.description && (
-                                        <p className="text-sm text-muted-foreground">{unit.description}</p>
-                                      )}
-                                      
-                                      {/* Interactive Content Grid */}
-                                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                        <div 
-                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
-                                          onClick={() => openContentViewer(unit.id, unit.title, 'video')}
-                                        >
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <div className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded">
-                                              <Video className="h-4 w-4 text-red-600" />
-                                            </div>
-                                            <span className="text-sm font-medium">Video</span>
-                                          </div>
-                                          <Progress value={0} className="h-1.5" />
-                                        </div>
-                                        
-                                        <div 
-                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
-                                          onClick={() => openContentViewer(unit.id, unit.title, 'document')}
-                                        >
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded">
-                                              <FileText className="h-4 w-4 text-blue-600" />
-                                            </div>
-                                            <span className="text-sm font-medium">Documento</span>
-                                          </div>
-                                          <Progress value={0} className="h-1.5" />
-                                        </div>
-                                        
-                                        <div 
-                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
-                                          onClick={() => openContentViewer(unit.id, unit.title, 'audio')}
-                                        >
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded">
-                                              <Headphones className="h-4 w-4 text-purple-600" />
-                                            </div>
-                                            <span className="text-sm font-medium">Audio</span>
-                                          </div>
-                                          <Progress value={0} className="h-1.5" />
-                                        </div>
-                                        
-                                        <div 
-                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
-                                          onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
-                                        >
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded">
-                                              <Layers className="h-4 w-4 text-green-600" />
-                                            </div>
-                                            <span className="text-sm font-medium">Interactivo</span>
-                                          </div>
-                                          <Progress value={0} className="h-1.5" />
-                                        </div>
-                                        
-                                        <div 
-                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
-                                          onClick={() => openContentViewer(unit.id, unit.title, 'exercise')}
-                                        >
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded">
-                                              <FileQuestion className="h-4 w-4 text-amber-600" />
-                                            </div>
-                                            <span className="text-sm font-medium">Ejercicio</span>
-                                          </div>
-                                          <Progress value={0} className="h-1.5" />
-                                        </div>
-                                        
-                                        <div 
-                                          className="bg-background rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
-                                          onClick={() => openContentViewer(unit.id, unit.title, 'presentation')}
-                                        >
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded">
-                                              <Presentation className="h-4 w-4 text-orange-600" />
-                                            </div>
-                                            <span className="text-sm font-medium">Presentación</span>
-                                          </div>
-                                          <Progress value={0} className="h-1.5" />
-                                        </div>
-                                      </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardHeader>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <CardContent className="pt-0 border-t bg-muted/20">
+                              <div className="space-y-4 pt-4">
+                                {/* Fila 1: Mapa Conceptual y Objetivos */}
+                                <div className="grid lg:grid-cols-2 gap-4">
+                                  <div className="bg-background rounded-lg p-4 border">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
+                                      <Layers className="h-4 w-4 text-primary" />
+                                      Mapa Conceptual
+                                    </h4>
+                                    {module.concept_map_url ? (
+                                      <a 
+                                        href={module.concept_map_url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                                      >
+                                        Ver mapa conceptual
+                                      </a>
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground">Sin mapa conceptual</p>
+                                    )}
+                                  </div>
 
-                                      {/* Unit Tests */}
-                                      {unit.evaluations && unit.evaluations.length > 0 && (
-                                        <div className="space-y-2 pt-2 border-t">
-                                          <p className="text-xs font-medium text-muted-foreground">Tests ({unit.evaluations.length})</p>
-                                          {unit.evaluations.map((evaluation: any) => (
-                                            <Button
-                                              key={evaluation.id}
-                                              variant="outline"
-                                              size="sm"
-                                              className="w-full justify-start text-xs"
-                                              onClick={() => {
-                                                toast({
-                                                  title: "Test: " + evaluation.title,
-                                                  description: "Accediendo al test de evaluación...",
-                                                });
-                                                // Navigate to evaluation page when available
-                                                navigate(`/course/${courseId}/evaluation/${evaluation.id}`);
-                                              }}
-                                            >
-                                              <CheckCircle2 className="h-3 w-3 mr-2" />
-                                              {evaluation.title}
-                                            </Button>
-                                          ))}
-                                        </div>
-                                      )}
+                                  <div className="bg-background rounded-lg p-4 border">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
+                                      <BookOpen className="h-4 w-4 text-primary" />
+                                      Objetivos
+                                    </h4>
+                                    {module.objectives ? (
+                                      <p className="text-xs text-muted-foreground line-clamp-3">{module.objectives}</p>
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground">Sin objetivos definidos</p>
+                                    )}
+                                  </div>
+                                </div>
 
-                                      {/* Unit Activities */}
-                                      <div className="space-y-2 pt-2 border-t">
-                                        <div className="flex items-center justify-between">
-                                          <p className="text-xs font-medium text-muted-foreground">
-                                            Actividades ({unit.activities?.length || 0})
-                                          </p>
-                                          {(userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin') && (
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-6 text-xs"
-                                              onClick={() => openActivityManager(unit.id, unit.title)}
-                                            >
-                                              <Plus className="h-3 w-3 mr-1" />
-                                              Añadir
-                                            </Button>
-                                          )}
-                                        </div>
-                                        {unit.activities && unit.activities.length > 0 ? (
-                                          unit.activities.map((activity: any) => (
-                                            <Button
-                                              key={activity.id}
-                                              variant="outline"
-                                              size="sm"
-                                              className="w-full justify-start text-xs"
-                                              onClick={() => {
-                                                toast({
-                                                  title: "Actividad: " + activity.title,
-                                                  description: "Accediendo a la actividad...",
-                                                });
-                                                navigate(`/course/${courseId}/activity/${activity.id}`);
-                                              }}
-                                            >
-                                              <FileText className="h-3 w-3 mr-2" />
-                                              {activity.title}
-                                            </Button>
-                                          ))
-                                        ) : (
-                                          <p className="text-xs text-muted-foreground italic">Sin actividades</p>
-                                        )}
-                                      </div>
+                                {/* Fila 2: Temario y Foro */}
+                                <div className="grid lg:grid-cols-2 gap-4">
+                                  <div className="bg-background rounded-lg p-4 border">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
+                                      <FileText className="h-4 w-4 text-primary" />
+                                      Temario / Manual
+                                    </h4>
+                                    {module.content ? (
+                                      <p className="text-xs text-muted-foreground line-clamp-3">{module.content.substring(0, 150)}...</p>
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground">Sin contenido de temario</p>
+                                    )}
+                                  </div>
+
+                                  <div className="bg-background rounded-lg p-4 border">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
+                                      <MessageSquare className="h-4 w-4 text-primary" />
+                                      Foro del Módulo
+                                    </h4>
+                                    <Badge variant={module.forum_enabled ? "default" : "secondary"} className="text-xs">
+                                      {module.forum_enabled ? "Activo" : "Desactivado"}
+                                    </Badge>
+                                  </div>
+                                </div>
+
+                                {/* Unidades Formativas */}
+                                <div className="border-t pt-4">
+                                  <h4 className="font-medium flex items-center gap-2 mb-3">
+                                    <ListChecks className="h-4 w-4 text-primary" />
+                                    Unidades Formativas ({moduleUnits.length})
+                                  </h4>
+                                  
+                                  {moduleUnits.length === 0 ? (
+                                    <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
+                                      Sin unidades formativas en este módulo
                                     </div>
-                                  </AccordionContent>
-                                </AccordionItem>
-                              ))}
-                            </Accordion>
-                          </div>
-                        )}
+                                  ) : (
+                                    <Accordion type="multiple" className="space-y-2">
+                                      {moduleUnits.map((unit, unitIndex) => (
+                                        <AccordionItem key={unit.id} value={unit.id} className="bg-background rounded-lg border">
+                                          <AccordionTrigger className="hover:no-underline px-4 py-3">
+                                            <div className="flex items-center gap-3 w-full pr-4">
+                                              <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                                                {index + 1}.{unitIndex + 1}
+                                              </span>
+                                              <div className="text-left flex-1">
+                                                <p className="font-medium text-sm">{unit.title}</p>
+                                                {unit.duration_hours && (
+                                                  <p className="text-xs text-muted-foreground">{unit.duration_hours}h</p>
+                                                )}
+                                              </div>
+                                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <span className="flex items-center gap-1">
+                                                  <CheckCircle2 className="h-3 w-3" />
+                                                  {unit.evaluations?.length || 0}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                  <FileText className="h-3 w-3" />
+                                                  {unit.activities?.length || 0}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </AccordionTrigger>
+                                          <AccordionContent className="px-4 pb-4">
+                                            <div className="space-y-3">
+                                              {/* Unit info */}
+                                              {(unit.objectives || unit.description) && (
+                                                <div className="space-y-2">
+                                                  {unit.objectives && (
+                                                    <div>
+                                                      <p className="text-xs font-medium text-muted-foreground mb-1">Objetivos:</p>
+                                                      <p className="text-xs">{unit.objectives}</p>
+                                                    </div>
+                                                  )}
+                                                  {unit.description && (
+                                                    <div>
+                                                      <p className="text-xs font-medium text-muted-foreground mb-1">Descripción:</p>
+                                                      <p className="text-xs">{unit.description}</p>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
 
-                        {/* Module Content Button (if no UFs) */}
-                        {(!module.formative_units || module.formative_units.length === 0) && (
-                          <Button 
-                            variant="outline" 
-                            className="w-full justify-start"
-                            onClick={() => navigate(`/course/${courseId}/module/${module.id}`)}
-                          >
-                            <PlayCircle className="h-4 w-4 mr-2" />
-                            Ver contenido del módulo
-                          </Button>
-                        )}
+                                              {/* Contenido Interactivo */}
+                                              <div className="pt-2 border-t">
+                                                <span className="text-xs font-medium flex items-center gap-1.5 mb-2">
+                                                  <PlayCircle className="h-3 w-3 text-primary" />
+                                                  Contenido Interactivo
+                                                </span>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                  <div 
+                                                    className="bg-muted/50 rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                                    onClick={() => openContentViewer(unit.id, unit.title, 'video')}
+                                                  >
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                      <div className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded">
+                                                        <Video className="h-4 w-4 text-red-600" />
+                                                      </div>
+                                                      <span className="text-sm font-medium">Video</span>
+                                                    </div>
+                                                    <Progress value={0} className="h-1.5" />
+                                                  </div>
+                                                  
+                                                  <div 
+                                                    className="bg-muted/50 rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                                    onClick={() => openContentViewer(unit.id, unit.title, 'presentation')}
+                                                  >
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                      <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded">
+                                                        <Presentation className="h-4 w-4 text-orange-600" />
+                                                      </div>
+                                                      <span className="text-sm font-medium">Presentación</span>
+                                                    </div>
+                                                    <Progress value={0} className="h-1.5" />
+                                                  </div>
+                                                  
+                                                  <div 
+                                                    className="bg-muted/50 rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                                    onClick={() => openContentViewer(unit.id, unit.title, 'audio')}
+                                                  >
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                      <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded">
+                                                        <Headphones className="h-4 w-4 text-purple-600" />
+                                                      </div>
+                                                      <span className="text-sm font-medium">Audio</span>
+                                                    </div>
+                                                    <Progress value={0} className="h-1.5" />
+                                                  </div>
+                                                  
+                                                  <div 
+                                                    className="bg-muted/50 rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                                    onClick={() => openContentViewer(unit.id, unit.title, 'document')}
+                                                  >
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                      <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded">
+                                                        <FileText className="h-4 w-4 text-blue-600" />
+                                                      </div>
+                                                      <span className="text-sm font-medium">Documento</span>
+                                                    </div>
+                                                    <Progress value={0} className="h-1.5" />
+                                                  </div>
+                                                  
+                                                  <div 
+                                                    className="bg-muted/50 rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                                    onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
+                                                  >
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                      <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded">
+                                                        <Layers className="h-4 w-4 text-green-600" />
+                                                      </div>
+                                                      <span className="text-sm font-medium">SCORM</span>
+                                                    </div>
+                                                    <Progress value={0} className="h-1.5" />
+                                                  </div>
+                                                  
+                                                  <div 
+                                                    className="bg-muted/50 rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
+                                                    onClick={() => openContentViewer(unit.id, unit.title, 'exercise')}
+                                                  >
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                      <div className="p-1.5 bg-amber-100 dark:bg-amber-900/30 rounded">
+                                                        <FileQuestion className="h-4 w-4 text-amber-600" />
+                                                      </div>
+                                                      <span className="text-sm font-medium">Ejercicio</span>
+                                                    </div>
+                                                    <Progress value={0} className="h-1.5" />
+                                                  </div>
+                                                </div>
+                                              </div>
 
-                        {/* Module-level Evaluations */}
-                        {module.evaluations && module.evaluations.length > 0 && (
-                          <div className="space-y-2">
-                            <h4 className="font-semibold flex items-center gap-2 text-sm">
-                              <FileText className="h-4 w-4" />
-                              Evaluaciones del Módulo ({module.evaluations.length})
-                            </h4>
-                            {module.evaluations.map((evaluation: any) => (
-                              <Button
-                                key={evaluation.id}
-                                variant="outline"
-                                size="sm"
-                                className="w-full justify-start"
-                                onClick={() => navigate(`/course/${courseId}/evaluation/${evaluation.id}`)}
-                              >
-                                {evaluation.title}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
+                                              {/* Tests de la UF */}
+                                              {unit.evaluations && unit.evaluations.length > 0 && (
+                                                <div className="pt-2 border-t">
+                                                  <span className="text-xs font-medium flex items-center gap-1.5 mb-2">
+                                                    <CheckCircle2 className="h-3 w-3 text-primary" />
+                                                    Tests / Evaluaciones ({unit.evaluations.length})
+                                                  </span>
+                                                  <div className="space-y-1">
+                                                    {unit.evaluations.map((evaluation: any) => (
+                                                      <Button
+                                                        key={evaluation.id}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="w-full justify-start text-xs h-8"
+                                                        onClick={() => navigate(`/course/${courseId}/evaluation/${evaluation.id}`)}
+                                                      >
+                                                        {evaluation.title}
+                                                      </Button>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
 
-                        {/* Module-level Activities */}
-                        {module.activities && module.activities.length > 0 && (
-                          <div className="space-y-2">
-                            <h4 className="font-semibold flex items-center gap-2 text-sm">
-                              <FileText className="h-4 w-4" />
-                              Actividades del Módulo ({module.activities.length})
-                            </h4>
-                            {module.activities.map((activity: any) => (
-                              <Button
-                                key={activity.id}
-                                variant="outline"
-                                size="sm"
-                                className="w-full justify-start"
-                                onClick={() => navigate(`/course/${courseId}/activity/${activity.id}`)}
-                              >
-                                {activity.title}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
+                                              {/* Actividades de la UF */}
+                                              {unit.activities && unit.activities.length > 0 && (
+                                                <div className="pt-2 border-t">
+                                                  <span className="text-xs font-medium flex items-center gap-1.5 mb-2">
+                                                    <FileText className="h-3 w-3 text-primary" />
+                                                    Actividades ({unit.activities.length})
+                                                  </span>
+                                                  <div className="space-y-1">
+                                                    {unit.activities.map((activity: any) => (
+                                                      <Button
+                                                        key={activity.id}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="w-full justify-start text-xs h-8"
+                                                        onClick={() => openActivityManager(unit.id, unit.title)}
+                                                      >
+                                                        {activity.title}
+                                                      </Button>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </AccordionContent>
+                                        </AccordionItem>
+                                      ))}
+                                    </Accordion>
+                                  )}
+                                </div>
 
-                        {/* SCORM Content */}
-                        {module.scorm_content && module.scorm_content.length > 0 && (
-                          <div className="space-y-2">
-                            <h4 className="font-semibold flex items-center gap-2 text-sm">
-                              <PlayCircle className="h-4 w-4" />
-                              Contenido SCORM ({module.scorm_content.length})
-                            </h4>
-                            {module.scorm_content.map((scorm: any) => (
-                              <Button
-                                key={scorm.id}
-                                variant="outline"
-                                size="sm"
-                                className="w-full justify-start"
-                                onClick={() => navigate(`/course/${courseId}/module/${module.id}`)}
-                              >
-                                {scorm.scorm_packages?.title || "Paquete SCORM"}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </AccordionContent>
-                  </Card>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                                {/* Module-level evaluations */}
+                                {module.evaluations && module.evaluations.length > 0 && (
+                                  <div className="border-t pt-4">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
+                                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                                      Tests del Módulo ({module.evaluations.length})
+                                    </h4>
+                                    <div className="space-y-1">
+                                      {module.evaluations.map((evaluation: any) => (
+                                        <Button
+                                          key={evaluation.id}
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full justify-start"
+                                          onClick={() => navigate(`/course/${courseId}/evaluation/${evaluation.id}`)}
+                                        >
+                                          {evaluation.title}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Module-level activities */}
+                                {module.activities && module.activities.length > 0 && (
+                                  <div className="border-t pt-4">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
+                                      <FileText className="h-4 w-4 text-primary" />
+                                      Actividades del Módulo ({module.activities.length})
+                                    </h4>
+                                    <div className="space-y-1">
+                                      {module.activities.map((activity: any) => (
+                                        <Button
+                                          key={activity.id}
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full justify-start"
+                                          onClick={() => navigate(`/course/${courseId}/activity/${activity.id}`)}
+                                        >
+                                          {activity.title}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </AccordionContent>
+                        </Card>
+                      </AccordionItem>
+                    </Accordion>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="exams" className="space-y-4">
