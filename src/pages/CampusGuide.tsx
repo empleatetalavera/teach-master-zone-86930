@@ -1,13 +1,25 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, BookOpen, Users, FileText, MessageSquare, Calendar, Award, Clock, Monitor, CheckCircle2, HelpCircle, Phone, Mail } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Download, BookOpen, Users, FileText, MessageSquare, Calendar, Award, Clock, Monitor, CheckCircle2, HelpCircle, Phone, Mail, Loader2 } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useCenterBranding } from "@/hooks/useCenterBranding";
 
 export default function CampusGuide() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const centerSlug = searchParams.get("center");
+  const { branding, loading } = useCenterBranding(centerSlug);
 
   const handlePrint = () => {
     window.print();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -29,22 +41,40 @@ export default function CampusGuide() {
       <div className="container max-w-4xl mx-auto py-8 px-6 print:py-0 print:px-0">
         {/* Cover Page */}
         <div className="text-center mb-16 print:mb-8 print:page-break-after-always">
-          <div className="flex justify-center gap-6 mb-8">
+          <div className="flex justify-center gap-6 mb-8 items-center">
+            {branding.centerLogo && (
+              <img src={branding.centerLogo} alt={branding.centerName} className="h-20 object-contain" />
+            )}
             <img src="/branding/sepe-gobierno-logo.png" alt="Gobierno de España" className="h-16 object-contain" />
             <img src="/branding/sepe-logo.png" alt="SEPE" className="h-16 object-contain" />
           </div>
           
-          <div className="border-4 border-primary p-12 my-12 print:my-8">
-            <h1 className="text-4xl font-bold text-primary mb-4 print:text-3xl">
+          <div 
+            className="border-4 p-12 my-12 print:my-8"
+            style={{ borderColor: branding.primaryColor }}
+          >
+            <h1 
+              className="text-4xl font-bold mb-4 print:text-3xl"
+              style={{ color: branding.primaryColor }}
+            >
               GUÍA DEL CAMPUS VIRTUAL
             </h1>
             <h2 className="text-2xl text-muted-foreground mb-6 print:text-xl">
               Manual de Usuario para el Alumno
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-xl font-semibold" style={{ color: branding.secondaryColor }}>
+              {branding.centerName}
+            </p>
+            <p className="text-lg text-muted-foreground mt-2">
               Formación Profesional para el Empleo
             </p>
           </div>
+
+          {branding.officialBadge && (
+            <div className="mt-6 inline-block px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+              {branding.officialBadge}
+            </div>
+          )}
 
           <div className="mt-12 text-sm text-muted-foreground">
             <p>Documento conforme a los requisitos del</p>
