@@ -31,7 +31,8 @@ const BrandingContext = createContext<BrandingContextType | undefined>(undefined
 
 export function BrandingProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
-  const [branding, setBranding] = useState<BrandingConfig>(defaultBranding);
+  // Initialize with null to avoid showing default branding during load
+  const [branding, setBranding] = useState<BrandingConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
 
@@ -136,7 +137,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
   }, [user, authLoading]);
 
   // Don't render children until branding is initialized to prevent flash
-  if (!initialized && authLoading) {
+  if (!initialized || branding === null) {
     return null;
   }
 
