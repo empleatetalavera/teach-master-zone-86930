@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.check-plagiarism]
 verify_jwt = true
+
+[functions.setup-center-passwords]
+verify_jwt = false
