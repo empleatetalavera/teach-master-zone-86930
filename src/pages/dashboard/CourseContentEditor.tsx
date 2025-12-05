@@ -37,8 +37,16 @@ import {
   Map,
   ListChecks,
   MessagesSquare,
-  Link2
+  Link2,
+  Play,
+  FileQuestion,
+  Presentation,
+  Headphones,
+  Image,
+  Code,
+  Gamepad2
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface Course {
   id: string;
@@ -1176,6 +1184,97 @@ export default function CourseContentEditor() {
                                               )}
                                             </div>
                                           )}
+
+                                          {/* Contenido Interactivo de la UF */}
+                                          <div className="pt-2 border-t">
+                                            <div className="flex items-center justify-between mb-2">
+                                              <span className="text-xs font-medium flex items-center gap-1.5">
+                                                <Gamepad2 className="h-3 w-3 text-primary" />
+                                                Contenido Interactivo
+                                              </span>
+                                              <Button 
+                                                variant="ghost" 
+                                                size="sm"
+                                                className="h-6 text-xs"
+                                              >
+                                                <Plus className="h-3 w-3 mr-1" />
+                                                Añadir
+                                              </Button>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                              {/* Video */}
+                                              <div className="bg-background rounded p-2 border">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                  <div className="p-1 bg-red-100 dark:bg-red-900/30 rounded">
+                                                    <Play className="h-3 w-3 text-red-600" />
+                                                  </div>
+                                                  <span className="text-xs font-medium">Video</span>
+                                                </div>
+                                                <Progress value={0} className="h-1.5" />
+                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
+                                              </div>
+                                              
+                                              {/* Presentación */}
+                                              <div className="bg-background rounded p-2 border">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                  <div className="p-1 bg-orange-100 dark:bg-orange-900/30 rounded">
+                                                    <Presentation className="h-3 w-3 text-orange-600" />
+                                                  </div>
+                                                  <span className="text-xs font-medium">Presentación</span>
+                                                </div>
+                                                <Progress value={0} className="h-1.5" />
+                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
+                                              </div>
+                                              
+                                              {/* Audio */}
+                                              <div className="bg-background rounded p-2 border">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                  <div className="p-1 bg-purple-100 dark:bg-purple-900/30 rounded">
+                                                    <Headphones className="h-3 w-3 text-purple-600" />
+                                                  </div>
+                                                  <span className="text-xs font-medium">Audio</span>
+                                                </div>
+                                                <Progress value={0} className="h-1.5" />
+                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
+                                              </div>
+                                              
+                                              {/* Documento */}
+                                              <div className="bg-background rounded p-2 border">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                  <div className="p-1 bg-blue-100 dark:bg-blue-900/30 rounded">
+                                                    <FileText className="h-3 w-3 text-blue-600" />
+                                                  </div>
+                                                  <span className="text-xs font-medium">Documento</span>
+                                                </div>
+                                                <Progress value={0} className="h-1.5" />
+                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
+                                              </div>
+                                              
+                                              {/* SCORM */}
+                                              <div className="bg-background rounded p-2 border">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                  <div className="p-1 bg-green-100 dark:bg-green-900/30 rounded">
+                                                    <Code className="h-3 w-3 text-green-600" />
+                                                  </div>
+                                                  <span className="text-xs font-medium">SCORM</span>
+                                                </div>
+                                                <Progress value={0} className="h-1.5" />
+                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
+                                              </div>
+                                              
+                                              {/* Ejercicio */}
+                                              <div className="bg-background rounded p-2 border">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                  <div className="p-1 bg-amber-100 dark:bg-amber-900/30 rounded">
+                                                    <FileQuestion className="h-3 w-3 text-amber-600" />
+                                                  </div>
+                                                  <span className="text-xs font-medium">Ejercicio</span>
+                                                </div>
+                                                <Progress value={0} className="h-1.5" />
+                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
+                                              </div>
+                                            </div>
+                                          </div>
 
                                           {/* Tests de la UF */}
                                           <div className="pt-2 border-t">
