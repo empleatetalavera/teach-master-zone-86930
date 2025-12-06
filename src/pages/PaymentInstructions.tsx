@@ -2,18 +2,27 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, Copy } from "lucide-react";
+import { CheckCircle2, Copy, Building2, CreditCard, Wallet, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 
 export default function PaymentInstructions() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { orderId, paymentMethod } = location.state || {};
+  const { orderId, paymentMethod, totalAmount } = location.state || {};
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copiado al portapapeles");
+  };
+
+  // Bank details - replace with actual details
+  const bankDetails = {
+    bank: "Banco Santander",
+    iban: "ES91 2100 0418 4502 0005 1332",
+    bic: "CAIXESBBXXX",
+    beneficiary: "TalentCloud Solutions S.L.",
+    concept: `Pedido #${orderId?.slice(0, 8).toUpperCase()}`,
   };
 
   const renderInstructions = () => {
@@ -22,27 +31,82 @@ export default function PaymentInstructions() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Transferencia Bancaria</CardTitle>
-              <CardDescription>Realiza la transferencia a los siguientes datos:</CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Transferencia Bancaria</CardTitle>
+                  <CardDescription>Realiza la transferencia a los siguientes datos</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <p className="font-semibold">Banco: Banco Ejemplo</p>
-                <div className="flex items-center gap-2">
-                  <p>IBAN: ES91 2100 0418 4502 0005 1332</p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => copyToClipboard("ES91 2100 0418 4502 0005 1332")}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Banco:</span>
+                  <span className="font-medium">{bankDetails.bank}</span>
                 </div>
-                <p>Concepto: Pedido #{orderId?.slice(0, 8)}</p>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Beneficiario:</span>
+                  <span className="font-medium">{bankDetails.beneficiary}</span>
+                </div>
+                
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-muted-foreground">IBAN:</span>
+                  <div className="flex items-center gap-2">
+                    <code className="bg-background px-2 py-1 rounded text-sm font-mono">
+                      {bankDetails.iban}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => copyToClipboard(bankDetails.iban.replace(/\s/g, ""))}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">BIC/SWIFT:</span>
+                  <span className="font-medium">{bankDetails.bic}</span>
+                </div>
+                
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-muted-foreground">Concepto:</span>
+                  <div className="flex items-center gap-2">
+                    <code className="bg-background px-2 py-1 rounded text-sm font-mono">
+                      {bankDetails.concept}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => copyToClipboard(bankDetails.concept)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {totalAmount && (
+                  <div className="flex items-center justify-between border-t pt-3 mt-3">
+                    <span className="text-sm text-muted-foreground">Importe:</span>
+                    <span className="text-lg font-bold text-primary">
+                      €{(totalAmount * 1.21).toFixed(2)}
+                    </span>
+                  </div>
+                )}
               </div>
+              
               <Alert>
+                <Clock className="h-4 w-4" />
                 <AlertDescription>
-                  Una vez realizada la transferencia, envíanos el comprobante a pagos@ejemplo.com
+                  Una vez realizada la transferencia, envíanos el comprobante a{" "}
+                  <strong>pagos@talentcloudsolution.es</strong> para agilizar la activación de tu servicio.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -53,20 +117,62 @@ export default function PaymentInstructions() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>PayPal</CardTitle>
-              <CardDescription>Completa el pago con PayPal</CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center">
+                  <Wallet className="w-6 h-6 text-blue-500" />
+                </div>
+                <div>
+                  <CardTitle>Pago con PayPal</CardTitle>
+                  <CardDescription>Completa el pago a través de PayPal</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Email PayPal:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">pagos@talentcloudsolution.es</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => copyToClipboard("pagos@talentcloudsolution.es")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Referencia:</span>
+                  <span className="font-medium">{bankDetails.concept}</span>
+                </div>
+
+                {totalAmount && (
+                  <div className="flex items-center justify-between border-t pt-3 mt-3">
+                    <span className="text-sm text-muted-foreground">Importe:</span>
+                    <span className="text-lg font-bold text-primary">
+                      €{(totalAmount * 1.21).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              <Button 
+                className="w-full bg-[#0070ba] hover:bg-[#005ea6]" 
+                size="lg"
+                onClick={() => window.open("https://paypal.me/talentcloudsolution", "_blank")}
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                Pagar con PayPal
+              </Button>
+              
               <Alert>
                 <AlertDescription>
-                  Envía el pago a: pagos@ejemplo.com mediante PayPal
-                  <br />
-                  Referencia: Pedido #{orderId?.slice(0, 8)}
+                  Incluye la referencia <strong>{bankDetails.concept}</strong> en el concepto del pago de PayPal.
                 </AlertDescription>
               </Alert>
-              <Button className="w-full" onClick={() => window.open("https://paypal.com", "_blank")}>
-                Ir a PayPal
-              </Button>
             </CardContent>
           </Card>
         );
@@ -75,19 +181,23 @@ export default function PaymentInstructions() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Klarna</CardTitle>
-              <CardDescription>Paga con Klarna</CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-pink-500/10 rounded-full flex items-center justify-center">
+                  <Wallet className="w-6 h-6 text-pink-500" />
+                </div>
+                <div>
+                  <CardTitle>Pago con Klarna</CardTitle>
+                  <CardDescription>Próximamente disponible</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert>
                 <AlertDescription>
-                  Serás redirigido a Klarna para completar tu pago.
-                  Recibirás un email con las instrucciones de pago.
+                  El pago con Klarna estará disponible próximamente. Por favor, selecciona otro método de pago 
+                  o contacta con nosotros en <strong>comercial@talentcloudsolution.es</strong> para más información.
                 </AlertDescription>
               </Alert>
-              <Button className="w-full" onClick={() => window.open("https://klarna.com", "_blank")}>
-                Continuar con Klarna
-              </Button>
             </CardContent>
           </Card>
         );
@@ -96,18 +206,23 @@ export default function PaymentInstructions() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Pago con Tarjeta (Redsys)</CardTitle>
-              <CardDescription>Pago seguro con tarjeta</CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center">
+                  <CreditCard className="w-6 h-6 text-green-500" />
+                </div>
+                <div>
+                  <CardTitle>Pago con Tarjeta (Redsys)</CardTitle>
+                  <CardDescription>Próximamente disponible</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert>
                 <AlertDescription>
-                  Serás redirigido a la pasarela de pago segura de Redsys para completar tu compra.
+                  El pago con tarjeta a través de Redsys estará disponible próximamente. Por favor, selecciona 
+                  transferencia bancaria o PayPal, o contacta con nosotros en <strong>comercial@talentcloudsolution.es</strong>.
                 </AlertDescription>
               </Alert>
-              <Button className="w-full">
-                Ir a Pasarela de Pago
-              </Button>
             </CardContent>
           </Card>
         );
@@ -128,7 +243,7 @@ export default function PaymentInstructions() {
               <CardDescription>No se encontró información del pedido</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => navigate("/")}>Volver al Inicio</Button>
+              <Button onClick={() => navigate("/shop")}>Volver a la Tienda</Button>
             </CardContent>
           </Card>
         </div>
@@ -141,22 +256,44 @@ export default function PaymentInstructions() {
       <Navbar />
       <div className="container mx-auto px-4 py-16 max-w-2xl">
         <div className="text-center mb-8">
-          <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+          <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="h-10 w-10 text-green-500" />
+          </div>
           <h1 className="text-3xl font-bold mb-2">¡Pedido Creado!</h1>
           <p className="text-muted-foreground">
-            Número de pedido: #{orderId?.slice(0, 8)}
+            Tu número de pedido es: <strong className="text-foreground">#{orderId?.slice(0, 8).toUpperCase()}</strong>
           </p>
         </div>
 
         {renderInstructions()}
 
+        <Card className="mt-6">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold mb-3">¿Qué ocurre después?</h3>
+            <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+              <li>Realiza el pago según las instrucciones indicadas</li>
+              <li>Recibirás un email de confirmación cuando verifiquemos el pago</li>
+              <li>Te enviaremos los datos de acceso a tu plataforma</li>
+              <li>Nuestro equipo te contactará para la configuración inicial</li>
+            </ol>
+          </CardContent>
+        </Card>
+
         <div className="mt-8 text-center space-y-4">
           <p className="text-sm text-muted-foreground">
-            Recibirás un email de confirmación con los detalles de tu pedido.
+            ¿Tienes alguna duda? Contáctanos en{" "}
+            <a href="mailto:comercial@talentcloudsolution.es" className="text-primary hover:underline">
+              comercial@talentcloudsolution.es
+            </a>
           </p>
-          <Button variant="outline" onClick={() => navigate("/")}>
-            Volver al Inicio
-          </Button>
+          <div className="flex gap-4 justify-center">
+            <Button variant="outline" onClick={() => navigate("/")}>
+              Volver al Inicio
+            </Button>
+            <Button onClick={() => navigate("/shop")}>
+              Seguir Comprando
+            </Button>
+          </div>
         </div>
       </div>
     </div>
