@@ -94,9 +94,9 @@ export default function Checkout() {
 
       if (itemsError) throw itemsError;
 
-      // Clear cart from localStorage for guest users
+      // Clear cart
       if (!user) {
-        localStorage.removeItem("cart_items");
+        localStorage.removeItem("talentcloud_cart");
       } else {
         await clearCart();
       }
