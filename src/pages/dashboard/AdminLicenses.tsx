@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Key, Edit, Building2, Check, X, AlertCircle, CreditCard } from "lucide-react";
+import { Plus, Key, Edit, Building2, Check, X, AlertCircle, CreditCard, FileText, Receipt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -46,8 +46,10 @@ export default function AdminLicenses() {
   const [centersWithLicenses, setCentersWithLicenses] = useState<CenterWithLicense[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   const [editingLicense, setEditingLicense] = useState<License | null>(null);
   const [selectedCenterId, setSelectedCenterId] = useState<string | null>(null);
+  const [selectedLicenseForInvoice, setSelectedLicenseForInvoice] = useState<{ license: License; centerName: string } | null>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -59,6 +61,14 @@ export default function AdminLicenses() {
     end_date: "",
     is_active: true,
     price: "",
+    notes: "",
+  });
+
+  const [invoiceFormData, setInvoiceFormData] = useState({
+    invoice_number: "",
+    amount: "",
+    tax_rate: "21",
+    due_date: "",
     notes: "",
   });
 
@@ -254,6 +264,66 @@ export default function AdminLicenses() {
     });
   };
 
+  const handleGenerateInvoice = (license: License, centerName: string) => {
+    setSelectedLicenseForInvoice({ license, centerName });
+    const today = new Date();
+    const dueDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+    const invoiceNumber = `FAC-${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+    
+    setInvoiceFormData({
+      invoice_number: invoiceNumber,
+      amount: license.price?.toString() || "",
+      tax_rate: "21",
+      due_date: dueDate.toISOString().split("T")[0],
+      notes: `Licencia ${getLicenseTypeLabel(license.license_type)} - ${centerName}`,
+    });
+    setIsInvoiceDialogOpen(true);
+  };
+
+  const handleSubmitInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedLicenseForInvoice) return;
+
+    const amount = parseFloat(invoiceFormData.amount);
+    const taxRate = parseFloat(invoiceFormData.tax_rate) / 100;
+    const taxAmount = amount * taxRate;
+    const totalAmount = amount + taxAmount;
+
+    try {
+      const { error } = await supabase.from("invoices").insert([{
+        training_center_id: selectedLicenseForInvoice.license.training_center_id,
+        license_id: selectedLicenseForInvoice.license.id,
+        invoice_number: invoiceFormData.invoice_number,
+        amount: amount,
+        tax_amount: taxAmount,
+        total_amount: totalAmount,
+        issue_date: new Date().toISOString(),
+        due_date: invoiceFormData.due_date,
+        status: "pending",
+        notes: invoiceFormData.notes,
+        invoice_data: {
+          license_type: selectedLicenseForInvoice.license.license_type,
+          center_name: selectedLicenseForInvoice.centerName,
+          tax_rate: invoiceFormData.tax_rate,
+        },
+      }]);
+
+      if (error) throw error;
+
+      toast({ title: "Factura generada correctamente" });
+      setIsInvoiceDialogOpen(false);
+      setSelectedLicenseForInvoice(null);
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const getLicenseTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       basic: "Básica",
@@ -446,25 +516,38 @@ export default function AdminLicenses() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {center.license ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditLicense(center.license!)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Editar
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCreateLicense(center.id)}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Crear Licencia
-                        </Button>
-                      )}
+                      <div className="flex items-center justify-end gap-1">
+                        {center.license && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleGenerateInvoice(center.license!, center.name)}
+                              title="Generar Factura"
+                            >
+                              <Receipt className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditLicense(center.license!)}
+                              title="Editar Licencia"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        {!center.license && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCreateLicense(center.id)}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Crear Licencia
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -605,6 +688,123 @@ export default function AdminLicenses() {
               </Button>
               <Button type="submit">
                 {editingLicense ? "Actualizar" : "Crear"} Licencia
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice Dialog */}
+      <Dialog open={isInvoiceDialogOpen} onOpenChange={(open) => {
+        setIsInvoiceDialogOpen(open);
+        if (!open) setSelectedLicenseForInvoice(null);
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              Generar Factura
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmitInvoice} className="space-y-4">
+            {selectedLicenseForInvoice && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm font-medium">{selectedLicenseForInvoice.centerName}</p>
+                <p className="text-xs text-muted-foreground">
+                  Licencia {getLicenseTypeLabel(selectedLicenseForInvoice.license.license_type)} · 
+                  Vigencia: {new Date(selectedLicenseForInvoice.license.start_date).toLocaleDateString()} - {new Date(selectedLicenseForInvoice.license.end_date).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="invoice_number">Número de Factura *</Label>
+              <Input
+                id="invoice_number"
+                value={invoiceFormData.invoice_number}
+                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, invoice_number: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="amount">Importe Base (€) *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  value={invoiceFormData.amount}
+                  onChange={(e) => setInvoiceFormData({ ...invoiceFormData, amount: e.target.value })}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="tax_rate">IVA (%)</Label>
+                <Select
+                  value={invoiceFormData.tax_rate}
+                  onValueChange={(value) => setInvoiceFormData({ ...invoiceFormData, tax_rate: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0% (Exento)</SelectItem>
+                    <SelectItem value="4">4% (Super reducido)</SelectItem>
+                    <SelectItem value="10">10% (Reducido)</SelectItem>
+                    <SelectItem value="21">21% (General)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {invoiceFormData.amount && (
+              <div className="p-3 bg-muted rounded-lg space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span>Base imponible:</span>
+                  <span>{parseFloat(invoiceFormData.amount).toFixed(2)} €</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>IVA ({invoiceFormData.tax_rate}%):</span>
+                  <span>{(parseFloat(invoiceFormData.amount) * parseFloat(invoiceFormData.tax_rate) / 100).toFixed(2)} €</span>
+                </div>
+                <div className="flex justify-between font-bold pt-1 border-t">
+                  <span>Total:</span>
+                  <span>{(parseFloat(invoiceFormData.amount) * (1 + parseFloat(invoiceFormData.tax_rate) / 100)).toFixed(2)} €</span>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="due_date">Fecha de Vencimiento *</Label>
+              <Input
+                id="due_date"
+                type="date"
+                value={invoiceFormData.due_date}
+                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, due_date: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="invoice_notes">Notas</Label>
+              <Textarea
+                id="invoice_notes"
+                value={invoiceFormData.notes}
+                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, notes: e.target.value })}
+                placeholder="Concepto o notas adicionales"
+                rows={2}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsInvoiceDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                <FileText className="h-4 w-4 mr-2" />
+                Generar Factura
               </Button>
             </div>
           </form>
