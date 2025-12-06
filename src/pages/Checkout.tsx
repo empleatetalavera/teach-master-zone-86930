@@ -54,40 +54,25 @@ export default function Checkout() {
       return;
     }
 
-    // Validate billing info if not logged in
-    if (!user) {
-      if (!billingInfo.name || !billingInfo.email) {
-        toast.error("Por favor, completa los datos de facturación");
-        return;
-      }
+    // Validate billing info
+    if (!billingInfo.name || !billingInfo.email) {
+      toast.error("Por favor, completa los datos de facturación (nombre y email)");
+      return;
     }
 
     setProcessing(true);
     try {
-      let userId = user?.id;
-
-      // If user is not logged in, we'll store order with billing info
-      if (!userId) {
-        // Create order without user_id - need to handle this differently
-        toast.info("Para completar tu pedido, por favor inicia sesión o regístrate");
-        // Store cart and billing info in sessionStorage
-        sessionStorage.setItem("pending_checkout", JSON.stringify({
-          billingInfo,
-          paymentMethod,
-          notes,
-        }));
-        navigate("/auth?redirect=/checkout");
-        return;
-      }
-
-      // Create order
+      // Create order - user_id is optional for guest checkout
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
-          user_id: userId,
+          user_id: user?.id || null,
           total_amount: totalAmount,
           payment_method: paymentMethod,
           order_details: { notes, billingInfo },
+          guest_email: !user ? billingInfo.email : null,
+          guest_name: !user ? billingInfo.name : null,
+          guest_phone: !user ? billingInfo.phone : null,
         })
         .select()
         .single();
@@ -109,12 +94,24 @@ export default function Checkout() {
 
       if (itemsError) throw itemsError;
 
-      // Clear cart and pending checkout
-      await clearCart();
+      // Clear cart from localStorage for guest users
+      if (!user) {
+        localStorage.removeItem("cart_items");
+      } else {
+        await clearCart();
+      }
+      
       sessionStorage.removeItem("pending_checkout");
 
       toast.success("Pedido creado correctamente");
-      navigate("/payment-instructions", { state: { orderId: order.id, paymentMethod, totalAmount } });
+      navigate("/payment-instructions", { 
+        state: { 
+          orderId: order.id, 
+          paymentMethod, 
+          totalAmount,
+          billingEmail: billingInfo.email 
+        } 
+      });
     } catch (error) {
       console.error("Error creating order:", error);
       toast.error("Error al procesar el pedido");
