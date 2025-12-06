@@ -45,6 +45,9 @@ export const Navbar = () => {
               Tarifas
             </a>
             <ShoppingCartWidget />
+            <Button asChild>
+              <a href="/auth">Acceder</a>
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -82,8 +85,11 @@ export const Navbar = () => {
               >
                 Tarifas
               </a>
-              <div className="pt-2">
+              <div className="pt-2 flex items-center gap-4">
                 <ShoppingCartWidget />
+                <Button asChild className="flex-1">
+                  <a href="/auth" onClick={() => setIsMenuOpen(false)}>Acceder</a>
+                </Button>
               </div>
             </div>
           </div>
