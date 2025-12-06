@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { FileSignature, Download, Check } from "lucide-react";
+import { FileSignature, Check } from "lucide-react";
 
 interface ContractSigningModalProps {
   open: boolean;
@@ -17,6 +18,35 @@ interface ContractSigningModalProps {
 }
 
 const CONTRACT_VERSION = "1.0";
+
+type PlanType = "mensual" | "trimestral" | "anual" | "anual_contenido";
+
+const PLANS = {
+  mensual: {
+    name: "Alquiler Mensual",
+    price: "500€/mes",
+    commitment: "Sin compromiso de permanencia",
+    description: "Solo plataforma"
+  },
+  trimestral: {
+    name: "Plan Trimestral",
+    price: "400€/mes",
+    commitment: "Compromiso mínimo 3 meses",
+    description: "Solo plataforma"
+  },
+  anual: {
+    name: "Tarifa Plana Anual",
+    price: "350€/mes + IVA",
+    commitment: "Compromiso mínimo 12 meses",
+    description: "Solo plataforma"
+  },
+  anual_contenido: {
+    name: "Tarifa Plana Anual + Contenido",
+    price: "450€/mes + IVA",
+    commitment: "Compromiso mínimo 12 meses",
+    description: "Plataforma + Acceso ilimitado a catálogo SCORM"
+  }
+};
 
 export default function ContractSigningModal({
   open,
@@ -28,12 +58,15 @@ export default function ContractSigningModal({
   const [signerDni, setSignerDni] = useState("");
   const [signerPosition, setSignerPosition] = useState("");
   const [signerEmail, setSignerEmail] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>("anual");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedDataProcessing, setAcceptedDataProcessing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signatureData, setSignatureData] = useState<string>("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+
+  const plan = PLANS[selectedPlan];
 
   const generateContractHTML = () => {
     const currentDate = new Date().toLocaleDateString("es-ES", {
@@ -51,30 +84,34 @@ export default function ContractSigningModal({
       
       <p>Reconociéndose previa y recíprocamente la capacidad legal necesaria y suficiente para la formalización y firma del presente contrato.</p>
       
+      <h2>PLAN CONTRATADO</h2>
+      <p><strong>${plan.name}</strong> - ${plan.price}</p>
+      <p>${plan.commitment}</p>
+      <p>${plan.description}</p>
+      
       <h2>CLÁUSULAS</h2>
       
       <h3>PRIMERA - Objeto del Contrato</h3>
-      <p>TalentCloud pone a disposición del Cliente una plataforma de formación online (Campus Virtual) compatible con las normas internacionales SCORM, personalizada con la imagen del Cliente, junto con un catálogo de cursos adaptados a los programas formativos del SEPE y Certificados de Profesionalidad.</p>
+      <p>TalentCloud pone a disposición del Cliente una plataforma de formación online (Campus Virtual) compatible con las normas internacionales SCORM, personalizada con la imagen del Cliente${selectedPlan === 'anual_contenido' ? ', junto con acceso ilimitado al catálogo de cursos SCORM' : ''}.</p>
       
       <h3>SEGUNDA - Servicios Contratados</h3>
       <ol>
         <li>Uso de la plataforma de teleformación Campus TalentCloud</li>
-        <li>Acceso a contenidos SCORM del catálogo según plan contratado</li>
+        ${selectedPlan === 'anual_contenido' ? '<li>Acceso ilimitado a contenidos SCORM del catálogo</li>' : '<li>Acceso a contenidos SCORM del catálogo según licencias contratadas</li>'}
         <li>Personalización del campus con imagen corporativa del Cliente</li>
         <li>Soporte técnico y actualizaciones de la plataforma</li>
       </ol>
       
       <h3>TERCERA - Condiciones Económicas</h3>
-      <p>Las tarifas aplicables serán:</p>
-      <ul>
-        <li><strong>Alquiler Mensual:</strong> 500€/mes (sin compromiso)</li>
-        <li><strong>Plan Trimestral:</strong> 400€/mes (compromiso 3 meses)</li>
-        <li><strong>Tarifa Plana Anual:</strong> 350€/mes + IVA (compromiso 12 meses)</li>
-      </ul>
-      <p>Los cursos SCORM se licencian por separado según catálogo vigente.</p>
+      <p>El plan contratado es: <strong>${plan.name}</strong></p>
+      <p>Precio: <strong>${plan.price}</strong></p>
+      <p>${plan.commitment}</p>
+      ${selectedPlan !== 'anual_contenido' ? '<p>Los cursos SCORM se licencian por separado según catálogo vigente.</p>' : ''}
       
       <h3>CUARTA - Licencias de Contenidos</h3>
-      <p>Los contenidos se ceden en forma de licencias de uso. Una licencia se activa al matricular un alumno en una acción formativa, con una duración de 180 días.</p>
+      ${selectedPlan === 'anual_contenido' 
+        ? '<p>El Cliente tiene acceso ilimitado al catálogo de contenidos SCORM durante la vigencia del contrato.</p>' 
+        : '<p>Los contenidos se ceden en forma de licencias de uso. Una licencia se activa al matricular un alumno en una acción formativa, con una duración de 180 días.</p>'}
       
       <h3>QUINTA - Propiedad Intelectual</h3>
       <p>La prestación de servicios no supone transmisión de derechos de explotación. El Cliente deberá respetar la integridad de las obras y no podrá modificarlas sin autorización escrita.</p>
@@ -94,13 +131,14 @@ export default function ContractSigningModal({
       <p>En caso de impago, se suspenderán los servicios hasta regularización. La persistencia de la deuda conllevará resolución del contrato.</p>
       
       <h3>NOVENA - Vigencia</h3>
-      <p>El contrato tiene vigencia según el plan contratado, prorrogable automáticamente. Para resolver el contrato, se requiere comunicación con 90 días de antelación.</p>
+      <p>El contrato tiene vigencia según el plan contratado (${plan.commitment}), prorrogable automáticamente. Para resolver el contrato, se requiere comunicación con 90 días de antelación.</p>
       
       <h3>DÉCIMA - Jurisdicción</h3>
       <p>Las cuestiones litigiosas quedarán sometidas a los Juzgados y Tribunales de España.</p>
       
       <hr/>
       
+      <p><strong>Plan contratado:</strong> ${plan.name} - ${plan.price}</p>
       <p><strong>Fecha de firma:</strong> ${currentDate}</p>
       <p><strong>Firmado electrónicamente por:</strong> ${signerName}</p>
       <p><strong>DNI/NIE:</strong> ${signerDni}</p>
@@ -190,7 +228,7 @@ export default function ContractSigningModal({
         signer_dni: signerDni,
         signer_position: signerPosition,
         signer_email: signerEmail,
-        contract_type: "general",
+        contract_type: selectedPlan,
         contract_version: CONTRACT_VERSION,
         signature_data: signatureData,
         contract_content: contractContent,
@@ -199,6 +237,9 @@ export default function ContractSigningModal({
           accepted_terms: acceptedTerms,
           accepted_data_processing: acceptedDataProcessing,
           signed_at_local: new Date().toISOString(),
+          plan_name: plan.name,
+          plan_price: plan.price,
+          plan_commitment: plan.commitment,
         },
       });
 
@@ -261,6 +302,7 @@ export default function ContractSigningModal({
                 <li><strong>Alquiler Mensual:</strong> 500€/mes (sin compromiso)</li>
                 <li><strong>Plan Trimestral:</strong> 400€/mes (compromiso 3 meses)</li>
                 <li><strong>Tarifa Plana Anual:</strong> 350€/mes + IVA (compromiso 12 meses)</li>
+                <li><strong>Tarifa Plana Anual + Contenido:</strong> 450€/mes + IVA (compromiso 12 meses, incluye acceso ilimitado al catálogo SCORM)</li>
               </ul>
 
               <h3 className="text-base font-semibold mt-4">CUARTA - Licencias de Contenidos</h3>
@@ -308,7 +350,38 @@ export default function ContractSigningModal({
           </ScrollArea>
 
           {/* Signing Form */}
-          <div className="space-y-4">
+          <ScrollArea className="h-[60vh]">
+          <div className="space-y-4 pr-4">
+            {/* Plan Selection */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Seleccione su plan *</Label>
+              <RadioGroup
+                value={selectedPlan}
+                onValueChange={(value) => setSelectedPlan(value as PlanType)}
+                className="space-y-2"
+              >
+                {Object.entries(PLANS).map(([key, planInfo]) => (
+                  <div
+                    key={key}
+                    className={`flex items-start space-x-3 border rounded-lg p-3 cursor-pointer transition-colors ${
+                      selectedPlan === key ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                    }`}
+                    onClick={() => setSelectedPlan(key as PlanType)}
+                  >
+                    <RadioGroupItem value={key} id={key} className="mt-1" />
+                    <div className="flex-1">
+                      <Label htmlFor={key} className="font-medium cursor-pointer">
+                        {planInfo.name}
+                      </Label>
+                      <p className="text-sm text-primary font-semibold">{planInfo.price}</p>
+                      <p className="text-xs text-muted-foreground">{planInfo.commitment}</p>
+                      <p className="text-xs text-muted-foreground">{planInfo.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="signerName">Nombre completo del firmante *</Label>
@@ -422,6 +495,7 @@ export default function ContractSigningModal({
               Al firmar, acepta que esta firma electrónica tiene validez legal según el Reglamento eIDAS
             </p>
           </div>
+          </ScrollArea>
         </div>
       </DialogContent>
     </Dialog>
