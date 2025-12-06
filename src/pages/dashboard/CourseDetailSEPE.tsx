@@ -23,7 +23,8 @@ import {
   CheckCircle,
   Download,
   Printer,
-  Share2
+  Share2,
+  BookMarked
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -153,6 +154,14 @@ export default function CourseDetailSEPE() {
         </Button>
 
         <div className="flex gap-2 no-print">
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={() => navigate(`/dashboard/teacher/courses/${courseId}/tutor-guide`)}
+          >
+            <BookMarked className="mr-2 h-4 w-4" />
+            Guía del Tutor
+          </Button>
           <Button variant="outline" size="sm" onClick={handleShare}>
             <Share2 className="mr-2 h-4 w-4" />
             Compartir
