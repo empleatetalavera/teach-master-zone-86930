@@ -29,3 +29,9 @@ verify_jwt = true
 
 [functions.create-user]
 verify_jwt = true
+
+[functions.create-super-admin]
+verify_jwt = false
+
+[functions.search-user-by-email]
+verify_jwt = true
