@@ -96,8 +96,8 @@ function AppRoutes() {
         <Route path="/test-accounts" element={<TestAccounts />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-        <Route path="/payment-instructions" element={<ProtectedRoute><PaymentInstructions /></ProtectedRoute>} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/payment-instructions" element={<PaymentInstructions />} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/course/:courseId" element={<ProtectedRoute><CourseView /></ProtectedRoute>} />
         <Route path="/course/:courseId/module/:moduleId" element={<ProtectedRoute><ModuleView /></ProtectedRoute>} />
