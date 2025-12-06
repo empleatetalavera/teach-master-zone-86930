@@ -1597,33 +1597,42 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
+          guest_email: string | null
+          guest_name: string | null
+          guest_phone: string | null
           id: string
           order_details: Json | null
           payment_method: string
           payment_status: string
           total_amount: number
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
+          guest_email?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
           id?: string
           order_details?: Json | null
           payment_method: string
           payment_status?: string
           total_amount: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
+          guest_email?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
           id?: string
           order_details?: Json | null
           payment_method?: string
           payment_status?: string
           total_amount?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
