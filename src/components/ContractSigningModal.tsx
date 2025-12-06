@@ -78,7 +78,9 @@ export default function ContractSigningModal({
     return `
       <h1>CONDICIONES GENERALES CONTRATACIÓN DE CAMPUS TALENTCLOUD SOLUTION</h1>
       
-      <p>De una parte, TalentCloud Solutions S.L., con CIF B-XXXXXXXX y domicilio en España (en adelante "TalentCloud").</p>
+      <p>Las presentes cláusulas aplicarán con carácter general a la contratación de la plataforma virtual de aprendizaje online, en adelante Campus TalentCloud.</p>
+      
+      <p>De una parte, <strong>TalentCloud Solutions S.L.</strong>, con domicilio en España (en adelante "TalentCloud").</p>
       
       <p>De otra parte, <strong>${signerName}</strong> con DNI/NIE: <strong>${signerDni}</strong>, en representación de <strong>${centerName}</strong> (en adelante "El Cliente"), en calidad de <strong>${signerPosition}</strong>.</p>
       
@@ -91,52 +93,86 @@ export default function ContractSigningModal({
       
       <h2>CLÁUSULAS</h2>
       
-      <h3>PRIMERA - Objeto del Contrato</h3>
-      <p>TalentCloud pone a disposición del Cliente una plataforma de formación online (Campus Virtual) compatible con las normas internacionales SCORM, personalizada con la imagen del Cliente${selectedPlan === 'anual_contenido' ? ', junto con acceso ilimitado al catálogo de cursos SCORM' : ''}.</p>
+      <h3>I. Objeto del Contrato</h3>
+      <p>TalentCloud es distribuidor autorizado de Campus TalentCloud, compatible con las normas internacionales SCORM y de un amplio catálogo de cursos. Así como contenidos que han sido adaptados a los programas formativos del Fichero de Especialidades Formativas del SEPE u Organismos autonómicos competentes, Certificados de Profesionalidad entre otros.</p>
       
-      <h3>SEGUNDA - Servicios Contratados</h3>
-      <ol>
-        <li>Uso de la plataforma de teleformación Campus TalentCloud</li>
-        ${selectedPlan === 'anual_contenido' ? '<li>Acceso ilimitado a contenidos SCORM del catálogo</li>' : '<li>Acceso a contenidos SCORM del catálogo según licencias contratadas</li>'}
-        <li>Personalización del campus con imagen corporativa del Cliente</li>
-        <li>Soporte técnico y actualizaciones de la plataforma</li>
-      </ol>
+      <h3>II. Plataforma y Personalización</h3>
+      <p>TalentCloud pone a disposición del Cliente una plataforma de formación online personalizada con su imagen, de la que se le facilitarán datos de administración para la gestión de la misma${selectedPlan === 'anual_contenido' ? ', junto con acceso ilimitado al catálogo de cursos SCORM' : ''}.</p>
       
-      <h3>TERCERA - Condiciones Económicas</h3>
+      <h3>III. Propiedad Intelectual</h3>
+      <p>En ningún caso la prestación de los servicios contratados por el Cliente supone la transmisión de la titularidad de los derechos de explotación que ostenta TalentCloud. El alcance de la colaboración se circunscribe a la impartición de títulos de contenidos respetando en todo momento la integridad de la obra. Para cualquier modificación de la misma por parte del Cliente se deberá contar con la autorización escrita de TalentCloud.</p>
+      
+      <h3>IV. Licencias de Contenidos</h3>
+      ${selectedPlan === 'anual_contenido' 
+        ? '<p>El Cliente tiene acceso ilimitado al catálogo de contenidos SCORM durante la vigencia del contrato.</p>' 
+        : '<p>Si el Cliente hace uso de un contenido del catálogo de TalentCloud, los mismos se ceden en forma de licencias de uso, entendiendo que se activa una licencia en el momento de matriculación de un alumno en un grupo formativo, y la duración de dicha licencia activa es de 180 días.</p>'}
+      
+      <h3>V. Acreditaciones</h3>
+      <p>Para solicitar cualquier acreditación sobre Certificados de Profesionalidad ante terceros, el Cliente deberá contar con autorización expresa de TalentCloud, salvo que en las condiciones particulares se indique otras condiciones.</p>
+      
+      <h3>VI. Responsabilidades del Cliente</h3>
+      <p>El Cliente se compromete a hacer frente ante terceros de aquellas responsabilidades que fueran exigibles derivadas del uso de su plataforma de formación online. Especialmente de aquel contenido que no fuese licenciado por TalentCloud.</p>
+      
+      <h3>VII. Condiciones Económicas</h3>
       <p>El plan contratado es: <strong>${plan.name}</strong></p>
       <p>Precio: <strong>${plan.price}</strong></p>
       <p>${plan.commitment}</p>
+      <p>Para la activación del servicio, los pagos se realizarán mediante transferencia bancaria a la cuenta: <strong>ES14 0182 0861 6802 0169 9387 (BBVA)</strong></p>
+      <p>Para realizar el ingreso se debe indicar claramente el nombre del cliente.</p>
       ${selectedPlan !== 'anual_contenido' ? '<p>Los cursos SCORM se licencian por separado según catálogo vigente.</p>' : ''}
       
-      <h3>CUARTA - Licencias de Contenidos</h3>
-      ${selectedPlan === 'anual_contenido' 
-        ? '<p>El Cliente tiene acceso ilimitado al catálogo de contenidos SCORM durante la vigencia del contrato.</p>' 
-        : '<p>Los contenidos se ceden en forma de licencias de uso. Una licencia se activa al matricular un alumno en una acción formativa, con una duración de 180 días.</p>'}
+      <h3>VIII. Contenidos de Terceros</h3>
+      <p>En el Campus TalentCloud se podrán impartir acciones formativas no pertenecientes a TalentCloud, cuyo alojamiento se facturará según las condiciones específicas.</p>
+      <p>El Cliente puede subir contenido de terceros al Campus TalentCloud y reconoce tener todos los derechos de explotación necesarios para realizar esa acción y posteriores, eximiendo a TalentCloud de cualquier incidencia que pueda surgir con ese contenido.</p>
       
-      <h3>QUINTA - Propiedad Intelectual</h3>
-      <p>La prestación de servicios no supone transmisión de derechos de explotación. El Cliente deberá respetar la integridad de las obras y no podrá modificarlas sin autorización escrita.</p>
+      <h3>IX. Demos y Usuarios de Prueba</h3>
+      <p>Para el uso de demos, el Cliente deberá utilizar el usuario de alumno que se le facilita en el momento de la provisión del campus, facturándose el resto de alumnos matriculados independientemente del uso de los mismos.</p>
       
-      <h3>SEXTA - Responsabilidades del Cliente</h3>
-      <p>El Cliente se compromete a:</p>
-      <ol>
-        <li>Hacer frente a responsabilidades derivadas del uso de contenido no licenciado por TalentCloud</li>
-        <li>No sublicenciar ni redistribuir los contenidos</li>
-        <li>Mantener actualizados sus datos de contacto y facturación</li>
-      </ol>
+      <h3>X. Facturación y Pago</h3>
+      <p>Los consumos o gastos que se realicen en aplicación de este contrato serán facturados por TalentCloud al Cliente, teniendo como forma de pago la domiciliación bancaria o transferencia.</p>
+      <p>En el caso de contratación de nuevos servicios, estos deberán ser abonados antes de su provisión para la puesta en marcha del servicio.</p>
       
-      <h3>SÉPTIMA - Protección de Datos</h3>
-      <p>Conforme al RGPD y la LOPDGDD, TalentCloud actuará como encargado del tratamiento y el Cliente como responsable. Los datos de alumnos se tratarán exclusivamente para la finalidad de formación.</p>
+      <h3>XI. Irregularidades</h3>
+      <p>En caso de detectar cualquier irregularidad en el uso de los perfiles facilitados, TalentCloud facturará las cantidades no cobradas en su caso, y habilitará a TalentCloud para la resolución unilateral del convenio.</p>
       
-      <h3>OCTAVA - Impago</h3>
-      <p>En caso de impago, se suspenderán los servicios hasta regularización. La persistencia de la deuda conllevará resolución del contrato.</p>
+      <h3>XII. Impago</h3>
+      <p>En caso de impago de los servicios prestados por TalentCloud, se suspenderán todos los servicios al Cliente hasta la regularización de la deuda contraída. Esta suspensión será comunicada al Cliente antes de su ejecución.</p>
+      <p>En el momento en que se regularice esta situación, los servicios serán restaurados nuevamente. En caso de persistir la deuda, se resolverá este contrato y todas las obligaciones que emanan de él para TalentCloud.</p>
+      <p>Esta resolución del contrato no evita que TalentCloud tome las medidas oportunas y legalmente establecidas para cobrar las deudas contraídas desde el primer momento.</p>
       
-      <h3>NOVENA - Vigencia</h3>
-      <p>El contrato tiene vigencia según el plan contratado (${plan.commitment}), prorrogable automáticamente. Para resolver el contrato, se requiere comunicación con 90 días de antelación.</p>
+      <h3>XIII. Devolución de Recibos</h3>
+      <p>En caso de devolución de recibos, TalentCloud repercutirá el coste de devolución y los gastos de gestión al Cliente para continuar con el servicio.</p>
       
-      <h3>DÉCIMA - Jurisdicción</h3>
-      <p>Las cuestiones litigiosas quedarán sometidas a los Juzgados y Tribunales de España.</p>
+      <h3>XIV. Modificación de Condiciones</h3>
+      <p>TalentCloud se reserva el derecho de modificar las presentes condiciones generales de contratación de Campus TalentCloud. Con carácter previo a la aplicación de las nuevas condiciones, TalentCloud comunicará dichos cambios al Cliente, teniendo éste un plazo de 3 días hábiles para comunicar la NO aceptación de las mismas, lo que conllevará la resolución anticipada del presente acuerdo.</p>
+      
+      <h3>XV. Vigencia del Contrato</h3>
+      <p>El presente contrato, salvo que venga recogido en sus condiciones particulares, tiene una vigencia según el plan contratado (${plan.commitment}), prorrogable de forma automática por periodos iguales.</p>
+      <p>Para resolver el presente contrato, la parte que quiera rescindir deberá comunicarlo a la otra con una antelación mínima de 90 días antes de la renovación.</p>
+      
+      <h3>XVI. Baja Anticipada</h3>
+      <p>En los casos de baja anticipada del servicio antes del vencimiento del contrato, implicará la aplicación de una penalización única que vendrá reflejada en las cláusulas específicas.</p>
+      
+      <h3>XVII. Cesión de Derechos</h3>
+      <p>El Cliente consiente en este acto la cesión, total o parcial, de cualesquiera derechos u obligaciones titularidad de TalentCloud, derivados del presente contrato, siempre que tal cesión no altere en forma alguna los citados derechos u obligaciones según corresponda a los que obliga el presente contrato. TalentCloud notificará al Cliente tal cesión.</p>
+      
+      <h3>XVIII. Jurisdicción</h3>
+      <p>Las cuestiones litigiosas a que pudiera dar lugar la interpretación y cumplimiento del presente Contrato quedarán sometidas a la jurisdicción de los Jueces y Tribunales de España.</p>
+      
+      <h3>XIX. Protección de Datos</h3>
+      <p>Con arreglo a la Ley Orgánica 3/2018 de 5 de diciembre de Protección de Datos de Carácter Personal y Garantía de los Derechos Digitales, TalentCloud como encargado del tratamiento, y el Cliente como responsable, mantienen que la efectiva realización del presente contrato implica la necesidad de que ambas partes traten los datos personales de los alumnos con la finalidad indicada a lo largo del contrato de tratamiento de datos que se anexa al presente contrato de prestación de servicios.</p>
+      
+      <h3>XX. Subencargados del Tratamiento</h3>
+      <p>En el marco del cumplimiento de las obligaciones contractuales, el encargado del tratamiento tendrá derecho a emplear los siguientes subencargados:</p>
+      <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+        <tr><th>#</th><th>Nombre</th><th>Ámbito de aplicación</th></tr>
+        <tr><td>1</td><td>Lovable Cloud Infrastructure</td><td>Hosting y operación de la plataforma</td></tr>
+      </table>
       
       <hr/>
+      
+      <h3>XXI. Firma y Conformidad</h3>
+      <p>En prueba de conformidad, se firma el presente contrato electrónicamente a través de la plataforma TalentCloud.</p>
       
       <p><strong>Plan contratado:</strong> ${plan.name} - ${plan.price}</p>
       <p><strong>Fecha de firma:</strong> ${currentDate}</p>
@@ -146,6 +182,8 @@ export default function ContractSigningModal({
       <p><strong>Cargo:</strong> ${signerPosition}</p>
       <p><strong>Email:</strong> ${signerEmail}</p>
       <p><strong>Versión del contrato:</strong> ${CONTRACT_VERSION}</p>
+      
+      <p style="margin-top: 20px;"><em>Este contrato ha sido firmado electrónicamente y tiene plena validez legal conforme al Reglamento (UE) Nº 910/2014 (eIDAS).</em></p>
     `;
   };
 
@@ -274,6 +312,10 @@ export default function ContractSigningModal({
               </h2>
               
               <p className="text-sm">
+                Las presentes cláusulas aplicarán con carácter general a la contratación de la plataforma virtual de aprendizaje online, en adelante Campus TalentCloud.
+              </p>
+              
+              <p className="text-sm">
                 De una parte, <strong>TalentCloud Solutions S.L.</strong>, con domicilio en España (en adelante "TalentCloud").
               </p>
               
@@ -281,70 +323,70 @@ export default function ContractSigningModal({
                 De otra parte, el representante de <strong>{centerName || "[Centro de Formación]"}</strong> (en adelante "El Cliente").
               </p>
 
-              <h3 className="text-base font-semibold mt-4">PRIMERA - Objeto del Contrato</h3>
+              <h3 className="text-base font-semibold mt-4">I. Objeto del Contrato</h3>
               <p className="text-sm">
-                TalentCloud pone a disposición del Cliente una plataforma de formación online (Campus Virtual) 
-                compatible con las normas internacionales SCORM, personalizada con la imagen del Cliente, 
-                junto con un catálogo de cursos adaptados a los programas formativos del SEPE y Certificados de Profesionalidad.
+                TalentCloud es distribuidor autorizado de Campus TalentCloud, compatible con las normas internacionales SCORM y de un amplio catálogo de cursos adaptados a los programas formativos del Fichero de Especialidades Formativas del SEPE, Certificados de Profesionalidad entre otros.
               </p>
 
-              <h3 className="text-base font-semibold mt-4">SEGUNDA - Servicios Contratados</h3>
-              <ol className="text-sm list-decimal pl-5">
-                <li>Uso de la plataforma de teleformación Campus TalentCloud</li>
-                <li>Acceso a contenidos SCORM del catálogo según plan contratado</li>
-                <li>Personalización del campus con imagen corporativa del Cliente</li>
-                <li>Soporte técnico y actualizaciones de la plataforma</li>
-              </ol>
+              <h3 className="text-base font-semibold mt-4">II. Plataforma y Personalización</h3>
+              <p className="text-sm">
+                TalentCloud pone a disposición del Cliente una plataforma de formación online personalizada con su imagen, de la que se le facilitarán datos de administración para la gestión de la misma.
+              </p>
 
-              <h3 className="text-base font-semibold mt-4">TERCERA - Condiciones Económicas</h3>
+              <h3 className="text-base font-semibold mt-4">III. Propiedad Intelectual</h3>
+              <p className="text-sm">
+                En ningún caso la prestación de los servicios contratados supone la transmisión de la titularidad de los derechos de explotación. Para cualquier modificación se deberá contar con la autorización escrita de TalentCloud.
+              </p>
+
+              <h3 className="text-base font-semibold mt-4">IV. Licencias de Contenidos</h3>
+              <p className="text-sm">
+                Los contenidos se ceden en forma de licencias de uso. Una licencia se activa al matricular un alumno en una acción formativa, con una duración de 180 días.
+              </p>
+
+              <h3 className="text-base font-semibold mt-4">V. Condiciones Económicas</h3>
               <p className="text-sm">Las tarifas aplicables serán:</p>
               <ul className="text-sm list-disc pl-5">
                 <li><strong>Alquiler Mensual:</strong> 500€/mes (sin compromiso)</li>
                 <li><strong>Plan Trimestral:</strong> 400€/mes (compromiso 3 meses)</li>
                 <li><strong>Tarifa Plana Anual:</strong> 350€/mes + IVA (compromiso 12 meses)</li>
-                <li><strong>Tarifa Plana Anual + Contenido:</strong> 450€/mes + IVA (compromiso 12 meses, incluye acceso ilimitado al catálogo SCORM)</li>
+                <li><strong>Tarifa Plana Anual + Contenido:</strong> 450€/mes + IVA (compromiso 12 meses, acceso ilimitado SCORM)</li>
               </ul>
-
-              <h3 className="text-base font-semibold mt-4">CUARTA - Licencias de Contenidos</h3>
-              <p className="text-sm">
-                Los contenidos se ceden en forma de licencias de uso. Una licencia se activa al matricular 
-                un alumno en una acción formativa, con una duración de 180 días.
+              <p className="text-sm mt-2">
+                <strong>Cuenta bancaria:</strong> ES14 0182 0861 6802 0169 9387 (BBVA)
               </p>
 
-              <h3 className="text-base font-semibold mt-4">QUINTA - Propiedad Intelectual</h3>
+              <h3 className="text-base font-semibold mt-4">VI. Responsabilidades del Cliente</h3>
               <p className="text-sm">
-                La prestación de servicios no supone transmisión de derechos de explotación. 
-                El Cliente deberá respetar la integridad de las obras y no podrá modificarlas sin autorización escrita.
+                El Cliente se compromete a hacer frente ante terceros de aquellas responsabilidades derivadas del uso de su plataforma, especialmente del contenido no licenciado por TalentCloud.
               </p>
 
-              <h3 className="text-base font-semibold mt-4">SEXTA - Responsabilidades del Cliente</h3>
-              <ol className="text-sm list-decimal pl-5">
-                <li>Hacer frente a responsabilidades derivadas del uso de contenido no licenciado</li>
-                <li>No sublicenciar ni redistribuir los contenidos</li>
-                <li>Mantener actualizados sus datos de contacto y facturación</li>
-              </ol>
-
-              <h3 className="text-base font-semibold mt-4">SÉPTIMA - Protección de Datos</h3>
+              <h3 className="text-base font-semibold mt-4">VII. Contenidos de Terceros</h3>
               <p className="text-sm">
-                Conforme al RGPD y la LOPDGDD, TalentCloud actuará como encargado del tratamiento 
-                y el Cliente como responsable. Los datos de alumnos se tratarán exclusivamente para la finalidad de formación.
+                El Cliente puede subir contenido de terceros y reconoce tener todos los derechos necesarios, eximiendo a TalentCloud de cualquier incidencia.
               </p>
 
-              <h3 className="text-base font-semibold mt-4">OCTAVA - Impago</h3>
+              <h3 className="text-base font-semibold mt-4">VIII. Impago</h3>
               <p className="text-sm">
-                En caso de impago, se suspenderán los servicios hasta regularización. 
-                La persistencia de la deuda conllevará resolución del contrato.
+                En caso de impago, se suspenderán los servicios hasta regularización. La persistencia de la deuda conllevará resolución del contrato.
               </p>
 
-              <h3 className="text-base font-semibold mt-4">NOVENA - Vigencia</h3>
+              <h3 className="text-base font-semibold mt-4">IX. Vigencia</h3>
               <p className="text-sm">
-                El contrato tiene vigencia según el plan contratado, prorrogable automáticamente. 
-                Para resolver el contrato, se requiere comunicación con 90 días de antelación.
+                El contrato tiene vigencia según el plan contratado, prorrogable automáticamente. Para resolver el contrato, se requiere comunicación con 90 días de antelación.
               </p>
 
-              <h3 className="text-base font-semibold mt-4">DÉCIMA - Jurisdicción</h3>
+              <h3 className="text-base font-semibold mt-4">X. Protección de Datos</h3>
+              <p className="text-sm">
+                Conforme al RGPD y la LOPDGDD, TalentCloud actuará como encargado del tratamiento y el Cliente como responsable.
+              </p>
+
+              <h3 className="text-base font-semibold mt-4">XI. Jurisdicción</h3>
               <p className="text-sm">
                 Las cuestiones litigiosas quedarán sometidas a los Juzgados y Tribunales de España.
+              </p>
+
+              <p className="text-xs text-muted-foreground mt-4 italic">
+                Documento completo disponible tras la firma. Este es un resumen de las cláusulas principales.
               </p>
             </div>
           </ScrollArea>
