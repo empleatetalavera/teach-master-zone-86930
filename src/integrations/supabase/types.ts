@@ -2496,6 +2496,53 @@ export type Database = {
         }
         Relationships: []
       }
+      tutor_guide_sections: {
+        Row: {
+          content: string | null
+          course_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          order_index: number
+          resources: Json | null
+          section_key: string
+          section_title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          course_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number
+          resources?: Json | null
+          section_key: string
+          section_title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number
+          resources?: Json | null
+          section_key?: string
+          section_title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_guide_sections_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       unit_content_progress: {
         Row: {
           completed: boolean | null
