@@ -82,6 +82,9 @@ export const Navbar = () => {
               >
                 Tarifas
               </a>
+              <div className="pt-2">
+                <ShoppingCartWidget />
+              </div>
             </div>
           </div>
         )}
