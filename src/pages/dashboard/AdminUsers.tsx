@@ -721,15 +721,15 @@ const AdminUsers = () => {
                 Centro de Formación
               </Label>
               <Select
-                value={newUserTrainingCenter}
-                onValueChange={setNewUserTrainingCenter}
+                value={newUserTrainingCenter || "none"}
+                onValueChange={(value) => setNewUserTrainingCenter(value === "none" ? "" : value)}
                 disabled={isCreating}
               >
                 <SelectTrigger id="training-center">
                   <SelectValue placeholder="Selecciona un centro (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin centro asignado</SelectItem>
+                  <SelectItem value="none">Sin centro asignado</SelectItem>
                   {trainingCenters.map((center) => (
                     <SelectItem key={center.id} value={center.id}>
                       {center.name}
