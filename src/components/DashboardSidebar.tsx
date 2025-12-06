@@ -79,7 +79,7 @@ const teacherItems = [
   { title: "Evaluar Actividades", url: "/dashboard/teacher/grade-activities", icon: ClipboardList },
   { title: "Cronograma", url: "/dashboard/teacher/calendar", icon: Calendar },
   { title: "Informes", url: "/dashboard/teacher/reports", icon: BarChart },
-  { title: "Guía del Tutor", url: "/campus-guide?role=teacher", icon: BookMarked },
+  { title: "Guía del Tutor", url: "/dashboard/teacher/tutor-guide", icon: BookMarked },
 ];
 
 const studentItems = [
