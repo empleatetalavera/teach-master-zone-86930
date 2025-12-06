@@ -65,11 +65,15 @@ export default function TeacherStudents() {
 
   const loadStudents = async () => {
     try {
+      console.log("Loading students for teacher:", user!.id);
+      
       // Get courses where this teacher is the tutor
-      const { data: courses } = await supabase
+      const { data: courses, error: coursesError } = await supabase
         .from("courses")
         .select("id, title")
         .eq("tutor_id", user!.id);
+
+      console.log("Courses found:", courses, "Error:", coursesError);
 
       if (!courses || courses.length === 0) {
         setStudents([]);
