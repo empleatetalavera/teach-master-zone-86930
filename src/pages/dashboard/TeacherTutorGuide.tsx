@@ -1,115 +1,412 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { BookMarked, BookOpen, ChevronRight, Loader2, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { 
+  FileText, 
+  Users, 
+  Monitor, 
+  CalendarDays, 
+  BarChart3, 
+  MessageSquare, 
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  Upload,
+  Download,
+  Trash2,
+  Loader2,
+  FileIcon,
+  Paperclip
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 
-interface Course {
-  id: string;
-  title: string;
-  category: string | null;
-  duration_hours: number | null;
-  course_type: string | null;
+interface AttachedFile {
+  name: string;
+  url: string;
+  uploadedAt: string;
 }
 
-const TeacherTutorGuide = () => {
-  const { user } = useAuth();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+interface GuideSection {
+  key: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  content: string;
+  files: AttachedFile[];
+}
 
-  useEffect(() => {
-    const fetchAssignedCourses = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('courses')
-          .select('id, title, category, duration_hours, course_type')
-          .eq('tutor_id', user.id)
-          .eq('is_active', true)
-          .order('title');
+const defaultSections: GuideSection[] = [
+  {
+    key: "datos_accion",
+    title: "1. Datos de la Acción Formativa",
+    description: "Objetivos, organización y fechas de realización del curso",
+    icon: <FileText className="h-5 w-5" />,
+    content: `Esta sección incluye toda la información básica de la acción formativa:
 
-        if (error) throw error;
-        setCourses(data || []);
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+• **Identificación del curso**: Código, denominación y modalidad de impartición
+• **Objetivos generales y específicos**: Competencias a desarrollar por el alumnado
+• **Fechas de inicio y fin**: Calendario completo de la acción formativa
+• **Duración**: Horas totales, presenciales y de teleformación
+• **Requisitos de acceso**: Perfil del alumnado y documentación necesaria
 
-    fetchAssignedCourses();
-  }, [user]);
+Adjunte aquí la programación didáctica, ficha técnica del curso y cualquier documentación oficial relacionada.`,
+    files: []
+  },
+  {
+    key: "alumnos_equipo",
+    title: "2. Alumnos y Equipo Docente",
+    description: "Listado de participantes y coordinación del equipo",
+    icon: <Users className="h-5 w-5" />,
+    content: `Información sobre los participantes y el equipo:
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+• **Listado de alumnos**: Datos de los participantes matriculados
+• **Equipo docente**: Tutores, formadores y personal de apoyo
+• **Coordinación**: Responsables y canales de comunicación
+• **Roles y funciones**: Descripción de responsabilidades de cada miembro
+
+Adjunte aquí el listado de alumnos, fichas del equipo docente y organigramas.`,
+    files: []
+  },
+  {
+    key: "campus_virtual",
+    title: "3. Campus Virtual",
+    description: "Requisitos técnicos, funcionamiento, recursos y preguntas frecuentes",
+    icon: <Monitor className="h-5 w-5" />,
+    content: `Guía del campus virtual para tutores:
+
+• **Requisitos técnicos**: Navegadores compatibles, conexión mínima
+• **Acceso a la plataforma**: Credenciales y primeros pasos
+• **Navegación**: Estructura y ubicación de recursos
+• **Herramientas disponibles**: Foros, mensajería, videoconferencia
+• **Preguntas frecuentes**: Soluciones a problemas comunes
+
+Adjunte manuales de usuario, guías rápidas y FAQ.`,
+    files: []
+  },
+  {
+    key: "programacion_didactica",
+    title: "4. Programación Didáctica",
+    description: "Cómo desarrollar la formación y planificación de la evaluación",
+    icon: <CalendarDays className="h-5 w-5" />,
+    content: `Planificación pedagógica del curso:
+
+• **Estructura modular**: Organización de módulos y unidades formativas
+• **Contenidos**: Temario detallado por unidad
+• **Metodología**: Estrategias didácticas y recursos
+• **Temporalización**: Distribución horaria de contenidos
+• **Sistema de evaluación**: Criterios, instrumentos y ponderación
+
+Adjunte la programación didáctica completa, cronogramas y materiales de evaluación.`,
+    files: []
+  },
+  {
+    key: "seguimiento_aprendizaje",
+    title: "5. Seguimiento del Aprendizaje",
+    description: "Procedimientos de seguimiento y evaluación del alumnado",
+    icon: <BarChart3 className="h-5 w-5" />,
+    content: `Procedimientos de seguimiento:
+
+• **Indicadores de progreso**: Métricas de avance del alumnado
+• **Alertas de inactividad**: Detección y actuación ante alumnos inactivos
+• **Evaluación continua**: Registro de actividades y participación
+• **Informes de seguimiento**: Generación y envío de informes SEPE
+• **Acciones correctivas**: Protocolo ante bajo rendimiento
+
+Adjunte plantillas de informes, protocolos de seguimiento y documentos SEPE.`,
+    files: []
+  },
+  {
+    key: "sistema_tutorial",
+    title: "6. Sistema Tutorial",
+    description: "Tutorías virtuales y presenciales",
+    icon: <MessageSquare className="h-5 w-5" />,
+    content: `Sistema de tutorización:
+
+• **Tutorías síncronas**: Videoconferencias y sesiones en directo
+• **Tutorías asíncronas**: Mensajería, foros y correo
+• **Horario de atención**: Disponibilidad y tiempos de respuesta
+• **Registro de comunicaciones**: Documentación de interacciones
+• **Resolución de incidencias**: Protocolo de actuación
+
+Adjunte el calendario de tutorías, guías de comunicación y plantillas de registro.`,
+    files: []
+  },
+  {
+    key: "gestion_administrativa",
+    title: "7. Gestión y Administración",
+    description: "Altas/bajas, formación de grupos, prácticas e incidencias",
+    icon: <Settings className="h-5 w-5" />,
+    content: `Procedimientos administrativos:
+
+• **Altas y bajas**: Gestión de matriculaciones y abandonos
+• **Formación de grupos**: Criterios de agrupamiento
+• **Prácticas profesionales**: Organización y seguimiento (si aplica)
+• **Gestión de incidencias**: Registro y resolución de problemas
+• **Documentación final**: Actas, certificados y expedientes
+
+Adjunte modelos de documentos administrativos, formularios y procedimientos.`,
+    files: []
   }
+];
+
+const TeacherTutorGuide = () => {
+  const { user, userRole } = useAuth();
+  const { toast } = useToast();
+  const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [sections, setSections] = useState<GuideSection[]>(defaultSections);
+  const [uploadingSection, setUploadingSection] = useState<string | null>(null);
+
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+
+  const toggleSection = (key: string) => {
+    setExpandedSections(prev => 
+      prev.includes(key) 
+        ? prev.filter(k => k !== key)
+        : [...prev, key]
+    );
+  };
+
+  const handleFileUpload = async (sectionKey: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingSection(sectionKey);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${sectionKey}/${Date.now()}_${file.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('tutor-guides')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('tutor-guides')
+        .getPublicUrl(fileName);
+
+      setSections(prev => prev.map(section => {
+        if (section.key === sectionKey) {
+          return {
+            ...section,
+            files: [...section.files, {
+              name: file.name,
+              url: publicUrl,
+              uploadedAt: new Date().toISOString()
+            }]
+          };
+        }
+        return section;
+      }));
+
+      toast({
+        title: "Archivo subido",
+        description: `${file.name} se ha adjuntado correctamente`,
+      });
+    } catch (error: any) {
+      console.error("Error uploading file:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo subir el archivo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingSection(null);
+      event.target.value = '';
+    }
+  };
+
+  const handleDeleteFile = async (sectionKey: string, fileUrl: string, fileName: string) => {
+    try {
+      const path = fileUrl.split('/tutor-guides/')[1];
+      if (path) {
+        await supabase.storage.from('tutor-guides').remove([path]);
+      }
+
+      setSections(prev => prev.map(section => {
+        if (section.key === sectionKey) {
+          return {
+            ...section,
+            files: section.files.filter(f => f.url !== fileUrl)
+          };
+        }
+        return section;
+      }));
+
+      toast({
+        title: "Archivo eliminado",
+        description: `${fileName} se ha eliminado correctamente`,
+      });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el archivo",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Guía del Tutor-Formador</h1>
-        <p className="text-muted-foreground">
-          Selecciona un curso para ver su guía del tutor específica
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Guía del Tutor-Formador</h1>
+          <p className="text-muted-foreground">
+            Documento oficial aprobado por el SEPE con toda la información necesaria para la tutorización
+          </p>
+        </div>
       </div>
 
-      {courses.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">No tienes cursos asignados</h3>
-            <p className="text-sm text-muted-foreground text-center mt-2">
-              Cuando se te asignen cursos como tutor, podrás acceder a sus guías desde aquí.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {courses.map((course) => (
-            <Link
-              key={course.id}
-              to={`/dashboard/teacher/courses/${course.id}/tutor-guide`}
-              className="block"
-            >
-              <Card className="h-full hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="p-2 rounded-md bg-primary/10">
-                      <BookMarked className="h-5 w-5 text-primary" />
-                    </div>
-                    {course.course_type && (
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {course.course_type}
-                      </Badge>
-                    )}
-                  </div>
-                  <CardTitle className="text-base mt-3 line-clamp-2">{course.title}</CardTitle>
-                  <CardDescription className="text-xs">
-                    {course.category || "Sin categoría"} • {course.duration_hours || 0} horas
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center text-sm text-primary font-medium">
-                    Ver guía del tutor
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Guía del Tutor-Formador SEPE</CardTitle>
+          </div>
+          <CardDescription>
+            Este documento contiene toda la información que necesitas para el desarrollo óptimo de los cursos que vas a impartir.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {sections.map((section) => (
+              <Collapsible
+                key={section.key}
+                open={expandedSections.includes(section.key)}
+                onOpenChange={() => toggleSection(section.key)}
+              >
+                <Card className="h-full border hover:border-primary/50 transition-colors">
+                  <CollapsibleTrigger className="w-full text-left">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="p-2 rounded-md bg-primary/10 text-primary">
+                          {section.icon}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {section.files.length > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Paperclip className="h-3 w-3 mr-1" />
+                              {section.files.length}
+                            </Badge>
+                          )}
+                          {expandedSections.includes(section.key) ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                      <CardTitle className="text-sm mt-2">{section.title}</CardTitle>
+                      <CardDescription className="text-xs">
+                        {section.description}
+                      </CardDescription>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    <CardContent className="pt-0 space-y-4">
+                      <div className="text-sm text-muted-foreground whitespace-pre-line border-t pt-4">
+                        {section.content.split('\n').map((line, i) => (
+                          <p key={i} className={line.startsWith('•') ? 'ml-2' : 'mb-2'}>
+                            {line.includes('**') ? (
+                              <span dangerouslySetInnerHTML={{ 
+                                __html: line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                              }} />
+                            ) : line}
+                          </p>
+                        ))}
+                      </div>
+
+                      {/* Archivos adjuntos */}
+                      {section.files.length > 0 && (
+                        <div className="space-y-2 border-t pt-4">
+                          <p className="text-xs font-medium text-muted-foreground">Archivos adjuntos:</p>
+                          {section.files.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between gap-2 p-2 bg-muted/50 rounded-md">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileIcon className="h-4 w-4 text-primary flex-shrink-0" />
+                                <span className="text-xs truncate">{file.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  asChild
+                                >
+                                  <a href={file.url} target="_blank" rel="noopener noreferrer">
+                                    <Download className="h-3 w-3" />
+                                  </a>
+                                </Button>
+                                {isAdmin && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-destructive hover:text-destructive"
+                                    onClick={() => handleDeleteFile(section.key, file.url, file.name)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Botón de subir archivo */}
+                      {isAdmin && (
+                        <div className="border-t pt-4">
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                              onChange={(e) => handleFileUpload(section.key, e)}
+                              disabled={uploadingSection === section.key}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-xs"
+                              disabled={uploadingSection === section.key}
+                              asChild
+                            >
+                              <span>
+                                {uploadingSection === section.key ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                    Subiendo...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload className="h-3 w-3 mr-1" />
+                                    Adjuntar archivo
+                                  </>
+                                )}
+                              </span>
+                            </Button>
+                          </label>
+                        </div>
+                      )}
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="bg-muted/30">
         <CardHeader>
-          <CardTitle className="text-base">¿Qué es la Guía del Tutor?</CardTitle>
+          <CardTitle className="text-base">Documentación Complementaria</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>
@@ -117,9 +414,8 @@ const TeacherTutorGuide = () => {
             necesaria para el desarrollo óptimo de cada curso que impartes.
           </p>
           <p>
-            Cada guía incluye: datos de la acción formativa, estructura del curso (módulos y 
-            unidades formativas), sistema de evaluación, procedimientos de seguimiento del 
-            aprendizaje, sistema tutorial y gestión administrativa.
+            Cada sección puede contener documentos PDF adjuntos con información detallada, 
+            plantillas, formularios y recursos necesarios para la tutorización.
           </p>
         </CardContent>
       </Card>
