@@ -153,16 +153,14 @@ export default function Checkout() {
     {
       id: "redsys" as PaymentMethod,
       name: "Tarjeta (Redsys)",
-      description: "Pago seguro con tarjeta de crédito o débito (próximamente)",
+      description: "Pago seguro con tarjeta de crédito o débito",
       icon: CreditCard,
-      disabled: true,
     },
     {
       id: "klarna" as PaymentMethod,
       name: "Klarna",
-      description: "Paga ahora o a plazos con Klarna (próximamente)",
+      description: "Paga ahora o a plazos con Klarna",
       icon: Wallet,
-      disabled: true,
     },
   ];
 
