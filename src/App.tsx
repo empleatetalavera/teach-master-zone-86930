@@ -62,6 +62,7 @@ import AlertSettings from "./pages/dashboard/AlertSettings";
 import TestNotifications from "./pages/dashboard/TestNotifications";
 import QuickResponseManager from "./pages/dashboard/QuickResponseManager";
 import TeacherActivityGrading from "./pages/dashboard/TeacherActivityGrading";
+import TeacherTutorGuide from "./pages/dashboard/TeacherTutorGuide";
 import StudentCourses from "./pages/dashboard/StudentCourses";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import StudentSupport from "./pages/dashboard/StudentSupport";
@@ -136,6 +137,7 @@ function AppRoutes() {
           <Route path="teacher/alerts" element={<AlertSettings />} />
           <Route path="teacher/quick-responses" element={<QuickResponseManager />} />
           <Route path="teacher/grade-activities" element={<TeacherActivityGrading />} />
+          <Route path="teacher/tutor-guide" element={<TeacherTutorGuide />} />
           <Route path="teacher/course-settings" element={<AdminCourseSettings />} />
           <Route path="teacher/course-settings/:courseId" element={<AdminCourseSettings />} />
           <Route path="teacher/support" element={<AdminSupport />} />
