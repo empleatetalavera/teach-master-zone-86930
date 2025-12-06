@@ -6,10 +6,72 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Package, ShoppingCart, TrendingDown, Calculator, TrendingUp, Percent } from "lucide-react";
+import { Package, ShoppingCart, TrendingDown, Calculator, TrendingUp, Percent, Building2, Check, BookOpen, Award } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+
+// Planes de alquiler de plataforma
+const platformPlans = [
+  {
+    name: "Alquiler Mensual",
+    description: "Flexibilidad total, pago mes a mes",
+    price: "500€",
+    period: "mes",
+    commitment: "Sin permanencia",
+    features: [
+      "Alumnos ilimitados",
+      "Cursos ilimitados",
+      "Personalización completa",
+      "Dominio propio incluido",
+      "Soporte técnico por email",
+      "Backup automático diario",
+      "SSL y seguridad incluida",
+      "Actualizaciones incluidas"
+    ],
+    popular: false
+  },
+  {
+    name: "Plan Trimestral",
+    description: "Compromiso mínimo de 3 meses",
+    price: "400€",
+    period: "mes",
+    commitment: "Mínimo 3 meses",
+    features: [
+      "Alumnos ilimitados",
+      "Cursos ilimitados",
+      "Personalización completa",
+      "Dominio propio incluido",
+      "Soporte prioritario",
+      "Backup automático diario",
+      "SSL y seguridad incluida",
+      "Actualizaciones incluidas",
+      "Formación inicial incluida"
+    ],
+    popular: true
+  },
+  {
+    name: "Tarifa Plana Anual",
+    description: "Máximo ahorro con compromiso anual",
+    price: "300€",
+    period: "mes + IVA",
+    commitment: "Mínimo 12 meses",
+    features: [
+      "Alumnos ilimitados",
+      "Cursos ilimitados",
+      "Personalización avanzada",
+      "Múltiples dominios incluidos",
+      "Soporte prioritario 24/7",
+      "Gestor de cuenta dedicado",
+      "Formación personalizada",
+      "Integraciones personalizadas",
+      "SLA garantizado 99.9%",
+      "Mejor precio garantizado"
+    ],
+    popular: false
+  }
+];
 
 const hoursPacks = [
   {
@@ -119,22 +181,135 @@ export default function Shop() {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Elige la modalidad de compra que mejor se adapte a tus necesidades. 
-              Todas las licencias son válidas por 365 días desde la fecha de compra.
+              Elige la modalidad que mejor se adapte a las necesidades de tu centro de formación
             </p>
           </div>
 
-          <Tabs defaultValue="packs" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-12">
+          <Tabs defaultValue="platform" className="w-full">
+            <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-12">
+              <TabsTrigger value="platform">
+                <Building2 className="w-4 h-4 mr-2" />
+                Alquiler Plataforma
+              </TabsTrigger>
               <TabsTrigger value="packs">
                 <Package className="w-4 h-4 mr-2" />
-                Pack de horas
+                Licencias SCORM
               </TabsTrigger>
               <TabsTrigger value="volume">
                 <TrendingDown className="w-4 h-4 mr-2" />
                 Compra por volumen
               </TabsTrigger>
             </TabsList>
+
+            {/* Planes de Plataforma */}
+            <TabsContent value="platform" className="space-y-8">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">Alquiler de Plataforma LMS</h2>
+                <p className="text-muted-foreground max-w-3xl mx-auto">
+                  Tu propia plataforma e-learning con dominio propio, personalización completa y alumnos ilimitados. 
+                  Sin costes ocultos ni límite de matriculaciones.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                {platformPlans.map((plan, index) => (
+                  <Card 
+                    key={index}
+                    className={`p-6 hover:shadow-xl transition-all duration-300 ${
+                      plan.popular ? 'border-primary shadow-lg scale-105' : 'border-border/50'
+                    } relative`}
+                  >
+                    {plan.popular && (
+                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary">
+                        Más Popular
+                      </Badge>
+                    )}
+                    
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">{plan.description}</p>
+                      <Badge variant="secondary" className="mb-4">{plan.commitment}</Badge>
+                      <div className="mb-2">
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span className="text-4xl font-bold">{plan.price}</span>
+                          <span className="text-muted-foreground">/ {plan.period}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <ul className="space-y-3 mb-8">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button 
+                      className="w-full" 
+                      variant={plan.popular ? "default" : "outline"}
+                      size="lg"
+                      asChild
+                    >
+                      <Link to="/contact">
+                        Solicitar Información
+                      </Link>
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Sección de Licencias de Contenido */}
+              <div className="mt-16">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold mb-4">Licencias de Contenido</h3>
+                  <p className="text-muted-foreground max-w-2xl mx-auto">
+                    Precios de licencias de certificados de profesionalidad y especialidades formativas bajo presupuesto según horas
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                  <Card className="p-6 hover:shadow-xl transition-all duration-300 border-border/50">
+                    <div className="flex items-start gap-4 mb-6">
+                      <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="w-7 h-7 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-bold mb-2">Especialidades Formativas</h4>
+                        <p className="text-muted-foreground text-sm">Más de 500 especialidades formativas oficiales disponibles</p>
+                      </div>
+                    </div>
+                    <div className="border-t border-border pt-4 mb-4">
+                      <p className="text-lg font-semibold text-center text-primary">Presupuesto según horas</p>
+                      <p className="text-xs text-muted-foreground text-center mt-1">El precio varía según la duración del contenido</p>
+                    </div>
+                    <Button className="w-full" asChild>
+                      <Link to="/contact">Solicitar Presupuesto</Link>
+                    </Button>
+                  </Card>
+
+                  <Card className="p-6 hover:shadow-xl transition-all duration-300 border-border/50">
+                    <div className="flex items-start gap-4 mb-6">
+                      <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Award className="w-7 h-7 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-bold mb-2">Certificados de Profesionalidad</h4>
+                        <p className="text-muted-foreground text-sm">Catálogo completo de certificados oficiales con trazabilidad SEPE</p>
+                      </div>
+                    </div>
+                    <div className="border-t border-border pt-4 mb-4">
+                      <p className="text-lg font-semibold text-center text-primary">Presupuesto según horas</p>
+                      <p className="text-xs text-muted-foreground text-center mt-1">El precio varía según la duración del contenido</p>
+                    </div>
+                    <Button className="w-full" asChild>
+                      <Link to="/contact">Solicitar Presupuesto</Link>
+                    </Button>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
 
             <TabsContent value="packs" className="space-y-8">
               <div className="text-center mb-8">
