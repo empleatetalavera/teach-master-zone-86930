@@ -22,7 +22,6 @@ const platformPlans = [
     commitment: "Sin permanencia",
     features: [
       "Alumnos ilimitados",
-      "Cursos ilimitados",
       "Personalización completa",
       "Dominio propio incluido",
       "Soporte técnico por email",
@@ -40,7 +39,6 @@ const platformPlans = [
     commitment: "Mínimo 3 meses",
     features: [
       "Alumnos ilimitados",
-      "Cursos ilimitados",
       "Personalización completa",
       "Dominio propio incluido",
       "Soporte prioritario",
@@ -59,7 +57,6 @@ const platformPlans = [
     commitment: "Mínimo 12 meses",
     features: [
       "Alumnos ilimitados",
-      "Cursos ilimitados",
       "Personalización avanzada",
       "Múltiples dominios incluidos",
       "Soporte prioritario 24/7",
