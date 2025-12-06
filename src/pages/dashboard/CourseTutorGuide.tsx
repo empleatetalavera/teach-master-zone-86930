@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
-  Download, BookOpen, FileText, Users, Calendar, ClipboardList, 
+  BookOpen, FileText, Users, Calendar, ClipboardList, 
   MessageSquare, Award, ChevronLeft, Paperclip, Edit2, Save, X,
-  Settings, Target, Clock, CheckCircle, AlertCircle, Loader2
+  Target, CheckCircle, AlertCircle, Loader2, Upload, Trash2, ExternalLink
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,13 +81,48 @@ interface GuideSection {
 }
 
 const defaultSections = [
-  { key: "datos_accion", title: "1. Datos de la Acción Formativa", icon: FileText },
-  { key: "alumnos_equipo", title: "2. Alumnos y Equipo Docente", icon: Users },
-  { key: "campus_virtual", title: "3. Campus Virtual y Aplicaciones", icon: BookOpen },
-  { key: "programacion_didactica", title: "4. Programación Didáctica y Evaluación", icon: Calendar },
-  { key: "seguimiento_aprendizaje", title: "5. Seguimiento del Aprendizaje", icon: ClipboardList },
-  { key: "sistema_tutorial", title: "6. Sistema Tutorial", icon: MessageSquare },
-  { key: "gestion_administracion", title: "7. Gestión y Administración", icon: Award },
+  { 
+    key: "datos_accion", 
+    title: "1. Datos de la Acción Formativa", 
+    icon: FileText,
+    description: "Información general del curso: denominación, código, duración, fechas de realización, objetivos generales y específicos de la formación."
+  },
+  { 
+    key: "alumnos_equipo", 
+    title: "2. Alumnos y Equipo Docente", 
+    icon: Users,
+    description: "Listado de alumnos matriculados, datos del tutor-formador asignado, y otros miembros del equipo docente involucrados en la acción formativa."
+  },
+  { 
+    key: "campus_virtual", 
+    title: "3. Campus Virtual y Aplicaciones", 
+    icon: BookOpen,
+    description: "Acceso al campus virtual, aplicaciones disponibles, guía de uso de la plataforma, herramientas de comunicación y recursos tecnológicos."
+  },
+  { 
+    key: "programacion_didactica", 
+    title: "4. Programación Didáctica y Evaluación", 
+    icon: Calendar,
+    description: "Estructura del curso (módulos y unidades formativas), contenidos, sistema de evaluación, criterios de calificación y ponderación de notas."
+  },
+  { 
+    key: "seguimiento_aprendizaje", 
+    title: "5. Seguimiento del Aprendizaje", 
+    icon: ClipboardList,
+    description: "Procedimientos de seguimiento del progreso del alumno, control de tiempos, indicadores de participación y herramientas de trazabilidad."
+  },
+  { 
+    key: "sistema_tutorial", 
+    title: "6. Sistema Tutorial", 
+    icon: MessageSquare,
+    description: "Modalidades de tutorías (telemáticas/presenciales), canales de comunicación, horarios de atención, procedimientos de consulta y resolución de dudas."
+  },
+  { 
+    key: "gestion_administracion", 
+    title: "7. Gestión y Administración", 
+    icon: Award,
+    description: "Documentación administrativa, procedimientos de gestión, certificaciones, normativa aplicable y contacto con el centro de formación."
+  },
 ];
 
 const CourseTutorGuide = () => {
@@ -102,6 +137,9 @@ const CourseTutorGuide = () => {
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploadingSection, setUploadingSection] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentUploadSection, setCurrentUploadSection] = useState<string | null>(null);
   const isAdmin = userRole === 'admin' || userRole === 'super_admin';
 
   useEffect(() => {
@@ -235,6 +273,122 @@ const CourseTutorGuide = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleFileUpload = async (sectionKey: string, file: File) => {
+    if (!courseId) return;
+    
+    setUploadingSection(sectionKey);
+    try {
+      // Upload file to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${courseId}/${sectionKey}/${Date.now()}_${file.name}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('tutor-guides')
+        .upload(fileName, file);
+      
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('tutor-guides')
+        .getPublicUrl(fileName);
+      
+      // Update resources in the section
+      const existingSection = guideSections.find(s => s.section_key === sectionKey);
+      const existingResources = getCustomResources(sectionKey);
+      const newResource = {
+        name: file.name,
+        type: file.type.split('/')[1]?.toUpperCase() || 'FILE',
+        url: publicUrl,
+        path: fileName
+      };
+      const updatedResources = [...existingResources, newResource];
+      
+      if (existingSection) {
+        const { error } = await supabase
+          .from('tutor_guide_sections')
+          .update({ 
+            resources: updatedResources as unknown as Json,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', existingSection.id);
+        
+        if (error) throw error;
+      } else {
+        const sectionInfo = defaultSections.find(s => s.key === sectionKey);
+        const { error } = await supabase
+          .from('tutor_guide_sections')
+          .insert({
+            course_id: courseId,
+            section_key: sectionKey,
+            section_title: sectionInfo?.title || sectionKey,
+            resources: updatedResources as unknown as Json,
+            order_index: defaultSections.findIndex(s => s.key === sectionKey)
+          });
+        
+        if (error) throw error;
+      }
+      
+      toast.success("Archivo subido correctamente");
+      fetchCourseData();
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      toast.error("Error al subir el archivo");
+    } finally {
+      setUploadingSection(null);
+      setCurrentUploadSection(null);
+    }
+  };
+
+  const handleDeleteResource = async (sectionKey: string, resourceIndex: number) => {
+    const existingSection = guideSections.find(s => s.section_key === sectionKey);
+    if (!existingSection) return;
+    
+    const resources = getCustomResources(sectionKey);
+    const resourceToDelete = resources[resourceIndex];
+    
+    try {
+      // Delete from storage if it has a path
+      if ((resourceToDelete as any).path) {
+        await supabase.storage
+          .from('tutor-guides')
+          .remove([(resourceToDelete as any).path]);
+      }
+      
+      // Update resources array
+      const updatedResources = resources.filter((_, idx) => idx !== resourceIndex);
+      
+      const { error } = await supabase
+        .from('tutor_guide_sections')
+        .update({ 
+          resources: updatedResources as unknown as Json,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', existingSection.id);
+      
+      if (error) throw error;
+      
+      toast.success("Archivo eliminado");
+      fetchCourseData();
+    } catch (error: any) {
+      console.error('Error deleting resource:', error);
+      toast.error("Error al eliminar el archivo");
+    }
+  };
+
+  const triggerFileUpload = (sectionKey: string) => {
+    setCurrentUploadSection(sectionKey);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && currentUploadSection) {
+      handleFileUpload(currentUploadSection, file);
+    }
+    e.target.value = '';
   };
 
   const formatDate = (dateString: string | null) => {
@@ -485,6 +639,15 @@ const CourseTutorGuide = () => {
 
   return (
     <div className="space-y-6">
+      {/* Hidden file input for uploads */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileInputChange}
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif"
+      />
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
@@ -496,10 +659,6 @@ const CourseTutorGuide = () => {
           <h1 className="text-2xl font-bold text-foreground">Guía del Tutor-Formador</h1>
           <p className="text-muted-foreground mt-1">{course.title}</p>
         </div>
-        <Button variant="outline" className="gap-2" onClick={() => window.print()}>
-          <Download className="h-4 w-4" />
-          Imprimir/PDF
-        </Button>
       </div>
 
       <Card className="border-primary/20 bg-primary/5">
@@ -509,7 +668,7 @@ const CourseTutorGuide = () => {
             {course.title}
           </CardTitle>
           <CardDescription>
-            Guía oficial del tutor-formador para esta acción formativa
+            Guía oficial del tutor-formador para esta acción formativa. Cada sección puede contener información autogenerada y documentos adjuntos.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -526,10 +685,22 @@ const CourseTutorGuide = () => {
                 <div className="p-2 rounded-md bg-primary/10 shrink-0">
                   <section.icon className="h-4 w-4 text-primary" />
                 </div>
-                <span className="font-medium">{section.title}</span>
+                <div className="flex-1">
+                  <span className="font-medium">{section.title}</span>
+                  {getCustomResources(section.key).length > 0 && (
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      {getCustomResources(section.key).length} archivo(s)
+                    </Badge>
+                  )}
+                </div>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-4">
+              {/* Section description */}
+              <div className="p-3 rounded-lg bg-muted/30 border border-muted mb-4">
+                <p className="text-sm text-muted-foreground">{section.description}</p>
+              </div>
+
               {editingSection === section.key ? (
                 <div className="space-y-3 pt-2">
                   <Textarea
@@ -561,15 +732,75 @@ const CourseTutorGuide = () => {
                 <div className="pt-2">
                   {renderSectionContent(section.key)}
                   
-                  {isAdmin && (
+                  {/* Resources with download/delete options */}
+                  {getCustomResources(section.key).length > 0 && (
                     <div className="mt-4 pt-4 border-t">
+                      <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
+                        <Paperclip className="h-4 w-4 text-primary" />
+                        Archivos adjuntos ({getCustomResources(section.key).length})
+                      </h4>
+                      <div className="space-y-2">
+                        {getCustomResources(section.key).map((resource, idx) => (
+                          <div 
+                            key={idx}
+                            className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border"
+                          >
+                            <FileText className="h-5 w-5 text-primary shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{resource.name}</p>
+                              <p className="text-xs text-muted-foreground">{resource.type}</p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {resource.url && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => window.open(resource.url, '_blank')}
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {isAdmin && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                  onClick={() => handleDeleteResource(section.key, idx)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Admin actions */}
+                  {isAdmin && (
+                    <div className="mt-4 pt-4 border-t flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleEditSection(section.key)}
                       >
                         <Edit2 className="h-4 w-4 mr-2" />
-                        {getCustomContent(section.key) ? "Editar contenido" : "Añadir contenido personalizado"}
+                        {getCustomContent(section.key) ? "Editar contenido" : "Añadir contenido"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => triggerFileUpload(section.key)}
+                        disabled={uploadingSection === section.key}
+                      >
+                        {uploadingSection === section.key ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        Adjuntar archivo
                       </Button>
                     </div>
                   )}
