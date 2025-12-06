@@ -8,57 +8,59 @@ import { useEffect, useState } from "react";
 
 const platformPlans = [
   {
-    name: "Plataforma Básica",
-    description: "Alquiler de plataforma sin contenidos",
-    price: "99€",
-    period: "cuota al mes",
+    name: "Alquiler Mensual",
+    description: "Flexibilidad total, pago mes a mes",
+    price: "500€",
+    period: "mes",
+    commitment: "Sin permanencia",
     features: [
-      "Hasta 50 alumnos",
-      "Hasta 5 cursos simultáneos",
+      "Alumnos ilimitados",
+      "Cursos ilimitados",
       "Personalización completa",
       "Dominio propio incluido",
       "Soporte técnico por email",
       "Backup automático diario",
-      "SSL y seguridad incluida"
+      "SSL y seguridad incluida",
+      "Actualizaciones incluidas"
     ],
     popular: false
   },
   {
-    name: "Plataforma + Contenidos",
-    description: "Plataforma con acceso a catálogo SCORM",
-    price: "249€",
-    period: "cuota al mes",
+    name: "Plan Trimestral",
+    description: "Compromiso mínimo de 3 meses",
+    price: "400€",
+    period: "mes",
+    commitment: "Mínimo 3 meses",
     features: [
-      "Hasta 100 alumnos",
+      "Alumnos ilimitados",
       "Cursos ilimitados",
-      "Acceso catálogo SCORM completo",
-      "Especialidades formativas INCUAL",
-      "Certificados de profesionalidad",
       "Personalización completa",
       "Dominio propio incluido",
-      "Soporte prioritario 24/7",
-      "Tutor virtual con IA incluido"
+      "Soporte prioritario",
+      "Backup automático diario",
+      "SSL y seguridad incluida",
+      "Actualizaciones incluidas",
+      "Formación inicial incluida"
     ],
     popular: true
   },
   {
-    name: "Tarifa Plana Premium",
-    description: "Todo incluido sin límites",
-    price: "499€",
-    period: "cuota al mes",
+    name: "Tarifa Plana Anual",
+    description: "Máximo ahorro con compromiso anual",
+    price: "300€",
+    period: "mes + IVA",
+    commitment: "Mínimo 12 meses",
     features: [
       "Alumnos ilimitados",
       "Cursos ilimitados",
-      "Todo el catálogo SCORM",
-      "Todas las especialidades INCUAL",
-      "Todos los certificados profesionalidad",
-      "Licencias consumibles incluidas",
       "Personalización avanzada",
-      "Múltiples dominios",
+      "Múltiples dominios incluidos",
+      "Soporte prioritario 24/7",
       "Gestor de cuenta dedicado",
       "Formación personalizada del equipo",
       "Integraciones personalizadas",
-      "SLA garantizado 99.9%"
+      "SLA garantizado 99.9%",
+      "Mejor precio garantizado"
     ],
     popular: false
   }
@@ -66,9 +68,9 @@ const platformPlans = [
 
 const scormCategories = [
   {
-    title: "Especialidades Formativas INCUAL",
+    title: "Especialidades Formativas",
     icon: BookOpen,
-    description: "Más de 10.000 especialidades formativas oficiales del Instituto Nacional de las Cualificaciones",
+    description: "Más de 500 especialidades formativas oficiales disponibles para tu centro",
     items: [
       "Administración y Gestión",
       "Informática y Comunicaciones",
@@ -78,7 +80,8 @@ const scormCategories = [
       "Servicios Socioculturales",
       "Y muchas más..."
     ],
-    pricing: "Desde 99€/licencia consumible"
+    pricing: "Presupuesto según horas",
+    needsQuote: true
   },
   {
     title: "Certificados de Profesionalidad",
@@ -93,7 +96,8 @@ const scormCategories = [
       "Soporte técnico incluido",
       "Actualizaciones gratuitas"
     ],
-    pricing: "Desde 299€/certificado completo"
+    pricing: "Presupuesto según horas",
+    needsQuote: true
   }
 ];
 
@@ -158,12 +162,13 @@ export const PricingSection = () => {
               
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                <p className="text-sm text-muted-foreground mb-2">{plan.description}</p>
+                <Badge variant="secondary" className="mb-4">{plan.commitment}</Badge>
                 <div className="mb-2">
-                  <div className="flex items-baseline justify-center gap-2">
+                  <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold">{plan.price}</span>
+                    <span className="text-muted-foreground">/ {plan.period}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{plan.period}</p>
                 </div>
               </div>
 
@@ -231,24 +236,19 @@ export const PricingSection = () => {
               </ul>
 
               <div className="border-t border-border pt-6 mb-6">
-                <p className="text-lg font-semibold text-center mb-4">{category.pricing}</p>
+                <p className="text-lg font-semibold text-center text-primary mb-2">{category.pricing}</p>
+                <p className="text-xs text-muted-foreground text-center">El precio varía según la duración del contenido</p>
               </div>
 
               <Button 
                 className="w-full" 
-                variant="outline" 
+                variant="default" 
                 size="lg"
-                onClick={() => {
-                  const product = products.find(p => 
-                    p.product_type === 'scorm_license' && 
-                    p.features?.category === (category.title.includes('INCUAL') ? 'incual' : 'certificado')
-                  );
-                  if (product) handleAddToCart(product.id);
-                }}
-                disabled={loading}
+                asChild
               >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Añadir Licencia
+                <a href="/contact">
+                  Solicitar Presupuesto
+                </a>
               </Button>
             </Card>
           ))}
