@@ -21,8 +21,8 @@ interface BrandingContextType {
 const defaultBranding: BrandingConfig = {
   centerName: "TalentCloudSolution",
   centerLogo: "/branding/talentcloud-logo.png",
-  primaryColor: "hsl(177, 33%, 52%)",
-  secondaryColor: "hsl(177, 40%, 42%)",
+  primaryColor: "hsl(174, 62%, 47%)",
+  secondaryColor: "hsl(174, 50%, 38%)",
   officialBadge: "Centro Acreditado SEPE",
   footerText: "TalentCloudSolution - Todos los derechos reservados",
 };
@@ -106,13 +106,26 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     const parsePrimaryColor = parseHSL(config.primaryColor);
     const parseSecondaryColor = parseHSL(config.secondaryColor);
     
-    if (parsePrimaryColor) {
-      root.style.setProperty('--primary', parsePrimaryColor);
-    }
+    // Always set both primary and secondary to ensure consistency
+    root.style.setProperty('--primary', parsePrimaryColor);
+    root.style.setProperty('--secondary', parseSecondaryColor);
     
-    if (parseSecondaryColor) {
-      root.style.setProperty('--secondary', parseSecondaryColor);
+    // Also update related CSS variables for complete theme consistency
+    root.style.setProperty('--primary-glow', adjustLightness(parsePrimaryColor, 13));
+    root.style.setProperty('--accent', adjustLightness(parsePrimaryColor, -5));
+    root.style.setProperty('--ring', parsePrimaryColor);
+    root.style.setProperty('--sidebar-primary', parsePrimaryColor);
+    root.style.setProperty('--sidebar-ring', parsePrimaryColor);
+  };
+
+  const adjustLightness = (hslString: string, amount: number): string => {
+    const parts = hslString.split(' ');
+    if (parts.length === 3) {
+      const lightness = parseFloat(parts[2]);
+      const newLightness = Math.min(100, Math.max(0, lightness + amount));
+      return `${parts[0]} ${parts[1]} ${newLightness}%`;
     }
+    return hslString;
   };
 
   const parseHSL = (hslString: string): string => {

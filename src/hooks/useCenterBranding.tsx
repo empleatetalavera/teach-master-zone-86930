@@ -15,8 +15,8 @@ interface CenterBrandingConfig {
 const defaultBranding: CenterBrandingConfig = {
   centerName: "TalentCloudSolution",
   centerLogo: "/branding/talentcloud-logo.png",
-  primaryColor: "hsl(177, 33%, 52%)",
-  secondaryColor: "hsl(177, 40%, 42%)",
+  primaryColor: "hsl(174, 62%, 47%)",
+  secondaryColor: "hsl(174, 50%, 38%)",
   officialBadge: "Centro Acreditado SEPE",
   footerText: "TalentCloudSolution - Todos los derechos reservados",
 };
