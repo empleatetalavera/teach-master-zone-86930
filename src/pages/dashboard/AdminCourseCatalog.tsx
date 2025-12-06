@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, BookOpen, Search, ChevronRight, Building2, Award, GraduationCap } from "lucide-react";
+import { Loader2, BookOpen, Search, ChevronRight, Building2, Award, GraduationCap, BookMarked } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CourseAssignmentPanel from "@/components/CourseAssignmentPanel";
@@ -84,6 +84,7 @@ export default function AdminCourseCatalog() {
   // Filter by course type
   const especialidades = courses.filter(c => c.course_type === 'sepe_especialidad');
   const certificados = courses.filter(c => c.course_type === 'certificado_profesionalidad');
+  const cursosCFC = courses.filter(c => c.course_type === 'cfc');
 
   // Apply search filter
   const filterBySearch = (list: Course[]) => list.filter(c =>
@@ -93,6 +94,7 @@ export default function AdminCourseCatalog() {
 
   const filteredEspecialidades = filterBySearch(especialidades);
   const filteredCertificados = filterBySearch(certificados);
+  const filteredCFC = filterBySearch(cursosCFC);
 
   const handleCourseClick = (course: Course) => {
     setSelectedCourse(course);
@@ -201,7 +203,7 @@ export default function AdminCourseCatalog() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Especialidades Formativas</CardDescription>
@@ -222,6 +224,15 @@ export default function AdminCourseCatalog() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
+            <CardDescription>Cursos CFC</CardDescription>
+            <CardTitle className="text-3xl flex items-center gap-2">
+              <BookMarked className="h-6 w-6 text-green-500" />
+              {cursosCFC.length}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
             <CardDescription>Centros Activos</CardDescription>
             <CardTitle className="text-3xl">{totalCenters}</CardTitle>
           </CardHeader>
@@ -236,7 +247,7 @@ export default function AdminCourseCatalog() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-xl grid-cols-3">
           <TabsTrigger value="especialidades" className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4" />
             Especialidades ({especialidades.length})
@@ -244,6 +255,10 @@ export default function AdminCourseCatalog() {
           <TabsTrigger value="certificados" className="flex items-center gap-2">
             <Award className="h-4 w-4" />
             Certificados ({certificados.length})
+          </TabsTrigger>
+          <TabsTrigger value="cfc" className="flex items-center gap-2">
+            <BookMarked className="h-4 w-4" />
+            CFC ({cursosCFC.length})
           </TabsTrigger>
         </TabsList>
 
@@ -264,6 +279,10 @@ export default function AdminCourseCatalog() {
 
         <TabsContent value="certificados" className="mt-4">
           <CourseTable courseList={filteredCertificados} />
+        </TabsContent>
+
+        <TabsContent value="cfc" className="mt-4">
+          <CourseTable courseList={filteredCFC} />
         </TabsContent>
       </Tabs>
 
