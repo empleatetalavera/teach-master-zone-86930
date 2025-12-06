@@ -273,134 +273,131 @@ const TeacherTutorGuide = () => {
             Este documento contiene toda la información que necesitas para el desarrollo óptimo de los cursos que vas a impartir.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sections.map((section) => (
-              <Collapsible
-                key={section.key}
-                open={expandedSections.includes(section.key)}
-                onOpenChange={() => toggleSection(section.key)}
-              >
-                <Card className="h-full border hover:border-primary/50 transition-colors">
-                  <CollapsibleTrigger className="w-full text-left">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="p-2 rounded-md bg-primary/10 text-primary">
-                          {section.icon}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {section.files.length > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Paperclip className="h-3 w-3 mr-1" />
-                              {section.files.length}
-                            </Badge>
-                          )}
-                          {expandedSections.includes(section.key) ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </div>
-                      </div>
-                      <CardTitle className="text-sm mt-2">{section.title}</CardTitle>
-                      <CardDescription className="text-xs">
-                        {section.description}
-                      </CardDescription>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent>
-                    <CardContent className="pt-0 space-y-4">
-                      <div className="text-sm text-muted-foreground whitespace-pre-line border-t pt-4">
-                        {section.content.split('\n').map((line, i) => (
-                          <p key={i} className={line.startsWith('•') ? 'ml-2' : 'mb-2'}>
-                            {line.includes('**') ? (
-                              <span dangerouslySetInnerHTML={{ 
-                                __html: line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
-                              }} />
-                            ) : line}
-                          </p>
-                        ))}
-                      </div>
-
-                      {/* Archivos adjuntos */}
+        <CardContent className="space-y-3">
+          {sections.map((section) => (
+            <Collapsible
+              key={section.key}
+              open={expandedSections.includes(section.key)}
+              onOpenChange={() => toggleSection(section.key)}
+            >
+              <div className="border rounded-lg hover:border-primary/50 transition-colors">
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center gap-4 p-4">
+                    <div className="p-2 rounded-md bg-primary/10 text-primary flex-shrink-0">
+                      {section.icon}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <h3 className="font-medium text-sm">{section.title}</h3>
+                      <p className="text-xs text-muted-foreground">{section.description}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {section.files.length > 0 && (
-                        <div className="space-y-2 border-t pt-4">
-                          <p className="text-xs font-medium text-muted-foreground">Archivos adjuntos:</p>
+                        <Badge variant="secondary" className="text-xs">
+                          <Paperclip className="h-3 w-3 mr-1" />
+                          {section.files.length}
+                        </Badge>
+                      )}
+                      {expandedSections.includes(section.key) ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent>
+                  <div className="px-4 pb-4 space-y-4 border-t mx-4 pt-4">
+                    <div className="text-sm text-muted-foreground">
+                      {section.content.split('\n').map((line, i) => (
+                        <p key={i} className={line.startsWith('•') ? 'ml-4 mb-1' : 'mb-2'}>
+                          {line.includes('**') ? (
+                            <span dangerouslySetInnerHTML={{ 
+                              __html: line.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>') 
+                            }} />
+                          ) : line}
+                        </p>
+                      ))}
+                    </div>
+
+                    {/* Archivos adjuntos */}
+                    {section.files.length > 0 && (
+                      <div className="space-y-2 border-t pt-4">
+                        <p className="text-xs font-medium text-muted-foreground">Archivos adjuntos:</p>
+                        <div className="grid gap-2">
                           {section.files.map((file, index) => (
                             <div key={index} className="flex items-center justify-between gap-2 p-2 bg-muted/50 rounded-md">
                               <div className="flex items-center gap-2 min-w-0">
                                 <FileIcon className="h-4 w-4 text-primary flex-shrink-0" />
-                                <span className="text-xs truncate">{file.name}</span>
+                                <span className="text-sm truncate">{file.name}</span>
                               </div>
                               <div className="flex items-center gap-1 flex-shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-6 w-6"
+                                  className="h-7 w-7"
                                   asChild
                                 >
                                   <a href={file.url} target="_blank" rel="noopener noreferrer">
-                                    <Download className="h-3 w-3" />
+                                    <Download className="h-4 w-4" />
                                   </a>
                                 </Button>
                                 {canManageFiles && (
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-6 w-6 text-destructive hover:text-destructive"
+                                    className="h-7 w-7 text-destructive hover:text-destructive"
                                     onClick={() => handleDeleteFile(section.key, file.url, file.name)}
                                   >
-                                    <Trash2 className="h-3 w-3" />
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
                                 )}
                               </div>
                             </div>
                           ))}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Botón de subir archivo */}
-                      {canManageFiles && (
-                        <div className="border-t pt-4">
-                          <label className="cursor-pointer">
-                            <input
-                              type="file"
-                              className="hidden"
-                              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-                              onChange={(e) => handleFileUpload(section.key, e)}
-                              disabled={uploadingSection === section.key}
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full text-xs"
-                              disabled={uploadingSection === section.key}
-                              asChild
-                            >
-                              <span>
-                                {uploadingSection === section.key ? (
-                                  <>
-                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                    Subiendo...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Upload className="h-3 w-3 mr-1" />
-                                    Adjuntar archivo
-                                  </>
-                                )}
-                              </span>
-                            </Button>
-                          </label>
-                        </div>
-                      )}
-                    </CardContent>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            ))}
-          </div>
+                    {/* Botón de subir archivo */}
+                    {canManageFiles && (
+                      <div className={section.files.length > 0 ? "" : "border-t pt-4"}>
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                            onChange={(e) => handleFileUpload(section.key, e)}
+                            disabled={uploadingSection === section.key}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={uploadingSection === section.key}
+                            asChild
+                          >
+                            <span>
+                              {uploadingSection === section.key ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Subiendo...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Adjuntar archivo PDF
+                                </>
+                              )}
+                            </span>
+                          </Button>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
+          ))}
         </CardContent>
       </Card>
 
