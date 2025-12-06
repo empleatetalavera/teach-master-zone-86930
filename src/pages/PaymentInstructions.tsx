@@ -16,11 +16,11 @@ export default function PaymentInstructions() {
     toast.success("Copiado al portapapeles");
   };
 
-  // Bank details - replace with actual details
+  // Bank details
   const bankDetails = {
-    bank: "Banco Santander",
-    iban: "ES91 2100 0418 4502 0005 1332",
-    bic: "CAIXESBBXXX",
+    bank: "BBVA",
+    iban: "ES14 0182 0861 6802 0169 9387",
+    bic: "BBVAESMMXXX",
     beneficiary: "TalentCloud Solutions S.L.",
     concept: `Pedido #${orderId?.slice(0, 8).toUpperCase()}`,
   };
