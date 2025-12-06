@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Building2, CreditCard, Wallet, Save, Info, ExternalLink } from "lucide-react";
+import { Building2, CreditCard, Wallet, Save, Info, ExternalLink, RefreshCw } from "lucide-react";
 
 export default function AdminPaymentSettings() {
   // Bank transfer settings
@@ -46,6 +46,19 @@ export default function AdminPaymentSettings() {
     sandboxMode: true,
   });
 
+  // Redsys Recurring settings
+  const [redsysRecurringSettings, setRedsysRecurringSettings] = useState({
+    enabled: false,
+    merchantCode: "",
+    terminal: "001",
+    secretKey: "",
+    cofTxnId: "", // COF Transaction ID for recurring
+    recurringExpiry: "4912", // YYMM format
+    recurringFrequency: "30", // Days between charges
+    notificationUrl: "",
+    sandboxMode: true,
+  });
+
   const handleSave = (section: string) => {
     // Here you would save to database or environment variables
     toast.success(`Configuración de ${section} guardada correctamente`);
@@ -67,7 +80,7 @@ export default function AdminPaymentSettings() {
       </Alert>
 
       <Tabs defaultValue="bank" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="bank" className="flex items-center gap-2">
             <Building2 className="w-4 h-4" />
             Transferencia
@@ -79,6 +92,10 @@ export default function AdminPaymentSettings() {
           <TabsTrigger value="redsys" className="flex items-center gap-2">
             <CreditCard className="w-4 h-4" />
             Redsys
+          </TabsTrigger>
+          <TabsTrigger value="redsys-recurring" className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Recurrente
           </TabsTrigger>
           <TabsTrigger value="klarna" className="flex items-center gap-2">
             <Wallet className="w-4 h-4" />
@@ -318,6 +335,162 @@ export default function AdminPaymentSettings() {
                 <Button variant="outline" onClick={() => window.open("https://pagosonline.redsys.es/", "_blank")}>
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Panel Redsys
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Redsys Recurring */}
+        <TabsContent value="redsys-recurring">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
+                    <RefreshCw className="w-6 h-6 text-orange-500" />
+                  </div>
+                  <div>
+                    <CardTitle>Redsys Pagos Recurrentes</CardTitle>
+                    <CardDescription>Configura cobros automáticos mensuales para suscripciones anuales</CardDescription>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="redsys-recurring-enabled">Activado</Label>
+                  <Switch
+                    id="redsys-recurring-enabled"
+                    checked={redsysRecurringSettings.enabled}
+                    onCheckedChange={(checked) => setRedsysRecurringSettings(prev => ({ ...prev, enabled: checked }))}
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert className="mb-4">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Pagos COF (Credential on File):</strong> Este sistema permite cobrar automáticamente cada mes 
+                  a los centros con plan anual de 12 meses. Necesitas un TPV virtual con soporte para pagos recurrentes.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="recurringMerchantCode">Código de Comercio (FUC)</Label>
+                  <Input
+                    id="recurringMerchantCode"
+                    value={redsysRecurringSettings.merchantCode}
+                    onChange={(e) => setRedsysRecurringSettings(prev => ({ ...prev, merchantCode: e.target.value }))}
+                    placeholder="999008881"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="recurringTerminal">Terminal</Label>
+                  <Input
+                    id="recurringTerminal"
+                    value={redsysRecurringSettings.terminal}
+                    onChange={(e) => setRedsysRecurringSettings(prev => ({ ...prev, terminal: e.target.value }))}
+                    placeholder="001"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="recurringSecretKey">Clave Secreta (SHA-256)</Label>
+                  <Input
+                    id="recurringSecretKey"
+                    type="password"
+                    value={redsysRecurringSettings.secretKey}
+                    onChange={(e) => setRedsysRecurringSettings(prev => ({ ...prev, secretKey: e.target.value }))}
+                    placeholder="Tu clave secreta proporcionada por el banco"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold mb-3">Configuración de Recurrencia</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cofTxnId">COF Transaction ID (Identificador)</Label>
+                    <Input
+                      id="cofTxnId"
+                      value={redsysRecurringSettings.cofTxnId}
+                      onChange={(e) => setRedsysRecurringSettings(prev => ({ ...prev, cofTxnId: e.target.value }))}
+                      placeholder="Se genera automáticamente tras primer cobro"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Identificador único para pagos recurrentes. Se obtiene del primer cobro exitoso.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recurringExpiry">Fecha Expiración Tarjeta (YYMM)</Label>
+                    <Input
+                      id="recurringExpiry"
+                      value={redsysRecurringSettings.recurringExpiry}
+                      onChange={(e) => setRedsysRecurringSettings(prev => ({ ...prev, recurringExpiry: e.target.value }))}
+                      placeholder="4912"
+                      maxLength={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Formato: Año (2 dígitos) + Mes (2 dígitos). Ej: 4912 = Dic 2049
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recurringFrequency">Frecuencia de Cobro (días)</Label>
+                    <Input
+                      id="recurringFrequency"
+                      type="number"
+                      value={redsysRecurringSettings.recurringFrequency}
+                      onChange={(e) => setRedsysRecurringSettings(prev => ({ ...prev, recurringFrequency: e.target.value }))}
+                      placeholder="30"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Días entre cada cobro automático. Por defecto: 30 días (mensual)
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notificationUrl">URL de Notificación (Webhook)</Label>
+                    <Input
+                      id="notificationUrl"
+                      value={redsysRecurringSettings.notificationUrl}
+                      onChange={(e) => setRedsysRecurringSettings(prev => ({ ...prev, notificationUrl: e.target.value }))}
+                      placeholder="https://tudominio.com/api/redsys-webhook"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      URL donde Redsys enviará confirmaciones de pago
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <Switch
+                  id="redsys-recurring-sandbox"
+                  checked={redsysRecurringSettings.sandboxMode}
+                  onCheckedChange={(checked) => setRedsysRecurringSettings(prev => ({ ...prev, sandboxMode: checked }))}
+                />
+                <Label htmlFor="redsys-recurring-sandbox">Modo Sandbox (pruebas)</Label>
+              </div>
+
+              <Alert className="mt-4 border-orange-200 bg-orange-50">
+                <Info className="h-4 w-4 text-orange-600" />
+                <AlertDescription className="text-orange-800">
+                  <strong>Flujo de cobro recurrente:</strong>
+                  <ol className="list-decimal ml-4 mt-2 space-y-1">
+                    <li>Centro contrata Plan Anual (12 meses) y paga primera cuota</li>
+                    <li>Se almacena el identificador COF de la tarjeta</li>
+                    <li>Cada 30 días se realiza cobro automático sin intervención del cliente</li>
+                    <li>Si falla el cobro, se notifica al centro y se reintenta</li>
+                  </ol>
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex gap-2 mt-4">
+                <Button onClick={() => handleSave("Redsys Recurrente")}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Guardar Configuración
+                </Button>
+                <Button variant="outline" onClick={() => window.open("https://pagosonline.redsys.es/funcionalidades-702702-702.html", "_blank")}>
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Documentación COF
                 </Button>
               </div>
             </CardContent>
