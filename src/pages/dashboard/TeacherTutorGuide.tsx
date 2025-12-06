@@ -160,7 +160,7 @@ const TeacherTutorGuide = () => {
   const [sections, setSections] = useState<GuideSection[]>(defaultSections);
   const [uploadingSection, setUploadingSection] = useState<string | null>(null);
 
-  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+  const canManageFiles = userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher';
 
   const toggleSection = (key: string) => {
     setExpandedSections(prev => 
@@ -344,7 +344,7 @@ const TeacherTutorGuide = () => {
                                     <Download className="h-3 w-3" />
                                   </a>
                                 </Button>
-                                {isAdmin && (
+                                {canManageFiles && (
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -361,7 +361,7 @@ const TeacherTutorGuide = () => {
                       )}
 
                       {/* Botón de subir archivo */}
-                      {isAdmin && (
+                      {canManageFiles && (
                         <div className="border-t pt-4">
                           <label className="cursor-pointer">
                             <input
