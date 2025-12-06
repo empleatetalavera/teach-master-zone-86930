@@ -7,6 +7,7 @@ import { CampusEnvironmentsSection } from "@/components/CampusEnvironmentsSectio
 import { ExperienceSection } from "@/components/ExperienceSection";
 import { CustomizationSection } from "@/components/CustomizationSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
+import { PricingSection } from "@/components/PricingSection";
 import { CTASection } from "@/components/CTASection";
 import { AssociatedCentersSection } from "@/components/AssociatedCentersSection";
 import { Footer } from "@/components/Footer";
@@ -39,6 +40,7 @@ const Index = () => {
       <CampusEnvironmentsSection />
       <BenefitsSection />
       <CustomizationSection />
+      <PricingSection />
       <TestimonialsSection />
       <AssociatedCentersSection />
       <CTASection />
