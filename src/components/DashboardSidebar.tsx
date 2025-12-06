@@ -52,6 +52,8 @@ const superAdminItems = [
   { title: "Cursos", url: "/dashboard/admin/courses", icon: BookOpen },
   { title: "Licencias", url: "/dashboard/admin/licenses", icon: Key },
   { title: "Facturación Global", url: "/dashboard/admin/billing", icon: DollarSign },
+  { title: "Pedidos Tienda", url: "/dashboard/admin/shop-orders", icon: Package },
+  { title: "Configurar Pagos", url: "/dashboard/admin/payment-settings", icon: Settings },
   { title: "Pedidos de Contenido", url: "/dashboard/admin/orders", icon: Package },
   { title: "Análisis AI", url: "/dashboard/admin/ai-analytics", icon: MessageSquare },
   { title: "Todos los Usuarios", url: "/dashboard/admin/users", icon: Users },
