@@ -106,8 +106,10 @@ export default function SEPEReportGenerator() {
   });
 
   useEffect(() => {
-    loadCourses();
-  }, []);
+    if (user) {
+      loadCourses();
+    }
+  }, [user, userRole]);
 
   useEffect(() => {
     if (filters.courseId) {
@@ -116,11 +118,25 @@ export default function SEPEReportGenerator() {
   }, [filters.courseId]);
 
   const loadCourses = async () => {
-    const { data } = await supabase
+    if (!user) return;
+
+    let query = supabase
       .from("courses")
       .select("id, title, category")
       .eq("is_active", true)
       .order("title");
+
+    // For teachers, only show their assigned courses
+    if (userRole === 'teacher') {
+      query = query.eq("tutor_id", user.id);
+    }
+
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error("Error loading courses:", error);
+      return;
+    }
     
     if (data) setCourses(data);
   };
@@ -171,11 +187,14 @@ export default function SEPEReportGenerator() {
     }
 
     setLoading(true);
+    console.log("Generating PDF for course:", filters.courseId, "Report type:", selectedReport);
 
     try {
       const doc = new jsPDF();
       const course = courses.find((c) => c.id === filters.courseId);
       const reportType = SEPE_REPORT_TYPES.find((r) => r.id === selectedReport);
+
+      console.log("Course found:", course?.title, "Report type:", reportType?.name);
 
       // Header
       doc.setFontSize(18);
@@ -204,6 +223,8 @@ export default function SEPEReportGenerator() {
         case "tiempos-resumen":
           await generateTimeSummaryReport(doc, yPosition);
           break;
+        default:
+          doc.text("Selecciona un tipo de informe válido", 14, yPosition);
       }
 
       // Footer with page numbers
@@ -225,18 +246,19 @@ export default function SEPEReportGenerator() {
       }
 
       // Save PDF
-      const fileName = `${reportType?.name.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd_HHmm")}.pdf`;
+      const fileName = `${(reportType?.name || "Informe").replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd_HHmm")}.pdf`;
+      console.log("Saving PDF as:", fileName);
       doc.save(fileName);
 
       toast({
         title: "Informe generado",
         description: `El informe ${fileName} se ha descargado correctamente`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating PDF:", error);
       toast({
-        title: "Error",
-        description: "No se pudo generar el informe PDF",
+        title: "Error al generar informe",
+        description: error?.message || "No se pudo generar el informe PDF",
         variant: "destructive",
       });
     } finally {
