@@ -25,17 +25,10 @@ import {
   BookOpen,
 } from "lucide-react";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-// Extend jsPDF type for autotable
-declare module "jspdf" {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable: { finalY: number };
-  }
-}
 
 interface Course {
   id: string;
@@ -321,7 +314,7 @@ export default function SEPEReportGenerator() {
     doc.setFont("helvetica", "bold");
     doc.text("Listado de Alumnos", 14, startY);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: startY + 5,
       head: [["NIF", "Nombre Completo", "Perfil", "Tiempo Total"]],
       body: tableData,
@@ -346,7 +339,7 @@ export default function SEPEReportGenerator() {
     const totalTime = Object.values(timeByUser).reduce((a, b) => a + b, 0);
     const avgTime = enrollments.length > 0 ? totalTime / enrollments.length : 0;
 
-    const summaryY = doc.lastAutoTable.finalY + 15;
+    const summaryY = (doc as any).lastAutoTable.finalY + 15;
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("Resumen", 14, summaryY);
@@ -432,7 +425,7 @@ export default function SEPEReportGenerator() {
         a.status === "completed" ? "Completado" : a.status,
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: currentY + 10,
         head: [["Fecha", "Evaluación", "Intento", "Calificación", "Estado"]],
         body: tableData,
@@ -447,7 +440,7 @@ export default function SEPEReportGenerator() {
         },
       });
 
-      currentY = doc.lastAutoTable.finalY + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
     }
   };
 
@@ -567,7 +560,7 @@ export default function SEPEReportGenerator() {
         ["Tests Realizados", `${metrics.passedTests}/${metrics.totalTests}`],
       ];
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: currentY,
         body: detailsData,
         theme: "plain",
@@ -581,7 +574,7 @@ export default function SEPEReportGenerator() {
       });
 
       // Progress bar
-      const progressY = doc.lastAutoTable.finalY + 5;
+      const progressY = (doc as any).lastAutoTable.finalY + 5;
       const progress = enrollment.progress_percentage || 0;
       doc.setDrawColor(200, 200, 200);
       doc.rect(14, progressY, 100, 6);
@@ -643,7 +636,7 @@ export default function SEPEReportGenerator() {
     doc.setFont("helvetica", "bold");
     doc.text("TIEMPO INVERTIDO", 14, startY);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: startY + 10,
       head: [["NIF", "Nombre", "Apellidos", "Perfil", "Tiempo Total"]],
       body: tableData.map((d) => {
@@ -664,7 +657,7 @@ export default function SEPEReportGenerator() {
     });
 
     // Summary chart area (simplified bar representation)
-    const summaryY = doc.lastAutoTable.finalY + 15;
+    const summaryY = (doc as any).lastAutoTable.finalY + 15;
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("Total de tiempos invertidos", 14, summaryY);
