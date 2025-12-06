@@ -33,6 +33,8 @@ import ModuleView from "./pages/ModuleView";
 import EvaluationView from "./pages/EvaluationView";
 import ActivityView from "./pages/ActivityView";
 import CampusGuide from "./pages/CampusGuide";
+import AdminShopOrders from "./pages/dashboard/AdminShopOrders";
+import AdminPaymentSettings from "./pages/dashboard/AdminPaymentSettings";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import AdminTrainingCenters from "./pages/dashboard/AdminTrainingCenters";
 import AdminLicenses from "./pages/dashboard/AdminLicenses";
@@ -112,6 +114,8 @@ function AppRoutes() {
           <Route path="admin/licenses" element={<AdminLicenses />} />
           <Route path="admin/billing" element={<AdminBilling />} />
           <Route path="admin/orders" element={<AdminContentOrders />} />
+          <Route path="admin/shop-orders" element={<AdminShopOrders />} />
+          <Route path="admin/payment-settings" element={<AdminPaymentSettings />} />
           <Route path="admin/ai-analytics" element={<AdminAIAnalytics />} />
           <Route path="admin/traceability" element={<AdminTraceability />} />
           <Route path="admin/users" element={<AdminUsers />} />
