@@ -183,9 +183,31 @@ export default function SEPEReportGenerator() {
     console.log("Generating PDF for course:", filters.courseId, "Report type:", selectedReport);
 
     try {
+      // Get user profile and training center info
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, training_center_id")
+        .eq("id", user?.id)
+        .single();
+
+      let centerName = "Centro de Formación";
+      if (profileData?.training_center_id) {
+        const { data: centerData } = await supabase
+          .from("training_centers")
+          .select("name")
+          .eq("id", profileData.training_center_id)
+          .single();
+        if (centerData?.name) {
+          centerName = centerData.name;
+        }
+      }
+
+      const generatorName = profileData?.full_name || user?.email || "Usuario";
+
       const doc = new jsPDF();
       const course = courses.find((c) => c.id === filters.courseId);
       const reportType = SEPE_REPORT_TYPES.find((r) => r.id === selectedReport);
+      const generationDate = format(new Date(), "dd/MM/yyyy 'a las' HH:mm", { locale: es });
 
       console.log("Course found:", course?.title, "Report type:", reportType?.name);
 
@@ -196,11 +218,13 @@ export default function SEPEReportGenerator() {
 
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      doc.text(`Curso: ${course?.title || "N/A"}`, 14, 30);
-      doc.text(`Código Grupo: ${filters.groupCode || "N/A"}`, 14, 36);
-      doc.text(`Fecha de generación: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: es })}`, 14, 42);
+      doc.text(`Centro: ${centerName}`, 14, 30);
+      doc.text(`Curso: ${course?.title || "N/A"}`, 14, 36);
+      doc.text(`Código Grupo: ${filters.groupCode || "N/A"}`, 14, 42);
+      doc.text(`Generado por: ${generatorName}`, 14, 48);
+      doc.text(`Fecha: ${generationDate}`, 14, 54);
 
-      let yPosition = 50;
+      let yPosition = 64;
 
       switch (selectedReport) {
         case "tiempo-tutorizacion":
@@ -232,7 +256,7 @@ export default function SEPEReportGenerator() {
           { align: "center" }
         );
         doc.text(
-          `Generado por TalentCloud - ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
+          `${centerName} | Generado por: ${generatorName} - ${generationDate}`,
           14,
           doc.internal.pageSize.height - 10
         );
