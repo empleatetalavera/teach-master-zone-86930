@@ -433,13 +433,17 @@ export default function AdminTrainingCenters() {
                         id="primary_color"
                         value={formData.primary_color}
                         onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                        placeholder="#3B82F6 o hsl(217, 91%, 60%)"
                         className="flex-1"
                       />
-                      <div 
-                        className="w-10 h-10 rounded border"
-                        style={{ backgroundColor: formData.primary_color }}
+                      <input
+                        type="color"
+                        value={formData.primary_color.startsWith('#') ? formData.primary_color : '#3B82F6'}
+                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                        className="w-10 h-10 rounded border cursor-pointer p-0"
                       />
                     </div>
+                    <p className="text-xs text-muted-foreground mt-1">Introduce código HEX (#3B82F6) o HSL</p>
                   </div>
                   <div>
                     <Label htmlFor="secondary_color">Color Secundario</Label>
@@ -448,13 +452,17 @@ export default function AdminTrainingCenters() {
                         id="secondary_color"
                         value={formData.secondary_color}
                         onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                        placeholder="#8B5CF6 o hsl(262, 83%, 58%)"
                         className="flex-1"
                       />
-                      <div 
-                        className="w-10 h-10 rounded border"
-                        style={{ backgroundColor: formData.secondary_color }}
+                      <input
+                        type="color"
+                        value={formData.secondary_color.startsWith('#') ? formData.secondary_color : '#8B5CF6'}
+                        onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                        className="w-10 h-10 rounded border cursor-pointer p-0"
                       />
                     </div>
+                    <p className="text-xs text-muted-foreground mt-1">Introduce código HEX (#8B5CF6) o HSL</p>
                   </div>
                   <div>
                     <Label htmlFor="official_badge">Insignia Oficial</Label>
