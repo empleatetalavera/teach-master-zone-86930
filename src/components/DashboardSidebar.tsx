@@ -24,7 +24,8 @@ import {
   Headphones,
   Bell,
   DollarSign,
-  Layers
+  Layers,
+  FileSignature
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,7 @@ const superAdminItems = [
   { title: "Catálogo de Cursos", url: "/dashboard/admin/course-catalog", icon: Layers },
   { title: "Cursos", url: "/dashboard/admin/courses", icon: BookOpen },
   { title: "Licencias", url: "/dashboard/admin/licenses", icon: Key },
+  { title: "Contratos Firmados", url: "/dashboard/admin/contracts", icon: FileSignature },
   { title: "Facturación Global", url: "/dashboard/admin/billing", icon: DollarSign },
   { title: "Pedidos Tienda", url: "/dashboard/admin/shop-orders", icon: Package },
   { title: "Configurar Pagos", url: "/dashboard/admin/payment-settings", icon: Settings },

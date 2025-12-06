@@ -217,6 +217,71 @@ export type Database = {
           },
         ]
       }
+      center_contracts: {
+        Row: {
+          contract_content: string
+          contract_type: string
+          contract_version: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          signature_data: string | null
+          signed_at: string
+          signed_by: string
+          signer_dni: string
+          signer_email: string
+          signer_name: string
+          signer_position: string
+          training_center_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          contract_content: string
+          contract_type?: string
+          contract_version?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          signature_data?: string | null
+          signed_at?: string
+          signed_by: string
+          signer_dni: string
+          signer_email: string
+          signer_name: string
+          signer_position: string
+          training_center_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          contract_content?: string
+          contract_type?: string
+          contract_version?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          signature_data?: string | null
+          signed_at?: string
+          signed_by?: string
+          signer_dni?: string
+          signer_email?: string
+          signer_name?: string
+          signer_position?: string
+          training_center_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "center_contracts_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "training_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communications: {
         Row: {
           communication_type: Database["public"]["Enums"]["communication_type"]

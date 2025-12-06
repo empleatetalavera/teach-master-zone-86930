@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
@@ -5,8 +6,68 @@ import { BrandingHeader } from "@/components/BrandingHeader";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useContractCheck } from "@/hooks/useContractCheck";
+import ContractSigningModal from "@/components/ContractSigningModal";
 
 export function DashboardLayout() {
+  const { user, userRole } = useAuth();
+  const [trainingCenterId, setTrainingCenterId] = useState<string | null>(null);
+  const [centerName, setCenterName] = useState<string>("");
+  const [isLoadingCenter, setIsLoadingCenter] = useState(true);
+
+  // Fetch user's training center
+  useEffect(() => {
+    async function fetchUserCenter() {
+      if (!user) {
+        setIsLoadingCenter(false);
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("training_center_id")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.training_center_id) {
+          setTrainingCenterId(profile.training_center_id);
+          
+          const { data: center } = await supabase
+            .from("training_centers")
+            .select("name")
+            .eq("id", profile.training_center_id)
+            .single();
+          
+          if (center) {
+            setCenterName(center.name);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user center:", error);
+      } finally {
+        setIsLoadingCenter(false);
+      }
+    }
+
+    fetchUserCenter();
+  }, [user]);
+
+  const { hasSignedContract, isLoading: isLoadingContract, refreshContractStatus } = useContractCheck(
+    trainingCenterId,
+    userRole
+  );
+
+  // Show contract modal for center admins who haven't signed
+  const showContractModal = 
+    !isLoadingCenter && 
+    !isLoadingContract && 
+    userRole === "admin" && 
+    trainingCenterId && 
+    hasSignedContract === false;
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -38,6 +99,16 @@ export function DashboardLayout() {
           </main>
         </div>
       </div>
+
+      {/* Contract Signing Modal - Blocks access for center admins who haven't signed */}
+      {showContractModal && trainingCenterId && (
+        <ContractSigningModal
+          open={true}
+          onSigned={refreshContractStatus}
+          trainingCenterId={trainingCenterId}
+          centerName={centerName}
+        />
+      )}
     </SidebarProvider>
   );
 }

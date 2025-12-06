@@ -75,6 +75,7 @@ import StudentCertificates from "./pages/dashboard/StudentCertificates";
 import AuditorDashboard from "./pages/dashboard/AuditorDashboard";
 import AuditorCourses from "./pages/dashboard/AuditorCourses";
 import AuditorReports from "./pages/dashboard/AuditorReports";
+import AdminContracts from "./pages/dashboard/AdminContracts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -112,6 +113,7 @@ function AppRoutes() {
           <Route path="admin/center-settings" element={<CenterSettings />} />
           <Route path="admin/centers" element={<AdminTrainingCenters />} />
           <Route path="admin/licenses" element={<AdminLicenses />} />
+          <Route path="admin/contracts" element={<AdminContracts />} />
           <Route path="admin/billing" element={<AdminBilling />} />
           <Route path="admin/orders" element={<AdminContentOrders />} />
           <Route path="admin/shop-orders" element={<AdminShopOrders />} />
