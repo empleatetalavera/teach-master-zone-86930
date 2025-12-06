@@ -109,20 +109,32 @@ export default function CenterDetailPanel({ centerId, centerName }: CenterDetail
         })) || [];
       }
 
-      // Get courses from this center
-      const { data: coursesData, error: coursesError } = await supabase
-        .from("courses")
-        .select("id, title, is_active, start_date, end_date")
+      // Get courses assigned to this center via course_center_assignments
+      const { data: assignmentsData, error: assignmentsError } = await supabase
+        .from("course_center_assignments")
+        .select(`
+          is_active,
+          courses:course_id (
+            id,
+            title,
+            is_active,
+            start_date,
+            end_date
+          )
+        `)
         .eq("training_center_id", centerId)
-        .order("created_at", { ascending: false });
+        .eq("is_active", true);
 
-      if (coursesError) throw coursesError;
+      if (assignmentsError) throw assignmentsError;
 
       // Get enrollment counts for each course
       const coursesWithEnrollments: CourseData[] = [];
       let totalEnrollments = 0;
 
-      for (const course of coursesData || []) {
+      for (const assignment of assignmentsData || []) {
+        const course = assignment.courses as any;
+        if (!course) continue;
+
         const { count } = await supabase
           .from("enrollments")
           .select("*", { count: "exact", head: true })
@@ -132,10 +144,16 @@ export default function CenterDetailPanel({ centerId, centerName }: CenterDetail
         totalEnrollments += enrollmentCount;
 
         coursesWithEnrollments.push({
-          ...course,
+          id: course.id,
+          title: course.title,
+          is_active: course.is_active,
+          start_date: course.start_date,
+          end_date: course.end_date,
           enrollmentCount,
         });
       }
+
+      const coursesData = coursesWithEnrollments;
 
       setUsers(usersWithDetails);
       setCourses(coursesWithEnrollments);
@@ -144,8 +162,8 @@ export default function CenterDetailPanel({ centerId, centerName }: CenterDetail
         totalStudents: studentCount,
         totalTeachers: teacherCount,
         totalAdmins: adminCount,
-        totalCourses: coursesData?.length || 0,
-        activeCourses: coursesData?.filter(c => c.is_active).length || 0,
+        totalCourses: coursesWithEnrollments.length,
+        activeCourses: coursesWithEnrollments.filter(c => c.is_active).length,
         totalEnrollments,
       });
     } catch (error) {
