@@ -12,7 +12,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2, Building2, Copy, CheckCircle2, Key, Mail, User, GraduationCap, Calendar, Clock, X, AlertTriangle } from "lucide-react";
+import { UserPlus, Loader2, Shield, Search, RefreshCw, Edit2, Building2, Copy, CheckCircle2, Key, Mail, User, GraduationCap, Calendar, Clock, X, AlertTriangle, Trash2, MoreHorizontal, UserX } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { UserRoleManager } from "@/components/UserRoleManager";
 import { useAuth } from "@/lib/auth";
 
@@ -79,6 +81,16 @@ const AdminUsers = () => {
   const [userEnrollments, setUserEnrollments] = useState<StudentEnrollment[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
   const [unenrollingId, setUnenrollingId] = useState<string | null>(null);
+  
+  // Delete/Edit user state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [editProfileDialogOpen, setEditProfileDialogOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<UserWithRole | null>(null);
+  const [editFullName, setEditFullName] = useState("");
+  const [editTrainingCenter, setEditTrainingCenter] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   
   const isSuperAdmin = userRole === 'super_admin';
   
@@ -430,6 +442,90 @@ const AdminUsers = () => {
     }
   };
 
+  // Handle opening edit profile dialog
+  const handleEditProfile = async (userItem: UserWithRole) => {
+    setUserToEdit(userItem);
+    setEditFullName(userItem.full_name || "");
+    setEditTrainingCenter(userItem.training_center_id || "");
+    setEditProfileDialogOpen(true);
+  };
+
+  // Save profile changes
+  const handleSaveProfile = async () => {
+    if (!userToEdit) return;
+    
+    setIsSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editFullName || null,
+          training_center_id: editTrainingCenter || null,
+        })
+        .eq("id", userToEdit.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Perfil actualizado",
+        description: "Los datos del usuario han sido actualizados",
+      });
+
+      setEditProfileDialogOpen(false);
+      setUserToEdit(null);
+      loadUsers();
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el perfil",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  // Handle delete user confirmation
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      // First delete user role
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userToDelete.id);
+
+      if (roleError) throw roleError;
+
+      // Remove from training center (set training_center_id to null)
+      await supabase
+        .from("profiles")
+        .update({ training_center_id: null })
+        .eq("id", userToDelete.id);
+
+      toast({
+        title: "Usuario dado de baja",
+        description: "El usuario ha sido desvinculado y su rol eliminado",
+      });
+
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+      loadUsers();
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo dar de baja al usuario",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -572,17 +668,43 @@ const AdminUsers = () => {
                         })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setIsRoleDialogOpen(true);
-                          }}
-                        >
-                          <Edit2 className="h-4 w-4 mr-2" />
-                          Gestionar Rol
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedUser(user);
+                              setIsRoleDialogOpen(true);
+                            }}>
+                              <Shield className="h-4 w-4 mr-2" />
+                              Gestionar Rol
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditProfile(user)}>
+                              <Edit2 className="h-4 w-4 mr-2" />
+                              Editar Perfil
+                            </DropdownMenuItem>
+                            {user.role === 'student' && (
+                              <DropdownMenuItem onClick={() => handleOpenEnrollmentPanel(user)}>
+                                <GraduationCap className="h-4 w-4 mr-2" />
+                                Ver Matrículas
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setUserToDelete(user);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <UserX className="h-4 w-4 mr-2" />
+                              Dar de Baja
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -1012,6 +1134,110 @@ const AdminUsers = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Dar de baja a este usuario?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará el rol del usuario <strong>{userToDelete?.full_name || userToDelete?.email}</strong> y lo desvinculará del centro de formación.
+              <br /><br />
+              El usuario no podrá acceder al sistema hasta que se le asigne un nuevo rol.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <UserX className="h-4 w-4 mr-2" />
+                  Dar de Baja
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editProfileDialogOpen} onOpenChange={setEditProfileDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Editar Perfil de Usuario</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="rounded-lg bg-muted p-3">
+              <p className="text-sm text-muted-foreground">
+                <strong>ID:</strong> <code className="text-xs">{userToEdit?.id}</code>
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="editFullName">Nombre Completo</Label>
+              <Input
+                id="editFullName"
+                value={editFullName}
+                onChange={(e) => setEditFullName(e.target.value)}
+                placeholder="Nombre y apellidos"
+                disabled={isSavingProfile}
+              />
+            </div>
+
+            {isSuperAdmin && (
+              <div className="space-y-2">
+                <Label htmlFor="editCenter">Centro de Formación</Label>
+                <Select
+                  value={editTrainingCenter}
+                  onValueChange={setEditTrainingCenter}
+                  disabled={isSavingProfile}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin asignar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Sin asignar</SelectItem>
+                    {trainingCenters.map((center) => (
+                      <SelectItem key={center.id} value={center.id}>
+                        {center.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setEditProfileDialogOpen(false)}
+                disabled={isSavingProfile}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveProfile} disabled={isSavingProfile}>
+                {isSavingProfile ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  "Guardar Cambios"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
