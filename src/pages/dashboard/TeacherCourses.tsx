@@ -1,494 +1,211 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { 
   BookOpen, 
   Users, 
   Clock, 
-  MoreVertical, 
-  Edit, 
-  Trash2, 
   Eye, 
-  Upload,
-  FileText,
-  Download,
-  Play
+  Calendar,
+  Search,
+  Loader2,
+  ClipboardList,
+  BarChart3
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import ScormUploader from "@/components/scorm/ScormUploader";
-import ScormManager from "@/components/scorm/ScormManager";
+import { useAuth } from "@/lib/auth";
 
-const mockScormContent = [
-  {
-    id: 1,
-    name: "Módulo 1: Fundamentos",
-    type: "SCORM 1.2",
-    size: "45 MB",
-    uploadDate: "2024-01-15",
-    courses: 3
-  },
-  {
-    id: 2,
-    name: "Módulo 2: Prácticas Avanzadas",
-    type: "SCORM 2004",
-    size: "78 MB",
-    uploadDate: "2024-01-20",
-    courses: 2
-  },
-  {
-    id: 3,
-    name: "Evaluación Final",
-    type: "SCORM 1.2",
-    size: "12 MB",
-    uploadDate: "2024-02-01",
-    courses: 5
-  },
-];
+interface CourseWithEnrollments {
+  id: string;
+  title: string;
+  description: string | null;
+  duration_hours: number | null;
+  category: string | null;
+  level: string | null;
+  thumbnail_url: string | null;
+  is_active: boolean;
+  start_date: string | null;
+  end_date: string | null;
+  enrollments_count: number;
+}
 
 export default function TeacherCourses() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("courses");
-  const [newCourse, setNewCourse] = useState({
-    title: "",
-    duration: "",
-    description: "",
-    category: "Desarrollo Web",
-    level: "Principiante"
-  });
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch courses from database
+  // Fetch courses where user is tutor
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ["teacher-courses"],
+    queryKey: ["teacher-assigned-courses", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!user) return [];
+      
+      // Get courses where user is tutor
+      const { data: coursesData, error } = await supabase
         .from("courses")
         .select("*")
+        .eq("tutor_id", user.id)
+        .eq("is_active", true)
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return data;
-    }
+      
+      // Get enrollment counts for each course
+      const coursesWithCounts: CourseWithEnrollments[] = await Promise.all(
+        (coursesData || []).map(async (course) => {
+          const { count } = await supabase
+            .from("enrollments")
+            .select("*", { count: "exact", head: true })
+            .eq("course_id", course.id);
+          
+          return {
+            ...course,
+            enrollments_count: count || 0
+          };
+        })
+      );
+      
+      return coursesWithCounts;
+    },
+    enabled: !!user
   });
 
-  // Upload image to storage
-  const uploadCourseImage = async (file: File, courseId: string) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${courseId}-${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
+  const filteredCourses = courses.filter(course =>
+    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    const { error: uploadError } = await supabase.storage
-      .from('course-images')
-      .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('course-images')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
-  };
-
-  // Create course mutation
-  const createCourseMutation = useMutation({
-    mutationFn: async (courseData: typeof newCourse) => {
-      // First, create the course
-      const { data, error } = await supabase
-        .from("courses")
-        .insert([{
-          title: courseData.title,
-          description: courseData.description,
-          duration_hours: parseInt(courseData.duration) || null,
-          category: courseData.category,
-          level: courseData.level,
-          is_active: true
-        }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-
-      // If there's an image, upload it and update the course
-      if (selectedImage && data) {
-        const imageUrl = await uploadCourseImage(selectedImage, data.id);
-        
-        const { error: updateError } = await supabase
-          .from("courses")
-          .update({ thumbnail_url: imageUrl })
-          .eq("id", data.id);
-
-        if (updateError) throw updateError;
-        
-        return { ...data, thumbnail_url: imageUrl };
-      }
-      
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
-      toast({
-        title: "¡Curso creado!",
-        description: "El curso ha sido creado exitosamente",
-      });
-      setNewCourse({
-        title: "",
-        duration: "",
-        description: "",
-        category: "Desarrollo Web",
-        level: "Principiante"
-      });
-      setSelectedImage(null);
-      setImagePreview(null);
-      setActiveTab("courses");
-    },
-    onError: (error) => {
-      toast({
-        title: "Error al crear curso",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "Archivo muy grande",
-          description: "La imagen debe ser menor a 5MB",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        toast({
-          title: "Formato no válido",
-          description: "Solo se permiten imágenes JPG, PNG o WEBP",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setSelectedImage(file);
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-  };
-
-  const handleCreateCourse = () => {
-    if (!newCourse.title || !newCourse.description) {
-      toast({
-        title: "Campos requeridos",
-        description: "Por favor completa el título y la descripción",
-        variant: "destructive",
-      });
-      return;
-    }
-    createCourseMutation.mutate(newCourse);
-  };
-
-  const handleEditCourse = (courseId: string) => {
-    toast({
-      title: "Editar curso",
-      description: `Editando curso ${courseId}`,
-    });
-  };
-
-  const handleDeleteCourse = async (courseId: string) => {
-    const { error } = await supabase
-      .from("courses")
-      .update({ is_active: false })
-      .eq("id", courseId);
-    
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    queryClient.invalidateQueries({ queryKey: ["teacher-courses"] });
-    toast({
-      title: "Curso eliminado",
-      description: "El curso ha sido desactivado correctamente",
-    });
-  };
-
-  const handleUploadScorm = () => {
-    toast({
-      title: "Subir contenido SCORM",
-      description: "Función de carga en desarrollo",
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Gestión de Cursos</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Mis Cursos Asignados</h1>
         <p className="text-muted-foreground mt-2">
-          Administra tus cursos, crea nuevos contenidos y gestiona recursos SCORM
+          Cursos donde eres tutor/profesor asignado
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="courses">Mis Cursos</TabsTrigger>
-          <TabsTrigger value="create">Crear Nuevo</TabsTrigger>
-          <TabsTrigger value="scorm">SCORM</TabsTrigger>
-        </TabsList>
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar cursos..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
 
-        <TabsContent value="courses" className="space-y-4">
-          {isLoading ? (
-            <div className="text-center py-8">Cargando cursos...</div>
-          ) : courses.length === 0 ? (
-            <Card className="p-12 text-center">
-              <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">No hay cursos todavía</h3>
-              <p className="text-muted-foreground mb-4">Crea tu primer curso para comenzar</p>
-              <Button onClick={() => setActiveTab("create")}>
-                <BookOpen className="mr-2 h-4 w-4" />
-                Crear Primer Curso
-              </Button>
-            </Card>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {courses.map((course) => (
-                <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div 
-                    className="h-48 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden"
-                  >
-                    {course.thumbnail_url ? (
-                      <img 
-                        src={course.thumbnail_url} 
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <BookOpen className="h-16 w-16 text-primary" />
-                    )}
-                  </div>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl">{course.title}</CardTitle>
-                        <CardDescription className="mt-2">{course.description}</CardDescription>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="ml-2">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/teacher/courses/${course.id}`)}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Ficha SEPE
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditCourse(course.id)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Eye className="mr-2 h-4 w-4" />
-                            Vista previa
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteCourse(course.id)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>{course.duration_hours ? `${course.duration_hours} horas` : 'Sin definir'}</span>
-                        </div>
-                        {course.category && (
-                          <Badge variant="outline">{course.category}</Badge>
-                        )}
-                      </div>
-
-                      <Badge variant={course.is_active ? "default" : "secondary"}>
-                        {course.is_active ? "Activo" : "Inactivo"}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="create" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Crear Nuevo Curso</CardTitle>
-              <CardDescription>
-                Completa la información para crear un nuevo curso
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Título del Curso *</Label>
-                  <Input 
-                    id="title" 
-                    placeholder="Ej: Introducción a Python"
-                    value={newCourse.title}
-                    onChange={(e) => setNewCourse({...newCourse, title: e.target.value})}
+      {filteredCourses.length === 0 ? (
+        <Card className="p-12 text-center">
+          <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold mb-2">No tienes cursos asignados</h3>
+          <p className="text-muted-foreground">
+            {searchTerm 
+              ? "No se encontraron cursos con ese criterio" 
+              : "El administrador debe asignarte como tutor de un curso"}
+          </p>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredCourses.map((course) => (
+            <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <div 
+                className="h-40 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center overflow-hidden"
+              >
+                {course.thumbnail_url ? (
+                  <img 
+                    src={course.thumbnail_url} 
+                    alt={course.title}
+                    className="w-full h-full object-cover"
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Duración (horas) *</Label>
-                  <Input 
-                    id="duration" 
-                    type="number"
-                    placeholder="Ej: 40"
-                    value={newCourse.duration}
-                    onChange={(e) => setNewCourse({...newCourse, duration: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoría *</Label>
-                  <Input 
-                    id="category"
-                    placeholder="Ej: Desarrollo Web"
-                    value={newCourse.category}
-                    onChange={(e) => setNewCourse({...newCourse, category: e.target.value})}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="level">Nivel *</Label>
-                  <Input 
-                    id="level"
-                    placeholder="Ej: Principiante, Intermedio, Avanzado"
-                    value={newCourse.level}
-                    onChange={(e) => setNewCourse({...newCourse, level: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Descripción *</Label>
-                <Textarea 
-                  id="description" 
-                  placeholder="Describe el contenido y objetivos del curso..."
-                  className="min-h-[120px]"
-                  value={newCourse.description}
-                  onChange={(e) => setNewCourse({...newCourse, description: e.target.value})}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="image">Imagen del Curso</Label>
-                {imagePreview ? (
-                  <div className="relative">
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={handleRemoveImage}
-                      type="button"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
                 ) : (
-                  <div className="flex items-center gap-4">
-                    <Input 
-                      id="image" 
-                      type="file" 
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                      onChange={handleImageChange}
-                    />
+                  <BookOpen className="h-12 w-12 text-primary" />
+                )}
+              </div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg line-clamp-2">{course.title}</CardTitle>
+                {course.description && (
+                  <CardDescription className="line-clamp-2">{course.description}</CardDescription>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>{course.duration_hours ? `${course.duration_hours}h` : '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Users className="h-4 w-4" />
+                    <span>{course.enrollments_count} alumnos</span>
+                  </div>
+                  {course.category && (
+                    <Badge variant="outline" className="text-xs">{course.category}</Badge>
+                  )}
+                </div>
+
+                {(course.start_date || course.end_date) && (
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {course.start_date && new Date(course.start_date).toLocaleDateString('es-ES')}
+                    {course.start_date && course.end_date && ' - '}
+                    {course.end_date && new Date(course.end_date).toLocaleDateString('es-ES')}
                   </div>
                 )}
-                <p className="text-sm text-muted-foreground">
-                  Formatos: JPG, PNG, WEBP. Tamaño máximo: 5MB. Recomendado: 1200x600px
-                </p>
-              </div>
 
-              <div className="flex gap-4">
-                <Button 
-                  className="flex-1" 
-                  size="lg"
-                  onClick={handleCreateCourse}
-                  disabled={createCourseMutation.isPending}
-                >
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  {createCourseMutation.isPending ? "Creando..." : "Crear Curso"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="scorm" className="space-y-6">
-          <ScormUploader />
-          <ScormManager />
-        </TabsContent>
-      </Tabs>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/course/${course.id}`)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Ver Curso
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/dashboard/teacher/students?course=${course.id}`)}
+                  >
+                    <Users className="h-4 w-4 mr-1" />
+                    Alumnos
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => navigate(`/dashboard/teacher/grade-activities?course=${course.id}`)}
+                  >
+                    <ClipboardList className="h-4 w-4 mr-1" />
+                    Evaluar
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => navigate(`/dashboard/teacher/reports?course=${course.id}`)}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Informes
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

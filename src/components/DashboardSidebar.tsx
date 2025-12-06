@@ -75,15 +75,11 @@ const adminItems = [
 const teacherItems = [
   { title: "Dashboard", url: "/dashboard/teacher", icon: LayoutDashboard },
   { title: "Mis Cursos", url: "/dashboard/teacher/courses", icon: BookOpen },
-  { title: "Configurar Cursos", url: "/dashboard/teacher/course-settings", icon: Settings },
-  { title: "Mi Perfil Docente", url: "/dashboard/teacher/profile", icon: UserCircle },
   { title: "Alumnos", url: "/dashboard/teacher/students", icon: Users },
+  { title: "Evaluar Actividades", url: "/dashboard/teacher/grade-activities", icon: ClipboardList },
+  { title: "Cronograma", url: "/dashboard/teacher/calendar", icon: Calendar },
   { title: "Informes", url: "/dashboard/teacher/reports", icon: BarChart },
-  { title: "Alertas", url: "/dashboard/teacher/alerts", icon: Bell },
-  { title: "Respuestas Rápidas", url: "/dashboard/teacher/quick-responses", icon: MessageSquare },
-  { title: "Atención al Alumno", url: "/dashboard/teacher/support", icon: Headphones },
-  { title: "Evaluaciones", url: "/dashboard/teacher/evaluations", icon: ClipboardList },
-  { title: "Calendario", url: "/dashboard/teacher/calendar", icon: Calendar },
+  { title: "Guía del Tutor", url: "/campus-guide?role=teacher", icon: BookMarked },
 ];
 
 const studentItems = [
