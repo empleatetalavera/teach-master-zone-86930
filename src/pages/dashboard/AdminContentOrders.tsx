@@ -49,7 +49,7 @@ export default function AdminContentOrders() {
 
   const [formData, setFormData] = useState({
     training_center_id: "",
-    content_type: "course",
+    content_type: "activation",
     title: "",
     description: "",
     status: "pending",
@@ -258,7 +258,7 @@ export default function AdminContentOrders() {
     setEditingOrder(null);
     setFormData({
       training_center_id: "",
-      content_type: "course",
+      content_type: "activation",
       title: "",
       description: "",
       status: "pending",
@@ -275,6 +275,7 @@ export default function AdminContentOrders() {
       video: "Vídeo",
       document: "Documento",
       custom: "Personalizado",
+      activation: "Activación de Contenido",
     };
     return labels[type] || type;
   };
@@ -384,7 +385,8 @@ export default function AdminContentOrders() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="course">Curso</SelectItem>
+                      <SelectItem value="activation">Activación de Contenido</SelectItem>
+                      <SelectItem value="course">Curso Nuevo</SelectItem>
                       <SelectItem value="module">Módulo</SelectItem>
                       <SelectItem value="video">Vídeo</SelectItem>
                       <SelectItem value="document">Documento</SelectItem>
