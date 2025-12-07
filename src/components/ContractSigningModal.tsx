@@ -13,6 +13,7 @@ import { FileSignature, Check } from "lucide-react";
 interface ContractSigningModalProps {
   open: boolean;
   onSigned: () => void;
+  onSkip?: () => void;
   trainingCenterId: string;
   centerName: string;
 }
@@ -51,6 +52,7 @@ const PLANS = {
 export default function ContractSigningModal({
   open,
   onSigned,
+  onSkip,
   trainingCenterId,
   centerName,
 }: ContractSigningModalProps) {
@@ -536,6 +538,17 @@ export default function ContractSigningModal({
             <p className="text-xs text-muted-foreground text-center">
               Al firmar, acepta que esta firma electrónica tiene validez legal según el Reglamento eIDAS
             </p>
+
+            {onSkip && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onSkip}
+                className="w-full text-muted-foreground hover:text-foreground"
+              >
+                Continuar sin firmar (firmar más tarde)
+              </Button>
+            )}
           </div>
           </ScrollArea>
         </div>
