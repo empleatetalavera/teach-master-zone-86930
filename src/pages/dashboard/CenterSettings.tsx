@@ -286,6 +286,43 @@ export default function CenterSettings() {
               </div>
             </div>
 
+            {/* Color Presets */}
+            <div>
+              <Label className="mb-3 block">Paletas de Colores Predefinidas</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { name: "Turquesa", primary: "hsl(177, 33%, 52%)", secondary: "hsl(177, 40%, 42%)" },
+                  { name: "Azul Profesional", primary: "hsl(217, 91%, 60%)", secondary: "hsl(221, 83%, 53%)" },
+                  { name: "Verde Corporativo", primary: "hsl(142, 76%, 36%)", secondary: "hsl(142, 71%, 29%)" },
+                  { name: "Naranja Energético", primary: "hsl(25, 95%, 53%)", secondary: "hsl(21, 90%, 48%)" },
+                  { name: "Púrpura Elegante", primary: "hsl(262, 83%, 58%)", secondary: "hsl(263, 70%, 50%)" },
+                  { name: "Rojo Institucional", primary: "hsl(0, 84%, 60%)", secondary: "hsl(0, 72%, 51%)" },
+                ].map((preset) => (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    onClick={() => {
+                      setPrimaryColor(preset.primary);
+                      setSecondaryColor(preset.secondary);
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 border rounded-lg hover:border-primary hover:bg-muted/50 transition-all"
+                  >
+                    <div className="flex gap-1">
+                      <div 
+                        className="w-8 h-8 rounded-l-md" 
+                        style={{ backgroundColor: preset.primary }}
+                      />
+                      <div 
+                        className="w-8 h-8 rounded-r-md" 
+                        style={{ backgroundColor: preset.secondary }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium">{preset.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="primaryColor">Color Primario (HSL)</Label>
