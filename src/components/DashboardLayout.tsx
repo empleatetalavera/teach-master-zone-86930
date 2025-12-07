@@ -16,6 +16,7 @@ export function DashboardLayout() {
   const [trainingCenterId, setTrainingCenterId] = useState<string | null>(null);
   const [centerName, setCenterName] = useState<string>("");
   const [isLoadingCenter, setIsLoadingCenter] = useState(true);
+  const [contractSkipped, setContractSkipped] = useState(false);
 
   // Fetch user's training center
   useEffect(() => {
@@ -60,13 +61,18 @@ export function DashboardLayout() {
     userRole
   );
 
+  const handleSkipContract = () => {
+    setContractSkipped(true);
+  };
+
   // Show contract modal for center admins who haven't signed
   const showContractModal = 
     !isLoadingCenter && 
     !isLoadingContract && 
     userRole === "admin" && 
     trainingCenterId && 
-    hasSignedContract === false;
+    hasSignedContract === false &&
+    !contractSkipped;
 
   return (
     <SidebarProvider>
@@ -105,6 +111,7 @@ export function DashboardLayout() {
         <ContractSigningModal
           open={true}
           onSigned={refreshContractStatus}
+          onSkip={handleSkipContract}
           trainingCenterId={trainingCenterId}
           centerName={centerName}
         />
