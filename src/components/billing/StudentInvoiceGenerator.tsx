@@ -102,16 +102,21 @@ export function StudentInvoiceGenerator() {
   });
 
   useEffect(() => {
-    loadCourses();
-    loadInvoices();
     loadCenterInfo();
+    loadInvoices();
   }, []);
 
   useEffect(() => {
-    if (form.courseId) {
-      loadStudents(form.courseId);
+    if (centerInfo?.id) {
+      loadCourses(centerInfo.id);
     }
-  }, [form.courseId]);
+  }, [centerInfo]);
+
+  useEffect(() => {
+    if (form.courseId && centerInfo?.id) {
+      loadStudents(form.courseId, centerInfo.id);
+    }
+  }, [form.courseId, centerInfo]);
 
   const loadCenterInfo = async () => {
     if (!user) return;
@@ -133,17 +138,18 @@ export function StudentInvoiceGenerator() {
     }
   };
 
-  const loadCourses = async () => {
+  const loadCourses = async (centerId: string) => {
     const { data } = await supabase
       .from("courses")
       .select("id, title, training_center_id")
       .eq("is_active", true)
+      .eq("training_center_id", centerId)
       .order("title");
 
     if (data) setCourses(data);
   };
 
-  const loadStudents = async (courseId: string) => {
+  const loadStudents = async (courseId: string, centerId: string) => {
     const { data: enrollments } = await supabase
       .from("enrollments")
       .select("user_id")
@@ -152,11 +158,12 @@ export function StudentInvoiceGenerator() {
     if (enrollments && enrollments.length > 0) {
       const userIds = enrollments.map((e) => e.user_id);
       
-      // Get full profiles with all student data
+      // Get full profiles with all student data, filtered by training center
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, dni_nie, phone, address, city, postal_code, province")
-        .in("id", userIds);
+        .select("id, full_name, dni_nie, phone, address, city, postal_code, province, training_center_id")
+        .in("id", userIds)
+        .eq("training_center_id", centerId);
 
       if (profiles) {
         setStudents(
