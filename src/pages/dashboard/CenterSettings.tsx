@@ -289,6 +289,16 @@ export default function CenterSettings() {
             {/* Color Presets */}
             <div>
               <Label className="mb-3 block">Paletas de Colores Predefinidas</Label>
+              <div className="flex gap-2 mb-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-muted border"></div>
+                  <span>Primario</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-muted border"></div>
+                  <span>Secundario</span>
+                </div>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
                   { name: "Turquesa", primary: "hsl(177, 33%, 52%)", secondary: "hsl(177, 40%, 42%)" },
@@ -308,14 +318,20 @@ export default function CenterSettings() {
                     className="flex flex-col items-center gap-2 p-3 border rounded-lg hover:border-primary hover:bg-muted/50 transition-all"
                   >
                     <div className="flex gap-1">
-                      <div 
-                        className="w-8 h-8 rounded-l-md" 
-                        style={{ backgroundColor: preset.primary }}
-                      />
-                      <div 
-                        className="w-8 h-8 rounded-r-md" 
-                        style={{ backgroundColor: preset.secondary }}
-                      />
+                      <div className="flex flex-col items-center">
+                        <div 
+                          className="w-10 h-10 rounded-md shadow-sm" 
+                          style={{ backgroundColor: preset.primary }}
+                        />
+                        <span className="text-[10px] text-muted-foreground mt-1">P</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div 
+                          className="w-10 h-10 rounded-md shadow-sm" 
+                          style={{ backgroundColor: preset.secondary }}
+                        />
+                        <span className="text-[10px] text-muted-foreground mt-1">S</span>
+                      </div>
                     </div>
                     <span className="text-xs font-medium">{preset.name}</span>
                   </button>
