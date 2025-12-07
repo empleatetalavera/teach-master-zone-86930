@@ -548,11 +548,11 @@ const AdminUsers = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={() => loadUsers()} variant="outline">
+          <Button onClick={() => loadUsers()} variant="outline" className="border-primary text-primary hover:bg-primary/10">
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
           </Button>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
             <UserPlus className="h-4 w-4 mr-2" />
             Crear Usuario
           </Button>
@@ -876,6 +876,7 @@ const AdminUsers = () => {
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 variant="outline"
+                className="border-muted-foreground/30"
                 onClick={() => {
                   setIsCreateDialogOpen(false);
                   setNewUserEmail("");
@@ -888,7 +889,7 @@ const AdminUsers = () => {
               >
                 Cancelar
               </Button>
-              <Button onClick={handleCreateUser} disabled={isCreating}>
+              <Button onClick={handleCreateUser} disabled={isCreating} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 {isCreating ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

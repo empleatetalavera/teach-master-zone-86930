@@ -110,6 +110,11 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     root.style.setProperty('--primary', parsePrimaryColor);
     root.style.setProperty('--secondary', parseSecondaryColor);
     
+    // Ensure foreground colors are always set for visibility
+    root.style.setProperty('--primary-foreground', '0 0% 100%');
+    root.style.setProperty('--secondary-foreground', '0 0% 100%');
+    root.style.setProperty('--accent-foreground', '0 0% 100%');
+    
     // Also update related CSS variables for complete theme consistency
     root.style.setProperty('--primary-glow', adjustLightness(parsePrimaryColor, 13));
     root.style.setProperty('--accent', adjustLightness(parsePrimaryColor, -5));
