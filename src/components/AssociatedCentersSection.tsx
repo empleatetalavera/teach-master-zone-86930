@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Building2, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
+import { useNavigate } from "react-router-dom";
 interface TrainingCenter {
   id: string;
   name: string;
@@ -14,6 +14,12 @@ interface TrainingCenter {
 export const AssociatedCentersSection = () => {
   const [centers, setCenters] = useState<TrainingCenter[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const handleCenterClick = (slug: string) => {
+    // Force a full page navigation to ensure the center parameter is properly loaded
+    window.location.href = `/auth?center=${slug}`;
+  };
 
   useEffect(() => {
     const fetchCenters = async () => {
@@ -89,12 +95,10 @@ export const AssociatedCentersSection = () => {
                 <Button 
                   className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors" 
                   variant="outline"
-                  asChild
+                  onClick={() => handleCenterClick(center.slug)}
                 >
-                  <a href={`/auth?center=${center.slug}`}>
-                    Acceder al Campus
-                    <ExternalLink className="w-4 h-4 ml-2" />
-                  </a>
+                  Acceder al Campus
+                  <ExternalLink className="w-4 h-4 ml-2" />
                 </Button>
               </CardContent>
             </Card>
