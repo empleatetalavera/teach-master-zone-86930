@@ -13,8 +13,10 @@ serve(async (req) => {
 
   try {
     const { userId, newPassword } = await req.json();
+    console.log("Reset password request for userId:", userId);
 
     if (!userId || !newPassword) {
+      console.log("Missing userId or newPassword");
       return new Response(
         JSON.stringify({ error: "userId y newPassword son requeridos" }),
         {
@@ -25,6 +27,7 @@ serve(async (req) => {
     }
 
     if (newPassword.length < 6) {
+      console.log("Password too short");
       return new Response(
         JSON.stringify({ error: "La contraseña debe tener al menos 6 caracteres" }),
         {
@@ -37,6 +40,7 @@ serve(async (req) => {
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.log("No authorization header");
       return new Response(
         JSON.stringify({ error: "No autorizado" }),
         {
@@ -62,10 +66,11 @@ serve(async (req) => {
       },
     });
 
-    // Verify the user is authenticated and has admin role
+    // Verify the user is authenticated
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     
     if (authError || !user) {
+      console.log("Auth error:", authError?.message);
       return new Response(
         JSON.stringify({ error: "No autorizado" }),
         {
@@ -75,6 +80,8 @@ serve(async (req) => {
       );
     }
 
+    console.log("Authenticated user:", user.id);
+
     // Check if user has admin or super_admin role
     const { data: roleData, error: roleError } = await supabaseClient
       .from("user_roles")
@@ -82,7 +89,10 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
+    console.log("Role data:", roleData, "Role error:", roleError?.message);
+
     if (roleError || !roleData || (roleData.role !== "admin" && roleData.role !== "super_admin")) {
+      console.log("Permission denied - role:", roleData?.role);
       return new Response(
         JSON.stringify({ error: "No tienes permisos de administrador" }),
         {
@@ -91,6 +101,8 @@ serve(async (req) => {
         }
       );
     }
+
+    console.log("User has role:", roleData.role, "- proceeding with password update");
 
     // Create admin client to update the user's password
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -109,13 +121,15 @@ serve(async (req) => {
     if (updateError) {
       console.error("Error updating password:", updateError);
       return new Response(
-        JSON.stringify({ error: "Error al actualizar la contraseña" }),
+        JSON.stringify({ error: "Error al actualizar la contraseña: " + updateError.message }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
+
+    console.log("Password updated successfully for user:", userId);
 
     return new Response(
       JSON.stringify({ success: true, message: "Contraseña actualizada correctamente" }),
@@ -125,7 +139,7 @@ serve(async (req) => {
       }
     );
   } catch (e) {
-    console.error("Error:", e);
+    console.error("Caught error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Error desconocido" }),
       {
