@@ -12,13 +12,13 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, newPassword } = await req.json();
-    console.log("Reset password request for userId:", userId);
+    const { userId, newPassword, newEmail } = await req.json();
+    console.log("Update user request for userId:", userId, "- Password change:", !!newPassword, "- Email change:", !!newEmail);
 
-    if (!userId || !newPassword) {
-      console.log("Missing userId or newPassword");
+    if (!userId || (!newPassword && !newEmail)) {
+      console.log("Missing userId or both newPassword and newEmail");
       return new Response(
-        JSON.stringify({ error: "userId y newPassword son requeridos" }),
+        JSON.stringify({ error: "userId y newPassword o newEmail son requeridos" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -26,7 +26,7 @@ serve(async (req) => {
       );
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword && newPassword.length < 6) {
       console.log("Password too short");
       return new Response(
         JSON.stringify({ error: "La contraseña debe tener al menos 6 caracteres" }),
@@ -35,6 +35,21 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
+    }
+
+    // Basic email validation
+    if (newEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        console.log("Invalid email format");
+        return new Response(
+          JSON.stringify({ error: "El formato del email no es válido" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
     }
 
     // Get the authorization header
@@ -113,16 +128,22 @@ serve(async (req) => {
       },
     });
 
-    // Update the user's password
+    // Build update object
+    const updateData: { password?: string; email?: string } = {};
+    if (newPassword) updateData.password = newPassword;
+    if (newEmail) updateData.email = newEmail;
+
+    // Update the user
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
-      { password: newPassword }
+      updateData
     );
 
     if (updateError) {
-      console.error("Error updating password:", updateError);
+      console.error("Error updating user:", updateError);
+      const errorType = newPassword ? "contraseña" : "email";
       return new Response(
-        JSON.stringify({ error: "Error al actualizar la contraseña: " + updateError.message }),
+        JSON.stringify({ error: `Error al actualizar ${errorType}: ` + updateError.message }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -130,10 +151,11 @@ serve(async (req) => {
       );
     }
 
-    console.log("Password updated successfully for user:", userId);
+    const updateType = newPassword ? "Contraseña" : "Email";
+    console.log(`${updateType} updated successfully for user:`, userId);
 
     return new Response(
-      JSON.stringify({ success: true, message: "Contraseña actualizada correctamente" }),
+      JSON.stringify({ success: true, message: `${updateType} actualizado/a correctamente` }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
