@@ -98,6 +98,12 @@ const AdminUsers = () => {
   const [newPasswordValue, setNewPasswordValue] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   
+  // Change email state
+  const [changeEmailDialogOpen, setChangeEmailDialogOpen] = useState(false);
+  const [userToChangeEmail, setUserToChangeEmail] = useState<UserWithRole | null>(null);
+  const [newEmailValue, setNewEmailValue] = useState("");
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+  
   const isSuperAdmin = userRole === 'super_admin';
   
   // New user form state
@@ -499,6 +505,60 @@ const AdminUsers = () => {
     setChangePasswordDialogOpen(true);
   };
 
+  // Handle change email
+  const handleOpenChangeEmail = (userItem: UserWithRole) => {
+    setUserToChangeEmail(userItem);
+    setNewEmailValue(userItem.email !== "Cargando..." ? userItem.email : "");
+    setChangeEmailDialogOpen(true);
+  };
+
+  const handleChangeEmail = async () => {
+    if (!userToChangeEmail || !newEmailValue) return;
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmailValue)) {
+      toast({
+        title: "Error",
+        description: "Por favor, introduce un email válido",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsChangingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: {
+          userId: userToChangeEmail.id,
+          newEmail: newEmailValue,
+        },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Error al cambiar el email');
+
+      toast({
+        title: "Email actualizado",
+        description: "El nuevo email ha sido establecido correctamente",
+      });
+
+      setChangeEmailDialogOpen(false);
+      setUserToChangeEmail(null);
+      setNewEmailValue("");
+      loadUsers();
+    } catch (error: any) {
+      console.error("Error changing email:", error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar el email",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingEmail(false);
+    }
+  };
+
   const handleChangePassword = async () => {
     if (!userToChangePassword || !newPasswordValue) return;
     
@@ -746,6 +806,10 @@ const AdminUsers = () => {
                             <DropdownMenuItem onClick={() => handleOpenChangePassword(user)}>
                               <Key className="h-4 w-4 mr-2" />
                               Cambiar Contraseña
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenChangeEmail(user)}>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Cambiar Email
                             </DropdownMenuItem>
                             {user.role === 'student' && (
                               <DropdownMenuItem onClick={() => handleOpenEnrollmentPanel(user)}>
@@ -1399,6 +1463,85 @@ const AdminUsers = () => {
                   <>
                     <Key className="h-4 w-4 mr-2" />
                     Cambiar Contraseña
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Email Dialog */}
+      <Dialog open={changeEmailDialogOpen} onOpenChange={(open) => {
+        setChangeEmailDialogOpen(open);
+        if (!open) {
+          setUserToChangeEmail(null);
+          setNewEmailValue("");
+        }
+      }}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Cambiar Email de Acceso
+            </DialogTitle>
+            <CardDescription>
+              Cambia el email con el que el usuario accede a la plataforma.
+              {userToChangeEmail?.full_name && (
+                <span className="font-medium"> ({userToChangeEmail.full_name})</span>
+              )}
+            </CardDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 text-sm">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">Email actual:</span>
+                <span className="font-mono text-muted-foreground">{userToChangeEmail?.email || "Cargando..."}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="newEmail">Nuevo Email</Label>
+              <Input
+                id="newEmail"
+                type="email"
+                value={newEmailValue}
+                onChange={(e) => setNewEmailValue(e.target.value)}
+                placeholder="nuevo@email.com"
+                disabled={isChangingEmail}
+              />
+              <p className="text-xs text-muted-foreground">
+                El usuario deberá usar este nuevo email para acceder a la plataforma
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setChangeEmailDialogOpen(false);
+                  setUserToChangeEmail(null);
+                  setNewEmailValue("");
+                }}
+                disabled={isChangingEmail}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleChangeEmail} 
+                disabled={isChangingEmail || !newEmailValue}
+              >
+                {isChangingEmail ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Cambiar Email
                   </>
                 )}
               </Button>
