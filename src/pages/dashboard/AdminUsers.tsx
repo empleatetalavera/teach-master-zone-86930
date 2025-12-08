@@ -92,6 +92,12 @@ const AdminUsers = () => {
   const [editTrainingCenter, setEditTrainingCenter] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   
+  // Change password state
+  const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
+  const [userToChangePassword, setUserToChangePassword] = useState<UserWithRole | null>(null);
+  const [newPasswordValue, setNewPasswordValue] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
   const isSuperAdmin = userRole === 'super_admin';
   
   // New user form state
@@ -486,6 +492,57 @@ const AdminUsers = () => {
     }
   };
 
+  // Handle change password
+  const handleOpenChangePassword = (userItem: UserWithRole) => {
+    setUserToChangePassword(userItem);
+    setNewPasswordValue(generatePassword());
+    setChangePasswordDialogOpen(true);
+  };
+
+  const handleChangePassword = async () => {
+    if (!userToChangePassword || !newPasswordValue) return;
+    
+    if (newPasswordValue.length < 6) {
+      toast({
+        title: "Error",
+        description: "La contraseña debe tener al menos 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsChangingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: {
+          userId: userToChangePassword.id,
+          newPassword: newPasswordValue,
+        },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Error al cambiar la contraseña');
+
+      toast({
+        title: "Contraseña actualizada",
+        description: "La nueva contraseña ha sido establecida correctamente",
+      });
+
+      setChangePasswordDialogOpen(false);
+      setUserToChangePassword(null);
+      setNewPasswordValue("");
+    } catch (error: any) {
+      console.error("Error changing password:", error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar la contraseña",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   // Handle delete user confirmation
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
@@ -685,6 +742,10 @@ const AdminUsers = () => {
                             <DropdownMenuItem onClick={() => handleEditProfile(user)}>
                               <Edit2 className="h-4 w-4 mr-2" />
                               Editar Perfil
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenChangePassword(user)}>
+                              <Key className="h-4 w-4 mr-2" />
+                              Cambiar Contraseña
                             </DropdownMenuItem>
                             {user.role === 'student' && (
                               <DropdownMenuItem onClick={() => handleOpenEnrollmentPanel(user)}>
@@ -1233,6 +1294,112 @@ const AdminUsers = () => {
                   </>
                 ) : (
                   "Guardar Cambios"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={changePasswordDialogOpen} onOpenChange={(open) => {
+        setChangePasswordDialogOpen(open);
+        if (!open) {
+          setUserToChangePassword(null);
+          setNewPasswordValue("");
+        }
+      }}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Cambiar Contraseña
+            </DialogTitle>
+            <CardDescription>
+              Establece una nueva contraseña para el usuario. 
+              {userToChangePassword?.full_name && (
+                <span className="font-medium"> ({userToChangePassword.full_name})</span>
+              )}
+            </CardDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">Usuario:</span>
+                <span className="font-mono text-muted-foreground">{userToChangePassword?.email || "Cargando..."}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Nueva Contraseña</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="newPassword"
+                  type="text"
+                  value={newPasswordValue}
+                  onChange={(e) => setNewPasswordValue(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  disabled={isChangingPassword}
+                  className="font-mono"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNewPasswordValue(generatePassword())}
+                  disabled={isChangingPassword}
+                  title="Generar nueva contraseña"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyToClipboard(newPasswordValue, 'Contraseña')}
+                  disabled={isChangingPassword || !newPasswordValue}
+                  title="Copiar contraseña"
+                >
+                  {copiedField === 'Contraseña' ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Copia la contraseña antes de guardar para compartirla con el usuario
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setChangePasswordDialogOpen(false);
+                  setUserToChangePassword(null);
+                  setNewPasswordValue("");
+                }}
+                disabled={isChangingPassword}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleChangePassword} 
+                disabled={isChangingPassword || !newPasswordValue || newPasswordValue.length < 6}
+              >
+                {isChangingPassword ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Key className="h-4 w-4 mr-2" />
+                    Cambiar Contraseña
+                  </>
                 )}
               </Button>
             </div>
