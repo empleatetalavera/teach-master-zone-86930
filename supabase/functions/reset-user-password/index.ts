@@ -54,6 +54,8 @@ serve(async (req) => {
 
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
+    console.log("Auth header present:", !!authHeader);
+    
     if (!authHeader) {
       console.log("No authorization header");
       return new Response(
@@ -66,29 +68,27 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Create client with user's token to verify they're authenticated
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    // Extract the JWT token from Authorization header
+    const token = authHeader.replace('Bearer ', '');
+    console.log("Token extracted, length:", token.length);
+
+    // Create admin client to verify the user
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
+        autoRefreshToken: false,
         persistSession: false,
-      },
-      global: {
-        headers: {
-          Authorization: authHeader,
-        },
       },
     });
 
-    // Extract the token from Authorization header and verify user
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    // Verify the user's token using admin client
+    const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token);
     
-    if (authError || !user) {
+    if (authError || !userData.user) {
       console.log("Auth error:", authError?.message);
       return new Response(
-        JSON.stringify({ error: "No autorizado" }),
+        JSON.stringify({ error: "No autorizado - sesión inválida" }),
         {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -96,13 +96,14 @@ serve(async (req) => {
       );
     }
 
-    console.log("Authenticated user:", user.id);
+    const currentUserId = userData.user.id;
+    console.log("Authenticated user:", currentUserId);
 
-    // Check if user has admin or super_admin role
-    const { data: roleData, error: roleError } = await supabaseClient
+    // Check if user has admin or super_admin role using admin client
+    const { data: roleData, error: roleError } = await supabaseAdmin
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", currentUserId)
       .single();
 
     console.log("Role data:", roleData, "Role error:", roleError?.message);
@@ -118,22 +119,14 @@ serve(async (req) => {
       );
     }
 
-    console.log("User has role:", roleData.role, "- proceeding with password update");
-
-    // Create admin client to update the user's password
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
+    console.log("User has role:", roleData.role, "- proceeding with update");
 
     // Build update object
     const updateData: { password?: string; email?: string } = {};
     if (newPassword) updateData.password = newPassword;
     if (newEmail) updateData.email = newEmail;
 
-    // Update the user
+    // Update the user using admin client
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
       updateData
