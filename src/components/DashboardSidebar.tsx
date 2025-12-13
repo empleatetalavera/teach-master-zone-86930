@@ -25,7 +25,8 @@ import {
   Bell,
   DollarSign,
   Layers,
-  FileSignature
+  FileSignature,
+  Globe
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +57,7 @@ const superAdminItems = [
   { title: "Facturación Global", url: "/dashboard/admin/billing", icon: DollarSign },
   { title: "Pedidos Tienda", url: "/dashboard/admin/shop-orders", icon: Package },
   { title: "Configurar Pagos", url: "/dashboard/admin/payment-settings", icon: Settings },
+  { title: "SíOnline SEPE", url: "/dashboard/admin/sionline", icon: Globe },
   { title: "Pedidos de Contenido", url: "/dashboard/admin/orders", icon: Package },
   { title: "Análisis AI", url: "/dashboard/admin/ai-analytics", icon: MessageSquare },
   { title: "Todos los Usuarios", url: "/dashboard/admin/users", icon: Users },
