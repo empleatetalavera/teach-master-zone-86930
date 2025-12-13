@@ -67,7 +67,7 @@ export default function AdminSionlineSettings() {
   const [globalConfig, setGlobalConfig] = useState<GlobalConfig>({
     email: "",
     password_hash: "",
-    is_connected: false,
+    is_connected: true,
     precio_trimestral: 200
   });
 
@@ -76,6 +76,9 @@ export default function AdminSionlineSettings() {
   const [availableCenters, setAvailableCenters] = useState<TrainingCenter[]>([]);
   const [selectedCenter, setSelectedCenter] = useState<(SionlineSettings & { training_center: TrainingCenter }) | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Base URL for tracking
+  const baseTrackingUrl = "https://talentcloudsolution.com/seguimiento/centro/cif";
 
   useEffect(() => {
     loadData();
@@ -173,7 +176,7 @@ export default function AdminSionlineSettings() {
     if (!center) return;
 
     try {
-      const urlSeguimiento = `https://tudominio.es/seguimiento/centro/cif/${center.cif || 'SIN_CIF'}`;
+      const urlSeguimiento = `${baseTrackingUrl}/${center.cif || 'SIN_CIF'}`;
       
       const { data, error } = await supabase
         .from('sionline_settings')
@@ -286,34 +289,28 @@ export default function AdminSionlineSettings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Servicio SíOnline - SEPE</h1>
-          <p className="text-muted-foreground">Ofrece URL de seguimiento SOAP a tus centros de formación</p>
+          <h1 className="text-3xl font-bold">Servicio Seguimiento SEPE</h1>
+          <p className="text-muted-foreground">Gestiona el servicio de URL de seguimiento SOAP para tus clientes</p>
         </div>
-        <div className="flex items-center gap-2">
-          <a href="https://plataformasionline.es" target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" size="sm">
-              <ExternalLink className="w-4 h-4 mr-2" />
-              plataformasionline.es
-            </Button>
+        <Button variant="outline" size="sm" asChild>
+          <a href="/seguimiento-sepe" target="_blank">
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Ver Página Pública
           </a>
-        </div>
+        </Button>
       </div>
 
       <Alert className="border-primary/20 bg-primary/5">
         <Shield className="h-4 w-4 text-primary" />
         <AlertDescription>
-          <strong>Servicio de reventa SíOnline</strong><br />
-          Configura tu cuenta de SíOnline y ofrece el servicio de URL de seguimiento SOAP 
-          a tus centros de formación clientes. Precio recomendado: {globalConfig.precio_trimestral}€/trimestre por centro.
+          <strong>Tu servicio de seguimiento SOAP</strong><br />
+          Ofrece URL de seguimiento SOAP a centros de formación que necesitan acreditarse ante SEPE. 
+          Precio configurado: {globalConfig.precio_trimestral}€/trimestre por centro.
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="account" className="space-y-6">
+      <Tabs defaultValue="centers" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="account" className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            Mi Cuenta SíOnline
-          </TabsTrigger>
           <TabsTrigger value="centers" className="flex items-center gap-2">
             <Building2 className="w-4 h-4" />
             Centros Clientes ({centersWithSettings.length})
@@ -322,82 +319,15 @@ export default function AdminSionlineSettings() {
             <Euro className="w-4 h-4" />
             Precios y Facturación
           </TabsTrigger>
+          <TabsTrigger value="config" className="flex items-center gap-2">
+            <Shield className="w-4 h-4" />
+            Configuración
+          </TabsTrigger>
           <TabsTrigger value="info" className="flex items-center gap-2">
             <Info className="w-4 h-4" />
             Información
           </TabsTrigger>
         </TabsList>
-
-        {/* Account Settings */}
-        <TabsContent value="account">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Cuenta SíOnline (Revendedor)</CardTitle>
-                    <CardDescription>Tus credenciales de acceso a plataformasionline.es</CardDescription>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {globalConfig.is_connected ? (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      Conectado
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                      <AlertCircle className="w-3 h-3 mr-1" />
-                      Desconectado
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sionline-email">Correo electrónico</Label>
-                  <Input
-                    id="sionline-email"
-                    type="email"
-                    value={globalConfig.email}
-                    onChange={(e) => setGlobalConfig({ ...globalConfig, email: e.target.value })}
-                    placeholder="tu-email@ejemplo.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sionline-password">Clave de acceso</Label>
-                  <Input
-                    id="sionline-password"
-                    type="password"
-                    value={globalConfig.password_hash}
-                    onChange={(e) => setGlobalConfig({ ...globalConfig, password_hash: e.target.value })}
-                    placeholder="••••••"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleSaveGlobalConfig} disabled={saving}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Guardar Credenciales
-                </Button>
-                <Button variant="outline" onClick={handleTestConnection}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Verificar Conexión
-                </Button>
-                <Button variant="outline" onClick={() => window.open("https://plataformasionline.es", "_blank")}>
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Acceder a SíOnline
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* Training Centers */}
         <TabsContent value="centers">
@@ -723,57 +653,92 @@ export default function AdminSionlineSettings() {
           </div>
         </TabsContent>
 
+        {/* Configuration */}
+        <TabsContent value="config">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Configuración del Servicio</CardTitle>
+                  <CardDescription>URL base y configuración técnica</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>URL Base de Seguimiento</Label>
+                <Input
+                  value={baseTrackingUrl}
+                  disabled
+                  className="bg-muted font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Esta URL se combina con el CIF de cada centro para generar su URL personalizada
+                </p>
+              </div>
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Las URLs de seguimiento se generan automáticamente siguiendo el formato:<br />
+                  <code className="bg-muted px-2 py-1 rounded text-sm">{baseTrackingUrl}/[CIF_CENTRO]</code>
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Service Information */}
         <TabsContent value="info">
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
-                <CardTitle className="text-center text-2xl">
-                  Servicio WEB de Seguimiento SOAP
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">¿Qué es el servicio SíOnline?</h3>
-                    <p className="text-muted-foreground">
-                      El servicio SíOnline proporciona una URL de seguimiento válida necesaria para la inscripción 
-                      o acreditación de entidades de formación en la modalidad de teleformación ante SEPE.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">¿Por qué ofrecerlo a tus clientes?</h3>
-                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                      <li>Servicio obligatorio para centros de formación que imparten teleformación</li>
-                      <li>Genera ingresos recurrentes por cada centro cliente</li>
-                      <li>Fideliza a tus clientes ofreciendo un servicio integral</li>
-                      <li>Simplifica la gestión - tú manejas todas las URLs desde un solo panel</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Cómo funciona</h3>
-                    <ol className="list-decimal list-inside text-muted-foreground space-y-1">
-                      <li>Configura tu cuenta de revendedor en SíOnline</li>
-                      <li>Añade cada centro de formación cliente al servicio</li>
-                      <li>Genera la URL de seguimiento personalizada con el CIF del centro</li>
-                      <li>El centro usa esa URL en su acreditación ante SEPE</li>
-                      <li>Factura trimestralmente a cada centro por el servicio</li>
-                    </ol>
-                  </div>
-
-                  <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertDescription>
-                      <strong>Importante:</strong> Cada centro de formación necesita tener su CIF correctamente 
-                      registrado en la plataforma para generar su URL de seguimiento personalizada.
-                    </AlertDescription>
-                  </Alert>
+          <Card>
+            <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
+              <CardTitle className="text-center text-2xl">
+                Servicio de Seguimiento SOAP SEPE
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">¿Qué es este servicio?</h3>
+                  <p className="text-muted-foreground">
+                    Proporciona una URL de seguimiento válida necesaria para la inscripción 
+                    o acreditación de entidades de formación en la modalidad de teleformación ante SEPE.
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Beneficios de ofrecer este servicio</h3>
+                  <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                    <li>Servicio obligatorio para centros de formación que imparten teleformación</li>
+                    <li>Genera ingresos recurrentes por cada centro cliente</li>
+                    <li>Fideliza a tus clientes ofreciendo un servicio integral</li>
+                    <li>Gestionas todas las URLs desde un solo panel</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Cómo funciona</h3>
+                  <ol className="list-decimal list-inside text-muted-foreground space-y-1">
+                    <li>Un centro solicita el servicio de seguimiento SEPE</li>
+                    <li>Añades el centro y generas su URL personalizada con su CIF</li>
+                    <li>El centro usa esa URL en su acreditación ante SEPE</li>
+                    <li>Facturas trimestralmente a cada centro por el servicio</li>
+                  </ol>
+                </div>
+
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Importante:</strong> Cada centro necesita tener su CIF correctamente 
+                    registrado para generar su URL de seguimiento personalizada.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
