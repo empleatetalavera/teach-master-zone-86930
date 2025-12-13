@@ -14,7 +14,8 @@ import {
   Mail,
   ArrowRight,
   Award,
-  Building2
+  Building2,
+  TrendingDown
 } from "lucide-react";
 
 export default function SeguimientoSEPE() {
@@ -26,16 +27,23 @@ export default function SeguimientoSEPE() {
       <section className="relative py-20 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge className="mb-4" variant="secondary">
-              Servicio Obligatorio SEPE
-            </Badge>
+            <div className="flex justify-center gap-2 mb-4">
+              <Badge className="bg-green-600 text-white">
+                <TrendingDown className="w-3 h-3 mr-1" />
+                El más económico del mercado
+              </Badge>
+              <Badge variant="secondary">
+                Servicio Obligatorio SEPE
+              </Badge>
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
               URL de Seguimiento SOAP para{" "}
               <span className="text-primary">Teleformación SEPE</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Servicio web de seguimiento requerido por SEPE para la acreditación e inscripción 
-              de entidades de formación en modalidad de teleformación.
+              de entidades de formación en modalidad de teleformación. 
+              <strong className="text-foreground"> ¡Al mejor precio del mercado!</strong>
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild>
@@ -128,13 +136,20 @@ export default function SeguimientoSEPE() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
+            <Badge className="mb-4 bg-green-600 text-white text-lg px-4 py-1">
+              <TrendingDown className="w-4 h-4 mr-2" />
+              ¡El precio más bajo del mercado!
+            </Badge>
             <h2 className="text-3xl font-bold mb-4">Precio del Servicio</h2>
             <p className="text-lg text-muted-foreground mb-12">
               Tarifa trimestral por centro de formación
             </p>
             
-            <Card className="max-w-md mx-auto border-primary">
-              <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
+            <Card className="max-w-md mx-auto border-2 border-green-500 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-green-500 text-white px-4 py-1 text-sm font-semibold">
+                -25% vs competencia
+              </div>
+              <CardHeader className="bg-primary text-primary-foreground rounded-t-lg pt-8">
                 <CardTitle className="text-2xl">Seguimiento SOAP SEPE</CardTitle>
                 <CardDescription className="text-primary-foreground/80">
                   ¡Activación en 24 horas!
@@ -142,9 +157,13 @@ export default function SeguimientoSEPE() {
               </CardHeader>
               <CardContent className="pt-8 pb-8">
                 <div className="text-center mb-6">
-                  <span className="text-5xl font-bold">200€</span>
+                  <div className="text-lg text-muted-foreground line-through mb-1">200€</div>
+                  <span className="text-5xl font-bold text-green-600">150€</span>
                   <span className="text-muted-foreground">/trimestre</span>
                   <p className="text-sm text-muted-foreground mt-2">+ IVA por centro de formación</p>
+                  <Badge className="mt-2 bg-green-100 text-green-800 border-green-300">
+                    ¡Ahorras 200€ al año!
+                  </Badge>
                 </div>
                 
                 <ul className="space-y-3 text-left mb-8">
@@ -174,11 +193,15 @@ export default function SeguimientoSEPE() {
                   </li>
                 </ul>
                 
-                <Button size="lg" className="w-full">
-                  <a href="/contact">Contratar Ahora</a>
+                <Button size="lg" className="w-full bg-green-600 hover:bg-green-700" asChild>
+                  <a href="/contact">Contratar Ahora - 150€/trimestre</a>
                 </Button>
               </CardContent>
             </Card>
+            
+            <p className="mt-6 text-muted-foreground">
+              * Comparado con otros proveedores del mercado que cobran 200€/trimestre
+            </p>
           </div>
         </div>
       </section>
@@ -244,8 +267,8 @@ export default function SeguimientoSEPE() {
                 <p className="text-muted-foreground">Activación</p>
               </div>
               <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">10+</div>
-                <p className="text-muted-foreground">Años de Experiencia</p>
+                <div className="text-4xl font-bold text-green-600 mb-2">150€</div>
+                <p className="text-muted-foreground">Mejor Precio</p>
               </div>
             </div>
             
@@ -261,14 +284,17 @@ export default function SeguimientoSEPE() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-primary text-primary-foreground">
+      <section className="py-16 bg-green-600 text-white">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4">
               ¿Necesitas la URL de Seguimiento SOAP?
             </h2>
-            <p className="text-xl opacity-90 mb-8">
+            <p className="text-xl opacity-90 mb-2">
               Contáctanos hoy y ten tu servicio activo en menos de 24 horas
+            </p>
+            <p className="text-2xl font-bold mb-8">
+              Solo 150€/trimestre - ¡El mejor precio garantizado!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="secondary" asChild>
@@ -277,7 +303,7 @@ export default function SeguimientoSEPE() {
                   Solicitar Información
                 </a>
               </Button>
-              <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary" asChild>
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-green-600" asChild>
                 <a href="tel:+34955271515">
                   <Phone className="mr-2 h-5 w-5" />
                   955 27 15 15

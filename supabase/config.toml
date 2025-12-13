@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.search-user-by-email]
 verify_jwt = true
+
+[functions.sepe-tracking]
+verify_jwt = false
