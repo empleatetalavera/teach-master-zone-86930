@@ -36,6 +36,7 @@ import CampusGuide from "./pages/CampusGuide";
 import AdminShopOrders from "./pages/dashboard/AdminShopOrders";
 import AdminPaymentSettings from "./pages/dashboard/AdminPaymentSettings";
 import AdminSionlineSettings from "./pages/dashboard/AdminSionlineSettings";
+import SeguimientoSEPE from "./pages/SeguimientoSEPE";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import AdminTrainingCenters from "./pages/dashboard/AdminTrainingCenters";
 import AdminLicenses from "./pages/dashboard/AdminLicenses";
@@ -108,6 +109,7 @@ function AppRoutes() {
         <Route path="/course/:courseId/evaluation/:evaluationId" element={<ProtectedRoute><EvaluationView /></ProtectedRoute>} />
         <Route path="/course/:courseId/activity/:activityId" element={<ProtectedRoute><ActivityView /></ProtectedRoute>} />
         <Route path="/campus-guide" element={<CampusGuide />} />
+        <Route path="/seguimiento-sepe" element={<SeguimientoSEPE />} />
         
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="admin" element={<AdminDashboard />} />

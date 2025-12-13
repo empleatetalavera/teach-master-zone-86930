@@ -39,6 +39,12 @@ export const Navbar = () => {
               Características
             </a>
             <a
+              href="/seguimiento-sepe"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Seguimiento SEPE
+            </a>
+            <a
               href="/shop"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -77,6 +83,13 @@ export const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Características
+              </a>
+              <a
+                href="/seguimiento-sepe"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Seguimiento SEPE
               </a>
               <a
                 href="/shop"
