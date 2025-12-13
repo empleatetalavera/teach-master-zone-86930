@@ -68,7 +68,7 @@ export default function AdminSionlineSettings() {
     email: "",
     password_hash: "",
     is_connected: true,
-    precio_trimestral: 200
+    precio_trimestral: 150
   });
 
   // Centers with settings
@@ -77,8 +77,8 @@ export default function AdminSionlineSettings() {
   const [selectedCenter, setSelectedCenter] = useState<(SionlineSettings & { training_center: TrainingCenter }) | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Base URL for tracking
-  const baseTrackingUrl = "https://talentcloudsolution.com/seguimiento/centro/cif";
+  // Base URL for tracking - uses the edge function
+  const baseTrackingUrl = "https://fkxbgifvwivlvpwxdzdb.supabase.co/functions/v1/sepe-tracking/centro/cif";
 
   useEffect(() => {
     loadData();
