@@ -44,20 +44,25 @@ Deno.serve(async (req) => {
   console.log('SEPE Tracking request for CIF:', cif)
   console.log('Request method:', req.method)
   console.log('Request path:', url.pathname)
+  console.log('Request headers:', JSON.stringify(Object.fromEntries(req.headers.entries())))
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // Verify the center has an active subscription
+  // Get settings for this center
+  let settingsData: any = null
+  let centerData: any = null
+
   if (cif) {
-    const { data: centerData, error: centerError } = await supabase
+    // Get center
+    const { data: center, error: centerError } = await supabase
       .from('training_centers')
       .select('id, name')
       .eq('cif', cif)
       .single()
 
-    if (centerError || !centerData) {
+    if (centerError || !center) {
       console.log('Center not found for CIF:', cif)
       return new Response(
         generateSOAPFault('SOAP-ENV:Client', 'Centro no encontrado', `No se encontró un centro con CIF: ${cif}`),
@@ -65,31 +70,79 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if service is enabled
-    const { data: settingsData } = await supabase
+    centerData = center
+
+    // Get SiOnline settings
+    const { data: settings } = await supabase
       .from('sionline_settings')
       .select('*')
-      .eq('training_center_id', centerData.id)
-      .eq('enabled', true)
-      .eq('estado', 'activo')
+      .eq('training_center_id', center.id)
       .single()
 
-    if (!settingsData) {
-      console.log('Service not active for center:', centerData.name)
+    if (!settings || !settings.enabled || settings.estado !== 'activo') {
+      console.log('Service not active for center:', center.name)
       return new Response(
         generateSOAPFault('SOAP-ENV:Client', 'Servicio no activo', 'El servicio de seguimiento no está activo para este centro'),
         { headers: corsHeaders, status: 403 }
       )
     }
 
-    // Log the access
-    console.log('Valid access for center:', centerData.name)
+    settingsData = settings
+
+    // Validate credentials if provided in Authorization header (HTTP Basic Auth)
+    const authHeader = req.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Basic ')) {
+      const base64Credentials = authHeader.slice(6)
+      try {
+        const credentials = atob(base64Credentials)
+        // Format: username:password - we only use password as the credential
+        const [, password] = credentials.split(':')
+        
+        if (settings.credenciales_seguimiento && password !== settings.credenciales_seguimiento) {
+          console.log('Invalid credentials provided')
+          return new Response(
+            generateSOAPFault('SOAP-ENV:Client', 'Credenciales inválidas', 'Las credenciales proporcionadas no son válidas'),
+            { headers: { ...corsHeaders, 'WWW-Authenticate': 'Basic realm="SEPE Tracking"' }, status: 401 }
+          )
+        }
+        console.log('Credentials validated successfully')
+      } catch (e) {
+        console.log('Error decoding credentials:', e)
+      }
+    }
+
+    console.log('Valid access for center:', center.name)
   }
 
-  // Handle GET request - return WSDL
+  // Handle GET request - return WSDL or validation response
   if (req.method === 'GET') {
-    const wsdl = generateWSDL(cif || 'CENTRO')
-    return new Response(wsdl, { 
+    // Check for wsdl query parameter
+    if (url.searchParams.has('wsdl') || url.searchParams.has('WSDL')) {
+      const wsdl = generateWSDL(cif || 'CENTRO')
+      return new Response(wsdl, { 
+        headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' } 
+      })
+    }
+
+    // Return a simple validation response for SEPE's autovalidation
+    const validationResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:tns="http://talentcloudsolution.com/sepe/seguimiento">
+  <soap:Body>
+    <tns:ValidacionResponse>
+      <tns:resultado>
+        <codigo>OK</codigo>
+        <mensaje>Servicio de seguimiento operativo</mensaje>
+        <centro>${escapeXml(centerData?.name || 'N/A')}</centro>
+        <cif>${escapeXml(cif || 'N/A')}</cif>
+        <fechaValidacion>${new Date().toISOString()}</fechaValidacion>
+        <estado>ACTIVO</estado>
+      </tns:resultado>
+    </tns:ValidacionResponse>
+  </soap:Body>
+</soap:Envelope>`
+    
+    return new Response(validationResponse, { 
       headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' } 
     })
   }
@@ -99,6 +152,43 @@ Deno.serve(async (req) => {
     try {
       const body = await req.text()
       console.log('SOAP Request body:', body.substring(0, 500))
+
+      // Check for validation request
+      if (body.includes('Validar') || body.includes('validar') || body.includes('Test') || body.includes('test')) {
+        const validationResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:tns="http://talentcloudsolution.com/sepe/seguimiento">
+  <soap:Body>
+    <tns:ValidacionResponse>
+      <tns:resultado>
+        <codigo>OK</codigo>
+        <mensaje>Servicio de seguimiento operativo</mensaje>
+        <centro>${escapeXml(centerData?.name || 'N/A')}</centro>
+        <cif>${escapeXml(cif || 'N/A')}</cif>
+        <fechaValidacion>${new Date().toISOString()}</fechaValidacion>
+        <estado>ACTIVO</estado>
+      </tns:resultado>
+    </tns:ValidacionResponse>
+  </soap:Body>
+</soap:Envelope>`
+        return new Response(validationResponse, { headers: corsHeaders })
+      }
+
+      // Validate credentials from SOAP body if present
+      if (settingsData?.credenciales_seguimiento) {
+        const credMatch = body.match(/<credenciales[^>]*>([^<]+)<\/credenciales>|<clave[^>]*>([^<]+)<\/clave>|<password[^>]*>([^<]+)<\/password>/i)
+        if (credMatch) {
+          const providedCred = credMatch[1] || credMatch[2] || credMatch[3]
+          if (providedCred !== settingsData.credenciales_seguimiento) {
+            console.log('Invalid SOAP credentials')
+            return new Response(
+              generateSOAPFault('SOAP-ENV:Client', 'Credenciales inválidas', 'Las credenciales proporcionadas no son válidas'),
+              { headers: corsHeaders, status: 401 }
+            )
+          }
+          console.log('SOAP credentials validated')
+        }
+      }
 
       // Parse SOAP action from header or body
       const soapAction = req.headers.get('soapaction') || ''
@@ -255,6 +345,22 @@ function generateWSDL(cif: string): string {
   
   <types>
     <xsd:schema targetNamespace="http://talentcloudsolution.com/sepe/seguimiento">
+      <xsd:element name="ValidarRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="cif" type="xsd:string"/>
+            <xsd:element name="credenciales" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ValidarResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="codigo" type="xsd:string"/>
+            <xsd:element name="mensaje" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
       <xsd:element name="ObtenerSeguimientoRequest">
         <xsd:complexType>
           <xsd:sequence>
@@ -287,6 +393,12 @@ function generateWSDL(cif: string): string {
     </xsd:schema>
   </types>
 
+  <message name="ValidarInput">
+    <part name="parameters" element="tns:ValidarRequest"/>
+  </message>
+  <message name="ValidarOutput">
+    <part name="parameters" element="tns:ValidarResponse"/>
+  </message>
   <message name="ObtenerSeguimientoInput">
     <part name="parameters" element="tns:ObtenerSeguimientoRequest"/>
   </message>
@@ -295,6 +407,10 @@ function generateWSDL(cif: string): string {
   </message>
 
   <portType name="SeguimientoPortType">
+    <operation name="Validar">
+      <input message="tns:ValidarInput"/>
+      <output message="tns:ValidarOutput"/>
+    </operation>
     <operation name="ObtenerSeguimiento">
       <input message="tns:ObtenerSeguimientoInput"/>
       <output message="tns:ObtenerSeguimientoOutput"/>
@@ -303,6 +419,11 @@ function generateWSDL(cif: string): string {
 
   <binding name="SeguimientoBinding" type="tns:SeguimientoPortType">
     <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="Validar">
+      <soap:operation soapAction="http://talentcloudsolution.com/sepe/Validar"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
     <operation name="ObtenerSeguimiento">
       <soap:operation soapAction="http://talentcloudsolution.com/sepe/ObtenerSeguimiento"/>
       <input><soap:body use="literal"/></input>
