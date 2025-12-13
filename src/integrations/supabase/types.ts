@@ -2138,6 +2138,92 @@ export type Database = {
           },
         ]
       }
+      sionline_global_config: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          is_connected: boolean | null
+          last_sync: string | null
+          password_hash: string | null
+          precio_trimestral: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_connected?: boolean | null
+          last_sync?: string | null
+          password_hash?: string | null
+          precio_trimestral?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_connected?: boolean | null
+          last_sync?: string | null
+          password_hash?: string | null
+          precio_trimestral?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sionline_settings: {
+        Row: {
+          api_key: string | null
+          created_at: string | null
+          credenciales_seguimiento: string | null
+          enabled: boolean | null
+          estado: string | null
+          fecha_alta: string | null
+          fecha_renovacion: string | null
+          id: string
+          notas: string | null
+          training_center_id: string
+          updated_at: string | null
+          url_seguimiento: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          created_at?: string | null
+          credenciales_seguimiento?: string | null
+          enabled?: boolean | null
+          estado?: string | null
+          fecha_alta?: string | null
+          fecha_renovacion?: string | null
+          id?: string
+          notas?: string | null
+          training_center_id: string
+          updated_at?: string | null
+          url_seguimiento?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          created_at?: string | null
+          credenciales_seguimiento?: string | null
+          enabled?: boolean | null
+          estado?: string | null
+          fecha_alta?: string | null
+          fecha_renovacion?: string | null
+          id?: string
+          notas?: string | null
+          training_center_id?: string
+          updated_at?: string | null
+          url_seguimiento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sionline_settings_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: true
+            referencedRelation: "training_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_documents: {
         Row: {
           created_at: string | null
