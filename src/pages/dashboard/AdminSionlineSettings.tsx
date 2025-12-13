@@ -517,81 +517,164 @@ export default function AdminSionlineSettings() {
                     </div>
                   </div>
 
-                  {/* URL de seguimiento */}
+                  {/* SEPE Form Data - Destacado */}
                   <div className="border-t pt-4">
-                    <div className="space-y-2">
-                      <Label className="font-semibold">URL de Seguimiento SOAP</Label>
-                      <div className="flex items-center gap-2">
+                    <Alert className="border-blue-200 bg-blue-50 mb-4">
+                      <Info className="h-4 w-4 text-blue-600" />
+                      <AlertDescription className="text-blue-800">
+                        <strong>Datos para el formulario SEPE</strong> - Copia estos datos exactamente en el formulario del SEPE
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-6 space-y-4">
+                      <h3 className="font-bold text-lg text-slate-800 border-b pb-2 mb-4">
+                        ACCESO PARA EL SEGUIMIENTO Y CONTROL DE ACCIONES FORMATIVAS:
+                      </h3>
+                      
+                      {/* Dirección URL */}
+                      <div className="space-y-2">
+                        <Label className="text-red-600 font-semibold flex items-center gap-1">
+                          <span className="text-red-500">*</span> Dirección (URL):
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={selectedCenter.url_seguimiento || ''}
+                            readOnly
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => copyToClipboard(selectedCenter.url_seguimiento || '', "URL")}
+                            className="shrink-0"
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copiar
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Credenciales de Acceso */}
+                      <div className="space-y-2">
+                        <Label className="text-red-600 font-semibold flex items-center gap-1">
+                          <span className="text-red-500">*</span> Credenciales De Acceso:
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={selectedCenter.credenciales_seguimiento || ''}
+                            readOnly
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => copyToClipboard(selectedCenter.credenciales_seguimiento || '', "Credenciales")}
+                            className="shrink-0"
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copiar
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Confirmar credenciales */}
+                      <div className="space-y-2">
+                        <Label className="text-red-600 font-semibold flex items-center gap-1">
+                          <span className="text-red-500">*</span> Confirmar credenciales de acceso:
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={selectedCenter.credenciales_seguimiento || ''}
+                            readOnly
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => copyToClipboard(selectedCenter.credenciales_seguimiento || '', "Credenciales")}
+                            className="shrink-0"
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copiar
+                          </Button>
+                        </div>
+                        <p className="text-xs text-slate-500 italic">
+                          (Introduce las mismas credenciales en ambos campos)
+                        </p>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-300">
+                        <Button 
+                          variant="outline" 
+                          className="w-full bg-slate-700 text-white hover:bg-slate-800"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              `URL: ${selectedCenter.url_seguimiento}\nCredenciales: ${selectedCenter.credenciales_seguimiento}`
+                            );
+                            toast.success("Todos los datos copiados al portapapeles");
+                          }}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copiar todos los datos para SEPE
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Configuración adicional */}
+                  <div className="border-t pt-4 space-y-4">
+                    <h4 className="font-semibold text-muted-foreground">Configuración Interna</h4>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>URL de Seguimiento (editable)</Label>
                         <Input
                           value={selectedCenter.url_seguimiento || ''}
                           onChange={(e) => setSelectedCenter({ ...selectedCenter, url_seguimiento: e.target.value })}
                           className="font-mono text-sm"
                           placeholder="https://..."
                         />
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          onClick={() => copyToClipboard(selectedCenter.url_seguimiento || '', "URL de seguimiento")}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Esta es la URL que el centro debe proporcionar al SEPE para la acreditación
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Credenciales */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Credenciales de Seguimiento</Label>
-                      <div className="flex items-center gap-2">
+                      <div className="space-y-2">
+                        <Label>Credenciales (editable)</Label>
                         <Input
                           value={selectedCenter.credenciales_seguimiento || ''}
                           onChange={(e) => setSelectedCenter({ ...selectedCenter, credenciales_seguimiento: e.target.value })}
                           placeholder="Clave de acceso"
                         />
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          onClick={() => copyToClipboard(selectedCenter.credenciales_seguimiento || '', "Credenciales")}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
                       </div>
                     </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>API Key (interno)</Label>
+                        <Input
+                          value={selectedCenter.api_key || ''}
+                          onChange={(e) => setSelectedCenter({ ...selectedCenter, api_key: e.target.value })}
+                          placeholder="API Key"
+                          className="font-mono text-xs"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Fecha de Renovación</Label>
+                        <Input
+                          type="date"
+                          value={selectedCenter.fecha_renovacion?.split('T')[0] || ''}
+                          onChange={(e) => setSelectedCenter({ ...selectedCenter, fecha_renovacion: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Notas */}
                     <div className="space-y-2">
-                      <Label>API Key (opcional)</Label>
-                      <Input
-                        value={selectedCenter.api_key || ''}
-                        onChange={(e) => setSelectedCenter({ ...selectedCenter, api_key: e.target.value })}
-                        placeholder="API Key"
+                      <Label>Notas internas</Label>
+                      <Textarea
+                        value={selectedCenter.notas || ''}
+                        onChange={(e) => setSelectedCenter({ ...selectedCenter, notas: e.target.value })}
+                        placeholder="Notas sobre este centro..."
+                        rows={3}
                       />
                     </div>
-                  </div>
-
-                  {/* Fecha renovación */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Fecha de Renovación</Label>
-                      <Input
-                        type="date"
-                        value={selectedCenter.fecha_renovacion?.split('T')[0] || ''}
-                        onChange={(e) => setSelectedCenter({ ...selectedCenter, fecha_renovacion: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Notas */}
-                  <div className="space-y-2">
-                    <Label>Notas internas</Label>
-                    <Textarea
-                      value={selectedCenter.notas || ''}
-                      onChange={(e) => setSelectedCenter({ ...selectedCenter, notas: e.target.value })}
-                      placeholder="Notas sobre este centro..."
-                      rows={3}
-                    />
                   </div>
 
                   <div className="flex gap-2 pt-4 border-t">
