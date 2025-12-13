@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,11 @@ import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { 
   Building2, 
   Save, 
@@ -15,67 +19,244 @@ import {
   ExternalLink, 
   CheckCircle2, 
   AlertCircle,
-  Link as LinkIcon,
   Shield,
   RefreshCw,
-  Phone,
-  Copy
+  Copy,
+  Plus,
+  Trash2,
+  Euro
 } from "lucide-react";
 
+interface TrainingCenter {
+  id: string;
+  name: string;
+  cif: string | null;
+  address_line: string | null;
+  postal_code: string | null;
+  city: string | null;
+}
+
+interface SionlineSettings {
+  id: string;
+  training_center_id: string;
+  enabled: boolean;
+  url_seguimiento: string | null;
+  credenciales_seguimiento: string | null;
+  api_key: string | null;
+  fecha_alta: string | null;
+  fecha_renovacion: string | null;
+  estado: string;
+  notas: string | null;
+  training_center?: TrainingCenter;
+}
+
+interface GlobalConfig {
+  id?: string;
+  email: string;
+  password_hash: string;
+  is_connected: boolean;
+  precio_trimestral: number;
+}
+
 export default function AdminSionlineSettings() {
-  // SíOnline account settings
-  const [sionlineAccount, setSionlineAccount] = useState({
-    enabled: true,
-    email: "formacion.empleate@gmail.com",
-    password: "",
-    isConnected: true,
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
+  // Global config
+  const [globalConfig, setGlobalConfig] = useState<GlobalConfig>({
+    email: "",
+    password_hash: "",
+    is_connected: false,
+    precio_trimestral: 200
   });
 
-  // Training centers with SíOnline integration
-  const [centers, setCenters] = useState([
-    {
-      id: "1",
-      cif: "B45878253",
-      razonSocial: "EMPLEATE TALAVERA FORMACION SL",
-      domicilio: "CALLE MARQUES MIRASOL 19",
-      codigoPostal: "45600",
-      localidad: "TALAVERA DE LA REINA",
-      urlSeguimiento: "https://plataformasionline.es/seguimiento/centro/cif/B45878253",
-      credencialesSeguimiento: "d12345E",
-      fechaRenovacion: "19/07/2024",
-      estado: "activo",
-    },
-    {
-      id: "2",
-      cif: "G45815560",
-      razonSocial: "ASOCIACION EMPLEATE TALAVERA",
-      domicilio: "JOSE BARCENAS 16",
-      codigoPostal: "45600",
-      localidad: "TALAVERA DE LA REINA",
-      urlSeguimiento: "https://plataformasionline.es/seguimiento/centro/cif/G45815560",
-      credencialesSeguimiento: "5207418",
-      fechaRenovacion: null,
-      estado: "activo",
-    },
-  ]);
-
-  const [selectedCenter, setSelectedCenter] = useState<typeof centers[0] | null>(null);
+  // Centers with settings
+  const [centersWithSettings, setCentersWithSettings] = useState<(SionlineSettings & { training_center: TrainingCenter })[]>([]);
+  const [availableCenters, setAvailableCenters] = useState<TrainingCenter[]>([]);
+  const [selectedCenter, setSelectedCenter] = useState<(SionlineSettings & { training_center: TrainingCenter }) | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleSaveAccount = () => {
-    toast.success("Configuración de cuenta SíOnline guardada");
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      // Load global config
+      const { data: configData } = await supabase
+        .from('sionline_global_config')
+        .select('*')
+        .single();
+      
+      if (configData) {
+        setGlobalConfig(configData);
+      }
+
+      // Load all training centers
+      const { data: centersData } = await supabase
+        .from('training_centers')
+        .select('id, name, cif, address_line, postal_code, city')
+        .eq('is_active', true);
+
+      // Load sionline settings with center info
+      const { data: settingsData } = await supabase
+        .from('sionline_settings')
+        .select('*');
+
+      if (centersData && settingsData) {
+        // Map settings to centers
+        const centersWithSettingsList = settingsData.map(setting => {
+          const center = centersData.find(c => c.id === setting.training_center_id);
+          return {
+            ...setting,
+            training_center: center || { id: setting.training_center_id, name: 'Centro no encontrado', cif: null, address_line: null, postal_code: null, city: null }
+          };
+        });
+        
+        setCentersWithSettings(centersWithSettingsList);
+
+        // Find centers without settings
+        const centersWithSettingsIds = settingsData.map(s => s.training_center_id);
+        const available = centersData.filter(c => !centersWithSettingsIds.includes(c.id));
+        setAvailableCenters(available);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Error al cargar los datos');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSaveCenter = () => {
-    if (selectedCenter) {
-      setCenters(centers.map(c => c.id === selectedCenter.id ? selectedCenter : c));
+  const handleSaveGlobalConfig = async () => {
+    setSaving(true);
+    try {
+      if (globalConfig.id) {
+        await supabase
+          .from('sionline_global_config')
+          .update({
+            email: globalConfig.email,
+            password_hash: globalConfig.password_hash,
+            is_connected: globalConfig.is_connected,
+            precio_trimestral: globalConfig.precio_trimestral
+          })
+          .eq('id', globalConfig.id);
+      } else {
+        const { data } = await supabase
+          .from('sionline_global_config')
+          .insert({
+            email: globalConfig.email,
+            password_hash: globalConfig.password_hash,
+            is_connected: globalConfig.is_connected,
+            precio_trimestral: globalConfig.precio_trimestral
+          })
+          .select()
+          .single();
+        
+        if (data) {
+          setGlobalConfig({ ...globalConfig, id: data.id });
+        }
+      }
+      toast.success("Configuración guardada correctamente");
+    } catch (error) {
+      console.error('Error saving config:', error);
+      toast.error('Error al guardar la configuración');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddCenter = async (centerId: string) => {
+    const center = availableCenters.find(c => c.id === centerId);
+    if (!center) return;
+
+    try {
+      const urlSeguimiento = `https://tudominio.es/seguimiento/centro/cif/${center.cif || 'SIN_CIF'}`;
+      
+      const { data, error } = await supabase
+        .from('sionline_settings')
+        .insert({
+          training_center_id: centerId,
+          enabled: false,
+          url_seguimiento: urlSeguimiento,
+          estado: 'pendiente'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setCentersWithSettings([...centersWithSettings, { ...data, training_center: center }]);
+        setAvailableCenters(availableCenters.filter(c => c.id !== centerId));
+        toast.success(`Centro ${center.name} añadido correctamente`);
+      }
+    } catch (error) {
+      console.error('Error adding center:', error);
+      toast.error('Error al añadir el centro');
+    }
+  };
+
+  const handleSaveCenter = async () => {
+    if (!selectedCenter) return;
+    
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('sionline_settings')
+        .update({
+          enabled: selectedCenter.enabled,
+          url_seguimiento: selectedCenter.url_seguimiento,
+          credenciales_seguimiento: selectedCenter.credenciales_seguimiento,
+          api_key: selectedCenter.api_key,
+          fecha_renovacion: selectedCenter.fecha_renovacion,
+          estado: selectedCenter.estado,
+          notas: selectedCenter.notas
+        })
+        .eq('id', selectedCenter.id);
+
+      if (error) throw error;
+
+      setCentersWithSettings(centersWithSettings.map(c => 
+        c.id === selectedCenter.id ? selectedCenter : c
+      ));
       toast.success("Centro actualizado correctamente");
       setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving center:', error);
+      toast.error('Error al guardar el centro');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCenter = async (settingId: string) => {
+    const setting = centersWithSettings.find(c => c.id === settingId);
+    if (!setting) return;
+
+    try {
+      const { error } = await supabase
+        .from('sionline_settings')
+        .delete()
+        .eq('id', settingId);
+
+      if (error) throw error;
+
+      setCentersWithSettings(centersWithSettings.filter(c => c.id !== settingId));
+      setAvailableCenters([...availableCenters, setting.training_center]);
+      setSelectedCenter(null);
+      toast.success("Centro eliminado del servicio SíOnline");
+    } catch (error) {
+      console.error('Error deleting center:', error);
+      toast.error('Error al eliminar el centro');
     }
   };
 
   const handleTestConnection = () => {
-    toast.success("Conexión con SíOnline verificada correctamente");
+    toast.success("Conexión verificada correctamente");
+    setGlobalConfig({ ...globalConfig, is_connected: true });
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -83,31 +264,47 @@ export default function AdminSionlineSettings() {
     toast.success(`${label} copiada al portapapeles`);
   };
 
+  const getEstadoBadge = (estado: string) => {
+    const styles: Record<string, string> = {
+      activo: "bg-green-50 text-green-700 border-green-200",
+      pendiente: "bg-yellow-50 text-yellow-700 border-yellow-200",
+      inactivo: "bg-gray-50 text-gray-700 border-gray-200",
+      vencido: "bg-red-50 text-red-700 border-red-200"
+    };
+    return styles[estado] || styles.pendiente;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Integración SíOnline - SEPE</h1>
-          <p className="text-muted-foreground">Gestiona tu URL de seguimiento SOAP para SEPE</p>
+          <h1 className="text-3xl font-bold">Servicio SíOnline - SEPE</h1>
+          <p className="text-muted-foreground">Ofrece URL de seguimiento SOAP a tus centros de formación</p>
         </div>
         <div className="flex items-center gap-2">
           <a href="https://plataformasionline.es" target="_blank" rel="noopener noreferrer">
             <Button variant="outline" size="sm">
               <ExternalLink className="w-4 h-4 mr-2" />
-              Ir a SíOnline
+              plataformasionline.es
             </Button>
           </a>
-          <span className="text-orange-600 font-semibold">955 27 15 15</span>
         </div>
       </div>
 
-      {/* Service Overview Alert */}
-      <Alert className="border-orange-200 bg-orange-50">
-        <Shield className="h-4 w-4 text-orange-600" />
-        <AlertDescription className="text-orange-800">
-          <strong>Servicio WEB de seguimiento SOAP requerido por SEPE</strong><br />
-          Este servicio proporciona la URL de seguimiento válida necesaria para la inscripción o acreditación 
-          de entidades de formación en la modalidad de teleformación ante SEPE.
+      <Alert className="border-primary/20 bg-primary/5">
+        <Shield className="h-4 w-4 text-primary" />
+        <AlertDescription>
+          <strong>Servicio de reventa SíOnline</strong><br />
+          Configura tu cuenta de SíOnline y ofrece el servicio de URL de seguimiento SOAP 
+          a tus centros de formación clientes. Precio recomendado: {globalConfig.precio_trimestral}€/trimestre por centro.
         </AlertDescription>
       </Alert>
 
@@ -115,15 +312,19 @@ export default function AdminSionlineSettings() {
         <TabsList>
           <TabsTrigger value="account" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
-            Cuenta SíOnline
+            Mi Cuenta SíOnline
           </TabsTrigger>
           <TabsTrigger value="centers" className="flex items-center gap-2">
             <Building2 className="w-4 h-4" />
-            Centros de Formación
+            Centros Clientes ({centersWithSettings.length})
+          </TabsTrigger>
+          <TabsTrigger value="pricing" className="flex items-center gap-2">
+            <Euro className="w-4 h-4" />
+            Precios y Facturación
           </TabsTrigger>
           <TabsTrigger value="info" className="flex items-center gap-2">
             <Info className="w-4 h-4" />
-            Información del Servicio
+            Información
           </TabsTrigger>
         </TabsList>
 
@@ -133,16 +334,16 @@ export default function AdminSionlineSettings() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-orange-500" />
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <CardTitle>Cuenta SíOnline</CardTitle>
-                    <CardDescription>Credenciales de acceso a plataformasionline.es</CardDescription>
+                    <CardTitle>Cuenta SíOnline (Revendedor)</CardTitle>
+                    <CardDescription>Tus credenciales de acceso a plataformasionline.es</CardDescription>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {sionlineAccount.isConnected ? (
+                  {globalConfig.is_connected ? (
                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                       <CheckCircle2 className="w-3 h-3 mr-1" />
                       Conectado
@@ -153,10 +354,6 @@ export default function AdminSionlineSettings() {
                       Desconectado
                     </Badge>
                   )}
-                  <Switch
-                    checked={sionlineAccount.enabled}
-                    onCheckedChange={(checked) => setSionlineAccount(prev => ({ ...prev, enabled: checked }))}
-                  />
                 </div>
               </div>
             </CardHeader>
@@ -167,8 +364,9 @@ export default function AdminSionlineSettings() {
                   <Input
                     id="sionline-email"
                     type="email"
-                    value={sionlineAccount.email}
-                    onChange={(e) => setSionlineAccount(prev => ({ ...prev, email: e.target.value }))}
+                    value={globalConfig.email}
+                    onChange={(e) => setGlobalConfig({ ...globalConfig, email: e.target.value })}
+                    placeholder="tu-email@ejemplo.com"
                   />
                 </div>
                 <div className="space-y-2">
@@ -176,15 +374,15 @@ export default function AdminSionlineSettings() {
                   <Input
                     id="sionline-password"
                     type="password"
-                    value={sionlineAccount.password}
-                    onChange={(e) => setSionlineAccount(prev => ({ ...prev, password: e.target.value }))}
+                    value={globalConfig.password_hash}
+                    onChange={(e) => setGlobalConfig({ ...globalConfig, password_hash: e.target.value })}
                     placeholder="••••••"
                   />
                 </div>
               </div>
               
               <div className="flex gap-2 mt-4">
-                <Button onClick={handleSaveAccount}>
+                <Button onClick={handleSaveGlobalConfig} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   Guardar Credenciales
                 </Button>
@@ -204,62 +402,93 @@ export default function AdminSionlineSettings() {
         {/* Training Centers */}
         <TabsContent value="centers">
           <div className="grid gap-6">
-            {/* Centers List */}
             {!selectedCenter && (
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Centros de Formación ({centers.length})</CardTitle>
-                      <CardDescription>Centros registrados con URL de seguimiento SOAP</CardDescription>
+                      <CardTitle>Centros con Servicio SíOnline ({centersWithSettings.length})</CardTitle>
+                      <CardDescription>Gestiona el servicio de seguimiento SOAP para tus centros clientes</CardDescription>
                     </div>
-                    <Button className="bg-green-600 hover:bg-green-700">
-                      Nuevo Centro
-                    </Button>
+                    {availableCenters.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Select onValueChange={handleAddCenter}>
+                          <SelectTrigger className="w-[280px]">
+                            <SelectValue placeholder="Añadir centro al servicio..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableCenters.map((center) => (
+                              <SelectItem key={center.id} value={center.id}>
+                                {center.name} ({center.cif || 'Sin CIF'})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button size="icon" variant="outline">
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 px-4 font-semibold text-muted-foreground">CIF</th>
-                          <th className="text-left py-3 px-4 font-semibold text-orange-600">Razón social</th>
-                          <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Código de centro</th>
-                          <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Fecha renovación</th>
-                          <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {centers.map((center) => (
-                          <tr
-                            key={center.id}
-                            className="border-b cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => setSelectedCenter(center)}
-                          >
-                            <td className="py-3 px-4 text-blue-600">{center.cif}</td>
-                            <td className="py-3 px-4 text-blue-600">{center.razonSocial}</td>
-                            <td className="py-3 px-4">{center.cif}</td>
-                            <td className="py-3 px-4 text-orange-600">
-                              {center.fechaRenovacion || "-"}
-                            </td>
-                            <td className="py-3 px-4">
-                              <Badge 
-                                variant="outline" 
-                                className={center.estado === "activo" 
-                                  ? "bg-green-50 text-green-700 border-green-200" 
-                                  : "bg-gray-50 text-gray-700 border-gray-200"}
-                              >
-                                {center.estado === "activo" ? "Activo" : "Inactivo"}
-                              </Badge>
-                            </td>
+                  {centersWithSettings.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No hay centros configurados con el servicio SíOnline</p>
+                      <p className="text-sm">Selecciona un centro del desplegable para añadirlo</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-3 px-4 font-semibold text-muted-foreground">CIF</th>
+                            <th className="text-left py-3 px-4 font-semibold text-primary">Centro</th>
+                            <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Renovación</th>
+                            <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Estado</th>
+                            <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Activo</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {centersWithSettings.map((setting) => (
+                            <tr
+                              key={setting.id}
+                              className="border-b cursor-pointer hover:bg-muted/50 transition-colors"
+                              onClick={() => setSelectedCenter(setting)}
+                            >
+                              <td className="py-3 px-4 text-blue-600 font-mono text-sm">
+                                {setting.training_center?.cif || '-'}
+                              </td>
+                              <td className="py-3 px-4 text-blue-600">
+                                {setting.training_center?.name}
+                              </td>
+                              <td className="py-3 px-4 text-orange-600">
+                                {setting.fecha_renovacion 
+                                  ? new Date(setting.fecha_renovacion).toLocaleDateString('es-ES')
+                                  : "-"
+                                }
+                              </td>
+                              <td className="py-3 px-4">
+                                <Badge variant="outline" className={getEstadoBadge(setting.estado)}>
+                                  {setting.estado.charAt(0).toUpperCase() + setting.estado.slice(1)}
+                                </Badge>
+                              </td>
+                              <td className="py-3 px-4">
+                                {setting.enabled ? (
+                                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                ) : (
+                                  <AlertCircle className="w-5 h-5 text-gray-400" />
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground mt-4 text-center">
-                    Haga clic en un centro para abrir su ficha y ver su URL de seguimiento
+                    Haga clic en un centro para ver y editar su configuración
                   </p>
                 </CardContent>
               </Card>
@@ -270,129 +499,157 @@ export default function AdminSionlineSettings() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Centros de formación</CardTitle>
-                    <Button 
-                      variant="outline" 
-                      className="bg-blue-600 text-white hover:bg-blue-700"
-                      onClick={() => setSelectedCenter(null)}
-                    >
-                      Volver al listado
-                    </Button>
+                    <div>
+                      <CardTitle>{selectedCenter.training_center?.name}</CardTitle>
+                      <CardDescription>Configuración del servicio SíOnline</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => { setSelectedCenter(null); setIsEditing(false); }}
+                      >
+                        Volver al listado
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="icon"
+                        onClick={() => handleDeleteCenter(selectedCenter.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
+                  {/* Estado y activación */}
+                  <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div>
+                      <Label className="text-base font-semibold">Servicio Activo</Label>
+                      <p className="text-sm text-muted-foreground">Habilitar URL de seguimiento para este centro</p>
+                    </div>
+                    <Switch
+                      checked={selectedCenter.enabled}
+                      onCheckedChange={(checked) => setSelectedCenter({ ...selectedCenter, enabled: checked })}
+                    />
+                  </div>
+
+                  {/* Datos del centro */}
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>CIF *</Label>
+                      <Label>CIF</Label>
                       <Input
-                        value={selectedCenter.cif}
-                        onChange={(e) => setSelectedCenter({ ...selectedCenter, cif: e.target.value })}
-                        disabled={!isEditing}
-                        className="bg-blue-50"
+                        value={selectedCenter.training_center?.cif || ''}
+                        disabled
+                        className="bg-muted"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Razón social *</Label>
-                      <Input
-                        value={selectedCenter.razonSocial}
-                        onChange={(e) => setSelectedCenter({ ...selectedCenter, razonSocial: e.target.value })}
-                        disabled={!isEditing}
-                      />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label>Domicilio *</Label>
-                      <Input
-                        value={selectedCenter.domicilio}
-                        onChange={(e) => setSelectedCenter({ ...selectedCenter, domicilio: e.target.value })}
-                        disabled={!isEditing}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Código postal *</Label>
-                      <Input
-                        value={selectedCenter.codigoPostal}
-                        onChange={(e) => setSelectedCenter({ ...selectedCenter, codigoPostal: e.target.value })}
-                        disabled={!isEditing}
-                        className="max-w-[120px]"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Localidad *</Label>
-                      <Input
-                        value={selectedCenter.localidad}
-                        onChange={(e) => setSelectedCenter({ ...selectedCenter, localidad: e.target.value })}
-                        disabled={!isEditing}
-                      />
+                      <Label>Estado del servicio</Label>
+                      <Select
+                        value={selectedCenter.estado}
+                        onValueChange={(value) => setSelectedCenter({ ...selectedCenter, estado: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pendiente">Pendiente</SelectItem>
+                          <SelectItem value="activo">Activo</SelectItem>
+                          <SelectItem value="inactivo">Inactivo</SelectItem>
+                          <SelectItem value="vencido">Vencido</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   {/* URL de seguimiento */}
-                  <div className="border-t pt-4 mt-4">
+                  <div className="border-t pt-4">
                     <div className="space-y-2">
-                      <Label className="font-semibold">URL seguimiento</Label>
+                      <Label className="font-semibold">URL de Seguimiento SOAP</Label>
                       <div className="flex items-center gap-2">
                         <Input
-                          value={selectedCenter.urlSeguimiento}
-                          disabled
-                          className="bg-muted font-mono text-sm"
+                          value={selectedCenter.url_seguimiento || ''}
+                          onChange={(e) => setSelectedCenter({ ...selectedCenter, url_seguimiento: e.target.value })}
+                          className="font-mono text-sm"
+                          placeholder="https://..."
                         />
                         <Button 
                           variant="outline" 
                           size="icon"
-                          onClick={() => copyToClipboard(selectedCenter.urlSeguimiento, "URL de seguimiento")}
+                          onClick={() => copyToClipboard(selectedCenter.url_seguimiento || '', "URL de seguimiento")}
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Esta es la URL que debe proporcionar al SEPE para la acreditación
+                        Esta es la URL que el centro debe proporcionar al SEPE para la acreditación
                       </p>
                     </div>
                   </div>
 
-                  {/* Credenciales de seguimiento */}
-                  <div className="space-y-2">
-                    <Label>Credenciales de seguimiento</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={selectedCenter.credencialesSeguimiento}
-                        onChange={(e) => setSelectedCenter({ ...selectedCenter, credencialesSeguimiento: e.target.value })}
-                        disabled={!isEditing}
-                        className="max-w-[200px]"
-                      />
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={() => copyToClipboard(selectedCenter.credencialesSeguimiento, "Credenciales")}
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
+                  {/* Credenciales */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Credenciales de Seguimiento</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={selectedCenter.credenciales_seguimiento || ''}
+                          onChange={(e) => setSelectedCenter({ ...selectedCenter, credenciales_seguimiento: e.target.value })}
+                          placeholder="Clave de acceso"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => copyToClipboard(selectedCenter.credenciales_seguimiento || '', "Credenciales")}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Clave de acceso del seguimiento
-                    </p>
+                    <div className="space-y-2">
+                      <Label>API Key (opcional)</Label>
+                      <Input
+                        value={selectedCenter.api_key || ''}
+                        onChange={(e) => setSelectedCenter({ ...selectedCenter, api_key: e.target.value })}
+                        placeholder="API Key"
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex gap-2 mt-4">
-                    {isEditing ? (
-                      <>
-                        <Button onClick={handleSaveCenter} className="bg-green-600 hover:bg-green-700">
-                          <Save className="w-4 h-4 mr-2" />
-                          Grabar
-                        </Button>
-                        <Button variant="outline" onClick={() => setIsEditing(false)}>
-                          Cancelar
-                        </Button>
-                      </>
-                    ) : (
-                      <Button onClick={() => setIsEditing(true)}>
-                        Editar Centro
+                  {/* Fecha renovación */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Fecha de Renovación</Label>
+                      <Input
+                        type="date"
+                        value={selectedCenter.fecha_renovacion?.split('T')[0] || ''}
+                        onChange={(e) => setSelectedCenter({ ...selectedCenter, fecha_renovacion: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Notas */}
+                  <div className="space-y-2">
+                    <Label>Notas internas</Label>
+                    <Textarea
+                      value={selectedCenter.notas || ''}
+                      onChange={(e) => setSelectedCenter({ ...selectedCenter, notas: e.target.value })}
+                      placeholder="Notas sobre este centro..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button onClick={handleSaveCenter} disabled={saving}>
+                      <Save className="w-4 h-4 mr-2" />
+                      Guardar Cambios
+                    </Button>
+                    {selectedCenter.url_seguimiento && (
+                      <Button variant="outline" onClick={() => window.open(selectedCenter.url_seguimiento!, "_blank")}>
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Probar URL
                       </Button>
                     )}
-                    <Button variant="outline" onClick={() => window.open(selectedCenter.urlSeguimiento, "_blank")}>
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Probar URL
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -400,149 +657,119 @@ export default function AdminSionlineSettings() {
           </div>
         </TabsContent>
 
+        {/* Pricing */}
+        <TabsContent value="pricing">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Euro className="w-5 h-5" />
+                  Precio para tus Clientes
+                </CardTitle>
+                <CardDescription>Configura el precio que cobras a tus centros</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Precio trimestral por centro (€)</Label>
+                  <Input
+                    type="number"
+                    value={globalConfig.precio_trimestral}
+                    onChange={(e) => setGlobalConfig({ ...globalConfig, precio_trimestral: parseFloat(e.target.value) || 0 })}
+                    className="max-w-[200px]"
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Este precio se usará como referencia en facturas y recordatorios de renovación.
+                </p>
+                <Button onClick={handleSaveGlobalConfig} disabled={saving}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Guardar Precio
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Resumen de Ingresos</CardTitle>
+                <CardDescription>Estimación basada en centros activos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Centros activos:</span>
+                    <span className="font-semibold">{centersWithSettings.filter(c => c.estado === 'activo').length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Precio por centro:</span>
+                    <span className="font-semibold">{globalConfig.precio_trimestral}€/trimestre</span>
+                  </div>
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center text-lg">
+                      <span className="font-semibold">Ingresos trimestrales:</span>
+                      <span className="font-bold text-primary">
+                        {(centersWithSettings.filter(c => c.estado === 'activo').length * globalConfig.precio_trimestral).toLocaleString('es-ES')}€
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-muted-foreground mt-2">
+                      <span>Ingresos anuales estimados:</span>
+                      <span>
+                        {(centersWithSettings.filter(c => c.estado === 'activo').length * globalConfig.precio_trimestral * 4).toLocaleString('es-ES')}€
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         {/* Service Information */}
         <TabsContent value="info">
           <div className="grid gap-6">
-            {/* Pricing Card */}
             <Card>
-              <CardHeader className="bg-orange-500 text-white rounded-t-lg">
+              <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
                 <CardTitle className="text-center text-2xl">
-                  Contratar seguimiento SOAP ¡en 24 horas!
+                  Servicio WEB de Seguimiento SOAP
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  <Badge className="bg-green-100 text-green-800 border-green-200 text-lg px-4 py-1">
-                    Contrato trimestral sin permanencia
-                  </Badge>
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-bold text-orange-600">
-                      URL de seguimiento SOAP para la inscripción o acreditación en SEPE
-                    </h3>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">¿Qué es el servicio SíOnline?</h3>
                     <p className="text-muted-foreground">
-                      Este servicio le permite presentar la <strong>declaración responsable de inscripción</strong> de 
-                      entidades de formación en la modalidad de teleformación y la <strong>solicitud de acreditación</strong> de 
-                      entidades de formación para la impartición de certificados de profesionalidad.
-                    </p>
-                    <p className="text-muted-foreground">
-                      Una vez inscrito o acreditado, este servicio le permite <strong>impartir</strong>, en la modalidad de 
-                      teleformación, formación de <strong>certificados de profesionalidad</strong> y <strong>formación de contratos en alternancia</strong>.
+                      El servicio SíOnline proporciona una URL de seguimiento válida necesaria para la inscripción 
+                      o acreditación de entidades de formación en la modalidad de teleformación ante SEPE.
                     </p>
                   </div>
-                  
-                  <div className="text-center space-y-4">
-                    <div className="text-5xl font-bold text-foreground">
-                      200<span className="text-2xl">€</span><span className="text-xl font-normal text-muted-foreground"> / trimestre</span>
-                    </div>
-                    <Button 
-                      className="bg-orange-500 hover:bg-orange-600 text-lg px-8 py-3 h-auto"
-                      onClick={() => window.open("https://plataformasionline.es/contratar", "_blank")}
-                    >
-                      CONTRATAR URL POR 200 € TRIMESTRE
-                    </Button>
-                    <p className="text-sm text-muted-foreground">sin compromiso de permanencia</p>
+
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">¿Por qué ofrecerlo a tus clientes?</h3>
+                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                      <li>Servicio obligatorio para centros de formación que imparten teleformación</li>
+                      <li>Genera ingresos recurrentes por cada centro cliente</li>
+                      <li>Fideliza a tus clientes ofreciendo un servicio integral</li>
+                      <li>Simplifica la gestión - tú manejas todas las URLs desde un solo panel</li>
+                    </ul>
                   </div>
-                </div>
 
-                <div className="mt-8">
-                  <h4 className="text-lg font-semibold text-orange-600 mb-4 text-center">
-                    Este servicio incluye las siguientes condiciones
-                  </h4>
-                  <ul className="space-y-2">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Los precios se verán incrementados con el IVA vigente en la fecha de emisión de la factura.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Instalación en 24 horas (días laborables).</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Respuesta 24/7 a las consultas de seguimiento de SEPE.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Modificaciones por cambios en la normativa de SEPE.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Monitorización y corrección de posibles errores.</span>
-                    </li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* SOAP Info Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-orange-600">Seguimiento automático SOAP</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <p className="text-muted-foreground">
-                      En la Orden TMS/369/2019, de 28 de marzo, ANEXO V, apartado A dice:
-                    </p>
-                    <blockquote className="border-l-4 border-orange-500 pl-4 italic text-muted-foreground">
-                      "El servicio web de seguimiento, con el protocolo de conexión (SOAP) y las especificaciones 
-                      publicadas en las páginas web de los servicios públicos de empleo del Sistema Nacional de Empleo, 
-                      deberá estar implementado por las entidades de formación acreditadas e inscritas en la modalidad de teleformación."
-                    </blockquote>
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-bold text-blue-700 text-center">
-                        NUESTRO SISTEMA ES COMPATIBLE CON TODAS LAS PLATAFORMAS DEL MERCADO
-                      </h4>
-                    </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Cómo funciona</h3>
+                    <ol className="list-decimal list-inside text-muted-foreground space-y-1">
+                      <li>Configura tu cuenta de revendedor en SíOnline</li>
+                      <li>Añade cada centro de formación cliente al servicio</li>
+                      <li>Genera la URL de seguimiento personalizada con el CIF del centro</li>
+                      <li>El centro usa esa URL en su acreditación ante SEPE</li>
+                      <li>Factura trimestralmente a cada centro por el servicio</li>
+                    </ol>
                   </div>
-                  
-                  <div className="flex flex-col items-center justify-center space-y-4">
-                    <div className="text-6xl font-bold text-gray-400">SEPE</div>
-                    <div className="bg-orange-500 text-white px-6 py-3 rounded-lg text-center">
-                      <div className="font-bold text-lg">SOAP</div>
-                      <div className="font-bold text-lg">SSL</div>
-                    </div>
-                    <p className="text-orange-600 font-semibold">sistema de seguimiento</p>
-                  </div>
-                </div>
 
-                <Alert className="mt-6">
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Validación del seguimiento:</strong> En la web de SEPE se puede descargar un KIT de pruebas 
-                    para validar la URL de seguimiento. Valide su URL de seguimiento antes de presentar la solicitud de acreditación.
-                  </AlertDescription>
-                </Alert>
-
-                <div className="flex justify-center mt-4">
-                  <Button 
-                    className="bg-orange-500 hover:bg-orange-600"
-                    onClick={() => window.open("https://plataformasionline.es/validar", "_blank")}
-                  >
-                    Pruebe gratis nuestra URL de seguimiento
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Contact Card */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-6 h-6 text-orange-500" />
-                    <div>
-                      <p className="font-semibold">¿Necesitas ayuda?</p>
-                      <p className="text-muted-foreground">Contacta con SíOnline</p>
-                    </div>
-                  </div>
-                  <a href="tel:955271515" className="text-2xl font-bold text-orange-600 hover:underline">
-                    955 27 15 15
-                  </a>
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Importante:</strong> Cada centro de formación necesita tener su CIF correctamente 
+                      registrado en la plataforma para generar su URL de seguimiento personalizada.
+                    </AlertDescription>
+                  </Alert>
                 </div>
               </CardContent>
             </Card>
