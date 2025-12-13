@@ -171,20 +171,45 @@ export default function AdminSionlineSettings() {
     }
   };
 
+  const generateApiKey = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = 'tcs_';
+    for (let i = 0; i < 32; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const generateCredentials = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 16; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
   const handleAddCenter = async (centerId: string) => {
     const center = availableCenters.find(c => c.id === centerId);
     if (!center) return;
 
     try {
       const urlSeguimiento = `${baseTrackingUrl}/${center.cif || 'SIN_CIF'}`;
+      const apiKey = generateApiKey();
+      const credentials = generateCredentials();
+      const fechaRenovacion = new Date();
+      fechaRenovacion.setMonth(fechaRenovacion.getMonth() + 3);
       
       const { data, error } = await supabase
         .from('sionline_settings')
         .insert({
           training_center_id: centerId,
-          enabled: false,
+          enabled: true,
           url_seguimiento: urlSeguimiento,
-          estado: 'pendiente'
+          api_key: apiKey,
+          credenciales_seguimiento: credentials,
+          fecha_renovacion: fechaRenovacion.toISOString(),
+          estado: 'activo'
         })
         .select()
         .single();
@@ -194,7 +219,7 @@ export default function AdminSionlineSettings() {
       if (data) {
         setCentersWithSettings([...centersWithSettings, { ...data, training_center: center }]);
         setAvailableCenters(availableCenters.filter(c => c.id !== centerId));
-        toast.success(`Centro ${center.name} añadido correctamente`);
+        toast.success(`Centro ${center.name} añadido con credenciales generadas`);
       }
     } catch (error) {
       console.error('Error adding center:', error);
