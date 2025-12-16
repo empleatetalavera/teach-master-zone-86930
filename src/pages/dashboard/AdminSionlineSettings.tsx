@@ -77,8 +77,8 @@ export default function AdminSionlineSettings() {
   const [selectedCenter, setSelectedCenter] = useState<(SionlineSettings & { training_center: TrainingCenter }) | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Base URL for tracking - uses the Lovable Cloud edge function directly
-  const baseTrackingUrl = "https://fkxbgifvwivlvpwxdzdb.supabase.co/functions/v1/sepe-tracking";
+  // Base URL for tracking - uses the LucusHost proxy to forward to Lovable Cloud
+  const baseTrackingUrl = "https://talentcloudsolution.es/sepe-tracking";
 
   useEffect(() => {
     loadData();
