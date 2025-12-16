@@ -23,10 +23,12 @@ Deno.serve(async (req) => {
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // Extract CIF from path if present
+  // Extract CIF from query parameter or path
+  const cifFromQuery = url.searchParams.get('cif')
   const pathParts = url.pathname.split('/')
   const cifIndex = pathParts.indexOf('cif')
-  const cif = cifIndex !== -1 ? pathParts[cifIndex + 1] : null
+  const cifFromPath = cifIndex !== -1 ? pathParts[cifIndex + 1] : null
+  const cif = cifFromQuery || cifFromPath
 
   // Handle GET request - return WSDL
   if (req.method === 'GET') {

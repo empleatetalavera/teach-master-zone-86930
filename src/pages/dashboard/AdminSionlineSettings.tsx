@@ -77,8 +77,8 @@ export default function AdminSionlineSettings() {
   const [selectedCenter, setSelectedCenter] = useState<(SionlineSettings & { training_center: TrainingCenter }) | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Base URL for tracking - uses the edge function
-  const baseTrackingUrl = "https://fkxbgifvwivlvpwxdzdb.supabase.co/functions/v1/sepe-tracking/centro/cif";
+  // Base URL for tracking - uses the Lovable Cloud edge function directly
+  const baseTrackingUrl = "https://fkxbgifvwivlvpwxdzdb.supabase.co/functions/v1/sepe-tracking";
 
   useEffect(() => {
     loadData();
@@ -194,7 +194,7 @@ export default function AdminSionlineSettings() {
     if (!center) return;
 
     try {
-      const urlSeguimiento = `${baseTrackingUrl}/${center.cif || 'SIN_CIF'}`;
+      const urlSeguimiento = `${baseTrackingUrl}?cif=${center.cif || 'SIN_CIF'}`;
       const apiKey = generateApiKey();
       const credentials = generateCredentials();
       const fechaRenovacion = new Date();
@@ -552,6 +552,9 @@ export default function AdminSionlineSettings() {
                             Copiar
                           </Button>
                         </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Para verificar, añada <code className="bg-slate-200 px-1 rounded">&wsdl</code> al final de la URL
+                        </p>
                       </div>
 
                       {/* Credenciales de Acceso */}
