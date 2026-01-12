@@ -895,7 +895,7 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                   </h4>
                   <div className="text-sm space-y-1">
                     <p><strong>Empleate Formación</strong></p>
-                    <p>C/ Corredera, 24 - 1ª Planta</p>
+                    <p>C/ Marqués de Mirasol, 19</p>
                     <p>45600 Talavera de la Reina (Toledo)</p>
                   </div>
                 </div>
