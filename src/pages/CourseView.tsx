@@ -20,7 +20,7 @@ import { UnitActivityManager } from "@/components/UnitActivityManager";
 import { CourseSchedule } from "@/components/CourseSchedule";
 import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
-import ScormContentViewerExtended from "@/components/ScormContentViewerExtended";
+import ScormProfessionalViewer from "@/components/ScormProfessionalViewer";
 import { UnitManualContent } from "@/components/UnitManualContent";
 
 interface Course {
@@ -1754,8 +1754,8 @@ export default function CourseView() {
         courseId={courseId || ""}
       />
 
-      {/* SCORM Content Viewer Dialog - Extended Version */}
-      <ScormContentViewerExtended
+      {/* SCORM Content Viewer Dialog - Professional Format */}
+      <ScormProfessionalViewer
         open={scormViewerOpen}
         onOpenChange={setScormViewerOpen}
         unitId={selectedUnitId}
