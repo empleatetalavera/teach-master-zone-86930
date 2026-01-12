@@ -20,6 +20,7 @@ import { UnitActivityManager } from "@/components/UnitActivityManager";
 import { CourseSchedule } from "@/components/CourseSchedule";
 import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
+import { ScormContentViewer } from "@/components/ScormContentViewer";
 
 interface Course {
   id: string;
@@ -109,6 +110,9 @@ export default function CourseView() {
   // Activity manager state
   const [activityManagerOpen, setActivityManagerOpen] = useState(false);
 
+  // SCORM content viewer state
+  const [scormViewerOpen, setScormViewerOpen] = useState(false);
+
   const openContentViewer = (unitId: string, unitTitle: string, contentType: 'video' | 'document' | 'audio' | 'scorm' | 'exercise' | 'presentation') => {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
@@ -120,6 +124,12 @@ export default function CourseView() {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
     setActivityManagerOpen(true);
+  };
+
+  const openScormViewer = (unitId: string, unitTitle: string) => {
+    setSelectedUnitId(unitId);
+    setSelectedUnitTitle(unitTitle);
+    setScormViewerOpen(true);
   };
 
   useEffect(() => {
@@ -1047,6 +1057,18 @@ export default function CourseView() {
                                                 </div>
                                               )}
 
+                                              {/* Botón Manual SEPE - Destacado */}
+                                              <div className="pt-2 border-t">
+                                                <Button
+                                                  variant="default"
+                                                  className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                                                  onClick={() => openScormViewer(unit.id, unit.title)}
+                                                >
+                                                  <BookOpen className="h-4 w-4 mr-2" />
+                                                  📚 Ver Manual / Temario SEPE
+                                                </Button>
+                                              </div>
+
                                               {/* Contenido Interactivo */}
                                               <div className="pt-2 border-t">
                                                 <span className="text-xs font-medium flex items-center gap-1.5 mb-2">
@@ -1595,6 +1617,15 @@ export default function CourseView() {
         unitId={selectedUnitId}
         unitTitle={selectedUnitTitle}
         courseId={courseId || ""}
+      />
+
+      {/* SCORM Content Viewer Dialog */}
+      <ScormContentViewer
+        open={scormViewerOpen}
+        onOpenChange={setScormViewerOpen}
+        unitId={selectedUnitId}
+        unitTitle={selectedUnitTitle}
+        enrollmentId={enrollment?.id}
       />
     </div>
   );
