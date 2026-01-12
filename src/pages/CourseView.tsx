@@ -1129,8 +1129,8 @@ export default function CourseView() {
                                                   </div>
                                                   
                                                   <div 
-                                                    className="bg-muted/50 rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors"
-                                                    onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
+                                                    className="bg-muted/50 rounded-lg p-3 border cursor-pointer hover:border-primary transition-colors bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-900/20 dark:to-green-800/10"
+                                                    onClick={() => openScormViewer(unit.id, unit.title)}
                                                   >
                                                     <div className="flex items-center gap-2 mb-2">
                                                       <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded">
