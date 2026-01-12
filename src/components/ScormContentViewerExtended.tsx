@@ -2340,20 +2340,42 @@ export default function ScormContentViewerExtended({
   const [score, setScore] = useState(0);
   const [showPdfMenu, setShowPdfMenu] = useState(false);
 
-  // Detect UF code from unit title
+  // Detect UF code from unit title - improved detection
   const getUFCode = useCallback(() => {
+    const titleLower = unitTitle.toLowerCase();
+    
+    // Direct UF code match
     const ufMatch = unitTitle.match(/UF0?5(17|18|19)/i);
     if (ufMatch) {
       return `UF05${ufMatch[1]}`;
     }
-    // Fallback based on keywords
-    if (unitTitle.toLowerCase().includes("organiza") || unitTitle.toLowerCase().includes("recursos humanos")) {
+    
+    // Keyword-based detection for UF0517
+    if (
+      titleLower.includes("organiza") || 
+      titleLower.includes("recursos humanos") ||
+      titleLower.includes("empresa") ||
+      titleLower.includes("organigrama") ||
+      titleLower.includes("departamento") ||
+      titleLower.includes("estructura")
+    ) {
       return "UF0517";
-    } else if (unitTitle.toLowerCase().includes("correspond") || unitTitle.toLowerCase().includes("paqueter")) {
-      return "UF0518";
-    } else {
-      return "UF0519";
     }
+    
+    // Keyword-based detection for UF0518
+    if (
+      titleLower.includes("correspond") || 
+      titleLower.includes("paqueter") ||
+      titleLower.includes("correo") ||
+      titleLower.includes("carta") ||
+      titleLower.includes("archivo") ||
+      titleLower.includes("comunicación escrita")
+    ) {
+      return "UF0518";
+    }
+    
+    // Default to UF0519 (most comprehensive)
+    return "UF0519";
   }, [unitTitle]);
 
   // Load content based on unit
