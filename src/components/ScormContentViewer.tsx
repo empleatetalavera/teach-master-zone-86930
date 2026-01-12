@@ -18,7 +18,7 @@ import {
   Play, CheckCheck, XCircle, ArrowRight, Sparkles, Brain, BookMarked,
   Award, Clock, BarChart3, Volume2, Presentation, FileQuestion, Layers,
   ChevronDown, Star, TrendingUp, ThumbsUp, ThumbsDown, RotateCcw, Video,
-  Headphones, Network, Eye, MapPin, Shuffle, SquarePlay
+  Headphones, Network, Eye, MapPin, Shuffle, SquarePlay, Download, FileDown
 } from "lucide-react";
 
 interface ScormContentViewerProps {
@@ -79,6 +79,31 @@ const SCORM_CONTENT_PATHS: Record<string, string[]> = {
   ]
 };
 
+// Manual PDF downloads
+const MANUAL_PDFS: Record<string, { title: string; files: { name: string; url: string }[] }> = {
+  "UF0517": {
+    title: "UF0517 - Organización Empresarial y de Recursos Humanos",
+    files: [
+      { name: "UD1 - La organización de entidades públicas y privadas", url: "/documents/manuales/UF0517_UD1_organizacion_entidades.pdf" },
+      { name: "UD2 - La organización de los Recursos Humanos", url: "/documents/manuales/UF0517_UD2_recursos_humanos.pdf" }
+    ]
+  },
+  "UF0518": {
+    title: "UF0518 - Gestión de la Correspondencia",
+    files: [
+      { name: "UD1 - Tratamiento de la correspondencia y paquetería", url: "/documents/manuales/UF0518_UD1_correspondencia.pdf" }
+    ]
+  },
+  "UF0519": {
+    title: "UF0519 - Documentación Económico-Administrativa",
+    files: [
+      { name: "UD1 - Gestión auxiliar de documentación administrativa básica", url: "/documents/manuales/UF0519_UD1_documentacion_administrativa.pdf" },
+      { name: "UD2 - Gestión básica de tesorería", url: "/documents/manuales/UF0519_UD2_tesoreria.pdf" },
+      { name: "UD3 - Gestión y control básico de existencias", url: "/documents/manuales/UF0519_UD3_existencias.pdf" }
+    ]
+  }
+};
+
 // Concept maps for each UF
 const CONCEPT_MAPS: Record<string, { title: string; nodes: { id: string; label: string; level: number; connections: string[] }[] }> = {
   "UF0517": {
@@ -128,6 +153,503 @@ const CONCEPT_MAPS: Record<string, { title: string; nodes: { id: string; label: 
       { id: "11", label: "PMP", level: 2, connections: [] }
     ]
   }
+};
+
+// Extended content slides with real curriculum content
+const EXTENDED_CONTENT: Record<string, { title: string; content: string; keyTerms?: string[] }[]> = {
+  "UF0517": [
+    {
+      title: "Funciones de la Empresa",
+      content: `Las empresas realizan diversas funciones para poder llevar a cabo su actividad:
+
+**Función Técnica**: Tiene que ver con la idea central de la empresa, sus objetivos, productos y servicios.
+
+**Función Financiera**: Manejo económico, control de deudas, inversión de beneficios.
+
+**Función Contable**: Registro de operaciones comerciales (contabilidad externa e interna).
+
+**Función Social**: Gestión de personas a través del Departamento de RRHH.
+
+**Función Comercial**: Proyectar el negocio hacia el mercado.
+
+**Función Administrativa**: Vigilar, conservar y dirigir todas las actividades.`,
+      keyTerms: ["Función técnica", "Función financiera", "Función comercial", "Función administrativa"]
+    },
+    {
+      title: "Clasificación de Empresas",
+      content: `Las empresas se pueden clasificar según diferentes criterios:
+
+**Por Forma Jurídica:**
+• Empresas individuales (autónomo)
+• Sociedades (S.L., S.A., Cooperativas)
+
+**Por Sector Económico:**
+• Extractivas (sector primario)
+• Transformadoras (sector secundario)
+• Comerciales y de Servicios (sector terciario)
+
+**Por Participación del Estado:**
+• Privadas
+• Públicas
+• Mixtas
+
+**Por Tamaño:**
+• Grandes: más de 250 trabajadores
+• Medianas: entre 50 y 250
+• Pequeñas: hasta 50 trabajadores`,
+      keyTerms: ["S.L.", "S.A.", "Autónomo", "PYME"]
+    },
+    {
+      title: "Jerarquía en la Empresa",
+      content: `La jerarquía se refiere al rango que tiene el trabajador dentro de la organización:
+
+**Tipos de Jerarquía:**
+
+1. **Por cargo**: Expresada en organigramas, muestra los niveles estructurales.
+
+2. **Por capacidad**: Los individuos ascienden de acuerdo a su capacidad.
+
+3. **Por rango**: Basada en condiciones personales, no en obligaciones.
+
+4. **Por remuneración**: Según la complejidad del trabajo, antigüedad o rendimiento.
+
+La jerarquía de un individuo se basa en el grado de especialización y ubicación que posea.`,
+      keyTerms: ["Jerarquía", "Organigrama", "Rango", "Estructura"]
+    },
+    {
+      title: "La Función Administrativa",
+      content: `La función administrativa coordina todo el trabajo de la empresa. Sus subfunciones son:
+
+**Subfunciones:**
+• **Técnicas**: Producción de bienes y servicios
+• **Comerciales**: Comprar y vender eficientemente
+• **Financieras**: Gestión económica
+• **Seguridad**: Prevención de riesgos laborales
+• **Contables**: Inventarios, registros, balances
+
+**Objetivos principales:**
+• Planteamiento de metas y estrategias
+• Segmentación del trabajo para especialización
+• Fijación de objetivos generales y específicos
+• Coordinación de intereses comunes`,
+      keyTerms: ["Planificación", "Organización", "Dirección", "Control"]
+    },
+    {
+      title: "Los Grupos de Trabajo",
+      content: `Un grupo es un conjunto de personas que participan en una misma estructura vivencial colectiva.
+
+**Elementos de un grupo:**
+• Miembros que lo componen
+• Objetivos comunes
+• Normas de convivencia
+• Roles y funciones
+• Sentimiento de pertenencia
+
+**Criterios de organización:**
+1. **Adaptación mutua**: Comunicación informal entre miembros
+2. **Supervisión directa**: Control por parte de superiores
+3. **Normalización**: Programación del trabajo en empresas maduras
+
+**Indicadores de calidad:**
+• Productividad, beneficios, costes, satisfacción del cliente`,
+      keyTerms: ["Grupo", "Equipo", "Coordinación", "Trabajo en equipo"]
+    }
+  ],
+  "UF0518": [
+    {
+      title: "La Comunicación Empresarial",
+      content: `La comunicación empresarial es aquella área estratégica de planificación en el marco de una organización.
+
+**Tipos de comunicación:**
+• **Interna**: Dirigida al trabajador de la empresa
+• **Externa**: Intercambio con el mercado y terceros
+
+**Funciones de la comunicación:**
+• **Abierta**: Comunicarse con el exterior de forma interactiva
+• **Evolutiva**: Adaptarse a lo imprevisto
+• **Flexible**: Combinar lo formal e informal
+• **Multidireccional**: De arriba a abajo y viceversa
+• **Instrumentada**: Usar herramientas adecuadas`,
+      keyTerms: ["Comunicación interna", "Comunicación externa", "Canal", "Mensaje"]
+    },
+    {
+      title: "Elementos de la Comunicación",
+      content: `En todo proceso de comunicación intervienen estos elementos:
+
+**Emisor**: Persona o conjunto de personas que transmiten el mensaje.
+
+**Receptor**: Destinatario del mensaje, quien lo interpreta.
+
+**Mensaje**: Objeto de la comunicación (información, opinión, datos).
+
+**Canal**: Medio mediante el cual se transmite la información.
+
+**Código**: Conjunto de símbolos utilizados para expresar el mensaje.
+
+**Contexto**: Situación real del emisor y receptor.
+
+**Retroalimentación**: Permite determinar si el receptor comprendió el mensaje.`,
+      keyTerms: ["Emisor", "Receptor", "Mensaje", "Canal", "Feedback"]
+    },
+    {
+      title: "Cartas Comerciales",
+      content: `La carta comercial es el principal vehículo de comunicación entre empresas o particulares.
+
+**Estructura de una carta comercial:**
+
+**Inicio:**
+• Membrete (datos de la empresa emisora)
+• Destinatario
+• Referencia o asunto
+• Fecha
+
+**Contenido:**
+• Saludo (fórmula de cortesía)
+• Texto (tema de la carta)
+
+**Final:**
+• Despedida
+• Antefirma y firma
+• Anexos (si los hay)`,
+      keyTerms: ["Membrete", "Saludo", "Despedida", "Firma"]
+    },
+    {
+      title: "Gestión de Correspondencia Entrante",
+      content: `El proceso de gestión de correspondencia entrante incluye:
+
+**1. Recepción:**
+• Recogida del correo
+• Verificación de integridad
+
+**2. Registro:**
+• Fecha de entrada
+• Remitente
+• Asunto
+• Destinatario interno
+
+**3. Clasificación:**
+• Por urgencia
+• Por departamento destino
+• Por tipo de documento
+
+**4. Distribución:**
+• Entrega al destinatario
+• Acuse de recibo
+
+**5. Archivo:**
+• Ordenación sistemática
+• Conservación adecuada`,
+      keyTerms: ["Registro", "Clasificación", "Distribución", "Archivo"]
+    },
+    {
+      title: "Sistemas de Archivo",
+      content: `Existen diferentes sistemas para organizar y clasificar los documentos:
+
+**Archivo Alfabético:**
+Por nombre de personas, empresas o temas.
+
+**Archivo Numérico:**
+Asigna un número correlativo a cada documento.
+
+**Archivo Cronológico:**
+Ordenado por fechas.
+
+**Archivo Temático o por Materias:**
+Clasificado por asuntos o temas.
+
+**Archivo Mixto:**
+Combinación de varios sistemas.
+
+**Archivo Digital:**
+Documentos escaneados y almacenados electrónicamente.`,
+      keyTerms: ["Alfabético", "Numérico", "Cronológico", "Temático", "Digital"]
+    }
+  ],
+  "UF0519": [
+    {
+      title: "Documentos Administrativos",
+      content: `Los documentos administrativos son los producidos y/o recibidos por una unidad administrativa en el ejercicio de sus funciones.
+
+**Elementos imprescindibles:**
+• Emisor
+• Destinatario
+• Tono del documento
+• Contenido informativo
+• Referencias legales
+• Lugar y fecha
+
+**Funciones principales:**
+• **De constancia**: Asegura la pervivencia de actuaciones
+• **De comunicación**: Medio de comunicación interna y externa
+
+**Clasificación:**
+• Expedientes administrativos
+• Correspondencia
+• Registros
+• Documentos simples`,
+      keyTerms: ["Emisor", "Destinatario", "Expediente", "Registro"]
+    },
+    {
+      title: "El Pedido y el Albarán",
+      content: `**EL PEDIDO:**
+Es la petición de compra que un cliente hace a un proveedor para que le suministre un bien o servicio.
+
+Elementos del pedido:
+• Datos del comprador y vendedor
+• Descripción de productos
+• Cantidad y precio
+• Condiciones de entrega y pago
+
+**EL ALBARÁN:**
+Nota de entrega que acompaña a la mercancía y justifica su recepción.
+
+Elementos del albarán:
+• Número de albarán
+• Fecha de entrega
+• Datos de emisor y receptor
+• Descripción de mercancías
+• Firma del receptor`,
+      keyTerms: ["Pedido", "Albarán", "Nota de entrega", "Mercancía"]
+    },
+    {
+      title: "La Factura",
+      content: `La factura es el documento que justifica legalmente una operación de compraventa.
+
+**Elementos obligatorios:**
+• Número de factura
+• Fecha de emisión
+• Datos fiscales del emisor y receptor
+• Descripción de productos/servicios
+• Base imponible
+• Tipo y cuota de IVA
+• Total factura
+
+**Tipos de facturas:**
+• **Ordinaria**: La más habitual
+• **Simplificada**: Para importes menores
+• **Rectificativa**: Corrige errores
+• **Proforma**: Sin valor fiscal (presupuesto)
+• **Electrónica**: Formato digital con validez legal`,
+      keyTerms: ["Factura", "Base imponible", "IVA", "Factura electrónica"]
+    },
+    {
+      title: "Gestión de Tesorería",
+      content: `La tesorería gestiona los recursos líquidos de la empresa: caja, bancos, cobros y pagos.
+
+**Operaciones básicas:**
+
+**FACTORING:**
+Cesión de cuentas a cobrar a una entidad financiera.
+
+**CONFIRMING:**
+Servicio de gestión de pagos a proveedores.
+
+**Medios de pago:**
+• Efectivo
+• Cheque
+• Pagaré
+• Letra de cambio
+• Transferencia bancaria
+• Tarjeta de crédito/débito
+
+**Libros auxiliares:**
+• Libro de Caja: Movimientos de efectivo
+• Libro de Bancos: Movimientos bancarios`,
+      keyTerms: ["Tesorería", "Factoring", "Confirming", "Libro de Caja"]
+    },
+    {
+      title: "Control de Existencias",
+      content: `Las existencias son bienes poseídos por la empresa para su venta o transformación.
+
+**Tipos de existencias:**
+• Materias primas
+• Productos en curso
+• Productos terminados
+• Mercaderías
+• Material de oficina
+
+**Métodos de valoración:**
+
+**FIFO (First In, First Out):**
+Las primeras unidades que entran son las primeras que salen.
+
+**PMP (Precio Medio Ponderado):**
+Se calcula un precio medio de todas las entradas.
+
+**Control de inventario:**
+• Inventario periódico
+• Inventario permanente
+• Fichas de almacén`,
+      keyTerms: ["Existencias", "FIFO", "PMP", "Inventario", "Stock"]
+    },
+    {
+      title: "El Arqueo de Caja",
+      content: `El arqueo de caja es la verificación del dinero efectivo en caja.
+
+**Proceso del arqueo:**
+1. Contar físicamente el efectivo
+2. Clasificar por billetes y monedas
+3. Comparar con el saldo contable
+4. Identificar diferencias
+
+**Posibles diferencias:**
+• **Sobrante**: Hay más dinero del que debería
+• **Faltante**: Hay menos dinero del que debería
+
+**Causas comunes:**
+• Errores al dar cambio
+• Olvidos de registro
+• Robos
+
+**El arqueo debe realizarse:**
+• Al cierre de cada día
+• Al cambio de turno
+• De forma sorpresiva`,
+      keyTerms: ["Arqueo", "Caja", "Sobrante", "Faltante"]
+    }
+  ]
+};
+
+// Extended quiz questions
+const EXTENDED_QUIZ: Record<string, QuizQuestion[]> = {
+  "UF0517": [
+    {
+      id: "q6",
+      question: "¿Qué función de la empresa se encarga del registro de operaciones comerciales?",
+      options: [
+        { id: "a", text: "Función técnica", isCorrect: false },
+        { id: "b", text: "Función contable", isCorrect: true },
+        { id: "c", text: "Función financiera", isCorrect: false },
+        { id: "d", text: "Función comercial", isCorrect: false }
+      ],
+      explanation: "La función contable se encarga de registrar todas las operaciones comerciales, tanto internas como externas.",
+      hint: "Piensa en qué función se encarga de los números y registros..."
+    },
+    {
+      id: "q7",
+      question: "¿Cuál es el órgano encargado de la selección y motivación del personal?",
+      options: [
+        { id: "a", text: "Dirección General", isCorrect: false },
+        { id: "b", text: "Departamento Comercial", isCorrect: false },
+        { id: "c", text: "Departamento de Recursos Humanos", isCorrect: true },
+        { id: "d", text: "Departamento Financiero", isCorrect: false }
+      ],
+      explanation: "El Departamento de RRHH gestiona la selección, contratación, formación y motivación del personal.",
+      hint: "El nombre del departamento hace referencia a las personas..."
+    },
+    {
+      id: "q8",
+      question: "¿Qué criterio de coordinación se utiliza cuando la empresa crece y aumenta la división del trabajo?",
+      options: [
+        { id: "a", text: "Adaptación mutua", isCorrect: false },
+        { id: "b", text: "Supervisión directa", isCorrect: true },
+        { id: "c", text: "Normalización", isCorrect: false },
+        { id: "d", text: "Autogestión", isCorrect: false }
+      ],
+      explanation: "La supervisión directa aparece cuando la empresa crece y el trabajo de unas personas es controlado por otras.",
+      hint: "Cuando hay más empleados, se necesita alguien que los supervise..."
+    }
+  ],
+  "UF0518": [
+    {
+      id: "q4",
+      question: "¿Cuál es la estructura correcta de una carta comercial en su parte final?",
+      options: [
+        { id: "a", text: "Membrete, destinatario, firma", isCorrect: false },
+        { id: "b", text: "Despedida, antefirma, firma, anexos", isCorrect: true },
+        { id: "c", text: "Saludo, texto, fecha", isCorrect: false },
+        { id: "d", text: "Referencia, asunto, cuerpo", isCorrect: false }
+      ],
+      explanation: "La parte final de una carta comercial incluye: despedida, antefirma, firma y anexos (si los hay).",
+      hint: "Piensa en cómo terminas normalmente una carta formal..."
+    },
+    {
+      id: "q5",
+      question: "¿Qué sistema de archivo utiliza fechas para organizar los documentos?",
+      options: [
+        { id: "a", text: "Alfabético", isCorrect: false },
+        { id: "b", text: "Numérico", isCorrect: false },
+        { id: "c", text: "Cronológico", isCorrect: true },
+        { id: "d", text: "Temático", isCorrect: false }
+      ],
+      explanation: "El archivo cronológico ordena los documentos según sus fechas, del más antiguo al más reciente o viceversa.",
+      hint: "Cronos en griego significa tiempo..."
+    },
+    {
+      id: "q6",
+      question: "¿Cuál es una función de la comunicación interna en la empresa?",
+      options: [
+        { id: "a", text: "Seleccionar proveedores", isCorrect: false },
+        { id: "b", text: "Implicar al personal en los objetivos", isCorrect: true },
+        { id: "c", text: "Gestionar las ventas", isCorrect: false },
+        { id: "d", text: "Facturar a clientes", isCorrect: false }
+      ],
+      explanation: "La comunicación interna mantiene la relación entre el trabajador y la empresa, implicándolo en los objetivos.",
+      hint: "Es comunicación INTERNA, destinada a los empleados..."
+    }
+  ],
+  "UF0519": [
+    {
+      id: "q6",
+      question: "¿Qué es el Factoring?",
+      options: [
+        { id: "a", text: "Un tipo de préstamo bancario", isCorrect: false },
+        { id: "b", text: "Cesión de cuentas a cobrar a una entidad financiera", isCorrect: true },
+        { id: "c", text: "Un método de valoración de existencias", isCorrect: false },
+        { id: "d", text: "Un tipo de factura especial", isCorrect: false }
+      ],
+      explanation: "El Factoring es una operación de financiación mediante la cesión de créditos comerciales a una entidad financiera.",
+      hint: "Es una forma de obtener dinero antes del vencimiento de facturas..."
+    },
+    {
+      id: "q7",
+      question: "¿Qué elemento NO es obligatorio en una factura?",
+      options: [
+        { id: "a", text: "Número de factura", isCorrect: false },
+        { id: "b", text: "Fecha de emisión", isCorrect: false },
+        { id: "c", text: "Logotipo de la empresa", isCorrect: true },
+        { id: "d", text: "Base imponible", isCorrect: false }
+      ],
+      explanation: "El logotipo es un elemento visual opcional; los elementos fiscales obligatorios son los datos del emisor, receptor, descripción, importes e IVA.",
+      hint: "Piensa en qué datos son fiscalmente necesarios..."
+    },
+    {
+      id: "q8",
+      question: "¿Cuándo se produce un 'faltante' en el arqueo de caja?",
+      options: [
+        { id: "a", text: "Cuando sobra dinero en caja", isCorrect: false },
+        { id: "b", text: "Cuando falta dinero respecto al saldo contable", isCorrect: true },
+        { id: "c", text: "Cuando se hace el cierre de caja", isCorrect: false },
+        { id: "d", text: "Cuando se ingresa dinero en el banco", isCorrect: false }
+      ],
+      explanation: "Un faltante ocurre cuando hay menos efectivo físico en caja del que indica el registro contable.",
+      hint: "El nombre lo dice: faltante = falta algo..."
+    },
+    {
+      id: "q9",
+      question: "¿Qué libro auxiliar registra los movimientos de dinero en efectivo?",
+      options: [
+        { id: "a", text: "Libro de Bancos", isCorrect: false },
+        { id: "b", text: "Libro Diario", isCorrect: false },
+        { id: "c", text: "Libro de Caja", isCorrect: true },
+        { id: "d", text: "Libro Mayor", isCorrect: false }
+      ],
+      explanation: "El Libro de Caja registra específicamente las entradas y salidas de dinero en efectivo.",
+      hint: "Si es dinero en efectivo, va en el libro de..."
+    },
+    {
+      id: "q10",
+      question: "¿Qué documento acompaña físicamente a la mercancía durante su transporte?",
+      options: [
+        { id: "a", text: "El presupuesto", isCorrect: false },
+        { id: "b", text: "La factura proforma", isCorrect: false },
+        { id: "c", text: "El albarán de entrega", isCorrect: true },
+        { id: "d", text: "El pedido", isCorrect: false }
+      ],
+      explanation: "El albarán es la nota de entrega que viaja con la mercancía y se firma al recibirla.",
+      hint: "Es lo que firmas cuando te entregan un paquete..."
+    }
+  ]
 };
 
 // Interactive exercises for each UF
@@ -461,21 +983,16 @@ export function ScormContentViewer({
         mediaUrl: getAudioUrl(code)
       });
 
-      // Content slides from markdown files
-      let slideIndex = 0;
-      for (const path of paths) {
-        try {
-          const response = await fetch(path);
-          if (response.ok) {
-            const text = await response.text();
-            const contentSlides = parseMarkdownToSlides(text, slideIndex);
-            generatedSlides.push(...contentSlides);
-            slideIndex += contentSlides.length;
-          }
-        } catch (e) {
-          console.error(`Error loading ${path}:`, e);
-        }
-      }
+      // Content slides from extended curriculum
+      const extendedContent = EXTENDED_CONTENT[code] || [];
+      extendedContent.forEach((content, index) => {
+        generatedSlides.push({
+          id: `ext-content-${index}`,
+          type: 'content',
+          title: content.title,
+          content: content.content
+        });
+      });
 
       // Exercise slides
       exercises.forEach((exercise, index) => {
@@ -487,12 +1004,15 @@ export function ScormContentViewer({
         });
       });
 
-      // Quiz slides
-      quizQuestions.forEach((quiz, index) => {
+      // Combine base and extended quiz questions
+      const extendedQuiz = EXTENDED_QUIZ[code] || [];
+      const allQuizQuestions = [...quizQuestions, ...extendedQuiz];
+      
+      allQuizQuestions.forEach((quiz, index) => {
         generatedSlides.push({
           id: `quiz-${index}`,
           type: 'quiz',
-          title: `Pregunta ${index + 1} de ${quizQuestions.length}`,
+          title: `Pregunta ${index + 1} de ${allQuizQuestions.length}`,
           quiz
         });
       });
@@ -1626,6 +2146,31 @@ Métodos de valoración:
               
               {/* Controls */}
               <div className="flex items-center gap-2">
+                {/* Download PDF button */}
+                {ufCode && MANUAL_PDFS[ufCode] && (
+                  <div className="relative group">
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      <span className="hidden sm:inline">Descargar Manual</span>
+                    </Button>
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-popover border rounded-lg shadow-lg p-3 hidden group-hover:block z-50">
+                      <p className="text-sm font-medium mb-2">Manuales disponibles:</p>
+                      <div className="space-y-1">
+                        {MANUAL_PDFS[ufCode].files.map((file, idx) => (
+                          <a 
+                            key={idx}
+                            href={file.url}
+                            download
+                            className="flex items-center gap-2 text-sm p-2 hover:bg-muted rounded-md transition-colors"
+                          >
+                            <FileDown className="h-4 w-4 text-primary" />
+                            <span className="truncate">{file.name}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <Button variant="outline" size="sm" onClick={() => setFontSize(f => Math.max(12, f - 2))}>
                   <ZoomOut className="h-4 w-4" />
                 </Button>
