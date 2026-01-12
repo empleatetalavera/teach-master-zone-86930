@@ -42,6 +42,8 @@ interface Course {
   start_date?: string;
   end_date?: string;
   enable_grade_breakdown?: boolean;
+  ficha_certificado_url?: string;
+  boe_url?: string;
 }
 
 interface Module {
@@ -648,6 +650,79 @@ export default function CourseView() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Documentos Oficiales del Certificado */}
+              {(course.ficha_certificado_url || course.boe_url) && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                        <FileText className="h-6 w-6 text-amber-600" />
+                      </div>
+                      <div>
+                        <CardTitle>Documentos Oficiales del Certificado</CardTitle>
+                        <CardDescription>Ficha del certificado de profesionalidad y BOE</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {course.ficha_certificado_url && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-amber-600" />
+                            Ficha del Certificado
+                          </h4>
+                          <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                            <iframe
+                              src={`${course.ficha_certificado_url}#toolbar=1&navpanes=0`}
+                              className="w-full h-full"
+                              title="Ficha del Certificado de Profesionalidad"
+                            />
+                          </div>
+                          <Button asChild variant="outline" className="w-full">
+                            <a 
+                              href={course.ficha_certificado_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2"
+                            >
+                              <FileDown className="h-4 w-4" />
+                              Descargar Ficha
+                            </a>
+                          </Button>
+                        </div>
+                      )}
+                      {course.boe_url && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-amber-600" />
+                            Boletín Oficial del Estado (BOE)
+                          </h4>
+                          <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                            <iframe
+                              src={`${course.boe_url}#toolbar=1&navpanes=0`}
+                              className="w-full h-full"
+                              title="BOE del Certificado"
+                            />
+                          </div>
+                          <Button asChild variant="outline" className="w-full">
+                            <a 
+                              href={course.boe_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2"
+                            >
+                              <FileDown className="h-4 w-4" />
+                              Descargar BOE
+                            </a>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Guía del Campus */}
               <Card>
