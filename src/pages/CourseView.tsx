@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -22,6 +22,8 @@ import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import ScormProfessionalViewer from "@/components/ScormProfessionalViewer";
 import { UnitManualContent } from "@/components/UnitManualContent";
+import { CourseStudentGuide } from "@/components/CourseStudentGuide";
+import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
 
 interface Course {
   id: string;
@@ -545,6 +547,20 @@ export default function CourseView() {
                     Inicio
                   </button>
                   <button
+                    onClick={() => setActiveTab("student-guide")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "student-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <BookMarked className="h-4 w-4" />
+                    Guía del Alumno
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("training-program")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "training-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Programa Formativo
+                  </button>
+                  <button
                     onClick={() => setActiveTab("schedule")}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "schedule" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                   >
@@ -910,6 +926,29 @@ export default function CourseView() {
               events={[...events, ...tutorials]}
               exams={exams}
             />
+          </TabsContent>
+
+          <TabsContent value="student-guide" className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                <CourseStudentGuide 
+                  course={course} 
+                  centerSlug={centerSlug} 
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="training-program" className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                <CourseTrainingProgram 
+                  course={course} 
+                  modules={modules}
+                  centerSlug={centerSlug} 
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="grades" className="space-y-4">
