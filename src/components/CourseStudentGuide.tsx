@@ -190,7 +190,7 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                     </tr>
                     <tr className="border-b">
                       <td className="p-3 font-semibold bg-gray-50">CÓDIGO:</td>
-                      <td className="p-3">Según BOE</td>
+                      <td className="p-3">ADGG0408</td>
                     </tr>
                     <tr className="border-b">
                       <td className="p-3 font-semibold bg-gray-50">FAMILIA PROFESIONAL:</td>
@@ -198,7 +198,7 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                     </tr>
                     <tr className="border-b">
                       <td className="p-3 font-semibold bg-gray-50">NIVEL DE CUALIFICACIÓN:</td>
-                      <td className="p-3">1-3</td>
+                      <td className="p-3">1</td>
                     </tr>
                     <tr>
                       <td className="p-3 font-semibold bg-gray-50">DURACIÓN:</td>
@@ -275,8 +275,8 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                 <span className="text-primary">2.5</span> Requisitos de Acceso
               </h3>
               <div className="border rounded-lg p-4">
-                <p className="text-sm mb-3">Para acceder a certificados de profesionalidad de nivel 2-3, deberás cumplir alguno de los siguientes requisitos:</p>
-                <div className="grid md:grid-cols-2 gap-3 text-sm">
+                <p className="text-sm mb-3">Al tratarse de un certificado de <strong>Nivel 1</strong>, no existen requisitos formativos de acceso. Podrás acceder a este curso independientemente de tu nivel de estudios previo.</p>
+                <div className="grid md:grid-cols-2 gap-3 text-sm hidden">
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                     <span>Título de Bachiller o equivalente</span>
@@ -1015,15 +1015,15 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-primary" />
-                    <span>soporte@campus.es</span>
+                    <span>formacion.empleate@gmail.com</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-primary" />
-                    <span>900 XXX XXX</span>
+                    <span>665 673 416</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-primary" />
-                    <span>L-V: 9:00 - 18:00h</span>
+                    <span>L-V: 09:00 - 15:00h</span>
                   </div>
                 </div>
               </div>
@@ -1052,21 +1052,17 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
             <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-5">
               <h4 className="font-semibold mb-3">{branding.centerName}</h4>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
-                {course.support_email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-primary" />
-                    <span>{course.support_email}</span>
-                  </div>
-                )}
-                {course.support_phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-primary" />
-                    <span>{course.support_phone}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-primary" />
+                  <span>{course.support_email || 'formacion.empleate@gmail.com'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-primary" />
+                  <span>{course.support_phone || '665 673 416'}</span>
+                </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />
-                  <span>Horario de atención: L-V 9:00-18:00</span>
+                  <span>Horario de atención: L-V 09:00-15:00</span>
                 </div>
               </div>
             </div>
