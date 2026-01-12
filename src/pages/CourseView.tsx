@@ -714,34 +714,41 @@ export default function CourseView() {
 
               {/* Documentos Oficiales del Certificado */}
               {(course.ficha_certificado_url || course.boe_url) && (
-                <Card>
-                  <CardHeader>
+                <Card className="overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                        <FileText className="h-6 w-6 text-amber-600" />
+                      <div className="p-3 bg-amber-500 text-white rounded-xl shadow-lg">
+                        <FileText className="h-7 w-7" />
                       </div>
                       <div>
-                        <CardTitle>Documentos Oficiales del Certificado</CardTitle>
-                        <CardDescription>Ficha del certificado de profesionalidad y BOE</CardDescription>
+                        <CardTitle className="text-lg">Documentos Oficiales del Certificado</CardTitle>
+                        <CardDescription>Ficha del certificado de profesionalidad y BOE oficial</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-2 gap-4">
+                  <CardContent className="p-6">
+                    <div className="grid md:grid-cols-2 gap-6">
                       {course.ficha_certificado_url && (
-                        <div className="space-y-3">
-                          <h4 className="font-medium flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-amber-600" />
+                        <div className="group space-y-4">
+                          <h4 className="font-semibold flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                            <FileText className="h-5 w-5" />
                             Ficha del Certificado
                           </h4>
-                          <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                          <div className="aspect-[4/3] bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl overflow-hidden border-2 border-amber-200 dark:border-amber-800 relative">
                             <iframe
-                              src={`${course.ficha_certificado_url}#toolbar=1&navpanes=0`}
+                              src={`${course.ficha_certificado_url}#toolbar=0&navpanes=0&scrollbar=0`}
                               className="w-full h-full"
                               title="Ficha del Certificado de Profesionalidad"
+                              loading="lazy"
                             />
+                            {/* Fallback overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-amber-100/90 to-orange-100/90 dark:from-amber-900/90 dark:to-orange-900/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                              <FileText className="h-16 w-16 text-amber-600 mb-3" />
+                              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Ficha del Certificado</p>
+                              <p className="text-xs text-amber-600 dark:text-amber-400">Documento PDF oficial</p>
+                            </div>
                           </div>
-                          <Button asChild variant="outline" className="w-full">
+                          <Button asChild variant="default" className="w-full bg-amber-600 hover:bg-amber-700">
                             <a 
                               href={course.ficha_certificado_url} 
                               target="_blank" 
@@ -749,25 +756,32 @@ export default function CourseView() {
                               className="flex items-center gap-2"
                             >
                               <FileDown className="h-4 w-4" />
-                              Descargar Ficha
+                              Ver / Descargar Ficha
                             </a>
                           </Button>
                         </div>
                       )}
                       {course.boe_url && (
-                        <div className="space-y-3">
-                          <h4 className="font-medium flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-amber-600" />
+                        <div className="group space-y-4">
+                          <h4 className="font-semibold flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                            <FileText className="h-5 w-5" />
                             Boletín Oficial del Estado (BOE)
                           </h4>
-                          <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                          <div className="aspect-[4/3] bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl overflow-hidden border-2 border-amber-200 dark:border-amber-800 relative">
                             <iframe
-                              src={`${course.boe_url}#toolbar=1&navpanes=0`}
+                              src={`${course.boe_url}#toolbar=0&navpanes=0&scrollbar=0`}
                               className="w-full h-full"
                               title="BOE del Certificado"
+                              loading="lazy"
                             />
+                            {/* Fallback overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-amber-100/90 to-orange-100/90 dark:from-amber-900/90 dark:to-orange-900/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                              <FileText className="h-16 w-16 text-amber-600 mb-3" />
+                              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Boletín Oficial del Estado</p>
+                              <p className="text-xs text-amber-600 dark:text-amber-400">Documento PDF oficial</p>
+                            </div>
                           </div>
-                          <Button asChild variant="outline" className="w-full">
+                          <Button asChild variant="default" className="w-full bg-amber-600 hover:bg-amber-700">
                             <a 
                               href={course.boe_url} 
                               target="_blank" 
@@ -775,7 +789,7 @@ export default function CourseView() {
                               className="flex items-center gap-2"
                             >
                               <FileDown className="h-4 w-4" />
-                              Descargar BOE
+                              Ver / Descargar BOE
                             </a>
                           </Button>
                         </div>
