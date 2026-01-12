@@ -21,6 +21,7 @@ import { CourseSchedule } from "@/components/CourseSchedule";
 import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { ScormContentViewer } from "@/components/ScormContentViewer";
+import { UnitManualContent } from "@/components/UnitManualContent";
 
 interface Course {
   id: string;
@@ -1100,16 +1101,12 @@ export default function CourseView() {
 
                                 {/* Fila 2: Temario y Foro */}
                                 <div className="grid lg:grid-cols-2 gap-4">
-                                  <div className="bg-background rounded-lg p-4 border">
-                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
+                                <div className="bg-background rounded-lg p-4 border lg:col-span-2">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-4">
                                       <FileText className="h-4 w-4 text-primary" />
                                       Temario / Manual
                                     </h4>
-                                    {module.content ? (
-                                      <p className="text-xs text-muted-foreground line-clamp-3">{module.content.substring(0, 150)}...</p>
-                                    ) : (
-                                      <p className="text-xs text-muted-foreground">Sin contenido de temario</p>
-                                    )}
+                                    <UnitManualContent unitId={module.id} unitTitle={module.title} />
                                   </div>
 
                                   <div className="bg-background rounded-lg p-4 border">
