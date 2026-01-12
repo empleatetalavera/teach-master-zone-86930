@@ -993,34 +993,108 @@ export default function CourseView() {
                                 {/* Fila 1: Mapa Conceptual y Objetivos */}
                                 <div className="grid lg:grid-cols-2 gap-4">
                                   <div className="bg-background rounded-lg p-4 border">
-                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-3">
                                       <Layers className="h-4 w-4 text-primary" />
                                       Mapa Conceptual
                                     </h4>
-                                    {module.concept_map_url ? (
-                                      <a 
-                                        href={module.concept_map_url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-primary hover:underline flex items-center gap-1"
-                                      >
-                                        Ver mapa conceptual
-                                      </a>
-                                    ) : (
-                                      <p className="text-xs text-muted-foreground">Sin mapa conceptual</p>
-                                    )}
+                                    {(() => {
+                                      // Generate concept map based on module title
+                                      const moduleTitle = module.title.toLowerCase();
+                                      let conceptNodes: { label: string; level: number }[] = [];
+                                      
+                                      if (moduleTitle.includes('técnicas administrativas') || moduleTitle.includes('mf0969')) {
+                                        conceptNodes = [
+                                          { label: 'TÉCNICAS ADMINISTRATIVAS', level: 0 },
+                                          { label: 'Organización', level: 1 },
+                                          { label: 'Documentación', level: 1 },
+                                          { label: 'Tesorería', level: 1 },
+                                          { label: 'Empresas', level: 2 },
+                                          { label: 'RRHH', level: 2 },
+                                          { label: 'Correspondencia', level: 2 },
+                                          { label: 'Mercantiles', level: 2 },
+                                          { label: 'Existencias', level: 2 },
+                                        ];
+                                      }
+                                      
+                                      if (conceptNodes.length === 0 && module.concept_map_url) {
+                                        return (
+                                          <a href={module.concept_map_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                                            Ver mapa conceptual
+                                          </a>
+                                        );
+                                      }
+                                      
+                                      if (conceptNodes.length === 0) {
+                                        return <p className="text-xs text-muted-foreground">Sin mapa conceptual</p>;
+                                      }
+                                      
+                                      return (
+                                        <div className="space-y-3">
+                                          {/* Root node */}
+                                          <div className="flex justify-center">
+                                            <span className="px-3 py-1.5 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground rounded-lg font-semibold text-xs shadow">
+                                              {conceptNodes.find(n => n.level === 0)?.label}
+                                            </span>
+                                          </div>
+                                          {/* Level 1 */}
+                                          <div className="flex flex-wrap justify-center gap-2">
+                                            {conceptNodes.filter(n => n.level === 1).map((node, i) => (
+                                              <span key={i} className="px-2 py-1 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded text-xs font-medium border border-blue-200 dark:border-blue-800">
+                                                {node.label}
+                                              </span>
+                                            ))}
+                                          </div>
+                                          {/* Level 2 */}
+                                          <div className="flex flex-wrap justify-center gap-1">
+                                            {conceptNodes.filter(n => n.level === 2).map((node, i) => (
+                                              <span key={i} className="px-2 py-0.5 bg-muted rounded text-xs">
+                                                {node.label}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
 
                                   <div className="bg-background rounded-lg p-4 border">
-                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-3">
                                       <BookOpen className="h-4 w-4 text-primary" />
                                       Objetivos
                                     </h4>
-                                    {module.objectives ? (
-                                      <p className="text-xs text-muted-foreground line-clamp-3">{module.objectives}</p>
-                                    ) : (
-                                      <p className="text-xs text-muted-foreground">Sin objetivos definidos</p>
-                                    )}
+                                    {(() => {
+                                      const moduleTitle = module.title.toLowerCase();
+                                      let objectives: string[] = [];
+                                      
+                                      if (moduleTitle.includes('técnicas administrativas') || moduleTitle.includes('mf0969')) {
+                                        objectives = [
+                                          'Conocer la organización empresarial y tipos de entidades',
+                                          'Gestionar correspondencia y documentación',
+                                          'Realizar operaciones básicas de tesorería',
+                                          'Controlar existencias e inventarios',
+                                          'Aplicar técnicas de archivo y clasificación'
+                                        ];
+                                      }
+                                      
+                                      if (objectives.length === 0 && module.objectives) {
+                                        return <p className="text-xs text-muted-foreground line-clamp-3">{module.objectives}</p>;
+                                      }
+                                      
+                                      if (objectives.length === 0) {
+                                        return <p className="text-xs text-muted-foreground">Sin objetivos definidos</p>;
+                                      }
+                                      
+                                      return (
+                                        <ul className="space-y-1.5">
+                                          {objectives.map((obj, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-xs">
+                                              <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
+                                              <span className="text-muted-foreground">{obj}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
 
