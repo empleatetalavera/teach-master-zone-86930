@@ -17,7 +17,8 @@ import {
   Printer, ZoomIn, ZoomOut, GraduationCap, Target, Lightbulb, HelpCircle,
   Play, CheckCheck, XCircle, ArrowRight, Sparkles, Brain, BookMarked,
   Award, Clock, BarChart3, Volume2, Presentation, FileQuestion, Layers,
-  ChevronDown, Star, TrendingUp, ThumbsUp, ThumbsDown, RotateCcw
+  ChevronDown, Star, TrendingUp, ThumbsUp, ThumbsDown, RotateCcw, Video,
+  Headphones, Network, Eye, MapPin, Shuffle, SquarePlay
 } from "lucide-react";
 
 interface ScormContentViewerProps {
@@ -30,7 +31,7 @@ interface ScormContentViewerProps {
 
 interface Slide {
   id: string;
-  type: 'intro' | 'content' | 'objectives' | 'quiz' | 'summary' | 'practice';
+  type: 'intro' | 'content' | 'objectives' | 'quiz' | 'summary' | 'practice' | 'concept-map' | 'video' | 'audio' | 'presentation' | 'exercise';
   title: string;
   content?: string;
   objectives?: string[];
@@ -38,6 +39,8 @@ interface Slide {
   quiz?: QuizQuestion;
   tips?: string[];
   image?: string;
+  mediaUrl?: string;
+  exerciseData?: ExerciseData;
 }
 
 interface QuizQuestion {
@@ -46,6 +49,12 @@ interface QuizQuestion {
   options: { id: string; text: string; isCorrect: boolean }[];
   explanation: string;
   hint?: string;
+}
+
+interface ExerciseData {
+  type: 'match' | 'order' | 'fill';
+  instructions: string;
+  items: { left: string; right: string }[];
 }
 
 interface ParsedContent {
@@ -67,6 +76,108 @@ const SCORM_CONTENT_PATHS: Record<string, string[]> = {
     "/scorm-content/MF0969_1/UF0519/UD1_documentacion_administrativa.md",
     "/scorm-content/MF0969_1/UF0519/UD2_tesoreria.md",
     "/scorm-content/MF0969_1/UF0519/UD3_existencias.md"
+  ]
+};
+
+// Concept maps for each UF
+const CONCEPT_MAPS: Record<string, { title: string; nodes: { id: string; label: string; level: number; connections: string[] }[] }> = {
+  "UF0517": {
+    title: "Organización Empresarial y RRHH",
+    nodes: [
+      { id: "1", label: "LA EMPRESA", level: 0, connections: ["2", "3", "4"] },
+      { id: "2", label: "Tipos de Empresas", level: 1, connections: ["5", "6", "7"] },
+      { id: "3", label: "Estructura Organizativa", level: 1, connections: ["8", "9"] },
+      { id: "4", label: "Recursos Humanos", level: 1, connections: ["10", "11"] },
+      { id: "5", label: "Autónomo", level: 2, connections: [] },
+      { id: "6", label: "S.L.", level: 2, connections: [] },
+      { id: "7", label: "S.A.", level: 2, connections: [] },
+      { id: "8", label: "Organigramas", level: 2, connections: [] },
+      { id: "9", label: "Departamentos", level: 2, connections: [] },
+      { id: "10", label: "Selección", level: 2, connections: [] },
+      { id: "11", label: "Formación", level: 2, connections: [] }
+    ]
+  },
+  "UF0518": {
+    title: "Gestión de Correspondencia",
+    nodes: [
+      { id: "1", label: "CORRESPONDENCIA", level: 0, connections: ["2", "3", "4"] },
+      { id: "2", label: "Recepción", level: 1, connections: ["5", "6"] },
+      { id: "3", label: "Distribución", level: 1, connections: ["7", "8"] },
+      { id: "4", label: "Archivo", level: 1, connections: ["9", "10"] },
+      { id: "5", label: "Registro", level: 2, connections: [] },
+      { id: "6", label: "Clasificación", level: 2, connections: [] },
+      { id: "7", label: "Interna", level: 2, connections: [] },
+      { id: "8", label: "Externa", level: 2, connections: [] },
+      { id: "9", label: "Físico", level: 2, connections: [] },
+      { id: "10", label: "Digital", level: 2, connections: [] }
+    ]
+  },
+  "UF0519": {
+    title: "Documentación Económico-Administrativa",
+    nodes: [
+      { id: "1", label: "DOCUMENTOS", level: 0, connections: ["2", "3", "4"] },
+      { id: "2", label: "Mercantiles", level: 1, connections: ["5", "6", "7"] },
+      { id: "3", label: "Tesorería", level: 1, connections: ["8", "9"] },
+      { id: "4", label: "Existencias", level: 1, connections: ["10", "11"] },
+      { id: "5", label: "Factura", level: 2, connections: [] },
+      { id: "6", label: "Albarán", level: 2, connections: [] },
+      { id: "7", label: "Pedido", level: 2, connections: [] },
+      { id: "8", label: "Libro Caja", level: 2, connections: [] },
+      { id: "9", label: "Arqueo", level: 2, connections: [] },
+      { id: "10", label: "FIFO", level: 2, connections: [] },
+      { id: "11", label: "PMP", level: 2, connections: [] }
+    ]
+  }
+};
+
+// Interactive exercises for each UF
+const EXERCISES: Record<string, ExerciseData[]> = {
+  "UF0517": [
+    {
+      type: 'match',
+      instructions: 'Relaciona cada tipo de sociedad con su capital mínimo',
+      items: [
+        { left: "Sociedad Limitada (S.L.)", right: "3.000 €" },
+        { left: "Sociedad Anónima (S.A.)", right: "60.000 €" },
+        { left: "Autónomo", right: "Sin mínimo" },
+        { left: "Cooperativa", right: "Variable" }
+      ]
+    },
+    {
+      type: 'match',
+      instructions: 'Une cada departamento con su función principal',
+      items: [
+        { left: "Recursos Humanos", right: "Gestión de personal" },
+        { left: "Marketing", right: "Promoción y ventas" },
+        { left: "Finanzas", right: "Control económico" },
+        { left: "Producción", right: "Fabricación" }
+      ]
+    }
+  ],
+  "UF0518": [
+    {
+      type: 'order',
+      instructions: 'Ordena los pasos del tratamiento de correspondencia entrante',
+      items: [
+        { left: "1", right: "Recepción" },
+        { left: "2", right: "Registro" },
+        { left: "3", right: "Clasificación" },
+        { left: "4", right: "Distribución" },
+        { left: "5", right: "Archivo" }
+      ]
+    }
+  ],
+  "UF0519": [
+    {
+      type: 'match',
+      instructions: 'Relaciona cada documento con su función',
+      items: [
+        { left: "Factura", right: "Justifica la compraventa" },
+        { left: "Albarán", right: "Acompaña la mercancía" },
+        { left: "Pedido", right: "Solicita productos" },
+        { left: "Recibo", right: "Confirma el pago" }
+      ]
+    }
   ]
 };
 
@@ -256,6 +367,8 @@ export function ScormContentViewer({
   const [score, setScore] = useState(0);
   const [activeTab, setActiveTab] = useState("slides");
   const [ufCode, setUfCode] = useState("");
+  const [exerciseAnswers, setExerciseAnswers] = useState<Record<string, Record<string, string>>>({});
+  const [exerciseCompleted, setExerciseCompleted] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (open && unitTitle) {
@@ -281,6 +394,8 @@ export function ScormContentViewer({
     setShowResults({});
     setShowHint({});
     setScore(0);
+    setExerciseAnswers({});
+    setExerciseCompleted({});
     
     try {
       const code = getUfCode(unitTitle);
@@ -288,6 +403,8 @@ export function ScormContentViewer({
       
       const paths = SCORM_CONTENT_PATHS[code] || [];
       const quizQuestions = QUIZ_QUESTIONS[code] || [];
+      const conceptMap = CONCEPT_MAPS[code];
+      const exercises = EXERCISES[code] || [];
       
       // Generate interactive slides
       const generatedSlides: Slide[] = [];
@@ -300,12 +417,48 @@ export function ScormContentViewer({
         content: getIntroContent(code)
       });
 
+      // Concept Map slide
+      if (conceptMap) {
+        generatedSlides.push({
+          id: 'concept-map',
+          type: 'concept-map',
+          title: `Mapa Conceptual: ${conceptMap.title}`,
+          content: JSON.stringify(conceptMap)
+        });
+      }
+
       // Objectives slide
       generatedSlides.push({
         id: 'objectives',
         type: 'objectives',
         title: 'Objetivos de Aprendizaje',
         objectives: getObjectives(code)
+      });
+
+      // Video slide
+      generatedSlides.push({
+        id: 'video',
+        type: 'video',
+        title: 'Vídeo Explicativo',
+        content: getVideoDescription(code),
+        mediaUrl: getVideoUrl(code)
+      });
+
+      // Presentation slide
+      generatedSlides.push({
+        id: 'presentation',
+        type: 'presentation',
+        title: 'Presentación del Tema',
+        content: getPresentationContent(code)
+      });
+
+      // Audio slide
+      generatedSlides.push({
+        id: 'audio',
+        type: 'audio',
+        title: 'Audio Resumen',
+        content: getAudioDescription(code),
+        mediaUrl: getAudioUrl(code)
       });
 
       // Content slides from markdown files
@@ -323,6 +476,16 @@ export function ScormContentViewer({
           console.error(`Error loading ${path}:`, e);
         }
       }
+
+      // Exercise slides
+      exercises.forEach((exercise, index) => {
+        generatedSlides.push({
+          id: `exercise-${index}`,
+          type: 'exercise',
+          title: `Ejercicio Práctico ${index + 1}`,
+          exerciseData: exercise
+        });
+      });
 
       // Quiz slides
       quizQuestions.forEach((quiz, index) => {
@@ -361,6 +524,122 @@ export function ScormContentViewer({
     }
   };
 
+  const getVideoUrl = (code: string): string => {
+    // Placeholder video URLs - in production these would be real video URLs
+    return "https://www.w3schools.com/html/mov_bbb.mp4";
+  };
+
+  const getAudioUrl = (code: string): string => {
+    // Placeholder audio URL
+    return "https://www.w3schools.com/html/horse.mp3";
+  };
+
+  const getVideoDescription = (code: string): string => {
+    const descriptions: Record<string, string> = {
+      "UF0517": "En este vídeo explicativo aprenderás los conceptos fundamentales sobre la organización empresarial, los diferentes tipos de sociedades y cómo se estructuran los departamentos en una empresa.",
+      "UF0518": "Visualiza este vídeo para comprender el proceso completo de gestión de correspondencia, desde la recepción hasta el archivo final.",
+      "UF0519": "Este vídeo te guiará a través de los principales documentos mercantiles y su correcta gestión en el ámbito empresarial."
+    };
+    return descriptions[code] || "Vídeo explicativo del tema.";
+  };
+
+  const getAudioDescription = (code: string): string => {
+    const descriptions: Record<string, string> = {
+      "UF0517": "Escucha este resumen en audio de los conceptos clave sobre organización empresarial mientras realizas otras tareas. Ideal para repasar antes del examen.",
+      "UF0518": "Audio resumen sobre la gestión de correspondencia. Perfecto para escuchar mientras te desplazas o como repaso rápido.",
+      "UF0519": "Repasa los documentos mercantiles básicos con este audio resumen. Incluye ejemplos prácticos y consejos para el examen."
+    };
+    return descriptions[code] || "Audio resumen del tema.";
+  };
+
+  const getPresentationContent = (code: string): string => {
+    const presentations: Record<string, string> = {
+      "UF0517": `
+## Diapositiva 1: Introducción
+La empresa es la unidad económica básica de producción de bienes y servicios.
+
+## Diapositiva 2: Tipos de Empresas
+- **Persona Física**: Autónomo
+- **Persona Jurídica**: S.L., S.A., Cooperativas
+
+## Diapositiva 3: Sociedad Limitada (S.L.)
+- Capital mínimo: 3.000€
+- Responsabilidad limitada al capital aportado
+- Mínimo 1 socio
+
+## Diapositiva 4: Sociedad Anónima (S.A.)
+- Capital mínimo: 60.000€
+- Capital dividido en acciones
+- Órgano máximo: Junta General de Accionistas
+
+## Diapositiva 5: Estructura Organizativa
+Los organigramas representan visualmente la estructura jerárquica y funcional.
+
+## Diapositiva 6: Departamentos Principales
+- Dirección General
+- Recursos Humanos
+- Finanzas
+- Marketing
+- Producción
+`,
+      "UF0518": `
+## Diapositiva 1: La Correspondencia Empresarial
+Comunicación escrita oficial entre la empresa y terceros.
+
+## Diapositiva 2: Tipos de Correspondencia
+- **Entrante**: Llega a la empresa
+- **Saliente**: Sale de la empresa
+- **Interna**: Entre departamentos
+
+## Diapositiva 3: Proceso de Recepción
+1. Recepción física/digital
+2. Apertura y verificación
+3. Registro en libro
+
+## Diapositiva 4: El Registro
+Datos obligatorios:
+- Fecha de entrada
+- Remitente
+- Asunto
+- Destinatario interno
+
+## Diapositiva 5: Distribución
+Clasificación y entrega al departamento correspondiente.
+
+## Diapositiva 6: Archivo
+Sistemas: Alfabético, Numérico, Cronológico, Temático.
+`,
+      "UF0519": `
+## Diapositiva 1: Documentos Mercantiles
+Documentos que acreditan operaciones comerciales.
+
+## Diapositiva 2: El Pedido
+Solicitud formal de productos o servicios.
+
+## Diapositiva 3: El Albarán
+Documento que acompaña la mercancía y justifica su entrega.
+
+## Diapositiva 4: La Factura
+Documento fiscal que acredita la compraventa. Incluye:
+- Datos fiscales
+- Descripción productos
+- Base imponible + IVA
+
+## Diapositiva 5: Tesorería
+Gestión de:
+- Caja (efectivo)
+- Bancos (cuentas)
+- Cobros y pagos
+
+## Diapositiva 6: Control de Existencias
+Métodos de valoración:
+- FIFO: Primeras entradas, primeras salidas
+- PMP: Precio Medio Ponderado
+`
+    };
+    return presentations[code] || "Contenido de la presentación.";
+  };
+
   const parseMarkdownToSlides = (markdown: string, startIndex: number): Slide[] => {
     const slides: Slide[] = [];
     const sections = markdown.split(/^## /gm).filter(Boolean);
@@ -380,7 +659,7 @@ export function ScormContentViewer({
       }
     });
     
-    return slides.slice(0, 8); // Limit content slides
+    return slides.slice(0, 6); // Limit content slides
   };
 
   const getIntroContent = (code: string): string => {
@@ -564,6 +843,343 @@ export function ScormContentViewer({
     window.print();
   };
 
+  const renderConceptMap = () => {
+    if (!currentSlideData?.content) return null;
+    
+    try {
+      const mapData = JSON.parse(currentSlideData.content);
+      
+      return (
+        <div className="p-8 max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="inline-flex p-4 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl mb-4">
+              <Network className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h2 className="text-3xl font-bold">{currentSlideData.title}</h2>
+            <p className="text-muted-foreground mt-2">Visualiza las conexiones entre conceptos</p>
+          </div>
+
+          {/* Concept Map Visual */}
+          <Card className="p-6 bg-gradient-to-br from-background via-muted/20 to-background">
+            <div className="flex flex-col items-center gap-6">
+              {/* Level 0 - Root */}
+              <div className="flex justify-center">
+                {mapData.nodes.filter((n: any) => n.level === 0).map((node: any) => (
+                  <div 
+                    key={node.id}
+                    className="px-6 py-4 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground rounded-xl font-bold text-lg shadow-lg"
+                  >
+                    {node.label}
+                  </div>
+                ))}
+              </div>
+
+              {/* Connection lines */}
+              <div className="flex items-center gap-8">
+                <div className="w-0.5 h-8 bg-primary/50" />
+                <div className="w-0.5 h-8 bg-primary/50" />
+                <div className="w-0.5 h-8 bg-primary/50" />
+              </div>
+
+              {/* Level 1 */}
+              <div className="flex flex-wrap justify-center gap-4">
+                {mapData.nodes.filter((n: any) => n.level === 1).map((node: any) => (
+                  <Card 
+                    key={node.id}
+                    className="px-4 py-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800 font-medium"
+                  >
+                    {node.label}
+                  </Card>
+                ))}
+              </div>
+
+              {/* Connection lines */}
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="w-0.5 h-6 bg-muted-foreground/30" />
+                ))}
+              </div>
+
+              {/* Level 2 */}
+              <div className="flex flex-wrap justify-center gap-3">
+                {mapData.nodes.filter((n: any) => n.level === 2).map((node: any) => (
+                  <Badge 
+                    key={node.id}
+                    variant="secondary"
+                    className="px-3 py-1.5 text-sm bg-muted"
+                  >
+                    {node.label}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Este mapa conceptual te ayuda a visualizar la estructura y relaciones entre los conceptos principales del tema.
+            </p>
+          </div>
+        </div>
+      );
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const renderVideoSlide = () => (
+    <div className="p-8 max-w-4xl mx-auto space-y-6">
+      <div className="text-center mb-6">
+        <div className="inline-flex p-4 bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 rounded-2xl mb-4">
+          <Video className="h-12 w-12 text-red-600 dark:text-red-400" />
+        </div>
+        <h2 className="text-3xl font-bold">{currentSlideData?.title}</h2>
+      </div>
+
+      <Card className="overflow-hidden">
+        <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center relative">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-white/80 p-8">
+              <SquarePlay className="h-20 w-20 mx-auto mb-4 opacity-50" />
+              <p className="text-lg">Vídeo explicativo del tema</p>
+              <p className="text-sm opacity-70 mt-2">Duración aproximada: 15 minutos</p>
+            </div>
+          </div>
+          {/* In production, this would be a real video player */}
+          <video 
+            src={currentSlideData?.mediaUrl}
+            controls
+            className="w-full h-full object-cover"
+            poster=""
+          />
+        </div>
+        <CardContent className="p-6">
+          <p className="text-muted-foreground">{currentSlideData?.content}</p>
+          <div className="flex gap-4 mt-4">
+            <Badge variant="outline" className="gap-1">
+              <Clock className="h-3 w-3" /> 15 min
+            </Badge>
+            <Badge variant="outline" className="gap-1">
+              <Eye className="h-3 w-3" /> HD
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderAudioSlide = () => (
+    <div className="p-8 max-w-4xl mx-auto space-y-6">
+      <div className="text-center mb-6">
+        <div className="inline-flex p-4 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-2xl mb-4">
+          <Headphones className="h-12 w-12 text-green-600 dark:text-green-400" />
+        </div>
+        <h2 className="text-3xl font-bold">{currentSlideData?.title}</h2>
+      </div>
+
+      <Card className="overflow-hidden">
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center gap-6">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg animate-pulse">
+              <Volume2 className="h-16 w-16 text-white" />
+            </div>
+            
+            <audio 
+              src={currentSlideData?.mediaUrl}
+              controls
+              className="w-full max-w-md"
+            />
+            
+            <p className="text-center text-muted-foreground max-w-lg">{currentSlideData?.content}</p>
+            
+            <div className="flex gap-4">
+              <Badge variant="outline" className="gap-1">
+                <Clock className="h-3 w-3" /> 8 min
+              </Badge>
+              <Badge variant="outline" className="gap-1">
+                <Headphones className="h-3 w-3" /> Audio MP3
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderPresentationSlide = () => {
+    const slides = currentSlideData?.content?.split('## ').filter(Boolean) || [];
+    
+    return (
+      <div className="p-8 max-w-5xl mx-auto space-y-6">
+        <div className="text-center mb-6">
+          <div className="inline-flex p-4 bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 rounded-2xl mb-4">
+            <Presentation className="h-12 w-12 text-orange-600 dark:text-orange-400" />
+          </div>
+          <h2 className="text-3xl font-bold">{currentSlideData?.title}</h2>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {slides.map((slide, index) => {
+            const lines = slide.split('\n');
+            const title = lines[0]?.replace('Diapositiva', 'Slide').trim() || '';
+            const content = lines.slice(1).join('\n').trim();
+            
+            return (
+              <Card 
+                key={index}
+                className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              >
+                <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 py-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">
+                      {index + 1}
+                    </div>
+                    {title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {content}
+                    </ReactMarkdown>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderExerciseSlide = () => {
+    const exercise = currentSlideData?.exerciseData;
+    if (!exercise) return null;
+
+    const exerciseId = currentSlideData.id;
+    const isCompleted = exerciseCompleted[exerciseId];
+    const answers = exerciseAnswers[exerciseId] || {};
+
+    const checkExercise = () => {
+      setExerciseCompleted(prev => ({ ...prev, [exerciseId]: true }));
+    };
+
+    const resetExercise = () => {
+      setExerciseCompleted(prev => ({ ...prev, [exerciseId]: false }));
+      setExerciseAnswers(prev => ({ ...prev, [exerciseId]: {} }));
+    };
+
+    return (
+      <div className="p-8 max-w-4xl mx-auto space-y-6">
+        <div className="text-center mb-6">
+          <div className="inline-flex p-4 bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 rounded-2xl mb-4">
+            <Shuffle className="h-12 w-12 text-violet-600 dark:text-violet-400" />
+          </div>
+          <h2 className="text-3xl font-bold">{currentSlideData?.title}</h2>
+          <p className="text-muted-foreground mt-2">{exercise.instructions}</p>
+        </div>
+
+        <Card className="overflow-hidden">
+          <CardContent className="p-6">
+            {exercise.type === 'match' && (
+              <div className="space-y-4">
+                {exercise.items.map((item, index) => (
+                  <div key={index} className="flex items-center gap-4">
+                    <Card className="flex-1 p-4 bg-gradient-to-r from-primary/5 to-primary/10">
+                      <span className="font-medium">{item.left}</span>
+                    </Card>
+                    <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <Card className={`flex-1 p-4 transition-colors ${
+                      isCompleted 
+                        ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800' 
+                        : 'bg-muted/50'
+                    }`}>
+                      {isCompleted ? (
+                        <span className="text-green-700 dark:text-green-300 font-medium">{item.right}</span>
+                      ) : (
+                        <select 
+                          className="w-full bg-transparent border-0 focus:ring-0 cursor-pointer"
+                          value={answers[item.left] || ''}
+                          onChange={(e) => setExerciseAnswers(prev => ({
+                            ...prev,
+                            [exerciseId]: { ...prev[exerciseId], [item.left]: e.target.value }
+                          }))}
+                        >
+                          <option value="">Selecciona...</option>
+                          {exercise.items.map((opt, i) => (
+                            <option key={i} value={opt.right}>{opt.right}</option>
+                          ))}
+                        </select>
+                      )}
+                    </Card>
+                    {isCompleted && (
+                      <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {exercise.type === 'order' && (
+              <div className="space-y-3">
+                {exercise.items.map((item, index) => (
+                  <Card 
+                    key={index}
+                    className={`p-4 flex items-center gap-4 ${
+                      isCompleted 
+                        ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800' 
+                        : 'bg-muted/50'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                      isCompleted 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-primary/10 text-primary'
+                    }`}>
+                      {item.left}
+                    </div>
+                    <span className="font-medium">{item.right}</span>
+                    {isCompleted && (
+                      <CheckCircle2 className="h-5 w-5 text-green-500 ml-auto" />
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="p-6 pt-0">
+            {!isCompleted ? (
+              <Button 
+                className="w-full gap-2 bg-gradient-to-r from-violet-500 to-purple-600"
+                onClick={checkExercise}
+              >
+                <CheckCheck className="h-4 w-4" />
+                Comprobar Ejercicio
+              </Button>
+            ) : (
+              <div className="w-full space-y-3">
+                <Card className="p-4 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-3">
+                    <ThumbsUp className="h-5 w-5 text-green-600" />
+                    <span className="font-medium text-green-800 dark:text-green-200">¡Ejercicio completado correctamente!</span>
+                  </div>
+                </Card>
+                <Button 
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={resetExercise}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Repetir Ejercicio
+                </Button>
+              </div>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  };
+
   const renderSlideContent = () => {
     if (!currentSlideData) return null;
 
@@ -587,7 +1203,7 @@ export function ScormContentViewer({
               </p>
             </div>
 
-            <div className="flex gap-4 mt-8">
+            <div className="flex gap-4 mt-8 flex-wrap justify-center">
               <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
                 <div className="flex items-center gap-3">
                   <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -618,6 +1234,21 @@ export function ScormContentViewer({
             </Button>
           </div>
         );
+
+      case 'concept-map':
+        return renderConceptMap();
+
+      case 'video':
+        return renderVideoSlide();
+
+      case 'audio':
+        return renderAudioSlide();
+
+      case 'presentation':
+        return renderPresentationSlide();
+
+      case 'exercise':
+        return renderExerciseSlide();
 
       case 'objectives':
         return (
@@ -951,6 +1582,25 @@ export function ScormContentViewer({
     }
   };
 
+  // Get slide type badge info
+  const getSlideTypeBadge = (type: string) => {
+    switch (type) {
+      case 'intro': return { icon: Play, label: 'Inicio', color: 'bg-blue-500' };
+      case 'concept-map': return { icon: Network, label: 'Mapa Conceptual', color: 'bg-indigo-500' };
+      case 'objectives': return { icon: Target, label: 'Objetivos', color: 'bg-amber-500' };
+      case 'video': return { icon: Video, label: 'Vídeo', color: 'bg-red-500' };
+      case 'audio': return { icon: Headphones, label: 'Audio', color: 'bg-green-500' };
+      case 'presentation': return { icon: Presentation, label: 'Presentación', color: 'bg-orange-500' };
+      case 'content': return { icon: BookOpen, label: 'Contenido', color: 'bg-sky-500' };
+      case 'exercise': return { icon: Shuffle, label: 'Ejercicio', color: 'bg-violet-500' };
+      case 'quiz': return { icon: HelpCircle, label: 'Test', color: 'bg-pink-500' };
+      case 'summary': return { icon: Award, label: 'Resumen', color: 'bg-emerald-500' };
+      default: return { icon: FileText, label: 'Contenido', color: 'bg-gray-500' };
+    }
+  };
+
+  const currentBadge = currentSlideData ? getSlideTypeBadge(currentSlideData.type) : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[95vh] p-0 overflow-hidden">
@@ -1000,20 +1650,23 @@ export function ScormContentViewer({
 
             {/* Slide navigation dots */}
             <div className="flex items-center justify-center gap-1.5 mt-4 flex-wrap">
-              {slides.map((slide, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSlideChange(index)}
-                  className={`transition-all duration-300 ${
-                    index === currentSlide 
-                      ? 'w-8 h-2 bg-primary rounded-full' 
-                      : index < currentSlide 
-                        ? 'w-2 h-2 bg-primary/50 rounded-full hover:bg-primary/70' 
-                        : 'w-2 h-2 bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50'
-                  }`}
-                  title={slide.title}
-                />
-              ))}
+              {slides.map((slide, index) => {
+                const badge = getSlideTypeBadge(slide.type);
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleSlideChange(index)}
+                    className={`transition-all duration-300 rounded-full ${
+                      index === currentSlide 
+                        ? `w-8 h-3 ${badge.color}` 
+                        : index < currentSlide 
+                          ? 'w-3 h-3 bg-primary/50 hover:bg-primary/70' 
+                          : 'w-3 h-3 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                    }`}
+                    title={`${slide.title} (${badge.label})`}
+                  />
+                );
+              })}
             </div>
           </DialogHeader>
 
@@ -1047,16 +1700,10 @@ export function ScormContentViewer({
             </Button>
 
             <div className="flex items-center gap-4">
-              {currentSlideData?.type === 'quiz' && (
-                <Badge variant="secondary" className="gap-1">
-                  <HelpCircle className="h-3 w-3" />
-                  Test Interactivo
-                </Badge>
-              )}
-              {currentSlideData?.type === 'content' && (
-                <Badge variant="secondary" className="gap-1">
-                  <BookOpen className="h-3 w-3" />
-                  Contenido Teórico
+              {currentBadge && (
+                <Badge className={`gap-1 ${currentBadge.color} text-white`}>
+                  <currentBadge.icon className="h-3 w-3" />
+                  {currentBadge.label}
                 </Badge>
               )}
             </div>

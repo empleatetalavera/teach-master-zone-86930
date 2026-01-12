@@ -534,25 +534,75 @@ export default function CourseView() {
         <div className="grid lg:grid-cols-[200px_1fr_280px] gap-6">
           {/* Left Sidebar - Navigation */}
           <div className="hidden lg:block">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4" orientation="vertical">
-              <TabsList className="flex flex-col h-fit w-full sticky top-4">
-                <TabsTrigger value="intro" className="w-full justify-start">Inicio</TabsTrigger>
-                <TabsTrigger value="schedule" className="w-full justify-start">Cronograma</TabsTrigger>
-                <TabsTrigger value="modules" className="w-full justify-start">Módulos</TabsTrigger>
-                <TabsTrigger value="grades" className="w-full justify-start">Calificaciones</TabsTrigger>
-                <TabsTrigger value="exams" className="w-full justify-start">Exámenes</TabsTrigger>
-                <TabsTrigger value="tutorials" className="w-full justify-start">Tutorías</TabsTrigger>
-                <TabsTrigger value="calendar" className="w-full justify-start">Calendario</TabsTrigger>
-                <TabsTrigger value="forum" className="w-full justify-start">Foro</TabsTrigger>
-                <TabsTrigger value="time-tracking" className="w-full justify-start">Tiempos Invertidos</TabsTrigger>
-                {(userRole === 'auditor' || userRole === 'admin') && (
-                  <TabsTrigger value="audit" className="w-full justify-start">
-                    <ShieldCheck className="h-4 w-4 mr-2" />
-                    Auditoría
-                  </TabsTrigger>
-                )}
-              </TabsList>
-            </Tabs>
+            <Card className="sticky top-4">
+              <CardContent className="p-2">
+                <nav className="flex flex-col space-y-1">
+                  <button
+                    onClick={() => setActiveTab("intro")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "intro" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Inicio
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("schedule")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "schedule" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Cronograma
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("modules")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "modules" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Módulos
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("grades")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "grades" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Calificaciones
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("exams")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "exams" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Exámenes
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("tutorials")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "tutorials" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Tutorías
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("calendar")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "calendar" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Calendario
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("forum")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "forum" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Foro
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("time-tracking")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "time-tracking" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Tiempos Invertidos
+                  </button>
+                  {(userRole === 'auditor' || userRole === 'admin') && (
+                    <button
+                      onClick={() => setActiveTab("audit")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "audit" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      Auditoría
+                    </button>
+                  )}
+                </nav>
+              </CardContent>
+            </Card>
           </div>
           
           {/* Main Content */}
