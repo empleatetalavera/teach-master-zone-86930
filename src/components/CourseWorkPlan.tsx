@@ -243,7 +243,7 @@ export function CourseWorkPlan({ course, modules, centerSlug }: CourseWorkPlanPr
                 <p><strong>{branding?.centerName || "Empleate Formación"}</strong></p>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>C/ Corredera, 24 - 1ª Planta</span>
+                  <span>C/ Marqués de Mirasol, 19</span>
                 </div>
                 <p className="ml-6">45600 Talavera de la Reina (Toledo)</p>
               </div>
