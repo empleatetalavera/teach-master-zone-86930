@@ -127,190 +127,12 @@ export function CourseWorkPlan({ course, modules, centerSlug }: CourseWorkPlanPr
         </CardHeader>
       </Card>
 
-      {/* 1. Datos del Centro */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
-            1. Datos del Centro que Solicita la Acreditación
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-2 text-sm">
-                <Briefcase className="h-4 w-4 text-primary mt-0.5" />
-                <div>
-                  <strong>Nombre:</strong>
-                  <p className="text-muted-foreground">{datosDelCentro.nombre}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2 text-sm">
-                <FileText className="h-4 w-4 text-primary mt-0.5" />
-                <div>
-                  <strong>CIF/NIF/NIE:</strong>
-                  <p className="text-muted-foreground">{datosDelCentro.cif}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2 text-sm">
-                <Globe className="h-4 w-4 text-primary mt-0.5" />
-                <div>
-                  <strong>Sitio Web:</strong>
-                  <p className="text-muted-foreground">{datosDelCentro.web}</p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-start gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-primary mt-0.5" />
-                <div>
-                  <strong>Dirección:</strong>
-                  <p className="text-muted-foreground">{datosDelCentro.direccion}</p>
-                  <p className="text-muted-foreground">{datosDelCentro.codigoPostal} {datosDelCentro.localidad} ({datosDelCentro.provincia})</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2 text-sm">
-                <Globe className="h-4 w-4 text-primary mt-0.5" />
-                <div>
-                  <strong>Ámbito Geográfico:</strong>
-                  <p className="text-muted-foreground">{datosDelCentro.ambitoGeografico}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 2. Caracterización de la Acción Formativa */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-primary" />
-            2. Caracterización de la Acción Formativa
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-24">Código</TableHead>
-                    <TableHead>Denominación</TableHead>
-                    <TableHead className="w-28 text-center">Duración Total</TableHead>
-                    <TableHead className="w-24 text-center">Nivel</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-mono">ADGG0408</TableCell>
-                    <TableCell className="font-medium">Operaciones auxiliares de servicios administrativos y generales</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="secondary">{course.duration_hours || 430} horas</Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge>Nivel 1</Badge>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-
-            <div className="bg-muted/50 rounded-lg p-4 mt-4">
-              <h4 className="font-semibold mb-2">Relación de Módulos y Unidades Formativas</h4>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Módulo/Unidad Formativa</TableHead>
-                      <TableHead className="text-center w-24">Duración</TableHead>
-                      <TableHead className="text-center w-32">Nº Tutores</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {planificacionDidactica.map((modulo, index) => (
-                      <>
-                        <TableRow key={`modulo-${index}`} className="bg-primary/5">
-                          <TableCell className="font-semibold">{modulo.modulo}</TableCell>
-                          <TableCell className="text-center font-semibold">{modulo.horasMF}h</TableCell>
-                          <TableCell className="text-center"></TableCell>
-                        </TableRow>
-                        {modulo.unidades.map((uf, ufIndex) => (
-                          <TableRow key={`uf-${index}-${ufIndex}`}>
-                            <TableCell className="pl-8">
-                              <span className="text-xs text-muted-foreground mr-2">{uf.codigo}:</span>
-                              {uf.titulo}
-                            </TableCell>
-                            <TableCell className="text-center">{uf.horas}h</TableCell>
-                            <TableCell className="text-center">{ufIndex === 0 ? modulo.tutores : ""}</TableCell>
-                          </TableRow>
-                        ))}
-                      </>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 3. Organización y Gestión */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <ClipboardList className="h-5 w-5 text-primary" />
-            3. Organización y Gestión de la Acción Formativa
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-semibold mb-3">Selección del alumnado</h4>
-              <div className="grid md:grid-cols-2 gap-3">
-                {seleccionAlumnado.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm p-2 bg-muted/30 rounded-lg">
-                    <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
-                      {index + 1}
-                    </span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4 mt-4">
-              <div className="border rounded-lg p-4">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
-                  Número máximo de alumnos
-                </h4>
-                <p className="text-2xl font-bold text-primary">{datosDelCentro.maximoAlumnos}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Según art. 6 y art. 30 de la Orden ESS/1897/2013
-                </p>
-              </div>
-              <div className="border rounded-lg p-4">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-primary" />
-                  Ámbito geográfico
-                </h4>
-                <p className="text-2xl font-bold text-primary">{datosDelCentro.ambitoGeografico}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Cobertura nacional para la impartición
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 4. Planificación didáctica */}
+      {/* 1. Planificación didáctica */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            4. Planificación Didáctica del Curso Completo (Anexo III)
+            1. Planificación Didáctica del Curso Completo (Anexo III)
           </CardTitle>
           <CardDescription>
             Distribución de módulos, unidades formativas y calendario de impartición
@@ -364,12 +186,12 @@ export function CourseWorkPlan({ course, modules, centerSlug }: CourseWorkPlanPr
         </CardContent>
       </Card>
 
-      {/* 5. Calendario de evaluaciones */}
+      {/* 2. Calendario de evaluaciones */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-primary" />
-            5. Fechas de Pruebas de Evaluación
+            2. Fechas de Pruebas de Evaluación
           </CardTitle>
           <CardDescription>
             Consulta las fechas de las evaluaciones en el <strong>CRONOGRAMA</strong> del curso
@@ -399,12 +221,12 @@ export function CourseWorkPlan({ course, modules, centerSlug }: CourseWorkPlanPr
         </CardContent>
       </Card>
 
-      {/* 6. Centro de formación */}
+      {/* 3. Centro de formación */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
-            6. Lugar de Realización de Pruebas y Tutorías Presenciales
+            3. Lugar de Realización de Pruebas y Tutorías Presenciales
           </CardTitle>
         </CardHeader>
         <CardContent>
