@@ -24,6 +24,7 @@ import ScormProfessionalViewer from "@/components/ScormProfessionalViewer";
 import { UnitManualContent } from "@/components/UnitManualContent";
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
+import { CourseWorkPlan } from "@/components/CourseWorkPlan";
 
 interface Course {
   id: string;
@@ -561,6 +562,13 @@ export default function CourseView() {
                     Programa Formativo
                   </button>
                   <button
+                    onClick={() => setActiveTab("work-plan")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "work-plan" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Plan de Trabajo
+                  </button>
+                  <button
                     onClick={() => setActiveTab("schedule")}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "schedule" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                   >
@@ -949,6 +957,14 @@ export default function CourseView() {
                 />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="work-plan" className="space-y-4">
+            <CourseWorkPlan 
+              course={course} 
+              modules={modules}
+              centerSlug={centerSlug} 
+            />
           </TabsContent>
 
           <TabsContent value="grades" className="space-y-4">
