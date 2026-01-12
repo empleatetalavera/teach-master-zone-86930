@@ -884,14 +884,35 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                 <span className="text-primary">6.2</span> Fecha y Lugar de la Prueba Final
               </h3>
               <div className="border rounded-lg p-4 bg-gray-50">
-                <p className="text-sm mb-2">
-                  Consulta en el <strong>PLAN DE TRABAJO</strong> y en <strong>MI AGENDA</strong> 
-                  las fechas de las pruebas de evaluación y la dirección del centro de formación.
+                <p className="text-sm mb-3">
+                  Las fechas de las pruebas de evaluación se comunicarán a través del <strong>correo interno del campus</strong> y 
+                  estarán visibles en la sección <strong>CRONOGRAMA</strong> del curso.
                 </p>
-                <div className="text-xs text-muted-foreground">
-                  <p>• <strong>1ª Convocatoria:</strong> Al finalizar el módulo/unidad formativa</p>
-                  <p>• <strong>2ª Convocatoria:</strong> Fecha alternativa si no superas la primera</p>
+                <div className="bg-white border rounded-lg p-4 mb-3">
+                  <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Centro de Formación
+                  </h4>
+                  <div className="text-sm space-y-1">
+                    <p><strong>Empleate Formación</strong></p>
+                    <p>C/ Corredera, 24 - 1ª Planta</p>
+                    <p>45600 Talavera de la Reina (Toledo)</p>
+                  </div>
                 </div>
+                <div className="grid md:grid-cols-2 gap-3 text-sm">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="font-semibold text-green-800">1ª Convocatoria</p>
+                    <p className="text-green-700 text-xs">Al finalizar el módulo/unidad formativa</p>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="font-semibold text-amber-800">2ª Convocatoria</p>
+                    <p className="text-amber-700 text-xs">Fecha alternativa si no superas la primera</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                <Phone className="h-4 w-4" />
+                <span>Contacto: <strong>665 673 416</strong> (L-V 09:00-15:00) | formacion.empleate@gmail.com</span>
               </div>
             </div>
 
