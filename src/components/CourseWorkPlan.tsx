@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Clock, MapPin, Phone, Mail, BookOpen, FileText, CheckCircle2, AlertCircle, GraduationCap, Users, Building2, Briefcase, Globe, ClipboardList } from "lucide-react";
+import { Calendar, Clock, MapPin, Phone, Mail, BookOpen, FileText, CheckCircle2, AlertCircle, GraduationCap, Users, Building2, Briefcase, Globe, ClipboardList, Paperclip, Download } from "lucide-react";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
 
 interface CourseWorkPlanProps {
@@ -441,9 +441,107 @@ export function CourseWorkPlan({ course, modules, centerSlug }: CourseWorkPlanPr
         </CardContent>
       </Card>
 
+      {/* 7. Documentación Anexos */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Paperclip className="h-5 w-5 text-primary" />
+            7. Documentación Oficial - Anexos III, IV y V
+          </CardTitle>
+          <CardDescription>
+            Documentos oficiales del proyecto formativo conforme a la normativa SEPE
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Anexo III */}
+            <a 
+              href="/documents/anexos/ANEXO_III_Planificacion_Didactica.pdf" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group border rounded-lg p-4 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-red-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold group-hover:text-primary">Anexo III</h4>
+                  <p className="text-xs text-muted-foreground">Planificación Didáctica</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Organización temporal y secuenciación de módulos y unidades formativas
+              </p>
+              <div className="flex items-center gap-1 text-xs text-primary">
+                <Download className="h-3 w-3" />
+                <span>Descargar PDF</span>
+              </div>
+            </a>
+
+            {/* Anexo IV */}
+            <a 
+              href="/documents/anexos/ANEXO_IV_Programacion_Didactica.pdf" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group border rounded-lg p-4 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold group-hover:text-primary">Anexo IV</h4>
+                  <p className="text-xs text-muted-foreground">Programación Didáctica</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Contenidos, objetivos y criterios de evaluación por unidad formativa
+              </p>
+              <div className="flex items-center gap-1 text-xs text-primary">
+                <Download className="h-3 w-3" />
+                <span>Descargar PDF</span>
+              </div>
+            </a>
+
+            {/* Anexo V */}
+            <a 
+              href="/documents/anexos/ANEXO_V_Guia_Aprendizaje.pdf" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group border rounded-lg p-4 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold group-hover:text-primary">Anexo V</h4>
+                  <p className="text-xs text-muted-foreground">Guía de Aprendizaje</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Instrucciones metodológicas y orientaciones para el alumno
+              </p>
+              <div className="flex items-center gap-1 text-xs text-primary">
+                <Download className="h-3 w-3" />
+                <span>Descargar PDF</span>
+              </div>
+            </a>
+          </div>
+
+          <div className="mt-4 p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground">
+            <p className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              Estos documentos están disponibles según la Orden TMS/369/2019 para acreditación de especialidades formativas
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Footer SEPE */}
       <div className="text-center text-xs text-muted-foreground border-t pt-4">
-        <p>Planificación conforme al Anexo III y IV de la especialidad formativa ADGG0408</p>
+        <p>Planificación conforme al Anexo III, IV y V de la especialidad formativa ADGG0408</p>
         <p>Servicio Público de Empleo Estatal (SEPE) - {new Date().getFullYear()}</p>
       </div>
     </div>
