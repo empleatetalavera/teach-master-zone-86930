@@ -564,6 +564,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          boe_url: string | null
           campus_guide_url: string | null
           category: string | null
           concept_map_url: string | null
@@ -573,6 +574,7 @@ export type Database = {
           duration_hours: number | null
           enable_grade_breakdown: boolean | null
           end_date: string | null
+          ficha_certificado_url: string | null
           id: string
           is_active: boolean | null
           level: string | null
@@ -590,6 +592,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          boe_url?: string | null
           campus_guide_url?: string | null
           category?: string | null
           concept_map_url?: string | null
@@ -599,6 +602,7 @@ export type Database = {
           duration_hours?: number | null
           enable_grade_breakdown?: boolean | null
           end_date?: string | null
+          ficha_certificado_url?: string | null
           id?: string
           is_active?: boolean | null
           level?: string | null
@@ -616,6 +620,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          boe_url?: string | null
           campus_guide_url?: string | null
           category?: string | null
           concept_map_url?: string | null
@@ -625,6 +630,7 @@ export type Database = {
           duration_hours?: number | null
           enable_grade_breakdown?: boolean | null
           end_date?: string | null
+          ficha_certificado_url?: string | null
           id?: string
           is_active?: boolean | null
           level?: string | null
