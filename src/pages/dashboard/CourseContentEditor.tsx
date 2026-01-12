@@ -57,6 +57,8 @@ interface Course {
   objectives: string;
   specific_objectives: string[];
   course_type: string;
+  ficha_certificado_url: string | null;
+  boe_url: string | null;
 }
 
 interface Module {
@@ -128,8 +130,8 @@ export default function CourseContentEditor() {
   const [formativeUnits, setFormativeUnits] = useState<FormativeUnit[]>([]);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [expandedUnits, setExpandedUnits] = useState<string[]>([]);
-  
-  // Dialog states
+  const [uploadingFicha, setUploadingFicha] = useState(false);
+  const [uploadingBoe, setUploadingBoe] = useState(false);
   const [moduleDialogOpen, setModuleDialogOpen] = useState(false);
   const [evaluationDialogOpen, setEvaluationDialogOpen] = useState(false);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
@@ -722,6 +724,117 @@ export default function CourseContentEditor() {
 
   const getModuleUnits = (moduleId: string) => formativeUnits.filter(u => u.module_id === moduleId);
 
+  // Upload official documents
+  const handleUploadFicha = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !courseId) return;
+
+    setUploadingFicha(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${courseId}/ficha_certificado.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('course-content')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('course-content')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('courses')
+        .update({ ficha_certificado_url: publicUrl })
+        .eq('id', courseId);
+
+      if (updateError) throw updateError;
+
+      setCourse(prev => prev ? { ...prev, ficha_certificado_url: publicUrl } : null);
+      toast.success('Ficha del certificado subida correctamente');
+    } catch (error: any) {
+      console.error('Error uploading ficha:', error);
+      toast.error('Error al subir la ficha del certificado');
+    } finally {
+      setUploadingFicha(false);
+    }
+  };
+
+  const handleUploadBoe = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !courseId) return;
+
+    setUploadingBoe(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${courseId}/boe_documento.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('course-content')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('course-content')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('courses')
+        .update({ boe_url: publicUrl })
+        .eq('id', courseId);
+
+      if (updateError) throw updateError;
+
+      setCourse(prev => prev ? { ...prev, boe_url: publicUrl } : null);
+      toast.success('Documento BOE subido correctamente');
+    } catch (error: any) {
+      console.error('Error uploading BOE:', error);
+      toast.error('Error al subir el documento BOE');
+    } finally {
+      setUploadingBoe(false);
+    }
+  };
+
+  const handleDeleteFicha = async () => {
+    if (!courseId || !course?.ficha_certificado_url) return;
+    if (!confirm('¿Eliminar la ficha del certificado?')) return;
+
+    try {
+      const { error: updateError } = await supabase
+        .from('courses')
+        .update({ ficha_certificado_url: null })
+        .eq('id', courseId);
+
+      if (updateError) throw updateError;
+
+      setCourse(prev => prev ? { ...prev, ficha_certificado_url: null } : null);
+      toast.success('Ficha eliminada');
+    } catch (error: any) {
+      toast.error('Error al eliminar la ficha');
+    }
+  };
+
+  const handleDeleteBoe = async () => {
+    if (!courseId || !course?.boe_url) return;
+    if (!confirm('¿Eliminar el documento BOE?')) return;
+
+    try {
+      const { error: updateError } = await supabase
+        .from('courses')
+        .update({ boe_url: null })
+        .eq('id', courseId);
+
+      if (updateError) throw updateError;
+
+      setCourse(prev => prev ? { ...prev, boe_url: null } : null);
+      toast.success('Documento BOE eliminado');
+    } catch (error: any) {
+      toast.error('Error al eliminar el documento BOE');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -789,6 +902,136 @@ export default function CourseContentEditor() {
                 Este editor cumple con los requisitos de la normativa SEPE: módulos formativos, 
                 evaluaciones con nota mínima del 50%, actividades de desarrollo y control de tiempos.
               </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Official Documents Section */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            Documentos Oficiales del Certificado
+          </CardTitle>
+          <CardDescription>
+            Sube la ficha del certificado de profesionalidad y el documento BOE correspondiente
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Ficha del Certificado */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-base font-medium">
+                <File className="h-4 w-4" />
+                Ficha del Certificado de Profesionalidad
+              </Label>
+              {course?.ficha_certificado_url ? (
+                <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+                  <FileText className="h-5 w-5 text-green-600" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-200">Ficha subida</p>
+                    <a 
+                      href={course.ficha_certificado_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-green-600 hover:underline truncate block"
+                    >
+                      Ver documento
+                    </a>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleDeleteFicha}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center">
+                  <input
+                    type="file"
+                    id="ficha-upload"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleUploadFicha}
+                    className="hidden"
+                    disabled={uploadingFicha}
+                  />
+                  <label 
+                    htmlFor="ficha-upload"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    {uploadingFicha ? (
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                    )}
+                    <span className="text-sm text-muted-foreground">
+                      {uploadingFicha ? 'Subiendo...' : 'Haz clic para subir la ficha'}
+                    </span>
+                    <span className="text-xs text-muted-foreground/75">PDF, DOC o DOCX</span>
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {/* BOE Document */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-base font-medium">
+                <BookOpen className="h-4 w-4" />
+                Documento BOE (Boletín Oficial del Estado)
+              </Label>
+              {course?.boe_url ? (
+                <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+                  <FileText className="h-5 w-5 text-green-600" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-200">BOE subido</p>
+                    <a 
+                      href={course.boe_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-green-600 hover:underline truncate block"
+                    >
+                      Ver documento
+                    </a>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleDeleteBoe}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center">
+                  <input
+                    type="file"
+                    id="boe-upload"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleUploadBoe}
+                    className="hidden"
+                    disabled={uploadingBoe}
+                  />
+                  <label 
+                    htmlFor="boe-upload"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    {uploadingBoe ? (
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                    )}
+                    <span className="text-sm text-muted-foreground">
+                      {uploadingBoe ? 'Subiendo...' : 'Haz clic para subir el BOE'}
+                    </span>
+                    <span className="text-xs text-muted-foreground/75">PDF, DOC o DOCX</span>
+                  </label>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
