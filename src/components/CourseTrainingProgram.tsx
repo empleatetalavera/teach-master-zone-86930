@@ -382,7 +382,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, isEditable 
           <h2 className="text-xl font-bold">5. Metodología</h2>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="border rounded-lg p-4">
             <h3 className="font-semibold text-primary mb-2">5.1 Modalidad de Impartición</h3>
             <p className="text-sm text-muted-foreground">
@@ -391,20 +391,66 @@ export function CourseTrainingProgram({ course, modules, centerSlug, isEditable 
             </p>
           </div>
 
+          {/* Pasos de la Metodología con letras */}
           <div className="border rounded-lg p-4">
-            <h3 className="font-semibold text-primary mb-2">5.2 Recursos Didácticos</h3>
+            <h3 className="font-semibold text-primary mb-4">5.2 Proceso de Aprendizaje</h3>
+            <div className="space-y-4">
+              <div className="flex items-start gap-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0">A</div>
+                <div>
+                  <h4 className="font-semibold text-blue-800">Introducción al Módulo/UF</h4>
+                  <p className="text-sm text-blue-900">Ve el vídeo de presentación, descarga objetivos y realiza el cuestionario previo.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4 p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+                <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold flex-shrink-0">B</div>
+                <div>
+                  <h4 className="font-semibold text-green-800">Formación en Campus Virtual</h4>
+                  <p className="text-sm text-green-900">Estudia el CIM, realiza actividades de aprendizaje, participa en foros y completa tests.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4 p-3 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold flex-shrink-0">C</div>
+                <div>
+                  <h4 className="font-semibold text-amber-800">Tutorías Presenciales</h4>
+                  <p className="text-sm text-amber-900">Acude a las sesiones presenciales para actividades prácticas.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold flex-shrink-0">D</div>
+                <div>
+                  <h4 className="font-semibold text-purple-800">Tutorías Virtuales</h4>
+                  <p className="text-sm text-purple-900">Asiste a tutorías de repaso por videoconferencia o chat.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                <div className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-bold flex-shrink-0">E</div>
+                <div>
+                  <h4 className="font-semibold text-red-800">Evaluación Final</h4>
+                  <p className="text-sm text-red-900">Realiza la prueba de evaluación final presencial en el centro.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <h3 className="font-semibold text-primary mb-2">5.3 Recursos Didácticos</h3>
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Contenido Interactivo Multimedia (CIM) con actividades autoevaluables
+                Contenido Interactivo Multimedia (CIM) con +60 pantallas por unidad
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Material complementario: documentos, vídeos explicativos y audios
+                Material complementario: PDFs, vídeos explicativos y audios
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Actividades de aprendizaje evaluables (casos prácticos individuales y grupales)
+                Actividades de aprendizaje evaluables (casos prácticos)
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -412,7 +458,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, isEditable 
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Test de autoevaluación al final de cada unidad didáctica
+                Test de autoevaluación al final de cada unidad
               </li>
             </ul>
           </div>
