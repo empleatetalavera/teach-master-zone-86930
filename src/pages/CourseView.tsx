@@ -1567,13 +1567,7 @@ export default function CourseView() {
                                                       {unit.activities && unit.activities.length > 0 ? (
                                                         unit.activities.map((activity: any, actIdx: number) => (
                                                           <div key={activity.id} className="border rounded-lg p-3 bg-orange-50/50 hover:bg-orange-100/50 transition-colors cursor-pointer"
-                                                            onClick={() => {
-                                                              if (userRole === 'student') {
-                                                                openActivitySubmission(activity.id);
-                                                              } else {
-                                                                openActivityManager(unit.id, unit.title);
-                                                              }
-                                                            }}
+                                                            onClick={() => openActivitySubmission(activity.id)}
                                                           >
                                                             <div className="flex items-center gap-2">
                                                               <Checkbox checked={activity.completed} className="h-4 w-4" />
