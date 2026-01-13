@@ -21,7 +21,7 @@ import { CourseSchedule } from "@/components/CourseSchedule";
 import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import ScormProfessionalViewer from "@/components/ScormProfessionalViewer";
-import { UnitManualContent } from "@/components/UnitManualContent";
+
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
 import { CourseWorkPlan } from "@/components/CourseWorkPlan";
@@ -1169,16 +1169,8 @@ export default function CourseView() {
                                   </div>
                                 </div>
 
-                                {/* Fila 2: Temario y Foro */}
+                                {/* Foro del Módulo */}
                                 <div className="grid lg:grid-cols-2 gap-4">
-                                <div className="bg-background rounded-lg p-4 border lg:col-span-2">
-                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-4">
-                                      <FileText className="h-4 w-4 text-primary" />
-                                      Temario / Manual
-                                    </h4>
-                                    <UnitManualContent unitId={module.id} unitTitle={module.title} />
-                                  </div>
-
                                   <div className="bg-background rounded-lg p-4 border">
                                     <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
                                       <MessageSquare className="h-4 w-4 text-primary" />
@@ -1248,7 +1240,7 @@ export default function CourseView() {
                                                 </div>
                                               )}
 
-                                              {/* Botón Manual SEPE - Destacado */}
+                                              {/* Botón Temario Interactivo - Destacado */}
                                               <div className="pt-2 border-t">
                                                 <Button
                                                   variant="default"
@@ -1256,7 +1248,7 @@ export default function CourseView() {
                                                   onClick={() => openScormViewer(unit.id, unit.title)}
                                                 >
                                                   <BookOpen className="h-4 w-4 mr-2" />
-                                                  📚 Ver Manual / Temario SEPE
+                                                  📚 Ver Temario Interactivo
                                                 </Button>
                                               </div>
 
