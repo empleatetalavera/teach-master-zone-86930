@@ -53,7 +53,7 @@ export function UnitActivityManager({
   const [newInstructions, setNewInstructions] = useState("");
   const [newMaxScore, setNewMaxScore] = useState("100");
   const [newDueDate, setNewDueDate] = useState("");
-  const [newSubmissionType, setNewSubmissionType] = useState("text");
+  const [newSubmissionType, setNewSubmissionType] = useState<"text" | "file" | "url" | "both">("text");
   const [allowLateSubmission, setAllowLateSubmission] = useState(false);
 
   const isTeacherOrAdmin = userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin';
@@ -236,7 +236,7 @@ export function UnitActivityManager({
 
         <div>
           <Label htmlFor="submission-type">Tipo de entrega</Label>
-          <Select value={newSubmissionType} onValueChange={setNewSubmissionType}>
+          <Select value={newSubmissionType} onValueChange={(val) => setNewSubmissionType(val as "text" | "file" | "url" | "both")}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -244,7 +244,7 @@ export function UnitActivityManager({
               <SelectItem value="text">Texto</SelectItem>
               <SelectItem value="file">Archivo</SelectItem>
               <SelectItem value="url">URL</SelectItem>
-              <SelectItem value="mixed">Mixto (texto + archivo)</SelectItem>
+              <SelectItem value="both">Mixto (texto + archivo)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -345,7 +345,7 @@ export function UnitActivityManager({
                             {activity.submission_type === 'text' && 'Texto'}
                             {activity.submission_type === 'file' && 'Archivo'}
                             {activity.submission_type === 'url' && 'URL'}
-                            {activity.submission_type === 'mixed' && 'Mixto'}
+                            {activity.submission_type === 'both' && 'Mixto'}
                           </Badge>
                         </div>
                       </div>
