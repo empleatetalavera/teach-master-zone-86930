@@ -15,7 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { PDFToSyllabusImporter } from "@/components/PDFToSyllabusImporter";
 import {
   Plus, Trash2, Save, Loader2, GripVertical, Eye, Edit2, FileText,
-  HelpCircle, CheckSquare, Table2, BookOpen, X, Copy, ArrowUp, ArrowDown, Upload
+  HelpCircle, CheckSquare, Table2, BookOpen, X, Copy, ArrowUp, ArrowDown, Upload,
+  Image, Target, MousePointerClick, AlertCircle, Info, Lightbulb, AlertTriangle
 } from "lucide-react";
 
 interface SyllabusEditorProps {
@@ -23,6 +24,27 @@ interface SyllabusEditorProps {
   onOpenChange: (open: boolean) => void;
   unitId: string;
   unitTitle: string;
+}
+
+interface ImageData {
+  id: string;
+  url: string;
+  alt: string;
+  caption?: string;
+}
+
+interface ButtonData {
+  id: string;
+  label: string;
+  url: string;
+  variant: 'primary' | 'secondary' | 'outline';
+}
+
+interface HighlightBoxData {
+  id: string;
+  type: 'info' | 'warning' | 'tip' | 'important';
+  title: string;
+  content: string;
 }
 
 interface SlideData {
@@ -38,6 +60,10 @@ interface SlideData {
   table_data: { headers: string[]; rows: string[][] } | null;
   quiz_data: { question: string; options: { id: string; text: string; isCorrect: boolean }[]; explanation: string; hint?: string } | null;
   checklist_items: { id: string; text: string }[] | null;
+  images: ImageData[] | null;
+  objectives: string[] | null;
+  buttons: ButtonData[] | null;
+  highlight_boxes: HighlightBoxData[] | null;
 }
 
 const SLIDE_TYPES = [
@@ -84,6 +110,10 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
         table_data: item.table_data as { headers: string[]; rows: string[][] } | null,
         quiz_data: item.quiz_data as { question: string; options: { id: string; text: string; isCorrect: boolean }[]; explanation: string; hint?: string } | null,
         checklist_items: item.checklist_items as { id: string; text: string }[] | null,
+        images: (Array.isArray(item.images) ? item.images : []) as unknown as ImageData[],
+        objectives: (Array.isArray(item.objectives) ? item.objectives : []) as unknown as string[],
+        buttons: (Array.isArray(item.buttons) ? item.buttons : []) as unknown as ButtonData[],
+        highlight_boxes: (Array.isArray(item.highlight_boxes) ? item.highlight_boxes : []) as unknown as HighlightBoxData[],
       }));
       
       setSlides(typedData);
@@ -124,6 +154,10 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
         table_data: data.table_data as { headers: string[]; rows: string[][] } | null,
         quiz_data: data.quiz_data as { question: string; options: { id: string; text: string; isCorrect: boolean }[]; explanation: string; hint?: string } | null,
         checklist_items: data.checklist_items as { id: string; text: string }[] | null,
+        images: (Array.isArray(data.images) ? data.images : []) as unknown as ImageData[],
+        objectives: (Array.isArray(data.objectives) ? data.objectives : []) as unknown as string[],
+        buttons: (Array.isArray(data.buttons) ? data.buttons : []) as unknown as ButtonData[],
+        highlight_boxes: (Array.isArray(data.highlight_boxes) ? data.highlight_boxes : []) as unknown as HighlightBoxData[],
       };
       setSlides(prev => [...prev, typedData]);
       setSelectedSlide(typedData);
@@ -149,6 +183,10 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
           table_data: selectedSlide.table_data ? JSON.parse(JSON.stringify(selectedSlide.table_data)) : null,
           quiz_data: selectedSlide.quiz_data ? JSON.parse(JSON.stringify(selectedSlide.quiz_data)) : null,
           checklist_items: selectedSlide.checklist_items ? JSON.parse(JSON.stringify(selectedSlide.checklist_items)) : null,
+          images: selectedSlide.images ? JSON.parse(JSON.stringify(selectedSlide.images)) : [],
+          objectives: selectedSlide.objectives || [],
+          buttons: selectedSlide.buttons ? JSON.parse(JSON.stringify(selectedSlide.buttons)) : [],
+          highlight_boxes: selectedSlide.highlight_boxes ? JSON.parse(JSON.stringify(selectedSlide.highlight_boxes)) : [],
         })
         .eq("id", selectedSlide.id);
 
@@ -248,11 +286,15 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
 
       if (error) throw error;
 
-      const typedData = {
+      const typedData: SlideData = {
         ...data,
         table_data: data.table_data as { headers: string[]; rows: string[][] } | null,
         quiz_data: data.quiz_data as { question: string; options: { id: string; text: string; isCorrect: boolean }[]; explanation: string; hint?: string } | null,
         checklist_items: data.checklist_items as { id: string; text: string }[] | null,
+        images: (Array.isArray(data.images) ? data.images : []) as unknown as ImageData[],
+        objectives: (Array.isArray(data.objectives) ? data.objectives : []) as unknown as string[],
+        buttons: (Array.isArray(data.buttons) ? data.buttons : []) as unknown as ButtonData[],
+        highlight_boxes: (Array.isArray(data.highlight_boxes) ? data.highlight_boxes : []) as unknown as HighlightBoxData[],
       };
 
       setSlides(prev => [...prev, typedData]);
@@ -584,6 +626,308 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
                         placeholder="Término 1, Término 2, Término 3"
                       />
                     </div>
+
+                    {/* Objectives Section */}
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="objectives">
+                        <AccordionTrigger className="text-sm font-medium">
+                          <div className="flex items-center gap-2">
+                            <Target className="h-4 w-4" />
+                            Objetivos ({(selectedSlide.objectives || []).length})
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2">
+                            {(selectedSlide.objectives || []).map((obj, idx) => (
+                              <div key={idx} className="flex items-center gap-2">
+                                <span className="text-xs font-mono text-muted-foreground">{idx + 1}.</span>
+                                <Input
+                                  value={obj}
+                                  onChange={(e) => {
+                                    const newObjectives = [...(selectedSlide.objectives || [])];
+                                    newObjectives[idx] = e.target.value;
+                                    updateSelectedSlide({ objectives: newObjectives });
+                                  }}
+                                  placeholder="Objetivo de aprendizaje"
+                                  className="flex-1"
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const newObjectives = (selectedSlide.objectives || []).filter((_, i) => i !== idx);
+                                    updateSelectedSlide({ objectives: newObjectives });
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateSelectedSlide({ objectives: [...(selectedSlide.objectives || []), ''] })}
+                            >
+                              <Plus className="h-3 w-3 mr-1" /> Añadir objetivo
+                            </Button>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      {/* Images Section */}
+                      <AccordionItem value="images">
+                        <AccordionTrigger className="text-sm font-medium">
+                          <div className="flex items-center gap-2">
+                            <Image className="h-4 w-4" />
+                            Imágenes ({(selectedSlide.images || []).length})
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-3">
+                            {(selectedSlide.images || []).map((img, idx) => (
+                              <Card key={img.id} className="p-3">
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-xs">Imagen {idx + 1}</Label>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6"
+                                      onClick={() => {
+                                        const newImages = (selectedSlide.images || []).filter(i => i.id !== img.id);
+                                        updateSelectedSlide({ images: newImages });
+                                      }}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                  <Input
+                                    value={img.url}
+                                    onChange={(e) => {
+                                      const newImages = (selectedSlide.images || []).map(i =>
+                                        i.id === img.id ? { ...i, url: e.target.value } : i
+                                      );
+                                      updateSelectedSlide({ images: newImages });
+                                    }}
+                                    placeholder="URL de la imagen"
+                                  />
+                                  <Input
+                                    value={img.alt}
+                                    onChange={(e) => {
+                                      const newImages = (selectedSlide.images || []).map(i =>
+                                        i.id === img.id ? { ...i, alt: e.target.value } : i
+                                      );
+                                      updateSelectedSlide({ images: newImages });
+                                    }}
+                                    placeholder="Texto alternativo"
+                                  />
+                                  <Input
+                                    value={img.caption || ''}
+                                    onChange={(e) => {
+                                      const newImages = (selectedSlide.images || []).map(i =>
+                                        i.id === img.id ? { ...i, caption: e.target.value } : i
+                                      );
+                                      updateSelectedSlide({ images: newImages });
+                                    }}
+                                    placeholder="Pie de foto (opcional)"
+                                  />
+                                </div>
+                              </Card>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newImage: ImageData = { id: crypto.randomUUID(), url: '', alt: '', caption: '' };
+                                updateSelectedSlide({ images: [...(selectedSlide.images || []), newImage] });
+                              }}
+                            >
+                              <Plus className="h-3 w-3 mr-1" /> Añadir imagen
+                            </Button>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      {/* Buttons Section */}
+                      <AccordionItem value="buttons">
+                        <AccordionTrigger className="text-sm font-medium">
+                          <div className="flex items-center gap-2">
+                            <MousePointerClick className="h-4 w-4" />
+                            Botones ({(selectedSlide.buttons || []).length})
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-3">
+                            {(selectedSlide.buttons || []).map((btn, idx) => (
+                              <Card key={btn.id} className="p-3">
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-xs">Botón {idx + 1}</Label>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6"
+                                      onClick={() => {
+                                        const newButtons = (selectedSlide.buttons || []).filter(b => b.id !== btn.id);
+                                        updateSelectedSlide({ buttons: newButtons });
+                                      }}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                  <Input
+                                    value={btn.label}
+                                    onChange={(e) => {
+                                      const newButtons = (selectedSlide.buttons || []).map(b =>
+                                        b.id === btn.id ? { ...b, label: e.target.value } : b
+                                      );
+                                      updateSelectedSlide({ buttons: newButtons });
+                                    }}
+                                    placeholder="Texto del botón"
+                                  />
+                                  <Input
+                                    value={btn.url}
+                                    onChange={(e) => {
+                                      const newButtons = (selectedSlide.buttons || []).map(b =>
+                                        b.id === btn.id ? { ...b, url: e.target.value } : b
+                                      );
+                                      updateSelectedSlide({ buttons: newButtons });
+                                    }}
+                                    placeholder="URL de destino"
+                                  />
+                                  <Select
+                                    value={btn.variant}
+                                    onValueChange={(value: 'primary' | 'secondary' | 'outline') => {
+                                      const newButtons = (selectedSlide.buttons || []).map(b =>
+                                        b.id === btn.id ? { ...b, variant: value } : b
+                                      );
+                                      updateSelectedSlide({ buttons: newButtons });
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Estilo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="primary">Primario</SelectItem>
+                                      <SelectItem value="secondary">Secundario</SelectItem>
+                                      <SelectItem value="outline">Contorno</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </Card>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newButton: ButtonData = { id: crypto.randomUUID(), label: '', url: '', variant: 'primary' };
+                                updateSelectedSlide({ buttons: [...(selectedSlide.buttons || []), newButton] });
+                              }}
+                            >
+                              <Plus className="h-3 w-3 mr-1" /> Añadir botón
+                            </Button>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      {/* Highlight Boxes Section */}
+                      <AccordionItem value="highlight_boxes">
+                        <AccordionTrigger className="text-sm font-medium">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            Cajas destacadas ({(selectedSlide.highlight_boxes || []).length})
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-3">
+                            {(selectedSlide.highlight_boxes || []).map((box, idx) => (
+                              <Card key={box.id} className="p-3">
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-xs flex items-center gap-1">
+                                      {box.type === 'info' && <Info className="h-3 w-3 text-blue-500" />}
+                                      {box.type === 'warning' && <AlertTriangle className="h-3 w-3 text-yellow-500" />}
+                                      {box.type === 'tip' && <Lightbulb className="h-3 w-3 text-green-500" />}
+                                      {box.type === 'important' && <AlertCircle className="h-3 w-3 text-red-500" />}
+                                      Caja {idx + 1}
+                                    </Label>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6"
+                                      onClick={() => {
+                                        const newBoxes = (selectedSlide.highlight_boxes || []).filter(b => b.id !== box.id);
+                                        updateSelectedSlide({ highlight_boxes: newBoxes });
+                                      }}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                  <Select
+                                    value={box.type}
+                                    onValueChange={(value: 'info' | 'warning' | 'tip' | 'important') => {
+                                      const newBoxes = (selectedSlide.highlight_boxes || []).map(b =>
+                                        b.id === box.id ? { ...b, type: value } : b
+                                      );
+                                      updateSelectedSlide({ highlight_boxes: newBoxes });
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Tipo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="info">
+                                        <div className="flex items-center gap-2"><Info className="h-4 w-4 text-blue-500" /> Información</div>
+                                      </SelectItem>
+                                      <SelectItem value="warning">
+                                        <div className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-yellow-500" /> Advertencia</div>
+                                      </SelectItem>
+                                      <SelectItem value="tip">
+                                        <div className="flex items-center gap-2"><Lightbulb className="h-4 w-4 text-green-500" /> Consejo</div>
+                                      </SelectItem>
+                                      <SelectItem value="important">
+                                        <div className="flex items-center gap-2"><AlertCircle className="h-4 w-4 text-red-500" /> Importante</div>
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Input
+                                    value={box.title}
+                                    onChange={(e) => {
+                                      const newBoxes = (selectedSlide.highlight_boxes || []).map(b =>
+                                        b.id === box.id ? { ...b, title: e.target.value } : b
+                                      );
+                                      updateSelectedSlide({ highlight_boxes: newBoxes });
+                                    }}
+                                    placeholder="Título de la caja"
+                                  />
+                                  <Textarea
+                                    value={box.content}
+                                    onChange={(e) => {
+                                      const newBoxes = (selectedSlide.highlight_boxes || []).map(b =>
+                                        b.id === box.id ? { ...b, content: e.target.value } : b
+                                      );
+                                      updateSelectedSlide({ highlight_boxes: newBoxes });
+                                    }}
+                                    placeholder="Contenido de la caja..."
+                                    className="min-h-[80px]"
+                                  />
+                                </div>
+                              </Card>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newBox: HighlightBoxData = { id: crypto.randomUUID(), type: 'info', title: '', content: '' };
+                                updateSelectedSlide({ highlight_boxes: [...(selectedSlide.highlight_boxes || []), newBox] });
+                              }}
+                            >
+                              <Plus className="h-3 w-3 mr-1" /> Añadir caja destacada
+                            </Button>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   </div>
                 </ScrollArea>
               </>
