@@ -32,6 +32,7 @@ import { PreAssessmentTest } from "@/components/PreAssessmentTest";
 import { CourseDocumentUploader } from "@/components/CourseDocumentUploader";
 import { PlatformHelpResources } from "@/components/PlatformHelpResources";
 import { CourseForum } from "@/components/CourseForum";
+import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
 
 interface Course {
   id: string;
@@ -1050,6 +1051,14 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="work-plan" className="space-y-4">
+            {/* Calendario interactivo con fechas de entregas, tutorías y exámenes */}
+            <WorkPlanCalendar 
+              courseId={courseId!}
+              modules={modules}
+              courseStartDate={course.start_date}
+              courseEndDate={course.end_date}
+            />
+            
             <CourseWorkPlan 
               course={course} 
               modules={modules}
@@ -1394,46 +1403,68 @@ export default function CourseView() {
                                                     <div className="space-y-2">
                                                       {unit.activities && unit.activities.length > 0 ? (
                                                         unit.activities.map((activity: any, actIdx: number) => (
-                                                          <div key={activity.id} className="flex items-center gap-2">
-                                                            <Checkbox checked={activity.completed} className="h-4 w-4" />
-                                                            <button
-                                                              onClick={() => openActivityManager(unit.id, unit.title)}
-                                                              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm"
-                                                            >
-                                                              <span>Actividad {actIdx + 1}: {activity.title}</span>
-                                                            </button>
-                                                            {activity.completed && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                                                          <div key={activity.id} className="border rounded-lg p-3 bg-orange-50/50">
+                                                            <div className="flex items-center gap-2">
+                                                              <Checkbox checked={activity.completed} className="h-4 w-4" />
+                                                              <button
+                                                                onClick={() => openActivityManager(unit.id, unit.title)}
+                                                                className="flex-1 text-left text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+                                                              >
+                                                                Actividad {actIdx + 1}: {activity.title}
+                                                              </button>
+                                                              {activity.completed && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                                                            </div>
+                                                            {activity.due_date && (
+                                                              <div className="flex items-center gap-2 mt-2 ml-6 text-xs">
+                                                                <Calendar className="h-3 w-3 text-orange-600" />
+                                                                <span className="text-orange-700 font-medium">
+                                                                  Fecha límite: {new Date(activity.due_date).toLocaleDateString('es-ES', { 
+                                                                    weekday: 'long', 
+                                                                    day: 'numeric', 
+                                                                    month: 'long', 
+                                                                    year: 'numeric' 
+                                                                  })}
+                                                                </span>
+                                                              </div>
+                                                            )}
                                                           </div>
                                                         ))
                                                       ) : (
                                                         <>
-                                                          <div className="flex items-center gap-2">
-                                                            <Checkbox checked={true} className="h-4 w-4" />
-                                                            <button
-                                                              onClick={() => openActivityManager(unit.id, unit.title)}
-                                                              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm"
-                                                            >
-                                                              <span>Actividad 1: Caso práctico</span>
-                                                            </button>
-                                                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                                          <div className="border rounded-lg p-3 bg-orange-50/50">
+                                                            <div className="flex items-center gap-2">
+                                                              <Checkbox checked={true} className="h-4 w-4" />
+                                                              <button
+                                                                onClick={() => openActivityManager(unit.id, unit.title)}
+                                                                className="flex-1 text-left text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+                                                              >
+                                                                Actividad 1: Caso práctico
+                                                              </button>
+                                                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mt-2 ml-6 text-xs">
+                                                              <Calendar className="h-3 w-3 text-orange-600" />
+                                                              <span className="text-orange-700 font-medium">
+                                                                Fecha límite: Por definir
+                                                              </span>
+                                                            </div>
                                                           </div>
-                                                          <div className="flex items-center gap-2">
-                                                            <Checkbox checked={false} className="h-4 w-4" />
-                                                            <button
-                                                              onClick={() => openActivityManager(unit.id, unit.title)}
-                                                              className="text-primary hover:text-primary/80 transition-colors text-sm"
-                                                            >
-                                                              Actividad 2: Ejercicio teórico práctico
-                                                            </button>
-                                                          </div>
-                                                          <div className="flex items-center gap-2">
-                                                            <Checkbox checked={false} className="h-4 w-4" />
-                                                            <button
-                                                              onClick={() => openActivityManager(unit.id, unit.title)}
-                                                              className="text-primary hover:text-primary/80 transition-colors text-sm"
-                                                            >
-                                                              Actividad 3: Caso práctico
-                                                            </button>
+                                                          <div className="border rounded-lg p-3 bg-orange-50/50">
+                                                            <div className="flex items-center gap-2">
+                                                              <Checkbox checked={false} className="h-4 w-4" />
+                                                              <button
+                                                                onClick={() => openActivityManager(unit.id, unit.title)}
+                                                                className="flex-1 text-left text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+                                                              >
+                                                                Actividad 2: Ejercicio teórico práctico
+                                                              </button>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mt-2 ml-6 text-xs">
+                                                              <Calendar className="h-3 w-3 text-orange-600" />
+                                                              <span className="text-orange-700 font-medium">
+                                                                Fecha límite: Por definir
+                                                              </span>
+                                                            </div>
                                                           </div>
                                                         </>
                                                       )}
