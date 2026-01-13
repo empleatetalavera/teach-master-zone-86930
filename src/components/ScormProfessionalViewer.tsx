@@ -1544,7 +1544,8 @@ export default function ScormProfessionalViewer({
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [slides] = useState<ContentSlide[]>(() => generateComprehensiveSlides(unitTitle));
+  const [slides, setSlides] = useState<ContentSlide[]>([]);
+  const [loadingSlides, setLoadingSlides] = useState(true);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [completedSlides, setCompletedSlides] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -1565,8 +1566,60 @@ export default function ScormProfessionalViewer({
   // Checklist state
   const [checklistState, setChecklistState] = useState<Record<string, Record<string, boolean>>>({});
 
+  // Load slides from database
+  useEffect(() => {
+    const loadSlidesFromDatabase = async () => {
+      if (!open || !unitId) return;
+      
+      setLoadingSlides(true);
+      try {
+        const { data, error } = await supabase
+          .from("unit_syllabus_slides")
+          .select("*")
+          .eq("formative_unit_id", unitId)
+          .eq("is_active", true)
+          .order("order_index");
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // Transform database slides to ContentSlide format
+          const dbSlides: ContentSlide[] = data.map((item: any) => ({
+            id: item.id,
+            type: item.slide_type as ContentSlide['type'],
+            title: item.title || '',
+            content: item.content || '',
+            keyTerms: item.key_terms || [],
+            section: item.section_title || undefined,
+            tableData: item.table_data as { headers: string[]; rows: string[][] } | undefined,
+            checklistItems: item.checklist_items as { id: string; text: string }[] | undefined,
+            quiz: item.quiz_data ? {
+              id: `quiz-${item.id}`,
+              question: (item.quiz_data as any).question || '',
+              options: (item.quiz_data as any).options || [],
+              explanation: (item.quiz_data as any).explanation || '',
+              hint: (item.quiz_data as any).hint
+            } : undefined
+          }));
+          setSlides(dbSlides);
+        } else {
+          // Fallback to generated content if no database slides exist
+          setSlides(generateComprehensiveSlides(unitTitle));
+        }
+      } catch (error) {
+        console.error("Error loading slides from database:", error);
+        // Fallback to generated content on error
+        setSlides(generateComprehensiveSlides(unitTitle));
+      } finally {
+        setLoadingSlides(false);
+      }
+    };
+
+    loadSlidesFromDatabase();
+  }, [open, unitId, unitTitle]);
+
   const currentSlide = slides[currentSlideIndex];
-  const progress = ((completedSlides.size + 1) / slides.length) * 100;
+  const progress = slides.length > 0 ? ((completedSlides.size + 1) / slides.length) * 100 : 0;
   const indexItems = generateIndex(slides);
 
   // Determine UF code for PDF downloads
@@ -1590,7 +1643,7 @@ export default function ScormProfessionalViewer({
   // Save progress to database
   useEffect(() => {
     const saveProgress = async () => {
-      if (!user || !enrollmentId) return;
+      if (!user || !enrollmentId || slides.length === 0) return;
       
       try {
         await supabase.from('module_progress').upsert({
@@ -1669,6 +1722,33 @@ export default function ScormProfessionalViewer({
   };
 
   if (!open) return null;
+
+  if (loadingSlides) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-[95vw] h-[95vh] flex flex-col items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Cargando contenido interactivo...</p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (slides.length === 0) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg">
+          <div className="text-center py-8">
+            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Sin contenido disponible</h3>
+            <p className="text-muted-foreground text-sm">
+              Esta unidad aún no tiene contenido interactivo. Un administrador puede añadirlo desde el editor de temario.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
