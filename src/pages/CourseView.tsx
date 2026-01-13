@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1491,51 +1491,106 @@ export default function CourseView() {
                                   )}
                                 </div>
 
-                                {/* Module-level evaluations */}
-                                {module.evaluations && module.evaluations.length > 0 && (
-                                  <div className="border-t pt-4">
-                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
-                                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                                      Tests del Módulo ({module.evaluations.length})
-                                    </h4>
-                                    <div className="space-y-1">
-                                      {module.evaluations.map((evaluation: any) => (
-                                        <Button
-                                          key={evaluation.id}
-                                          variant="outline"
-                                          size="sm"
-                                          className="w-full justify-start"
-                                          onClick={() => navigate(`/course/${courseId}/evaluation/${evaluation.id}`)}
-                                        >
-                                          {evaluation.title}
-                                        </Button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
+                                {/* EVALUACIÓN Section - SEPE Style */}
+                                <Accordion type="single" collapsible className="mt-4">
+                                  <AccordionItem value="evaluacion" className="border-0">
+                                    <AccordionTrigger className="bg-primary text-white px-4 py-3 rounded-t-lg hover:no-underline data-[state=open]:rounded-b-none">
+                                      <span className="font-bold text-lg">EVALUACIÓN</span>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="border border-t-0 rounded-b-lg p-4 bg-white">
+                                      {/* Lista de pruebas de evaluación */}
+                                      <div className="space-y-2 mb-6">
+                                        {module.formative_units?.map((unit: any) => (
+                                          <div key={`eval-${unit.id}`} className="flex items-center justify-between p-2 bg-blue-50 rounded border-l-4 border-l-primary">
+                                            <div className="flex items-center gap-3">
+                                              <div className="p-1 bg-primary/10 rounded">
+                                                <FileText className="h-4 w-4 text-primary" />
+                                              </div>
+                                              <span className="text-sm">{unit.title} - Test Final</span>
+                                            </div>
+                                            <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                          </div>
+                                        ))}
+                                        <div className="flex items-center justify-between p-2 bg-orange-50 rounded border-l-4 border-l-orange-500">
+                                          <div className="flex items-center gap-3">
+                                            <div className="p-1 bg-orange-100 rounded">
+                                              <AlertCircle className="h-4 w-4 text-orange-500" />
+                                            </div>
+                                            <span className="text-sm">Prueba de evaluación Final</span>
+                                          </div>
+                                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 bg-purple-50 rounded border-l-4 border-l-purple-500">
+                                          <div className="flex items-center gap-3">
+                                            <div className="p-1 bg-purple-100 rounded">
+                                              <Star className="h-4 w-4 text-purple-500" />
+                                            </div>
+                                            <span className="text-sm">Evaluación de la calidad de la formación</span>
+                                          </div>
+                                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                        </div>
+                                      </div>
 
-                                {/* Module-level activities */}
-                                {module.activities && module.activities.length > 0 && (
-                                  <div className="border-t pt-4">
-                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
-                                      <FileText className="h-4 w-4 text-primary" />
-                                      Actividades del Módulo ({module.activities.length})
-                                    </h4>
-                                    <div className="space-y-1">
-                                      {module.activities.map((activity: any) => (
-                                        <Button
-                                          key={activity.id}
-                                          variant="outline"
-                                          size="sm"
-                                          className="w-full justify-start"
-                                          onClick={() => navigate(`/course/${courseId}/activity/${activity.id}`)}
-                                        >
-                                          {activity.title}
-                                        </Button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
+                                      {/* Texto explicativo */}
+                                      <div className="border-l-4 border-l-slate-300 pl-4 py-2 mb-6 bg-slate-50 rounded-r">
+                                        <p className="text-sm text-slate-700">Las pruebas de evaluación que deberás realizar son las siguientes:</p>
+                                      </div>
+
+                                      {/* TEST FINAL EN CAMPUS (CIM) */}
+                                      <div className="border border-primary rounded-lg overflow-hidden mb-6">
+                                        <div className="bg-primary/10 px-4 py-3 flex items-center gap-3 border-b border-primary/20">
+                                          <div className="p-2 bg-primary rounded">
+                                            <FileText className="h-5 w-5 text-white" />
+                                          </div>
+                                          <h4 className="font-bold text-primary text-lg">
+                                            <span className="bg-yellow-200 px-2 py-0.5">TEST FINAL EN CAMPUS (CIM)</span>
+                                          </h4>
+                                        </div>
+                                        <div className="p-4 bg-white">
+                                          <p className="text-sm text-slate-700">
+                                            El <strong>TEST FINAL</strong> de evaluación desarrollado en el Campus Virtual. Para realizar este TEST FINAL 
+                                            dispondrás de un solo intento y podrás conocer los resultados una vez lo hayas realizado.
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* PRUEBA DE EVALUACIÓN FINAL PRESENCIAL */}
+                                      <div className="border border-orange-400 rounded-lg overflow-hidden mb-6">
+                                        <div className="bg-orange-50 px-4 py-3 flex items-center gap-3 border-b border-orange-200">
+                                          <div className="p-2 bg-orange-500 rounded">
+                                            <AlertCircle className="h-5 w-5 text-white" />
+                                          </div>
+                                          <h4 className="font-bold text-orange-700 text-lg">
+                                            <span className="bg-yellow-200 px-2 py-0.5">PRUEBA DE EVALUACIÓN FINAL PRESENCIAL</span>
+                                          </h4>
+                                        </div>
+                                        <div className="p-4 bg-white">
+                                          <p className="text-sm text-slate-700">
+                                            La <strong>PRUEBA DE EVALUACIÓN FINAL PRESENCIAL</strong> en el Centro de Formación. En la fecha y lugar que 
+                                            se te indican en el documento PLAN DE TRABAJO, y a través de MI AGENDA, deberás realizar la/s 
+                                            prueba/s de evaluación. Puedes encontrar en este apartado información sobre los criterios de 
+                                            evaluación que se aplicarán en esta prueba, así como algunas orientaciones sobre su contenido.
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* RECUERDA */}
+                                      <div className="border-2 border-slate-400 rounded-lg overflow-hidden">
+                                        <div className="bg-slate-100 px-4 py-2 border-b border-slate-300">
+                                          <h4 className="font-bold text-slate-700">
+                                            <span className="bg-yellow-200 px-2 py-0.5">RECUERDA</span>
+                                          </h4>
+                                        </div>
+                                        <div className="p-4 bg-white">
+                                          <p className="text-sm text-slate-700">
+                                            Para poder presentarte a la prueba de evaluación final debes haber realizado el total de las actividades de 
+                                            aprendizaje establecidas en el Campus Virtual, así como haber participado en los foros programados.
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                </Accordion>
                               </div>
                             </CardContent>
                           </AccordionContent>
