@@ -29,7 +29,7 @@ import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
 import { CourseWorkPlan } from "@/components/CourseWorkPlan";
 import { PreAssessmentTest } from "@/components/PreAssessmentTest";
-import { CourseDocumentUploader } from "@/components/CourseDocumentUploader";
+import { SingleDocumentUploader } from "@/components/SingleDocumentUploader";
 import { PlatformHelpResources } from "@/components/PlatformHelpResources";
 import { CourseForum } from "@/components/CourseForum";
 import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
@@ -677,17 +677,6 @@ export default function CourseView() {
               </div>
 
           <TabsContent value="intro" className="space-y-6">
-            {/* Document Uploader for Admins */}
-            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-              <CourseDocumentUploader
-                courseId={courseId || ''}
-                studentGuidePdfUrl={course.student_guide_pdf_url}
-                trainingProgramPdfUrl={course.training_program_pdf_url}
-                onUpdate={loadCourseData}
-                isAdmin={true}
-              />
-            )}
-
             {/* Platform Help Resources */}
             <PlatformHelpResources centerSlug={centerSlug} />
 
@@ -993,6 +982,17 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="student-guide" className="space-y-4">
+            {/* Admin uploader for custom student guide */}
+            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+              <SingleDocumentUploader
+                courseId={courseId || ''}
+                documentUrl={course.student_guide_pdf_url}
+                documentType="guide"
+                onUpdate={loadCourseData}
+                isAdmin={true}
+              />
+            )}
+            
             {course.student_guide_pdf_url ? (
               <Card>
                 <CardHeader>
@@ -1036,6 +1036,17 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="training-program" className="space-y-4">
+            {/* Admin uploader for custom training program */}
+            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+              <SingleDocumentUploader
+                courseId={courseId || ''}
+                documentUrl={course.training_program_pdf_url}
+                documentType="program"
+                onUpdate={loadCourseData}
+                isAdmin={true}
+              />
+            )}
+            
             {course.training_program_pdf_url ? (
               <Card>
                 <CardHeader>
