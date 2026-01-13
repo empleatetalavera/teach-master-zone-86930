@@ -66,6 +66,12 @@ export function ActivitySubmissionViewer({
 
   useEffect(() => {
     if (open && activityId) {
+      // Reset state when activity changes
+      setActivity(null);
+      setSubmission(null);
+      setResponseText("");
+      setResponseUrl("");
+      setSelectedFile(null);
       loadActivityAndSubmission();
     }
   }, [open, activityId]);
