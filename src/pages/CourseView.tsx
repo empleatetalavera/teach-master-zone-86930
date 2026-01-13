@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +33,7 @@ import { CourseDocumentUploader } from "@/components/CourseDocumentUploader";
 import { PlatformHelpResources } from "@/components/PlatformHelpResources";
 import { CourseForum } from "@/components/CourseForum";
 import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
+import { SyllabusEditor } from "@/components/SyllabusEditor";
 
 interface Course {
   id: string;
@@ -127,6 +128,9 @@ export default function CourseView() {
   // SCORM content viewer state
   const [scormViewerOpen, setScormViewerOpen] = useState(false);
 
+  // Syllabus editor state
+  const [syllabusEditorOpen, setSyllabusEditorOpen] = useState(false);
+
   const openContentViewer = (unitId: string, unitTitle: string, contentType: 'video' | 'document' | 'audio' | 'scorm' | 'exercise' | 'presentation') => {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
@@ -144,6 +148,12 @@ export default function CourseView() {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
     setScormViewerOpen(true);
+  };
+
+  const openSyllabusEditor = (unitId: string, unitTitle: string) => {
+    setSelectedUnitId(unitId);
+    setSelectedUnitTitle(unitTitle);
+    setSyllabusEditorOpen(true);
   };
 
   useEffect(() => {
@@ -1410,15 +1420,26 @@ export default function CourseView() {
                                                     <div className="flex items-center justify-between mb-2">
                                                       <h5 className="font-semibold text-foreground">Contenido interactivo</h5>
                                                       {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                        <Button 
-                                                          size="sm" 
-                                                          variant="ghost" 
-                                                          className="h-7 text-xs gap-1"
-                                                          onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
-                                                        >
-                                                          <Plus className="h-3 w-3" />
-                                                          Añadir
-                                                        </Button>
+                                                        <div className="flex items-center gap-1">
+                                                          <Button 
+                                                            size="sm" 
+                                                            variant="ghost" 
+                                                            className="h-7 text-xs gap-1"
+                                                            onClick={() => openSyllabusEditor(unit.id, unit.title)}
+                                                          >
+                                                            <Edit2 className="h-3 w-3" />
+                                                            Editar Temario
+                                                          </Button>
+                                                          <Button 
+                                                            size="sm" 
+                                                            variant="ghost" 
+                                                            className="h-7 text-xs gap-1"
+                                                            onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
+                                                          >
+                                                            <Plus className="h-3 w-3" />
+                                                            Añadir
+                                                          </Button>
+                                                        </div>
                                                       )}
                                                     </div>
                                                     <button
@@ -2114,6 +2135,14 @@ export default function CourseView() {
         unitId={selectedUnitId}
         unitTitle={selectedUnitTitle}
         enrollmentId={enrollment?.id}
+      />
+
+      {/* Syllabus Editor Dialog */}
+      <SyllabusEditor
+        open={syllabusEditorOpen}
+        onOpenChange={setSyllabusEditorOpen}
+        unitId={selectedUnitId}
+        unitTitle={selectedUnitTitle}
       />
     </div>
   );
