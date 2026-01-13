@@ -1160,12 +1160,79 @@ export default function CourseView() {
                           <AccordionContent>
                             <CardContent className="pt-0 border-t bg-muted/20">
                               <div className="space-y-4 pt-4">
-                                {/* Test de Conocimientos Previos */}
-                                <PreAssessmentTest 
-                                  moduleId={module.id}
-                                  moduleTitle={module.title}
-                                  onComplete={(results) => console.log('Assessment results:', results)}
-                                />
+                                {/* Chat Inicial - Acceso a la sesión de bienvenida */}
+                                <Accordion type="single" collapsible className="w-full">
+                                  <AccordionItem value="chat-inicial" className="border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+                                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white">
+                                          <MessageSquare className="h-5 w-5" />
+                                        </div>
+                                        <div className="text-left">
+                                          <h4 className="font-semibold text-blue-900 dark:text-blue-100">Chat de Sesión Inicial</h4>
+                                          <p className="text-xs text-blue-600 dark:text-blue-300">Acceso al chat de bienvenida con tu tutor/a-formador/a</p>
+                                        </div>
+                                      </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="px-4 pb-4">
+                                      <div className="space-y-3 bg-white dark:bg-background rounded-lg p-4 border">
+                                        <p className="text-sm text-muted-foreground">
+                                          El día de comienzo del curso, a través de la herramienta de chat habilitada, el tutor/a-formador/a del módulo formativo te informará de:
+                                        </p>
+                                        <ul className="text-sm space-y-2 text-muted-foreground">
+                                          <li className="flex items-start gap-2">
+                                            <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                            <span>Cuestiones generales relativas a la organización de la formación</span>
+                                          </li>
+                                          <li className="flex items-start gap-2">
+                                            <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                            <span>Presentación de tutores-formadores</span>
+                                          </li>
+                                          <li className="flex items-start gap-2">
+                                            <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                            <span>Exposición de objetivos que se persiguen alcanzar</span>
+                                          </li>
+                                          <li className="flex items-start gap-2">
+                                            <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                            <span>Actividades de aprendizaje y pruebas de evaluación a realizar</span>
+                                          </li>
+                                        </ul>
+                                        <div className="flex items-center gap-2 pt-2 text-xs text-blue-600 dark:text-blue-400">
+                                          <Calendar className="h-4 w-4" />
+                                          <span>La hora de esta sesión inicial puedes consultarla en el <strong>PLAN DE TRABAJO</strong> o en <strong>MI AGENDA</strong></span>
+                                        </div>
+                                        <Button className="w-full mt-2" variant="default">
+                                          <MessageSquare className="h-4 w-4 mr-2" />
+                                          Acceder al Chat de Sesión Inicial
+                                        </Button>
+                                      </div>
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                </Accordion>
+
+                                {/* Test de Conocimientos Previos - Desplegable */}
+                                <Accordion type="single" collapsible className="w-full">
+                                  <AccordionItem value="pre-assessment" className="border rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
+                                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white">
+                                          <ClipboardList className="h-5 w-5" />
+                                        </div>
+                                        <div className="text-left">
+                                          <h4 className="font-semibold text-amber-900 dark:text-amber-100">Test de Conocimientos Previos</h4>
+                                          <p className="text-xs text-amber-600 dark:text-amber-300">Evaluación diagnóstica de competencias digitales y conocimientos del módulo</p>
+                                        </div>
+                                      </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="px-4 pb-4">
+                                      <PreAssessmentTest 
+                                        moduleId={module.id}
+                                        moduleTitle={module.title}
+                                        onComplete={(results) => console.log('Assessment results:', results)}
+                                      />
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                </Accordion>
 
                                 {/* Fila 1: Mapa Conceptual y Objetivos */}
                                 <div className="grid lg:grid-cols-2 gap-4">
