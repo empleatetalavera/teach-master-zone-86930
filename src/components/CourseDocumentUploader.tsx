@@ -115,15 +115,23 @@ export const CourseDocumentUploader: React.FC<CourseDocumentUploaderProps> = ({
   if (!isAdmin) return null;
 
   return (
-    <Card className="border-dashed border-primary/30">
+    <Card className="border-2 border-dashed border-primary/40 bg-gradient-to-r from-primary/5 to-transparent">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Upload className="h-4 w-4 text-primary" />
-          Documentos del Curso (Admin)
-        </CardTitle>
-        <CardDescription className="text-xs">
-          Sube los PDFs personalizados de la Guía del Alumno y Programa Formativo
-        </CardDescription>
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Upload className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              Personalizar Documentos del Curso
+              <Badge variant="secondary" className="text-xs">Admin</Badge>
+            </CardTitle>
+            <CardDescription className="text-xs mt-1">
+              Sube tus PDFs personalizados para reemplazar el contenido auto-generado. 
+              Esto te permite adaptar la Guía del Alumno y el Programa Formativo a tu certificado profesional.
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Guía del Alumno */}
