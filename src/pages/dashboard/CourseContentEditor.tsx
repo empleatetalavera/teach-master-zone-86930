@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   ArrowLeft, 
   Plus, 
@@ -45,7 +46,8 @@ import {
   Headphones,
   Image,
   Code,
-  Gamepad2
+  Gamepad2,
+  Layers
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -1324,81 +1326,208 @@ export default function CourseContentEditor() {
                   
                   <CollapsibleContent>
                     <CardContent className="pt-0 border-t bg-muted/20">
-                      {/* Secciones del Módulo */}
+                      {/* Secciones del Módulo - Mismo diseño que Vista Previa */}
                       <div className="space-y-4 pt-4">
                         
-                        {/* Fila 1: Mapa Conceptual y Objetivos */}
+                        {/* Chat de Sesión Inicial - Desplegable con botón de editar */}
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value="chat-inicial" className="border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+                            <div className="flex items-center justify-between pr-4">
+                              <AccordionTrigger className="px-4 py-3 hover:no-underline flex-1">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white">
+                                    <MessageSquare className="h-5 w-5" />
+                                  </div>
+                                  <div className="text-left">
+                                    <h4 className="font-semibold text-blue-900 dark:text-blue-100">Chat de Sesión Inicial</h4>
+                                    <p className="text-xs text-blue-600 dark:text-blue-300">Acceso al chat de bienvenida con tu tutor/a-formador/a</p>
+                                  </div>
+                                </div>
+                              </AccordionTrigger>
+                              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleEditModule(module); }}>
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <AccordionContent className="px-4 pb-4">
+                              <div className="space-y-3 bg-white dark:bg-background rounded-lg p-4 border">
+                                <p className="text-sm text-muted-foreground">
+                                  El día de comienzo del curso, a través de la herramienta de chat habilitada, el tutor/a-formador/a del módulo formativo informará de:
+                                </p>
+                                <ul className="text-sm space-y-2 text-muted-foreground">
+                                  <li className="flex items-start gap-2">
+                                    <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                    <span>Cuestiones generales relativas a la organización de la formación</span>
+                                  </li>
+                                  <li className="flex items-start gap-2">
+                                    <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                    <span>Presentación de tutores-formadores</span>
+                                  </li>
+                                  <li className="flex items-start gap-2">
+                                    <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                    <span>Exposición de objetivos que se persiguen alcanzar</span>
+                                  </li>
+                                  <li className="flex items-start gap-2">
+                                    <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                    <span>Actividades de aprendizaje y pruebas de evaluación a realizar</span>
+                                  </li>
+                                </ul>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+
+                        {/* Test de Conocimientos Previos - Desplegable */}
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value="pre-assessment" className="border rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
+                            <div className="flex items-center justify-between pr-4">
+                              <AccordionTrigger className="px-4 py-3 hover:no-underline flex-1">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white">
+                                    <FileQuestion className="h-5 w-5" />
+                                  </div>
+                                  <div className="text-left">
+                                    <h4 className="font-semibold text-amber-900 dark:text-amber-100">Test de Conocimientos Previos</h4>
+                                    <p className="text-xs text-amber-600 dark:text-amber-300">Evaluación diagnóstica de competencias digitales y conocimientos del módulo</p>
+                                  </div>
+                                </div>
+                              </AccordionTrigger>
+                              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); }}>
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <AccordionContent className="px-4 pb-4">
+                              <div className="bg-white dark:bg-background rounded-lg p-4 border text-center">
+                                <p className="text-sm text-muted-foreground">
+                                  Test de 20 preguntas para evaluar el nivel inicial del alumno
+                                </p>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+
+                        {/* Fila 1: Mapa Conceptual y Objetivos - Diseño rico */}
                         <div className="grid lg:grid-cols-2 gap-4">
-                          {/* Mapa Conceptual */}
+                          {/* Mapa Conceptual con badges */}
                           <div className="bg-background rounded-lg p-4 border">
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-3">
                               <h4 className="font-medium flex items-center gap-2 text-sm">
-                                <Map className="h-4 w-4 text-primary" />
+                                <Layers className="h-4 w-4 text-primary" />
                                 Mapa Conceptual
                               </h4>
                               <Button variant="ghost" size="sm" onClick={() => handleEditModule(module)}>
                                 <Edit2 className="h-3 w-3" />
                               </Button>
                             </div>
-                            {module.concept_map_url ? (
-                              <a 
-                                href={module.concept_map_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs text-primary hover:underline flex items-center gap-1"
-                              >
-                                <Link2 className="h-3 w-3" />
-                                Ver mapa conceptual
-                              </a>
-                            ) : (
-                              <p className="text-xs text-muted-foreground">Sin mapa conceptual configurado</p>
-                            )}
+                            {(() => {
+                              const moduleTitle = module.title.toLowerCase();
+                              let conceptNodes: { label: string; level: number }[] = [];
+                              
+                              if (moduleTitle.includes('técnicas administrativas') || moduleTitle.includes('mf0969')) {
+                                conceptNodes = [
+                                  { label: 'TÉCNICAS ADMINISTRATIVAS', level: 0 },
+                                  { label: 'Organización', level: 1 },
+                                  { label: 'Documentación', level: 1 },
+                                  { label: 'Tesorería', level: 1 },
+                                  { label: 'Empresas', level: 2 },
+                                  { label: 'RRHH', level: 2 },
+                                  { label: 'Correspondencia', level: 2 },
+                                  { label: 'Mercantiles', level: 2 },
+                                  { label: 'Existencias', level: 2 },
+                                ];
+                              }
+                              
+                              if (conceptNodes.length === 0 && module.concept_map_url) {
+                                return (
+                                  <a href={module.concept_map_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                                    <Link2 className="h-3 w-3" />
+                                    Ver mapa conceptual
+                                  </a>
+                                );
+                              }
+                              
+                              if (conceptNodes.length === 0) {
+                                return <p className="text-xs text-muted-foreground">Sin mapa conceptual configurado</p>;
+                              }
+                              
+                              return (
+                                <div className="space-y-3">
+                                  <div className="flex justify-center">
+                                    <span className="px-3 py-1.5 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground rounded-lg font-semibold text-xs shadow">
+                                      {conceptNodes.find(n => n.level === 0)?.label}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap justify-center gap-2">
+                                    {conceptNodes.filter(n => n.level === 1).map((node, i) => (
+                                      <span key={i} className="px-2 py-1 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded text-xs font-medium border border-blue-200 dark:border-blue-800">
+                                        {node.label}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <div className="flex flex-wrap justify-center gap-1">
+                                    {conceptNodes.filter(n => n.level === 2).map((node, i) => (
+                                      <span key={i} className="px-2 py-0.5 bg-muted rounded text-xs">
+                                        {node.label}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
 
-                          {/* Objetivos */}
+                          {/* Objetivos con checkmarks verdes */}
                           <div className="bg-background rounded-lg p-4 border">
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-3">
                               <h4 className="font-medium flex items-center gap-2 text-sm">
-                                <Target className="h-4 w-4 text-primary" />
+                                <BookOpen className="h-4 w-4 text-primary" />
                                 Objetivos
                               </h4>
                               <Button variant="ghost" size="sm" onClick={() => handleEditModule(module)}>
                                 <Edit2 className="h-3 w-3" />
                               </Button>
                             </div>
-                            {module.objectives ? (
-                              <p className="text-xs text-muted-foreground line-clamp-3">{module.objectives}</p>
-                            ) : (
-                              <p className="text-xs text-muted-foreground">Sin objetivos definidos</p>
-                            )}
+                            {(() => {
+                              const moduleTitle = module.title.toLowerCase();
+                              let objectives: string[] = [];
+                              
+                              if (moduleTitle.includes('técnicas administrativas') || moduleTitle.includes('mf0969')) {
+                                objectives = [
+                                  'Conocer la organización empresarial y tipos de entidades',
+                                  'Gestionar correspondencia y documentación',
+                                  'Realizar operaciones básicas de tesorería',
+                                  'Controlar existencias e inventarios',
+                                  'Aplicar técnicas de archivo y clasificación'
+                                ];
+                              }
+                              
+                              if (objectives.length === 0 && module.objectives) {
+                                return <p className="text-xs text-muted-foreground line-clamp-3">{module.objectives}</p>;
+                              }
+                              
+                              if (objectives.length === 0) {
+                                return <p className="text-xs text-muted-foreground">Sin objetivos definidos</p>;
+                              }
+                              
+                              return (
+                                <ul className="space-y-1.5">
+                                  {objectives.map((obj, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-xs">
+                                      <CheckSquare className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
+                                      <span className="text-muted-foreground">{obj}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              );
+                            })()}
                           </div>
                         </div>
 
-                        {/* Fila 2: Temario y Foro */}
+                        {/* Foro del Módulo */}
                         <div className="grid lg:grid-cols-2 gap-4">
-                          {/* Temario / Contenido */}
                           <div className="bg-background rounded-lg p-4 border">
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="font-medium flex items-center gap-2 text-sm">
-                                <BookOpen className="h-4 w-4 text-primary" />
-                                Temario / Manual
-                              </h4>
-                              <Button variant="ghost" size="sm" onClick={() => handleEditModule(module)}>
-                                <Edit2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            {module.content ? (
-                              <p className="text-xs text-muted-foreground line-clamp-3">{module.content.substring(0, 150)}...</p>
-                            ) : (
-                              <p className="text-xs text-muted-foreground">Sin contenido de temario</p>
-                            )}
-                          </div>
-
-                          {/* Foro */}
-                          <div className="bg-background rounded-lg p-4 border">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-medium flex items-center gap-2 text-sm">
-                                <MessagesSquare className="h-4 w-4 text-primary" />
+                                <MessageSquare className="h-4 w-4 text-primary" />
                                 Foro del Módulo
                               </h4>
                               <Badge variant={module.forum_enabled ? "default" : "secondary"}>
@@ -1413,16 +1542,14 @@ export default function CourseContentEditor() {
                           </div>
                         </div>
 
-                        {/* Unidades Formativas - Submenu desplegable */}
+                        {/* FORMACIÓN EN CAMPUS - Estilo SEPE Homologado */}
                         <div className="border-t pt-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-medium flex items-center gap-2">
-                              <ListChecks className="h-4 w-4 text-primary" />
-                              Unidades Formativas
-                            </h4>
+                          <div className="bg-primary text-primary-foreground px-4 py-2 font-semibold text-sm uppercase tracking-wide rounded-t-md flex items-center justify-between">
+                            <span>FORMACIÓN EN CAMPUS</span>
                             <Button 
-                              variant="outline" 
-                              size="sm"
+                              variant="secondary" 
+                              size="sm" 
+                              className="h-7 text-xs"
                               onClick={() => openAddUnitForModule(module.id)}
                             >
                               <Plus className="h-3 w-3 mr-1" />
@@ -1430,234 +1557,89 @@ export default function CourseContentEditor() {
                             </Button>
                           </div>
                           
-                          {getModuleUnits(module.id).length === 0 ? (
-                            <div className="text-sm text-muted-foreground bg-background rounded-lg p-4 border border-dashed text-center">
-                              Sin unidades formativas. Añade la primera unidad a este módulo.
+                          {moduleUnits.length === 0 ? (
+                            <div className="text-sm text-muted-foreground bg-background rounded-b-lg p-4 border border-t-0 border-dashed text-center">
+                              Sin unidades formativas en este módulo
                             </div>
                           ) : (
-                            <div className="space-y-2">
-                              {getModuleUnits(module.id).map((unit, unitIndex) => {
-                                const isUnitExpanded = expandedUnits.includes(unit.id);
-                                return (
-                                  <Collapsible 
-                                    key={unit.id} 
-                                    open={isUnitExpanded} 
-                                    onOpenChange={() => toggleUnit(unit.id)}
-                                  >
-                                    <div className={`bg-background rounded-lg border ${!unit.is_active ? 'opacity-60' : ''}`}>
-                                      <CollapsibleTrigger asChild>
-                                        <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/30 transition-colors">
-                                          <div className="flex items-center gap-3">
-                                            {isUnitExpanded ? (
-                                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                            ) : (
-                                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                            )}
-                                            <span className="font-mono text-xs text-muted-foreground">{index + 1}.{unitIndex + 1}</span>
-                                            <span className="font-medium text-sm">{unit.title}</span>
-                                            {unit.duration_hours && (
-                                              <Badge variant="outline" className="text-xs">
-                                                {unit.duration_hours}h
-                                              </Badge>
-                                            )}
-                                            <span className="text-xs text-muted-foreground flex items-center gap-2">
-                                              <span className="flex items-center gap-1">
-                                                <CheckSquare className="h-3 w-3" />
-                                                {getUnitEvaluations(unit.id).length}
-                                              </span>
-                                              <span className="flex items-center gap-1">
-                                                <FileText className="h-3 w-3" />
-                                                {getUnitActivities(unit.id).length}
-                                              </span>
-                                            </span>
+                            <div className="space-y-0">
+                              {moduleUnits.map((unit, unitIndex) => (
+                                <Accordion key={unit.id} type="single" collapsible>
+                                  <AccordionItem value={unit.id} className="border-0">
+                                    <div className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80">
+                                      <AccordionTrigger className="hover:no-underline p-0 flex-1">
+                                        <span className="text-left">
+                                          Unidad Didáctica {unitIndex + 1}. {unit.title}
+                                        </span>
+                                      </AccordionTrigger>
+                                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20" onClick={() => handleEditUnit(unit)}>
+                                          <Edit2 className="h-3 w-3" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20" onClick={() => handleDeleteUnit(unit.id)}>
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    <AccordionContent className="p-0">
+                                      <div className="bg-white dark:bg-background border border-t-0 p-4 space-y-4">
+                                        
+                                        {/* Contenido Interactivo - Estilo SEPE */}
+                                        <div className="flex items-start gap-3">
+                                          <div className="p-2 bg-primary/10 rounded">
+                                            <Layers className="h-5 w-5 text-primary" />
                                           </div>
-                                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditUnit(unit)}>
-                                              <Edit2 className="h-3 w-3" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteUnit(unit.id)}>
-                                              <Trash2 className="h-3 w-3 text-destructive" />
-                                            </Button>
+                                          <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-2">
+                                              <h5 className="font-semibold text-foreground">Contenido interactivo</h5>
+                                              <div className="flex items-center gap-1">
+                                                <Button 
+                                                  size="sm" 
+                                                  variant="ghost" 
+                                                  className="h-7 text-xs gap-1"
+                                                  onClick={() => navigate(`/dashboard/admin/courses/${courseId}/units/${unit.id}/syllabus`)}
+                                                >
+                                                  <Edit2 className="h-3 w-3" />
+                                                  Editar Temario
+                                                </Button>
+                                                <Button 
+                                                  size="sm" 
+                                                  variant="ghost" 
+                                                  className="h-7 text-xs gap-1"
+                                                >
+                                                  <Plus className="h-3 w-3" />
+                                                  Añadir
+                                                </Button>
+                                              </div>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+                                                <Play className="h-3 w-3 text-red-500" />
+                                                Temario Interactivo
+                                              </Button>
+                                              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+                                                <Video className="h-3 w-3 text-purple-500" />
+                                                Multimedia
+                                              </Button>
+                                            </div>
                                           </div>
                                         </div>
-                                      </CollapsibleTrigger>
-                                      <CollapsibleContent>
-                                        <div className="px-3 pb-3 pt-0 space-y-3 border-t bg-muted/10">
-                                          {/* Info de la UF */}
-                                          {(unit.objectives || unit.description || unit.content) && (
-                                            <div className="pt-2 space-y-2">
-                                              {unit.objectives && (
-                                                <div>
-                                                  <p className="text-xs font-medium text-muted-foreground mb-1">Objetivos:</p>
-                                                  <p className="text-xs">{unit.objectives}</p>
-                                                </div>
-                                              )}
-                                              {unit.description && (
-                                                <div>
-                                                  <p className="text-xs font-medium text-muted-foreground mb-1">Descripción:</p>
-                                                  <p className="text-xs">{unit.description}</p>
-                                                </div>
-                                              )}
-                                              {unit.content && (
-                                                <div>
-                                                  <p className="text-xs font-medium text-muted-foreground mb-1">Contenido:</p>
-                                                  <p className="text-xs line-clamp-3">{unit.content.substring(0, 200)}...</p>
-                                                </div>
-                                              )}
-                                            </div>
-                                          )}
 
-                                          {/* Contenido Interactivo de la UF */}
-                                          <div className="pt-2 border-t">
-                                            <div className="flex items-center justify-between mb-2">
-                                              <span className="text-xs font-medium flex items-center gap-1.5">
-                                                <Gamepad2 className="h-3 w-3 text-primary" />
-                                                Contenido Interactivo
-                                              </span>
-                                              <Button 
-                                                variant="ghost" 
-                                                size="sm"
-                                                className="h-6 text-xs"
-                                              >
-                                                <Plus className="h-3 w-3 mr-1" />
-                                                Añadir
-                                              </Button>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                              {/* Video */}
-                                              <div className="bg-background rounded p-2 border">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                  <div className="p-1 bg-red-100 dark:bg-red-900/30 rounded">
-                                                    <Play className="h-3 w-3 text-red-600" />
-                                                  </div>
-                                                  <span className="text-xs font-medium">Video</span>
-                                                </div>
-                                                <Progress value={0} className="h-1.5" />
-                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
-                                              </div>
-                                              
-                                              {/* Presentación */}
-                                              <div className="bg-background rounded p-2 border">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                  <div className="p-1 bg-orange-100 dark:bg-orange-900/30 rounded">
-                                                    <Presentation className="h-3 w-3 text-orange-600" />
-                                                  </div>
-                                                  <span className="text-xs font-medium">Presentación</span>
-                                                </div>
-                                                <Progress value={0} className="h-1.5" />
-                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
-                                              </div>
-                                              
-                                              {/* Audio */}
-                                              <div className="bg-background rounded p-2 border">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                  <div className="p-1 bg-purple-100 dark:bg-purple-900/30 rounded">
-                                                    <Headphones className="h-3 w-3 text-purple-600" />
-                                                  </div>
-                                                  <span className="text-xs font-medium">Audio</span>
-                                                </div>
-                                                <Progress value={0} className="h-1.5" />
-                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
-                                              </div>
-                                              
-                                              {/* Documento */}
-                                              <div className="bg-background rounded p-2 border">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                  <div className="p-1 bg-blue-100 dark:bg-blue-900/30 rounded">
-                                                    <FileText className="h-3 w-3 text-blue-600" />
-                                                  </div>
-                                                  <span className="text-xs font-medium">Documento</span>
-                                                </div>
-                                                <Progress value={0} className="h-1.5" />
-                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
-                                              </div>
-                                              
-                                              {/* SCORM */}
-                                              <div className="bg-background rounded p-2 border">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                  <div className="p-1 bg-green-100 dark:bg-green-900/30 rounded">
-                                                    <Code className="h-3 w-3 text-green-600" />
-                                                  </div>
-                                                  <span className="text-xs font-medium">SCORM</span>
-                                                </div>
-                                                <Progress value={0} className="h-1.5" />
-                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
-                                              </div>
-                                              
-                                              {/* Ejercicio */}
-                                              <div className="bg-background rounded p-2 border">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                  <div className="p-1 bg-amber-100 dark:bg-amber-900/30 rounded">
-                                                    <FileQuestion className="h-3 w-3 text-amber-600" />
-                                                  </div>
-                                                  <span className="text-xs font-medium">Ejercicio</span>
-                                                </div>
-                                                <Progress value={0} className="h-1.5" />
-                                                <p className="text-[10px] text-muted-foreground mt-1">Sin contenido</p>
-                                              </div>
-                                            </div>
+                                        {/* Actividades de aprendizaje evaluables */}
+                                        <div className="flex items-start gap-3">
+                                          <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded">
+                                            <FileText className="h-5 w-5 text-amber-600" />
                                           </div>
-
-                                          {/* Tests de la UF */}
-                                          <div className="pt-2 border-t">
+                                          <div className="flex-1">
                                             <div className="flex items-center justify-between mb-2">
-                                              <span className="text-xs font-medium flex items-center gap-1.5">
-                                                <CheckSquare className="h-3 w-3 text-primary" />
-                                                Tests ({getUnitEvaluations(unit.id).length})
-                                              </span>
+                                              <h5 className="font-semibold text-foreground">Actividades de aprendizaje evaluables</h5>
                                               <Button 
+                                                size="sm" 
                                                 variant="ghost" 
-                                                size="sm"
-                                                className="h-6 text-xs"
-                                                onClick={() => openAddEvaluationForUnit(module.id, unit.id)}
-                                              >
-                                                <Plus className="h-3 w-3 mr-1" />
-                                                Añadir
-                                              </Button>
-                                            </div>
-                                            {getUnitEvaluations(unit.id).length === 0 ? (
-                                              <p className="text-xs text-muted-foreground">Sin tests</p>
-                                            ) : (
-                                              <div className="space-y-1">
-                                                {getUnitEvaluations(unit.id).map(evaluation => (
-                                                  <div 
-                                                    key={evaluation.id} 
-                                                    className={`flex items-center justify-between bg-background rounded p-2 border text-xs ${!evaluation.is_active ? 'opacity-60' : ''}`}
-                                                  >
-                                                    <div>
-                                                      <span className="font-medium">{evaluation.title}</span>
-                                                      <span className="text-muted-foreground ml-2">
-                                                        Mín: {evaluation.passing_score}%
-                                                      </span>
-                                                    </div>
-                                                    <div className="flex gap-1">
-                                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditEvaluation(evaluation)}>
-                                                        <Edit2 className="h-3 w-3" />
-                                                      </Button>
-                                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteEvaluation(evaluation.id)}>
-                                                        <Trash2 className="h-3 w-3 text-destructive" />
-                                                      </Button>
-                                                    </div>
-                                                  </div>
-                                                ))}
-                                              </div>
-                                            )}
-                                          </div>
-
-                                          {/* Actividades de la UF */}
-                                          <div className="pt-2 border-t">
-                                            <div className="flex items-center justify-between mb-2">
-                                              <span className="text-xs font-medium flex items-center gap-1.5">
-                                                <FileText className="h-3 w-3 text-primary" />
-                                                Actividades ({getUnitActivities(unit.id).length})
-                                              </span>
-                                              <Button 
-                                                variant="ghost" 
-                                                size="sm"
-                                                className="h-6 text-xs"
+                                                className="h-7 text-xs gap-1"
                                                 onClick={() => openAddActivityForUnit(module.id, unit.id)}
                                               >
-                                                <Plus className="h-3 w-3 mr-1" />
+                                                <Plus className="h-3 w-3" />
                                                 Añadir
                                               </Button>
                                             </div>
@@ -1668,15 +1650,13 @@ export default function CourseContentEditor() {
                                                 {getUnitActivities(unit.id).map(activity => (
                                                   <div 
                                                     key={activity.id} 
-                                                    className={`flex items-center justify-between bg-background rounded p-2 border text-xs ${!activity.is_active ? 'opacity-60' : ''}`}
+                                                    className="flex items-center justify-between bg-muted/50 rounded p-2 text-xs"
                                                   >
-                                                    <div>
-                                                      <span className="font-medium">{activity.title}</span>
-                                                      <span className="text-muted-foreground ml-2">
+                                                    <span className="font-medium">{activity.title}</span>
+                                                    <div className="flex items-center gap-1">
+                                                      <Badge variant="outline" className="text-[10px]">
                                                         Punt: {activity.max_score}
-                                                      </span>
-                                                    </div>
-                                                    <div className="flex gap-1">
+                                                      </Badge>
                                                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditActivity(activity)}>
                                                         <Edit2 className="h-3 w-3" />
                                                       </Button>
@@ -1690,31 +1670,74 @@ export default function CourseContentEditor() {
                                             )}
                                           </div>
                                         </div>
-                                      </CollapsibleContent>
-                                    </div>
-                                  </Collapsible>
-                                );
-                              })}
+
+                                        {/* Tests de evaluación */}
+                                        <div className="flex items-start gap-3">
+                                          <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded">
+                                            <CheckSquare className="h-5 w-5 text-green-600" />
+                                          </div>
+                                          <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-2">
+                                              <h5 className="font-semibold text-foreground">Tests de evaluación</h5>
+                                              <Button 
+                                                size="sm" 
+                                                variant="ghost" 
+                                                className="h-7 text-xs gap-1"
+                                                onClick={() => openAddEvaluationForUnit(module.id, unit.id)}
+                                              >
+                                                <Plus className="h-3 w-3" />
+                                                Añadir
+                                              </Button>
+                                            </div>
+                                            {getUnitEvaluations(unit.id).length === 0 ? (
+                                              <p className="text-xs text-muted-foreground">Sin tests</p>
+                                            ) : (
+                                              <div className="space-y-1">
+                                                {getUnitEvaluations(unit.id).map(evaluation => (
+                                                  <div 
+                                                    key={evaluation.id} 
+                                                    className="flex items-center justify-between bg-muted/50 rounded p-2 text-xs"
+                                                  >
+                                                    <span className="font-medium">{evaluation.title}</span>
+                                                    <div className="flex items-center gap-1">
+                                                      <Badge variant="outline" className="text-[10px]">
+                                                        Mín: {evaluation.passing_score}%
+                                                      </Badge>
+                                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditEvaluation(evaluation)}>
+                                                        <Edit2 className="h-3 w-3" />
+                                                      </Button>
+                                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteEvaluation(evaluation.id)}>
+                                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                                      </Button>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* Foros */}
+                                        <div className="flex items-start gap-3">
+                                          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded">
+                                            <MessagesSquare className="h-5 w-5 text-blue-600" />
+                                          </div>
+                                          <div className="flex-1">
+                                            <div className="flex items-center justify-between">
+                                              <h5 className="font-semibold text-foreground">Foros</h5>
+                                              <Badge variant={module.forum_enabled ? "default" : "secondary"} className="text-xs">
+                                                {module.forum_enabled ? "Habilitado" : "Deshabilitado"}
+                                              </Badge>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                </Accordion>
+                              ))}
                             </div>
                           )}
-                        </div>
-
-                        {/* Recursos del Módulo */}
-                        <div className="pt-4 border-t">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-medium flex items-center gap-2">
-                              <File className="h-4 w-4 text-primary" />
-                              Recursos y Material
-                            </h4>
-                            <Button variant="outline" size="sm">
-                              <Upload className="h-3 w-3 mr-1" />
-                              Subir
-                            </Button>
-                          </div>
-                          <div className="bg-background rounded-lg p-4 border border-dashed text-center text-sm text-muted-foreground">
-                            <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            Arrastra archivos aquí o haz clic en "Subir"
-                          </div>
                         </div>
                       </div>
                     </CardContent>
