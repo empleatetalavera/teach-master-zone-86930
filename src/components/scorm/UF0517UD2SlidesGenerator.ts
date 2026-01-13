@@ -227,7 +227,7 @@ El **reclutamiento** es el proceso de atraer candidatos potenciales para cubrir 
   },
   {
     id: "uf0517-ud2-009",
-    type: "flashcards",
+    type: "content",
     title: "2.3 Tarjetas: Técnicas de Selección",
     section: "2. Selección de Personal",
     content: `# 🎴 Técnicas de Selección de Personal`,
@@ -432,7 +432,7 @@ Es el contrato **sin fecha de finalización**. La relación laboral se mantiene 
   },
   {
     id: "uf0517-ud2-017",
-    type: "flashcards",
+    type: "content",
     title: "3.5 Tarjetas: Conceptos Contractuales",
     section: "3. El Contrato de Trabajo",
     content: `# 🎴 Conceptos Clave sobre Contratos`,
@@ -776,7 +776,7 @@ La **formación** es la herramienta para desarrollar las competencias del person
   },
   {
     id: "uf0517-ud2-029",
-    type: "flashcards",
+    type: "content",
     title: "6.2 Tarjetas: Conceptos de Formación",
     section: "6. Formación y Desarrollo",
     content: `# 🎴 Conceptos sobre Formación Empresarial`,
@@ -999,7 +999,7 @@ Las **relaciones laborales** son el conjunto de interacciones entre empresas, tr
   },
   {
     id: "uf0517-ud2-037",
-    type: "flashcards",
+    type: "content",
     title: "8.3 Tarjetas: Conflictos Laborales",
     section: "8. Relaciones Laborales",
     content: `# 🎴 Conceptos sobre Conflictos Laborales`,
