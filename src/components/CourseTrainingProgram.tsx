@@ -1,4 +1,5 @@
-import { BookOpen, Users, FileText, Clock, Target, Award, CheckCircle2, GraduationCap, Building2, Calendar, ClipboardList, BarChart3, Briefcase, Settings, Globe, MapPin, Phone, Mail } from "lucide-react";
+import { BookOpen, Users, FileText, Clock, Target, Award, CheckCircle2, GraduationCap, Building2, Calendar, ClipboardList, BarChart3, Briefcase, Settings, Globe, MapPin, Phone, Mail, Download, Monitor, Laptop, FileCheck, UserCog, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { CourseAnnexesUploader } from "./CourseAnnexesUploader";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -92,11 +93,48 @@ const planificacionDidactica = [
   }
 ];
 
+// Requisitos técnicos de la plataforma
+const requisitosDelSistema = {
+  conexion: "Ancho de banda mínimo de 1 Mbps",
+  navegadores: [
+    "Internet Explorer, versión superior o igual a 10.0",
+    "Mozilla Firefox, versión superior o igual a 5.0",
+    "Google Chrome, versión superior o igual a 5.0"
+  ],
+  resolucion: "1024 x 768 píxeles mínimo",
+  software: [
+    "Office 2003 o superior",
+    "Java (http://www.java.com/es/download)",
+    "Acrobat Reader (http://get.adobe.com/es/reader/)",
+    "WinZip (http://www.winzip.com)"
+  ],
+  hardware: [
+    "Monitor (recomendado 17\")",
+    "Teclado y ratón",
+    "Procesador Intel Core i3",
+    "Memoria (RAM) 2Gb"
+  ]
+};
+
+// Recursos humanos disponibles
+const perfilesRecursosHumanos = [
+  { perfil: "Personal de venta/captación", descripcion: "Gestión de solicitudes de inscripción y atención de consultas durante el proceso" },
+  { perfil: "Personal administrativo y de orientación académica", descripcion: "Comprobación de requisitos, prueba de competencia digital y asesoramiento académico" },
+  { perfil: "Tutor-formador", descripcion: "Acogida, seguimiento del aprendizaje, corrección de actividades y tutorías virtuales/presenciales" },
+  { perfil: "Formador (sesiones presenciales)", descripcion: "Desarrollo de tutorías presenciales y pruebas de evaluación final" },
+  { perfil: "Personal informático", descripcion: "Resolución de consultas técnicas y mantenimiento de la plataforma" },
+  { perfil: "Tutor de empresa", descripcion: "Supervisión y apoyo durante las prácticas profesionales no laborales" }
+];
+
 export function CourseTrainingProgram({ course, modules, centerSlug, isEditable = false }: CourseTrainingProgramProps) {
   const { branding } = useCenterBranding(centerSlug);
 
   const totalModules = modules.length;
   const totalUnits = modules.reduce((acc, m) => acc + (m.formative_units?.length || 0), 0);
+
+  const handleDownloadPDF = () => {
+    window.open('/documents/proyecto_formativo_ADGG0408.pdf', '_blank');
+  };
 
   return (
     <div className="space-y-8">
@@ -117,6 +155,14 @@ export function CourseTrainingProgram({ course, modules, centerSlug, isEditable 
         <p className="text-sm mt-2" style={{ color: branding.secondaryColor }}>
           {branding.centerName}
         </p>
+        
+        {/* Download Button */}
+        <div className="mt-4">
+          <Button onClick={handleDownloadPDF} className="gap-2">
+            <Download className="h-4 w-4" />
+            Descargar Proyecto Formativo (PDF)
+          </Button>
+        </div>
       </div>
 
       {/* Section 1: Datos del Centro */}
@@ -517,9 +563,133 @@ export function CourseTrainingProgram({ course, modules, centerSlug, isEditable 
         </div>
       </section>
 
-      {/* Section 9: Documentación Anexos - Dynamic Upload */}
+      {/* Section 9: Requisitos Técnicos */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Monitor className="h-6 w-6 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold">9. Requisitos Técnicos del Sistema</h2>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="border rounded-lg p-4 space-y-3">
+            <h4 className="font-semibold flex items-center gap-2">
+              <Globe className="h-4 w-4 text-primary" />
+              Conexión y Navegadores
+            </h4>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                {requisitosDelSistema.conexion}
+              </li>
+              {requisitosDelSistema.navegadores.map((nav, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  {nav}
+                </li>
+              ))}
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                Resolución mínima: {requisitosDelSistema.resolucion}
+              </li>
+            </ul>
+          </div>
+
+          <div className="border rounded-lg p-4 space-y-3">
+            <h4 className="font-semibold flex items-center gap-2">
+              <Laptop className="h-4 w-4 text-primary" />
+              Hardware y Software
+            </h4>
+            <div className="space-y-2 text-sm">
+              <p className="font-medium text-muted-foreground">Hardware recomendado:</p>
+              <ul className="space-y-1 ml-4">
+                {requisitosDelSistema.hardware.map((hw, i) => (
+                  <li key={i}>• {hw}</li>
+                ))}
+              </ul>
+              <p className="font-medium text-muted-foreground mt-3">Software necesario:</p>
+              <ul className="space-y-1 ml-4">
+                {requisitosDelSistema.software.map((sw, i) => (
+                  <li key={i}>• {sw}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 10: Recursos Humanos */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <UserCog className="h-6 w-6 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold">10. Recursos Humanos</h2>
+        </div>
+        
+        <p className="text-sm text-muted-foreground mb-4">
+          La entidad cuenta con los siguientes perfiles profesionales para garantizar el correcto desarrollo de la acción formativa:
+        </p>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {perfilesRecursosHumanos.map((recurso, index) => (
+            <div key={index} className="border rounded-lg p-4">
+              <h4 className="font-semibold text-sm text-primary mb-2">{recurso.perfil}</h4>
+              <p className="text-xs text-muted-foreground">{recurso.descripcion}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 11: Sistema de Gestión de Calidad */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Shield className="h-6 w-6 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold">11. Sistema de Gestión de Calidad</h2>
+        </div>
+        
+        <div className="border rounded-lg p-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            La entidad tiene implantado un sistema de gestión de la calidad de la formación basado en la norma 
+            <strong> UNE-EN-ISO 9001:2015</strong>, con el siguiente alcance:
+          </p>
+          <div className="bg-primary/5 p-4 rounded-lg">
+            <p className="text-sm italic">
+              "Prestación de servicios de formación en general, incluyendo formación profesional para el empleo 
+              y certificados de profesionalidad."
+            </p>
+          </div>
+          <div className="mt-4 grid md:grid-cols-3 gap-3">
+            <div className="text-center p-3 border rounded-lg">
+              <FileCheck className="h-6 w-6 mx-auto text-primary mb-2" />
+              <p className="text-xs font-medium">Indicadores de Calidad</p>
+            </div>
+            <div className="text-center p-3 border rounded-lg">
+              <BarChart3 className="h-6 w-6 mx-auto text-primary mb-2" />
+              <p className="text-xs font-medium">Mejora Continua</p>
+            </div>
+            <div className="text-center p-3 border rounded-lg">
+              <Shield className="h-6 w-6 mx-auto text-primary mb-2" />
+              <p className="text-xs font-medium">Auditorías Internas</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 12: Documentación Anexos - Dynamic Upload */}
       {course.id && (
-        <CourseAnnexesUploader courseId={course.id} isEditable={isEditable} />
+        <section className="space-y-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <FileText className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold">12. Documentación Oficial - Anexos III, IV y V</h2>
+          </div>
+          <CourseAnnexesUploader courseId={course.id} isEditable={isEditable} />
+        </section>
       )}
 
       {/* Footer */}
