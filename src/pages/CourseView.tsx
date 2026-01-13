@@ -1511,20 +1511,22 @@ export default function CourseView() {
                                                     <div className="flex items-center gap-3 mt-3">
                                                       <Button
                                                         variant="outline"
-                                                        className="flex items-center gap-2 rounded-full border-2"
+                                                        className="flex items-center gap-2 rounded-full border-2 hover:bg-primary hover:text-primary-foreground transition-all"
                                                         onClick={() => openScormViewer(unit.id, unit.title)}
                                                       >
-                                                        <Play className="h-4 w-4 text-red-500" />
+                                                        <Play className="h-4 w-4 text-primary" />
                                                         <span>Temario Interactivo</span>
                                                       </Button>
-                                                      <Button
-                                                        variant="outline"
-                                                        className="flex items-center gap-2 rounded-full border-2"
-                                                        onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
-                                                      >
-                                                        <MonitorPlay className="h-4 w-4 text-blue-500" />
-                                                        <span>Multimedia</span>
-                                                      </Button>
+                                                      {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                        <Button
+                                                          variant="outline"
+                                                          className="flex items-center gap-2 rounded-full border-2"
+                                                          onClick={() => openSyllabusEditor(unit.id, unit.title)}
+                                                        >
+                                                          <Edit2 className="h-4 w-4 text-blue-500" />
+                                                          <span>Editar Contenido</span>
+                                                        </Button>
+                                                      )}
                                                     </div>
                                                   </div>
                                                 </div>

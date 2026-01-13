@@ -17,8 +17,10 @@ import {
   GraduationCap, Lightbulb, FileQuestion, Download, Home, 
   ClipboardList, Play, Headphones, Video, Send, X, MessageCircle,
   BarChart3, BookMarked, HelpCircle, Check, Building2, Users, 
-  Briefcase, FileSpreadsheet, Mail, Package, Calculator, CreditCard
+  Briefcase, FileSpreadsheet, Mail, Package, Calculator, CreditCard,
+  Palette, Sparkles
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ScormProfessionalViewerProps {
   open: boolean;
@@ -54,6 +56,76 @@ interface IndexItem {
   subItems?: { id: string; title: string; completed?: boolean }[];
   completed?: boolean;
 }
+
+// Theme definitions - iSpring/Canva style
+const CONTENT_THEMES = [
+  { 
+    id: 'modern-blue', 
+    name: '🌊 Océano Moderno', 
+    headerBg: 'bg-gradient-to-r from-blue-600 to-cyan-500',
+    contentBg: 'bg-gradient-to-br from-blue-50 via-white to-cyan-50',
+    cardBg: 'bg-white/90 backdrop-blur',
+    accent: 'text-blue-600',
+    accentBg: 'bg-blue-500',
+    border: 'border-blue-200',
+    highlight: 'bg-blue-100',
+  },
+  { 
+    id: 'forest-green', 
+    name: '🌲 Bosque Profesional', 
+    headerBg: 'bg-gradient-to-r from-emerald-600 to-teal-500',
+    contentBg: 'bg-gradient-to-br from-emerald-50 via-white to-teal-50',
+    cardBg: 'bg-white/90 backdrop-blur',
+    accent: 'text-emerald-600',
+    accentBg: 'bg-emerald-500',
+    border: 'border-emerald-200',
+    highlight: 'bg-emerald-100',
+  },
+  { 
+    id: 'sunset-warm', 
+    name: '🌅 Atardecer Cálido', 
+    headerBg: 'bg-gradient-to-r from-orange-500 to-rose-500',
+    contentBg: 'bg-gradient-to-br from-orange-50 via-white to-rose-50',
+    cardBg: 'bg-white/90 backdrop-blur',
+    accent: 'text-orange-600',
+    accentBg: 'bg-orange-500',
+    border: 'border-orange-200',
+    highlight: 'bg-orange-100',
+  },
+  { 
+    id: 'royal-purple', 
+    name: '👑 Púrpura Elegante', 
+    headerBg: 'bg-gradient-to-r from-purple-600 to-pink-500',
+    contentBg: 'bg-gradient-to-br from-purple-50 via-white to-pink-50',
+    cardBg: 'bg-white/90 backdrop-blur',
+    accent: 'text-purple-600',
+    accentBg: 'bg-purple-500',
+    border: 'border-purple-200',
+    highlight: 'bg-purple-100',
+  },
+  { 
+    id: 'slate-minimal', 
+    name: '🖤 Minimalista Oscuro', 
+    headerBg: 'bg-gradient-to-r from-slate-800 to-slate-600',
+    contentBg: 'bg-gradient-to-br from-slate-100 via-white to-gray-100',
+    cardBg: 'bg-white/95 backdrop-blur',
+    accent: 'text-slate-700',
+    accentBg: 'bg-slate-700',
+    border: 'border-slate-300',
+    highlight: 'bg-slate-200',
+  },
+  { 
+    id: 'corporate-sepe', 
+    name: '🏛️ Corporativo SEPE', 
+    headerBg: 'bg-gradient-to-r from-primary to-primary/80',
+    contentBg: 'bg-gradient-to-br from-sky-50 via-white to-teal-50',
+    cardBg: 'bg-white/90 backdrop-blur',
+    accent: 'text-primary',
+    accentBg: 'bg-primary',
+    border: 'border-primary/30',
+    highlight: 'bg-primary/10',
+  },
+];
 
 // Sidebar menu items
 const SIDEBAR_MENU = [
@@ -1478,6 +1550,7 @@ export default function ScormProfessionalViewer({
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('content');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedTheme, setSelectedTheme] = useState(CONTENT_THEMES[5]); // Default: Corporate SEPE
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
@@ -1600,11 +1673,35 @@ export default function ScormProfessionalViewer({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
-        {/* Top header bar - turquoise/teal color */}
-        <div className="bg-primary text-primary-foreground">
-          {/* Unit title bar */}
-          <div className="px-4 py-2 text-center border-b border-primary-foreground/20 text-sm font-medium">
-            {unitTitle}
+        {/* Top header bar with theme */}
+        <div className={`${selectedTheme.headerBg} text-white`}>
+          {/* Unit title bar with theme selector */}
+          <div className="px-4 py-2 flex items-center justify-between border-b border-white/20">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              <span className="text-sm font-medium">{unitTitle}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              <Select 
+                value={selectedTheme.id} 
+                onValueChange={(value) => {
+                  const theme = CONTENT_THEMES.find(t => t.id === value);
+                  if (theme) setSelectedTheme(theme);
+                }}
+              >
+                <SelectTrigger className="h-8 w-[180px] bg-white/20 border-white/30 text-white text-xs">
+                  <SelectValue placeholder="Seleccionar tema" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CONTENT_THEMES.map((theme) => (
+                    <SelectItem key={theme.id} value={theme.id} className="text-sm">
+                      {theme.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           {/* Tabs navigation */}
@@ -1623,8 +1720,8 @@ export default function ScormProfessionalViewer({
           </div>
         </div>
 
-        {/* Main content area */}
-        <div className="flex-1 flex overflow-hidden bg-gradient-to-b from-sky-50 to-white dark:from-slate-900 dark:to-slate-800">
+        {/* Main content area with theme */}
+        <div className={`flex-1 flex overflow-hidden ${selectedTheme.contentBg} dark:from-slate-900 dark:to-slate-800`}>
           {/* Left Sidebar */}
           <div className={`${sidebarOpen ? 'w-72' : 'w-0'} transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 border-r border-border flex flex-col`}>
             {/* Sidebar header with home icon */}
