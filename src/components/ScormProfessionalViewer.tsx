@@ -21,6 +21,8 @@ import {
   Palette, Sparkles
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { generateUF0519ComprehensiveSlides } from "./scorm/UF0519SlidesGenerator";
+import { ContentSlide } from "./scorm/types";
 
 interface ScormProfessionalViewerProps {
   open: boolean;
@@ -201,8 +203,8 @@ const generateComprehensiveSlides = (unitTitle: string): ContentSlide[] => {
     return generateUF0518Slides();
   }
   
-  // UF0519 - DOCUMENTACIÓN ADMINISTRATIVA
-  return generateUF0519Slides();
+  // UF0519 - DOCUMENTACIÓN ADMINISTRATIVA - 68 slides completas
+  return generateUF0519ComprehensiveSlides() as ContentSlide[];
 };
 
 // UF0517 - 25+ slides on organizational structure and HR
