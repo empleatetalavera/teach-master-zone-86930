@@ -706,52 +706,48 @@ export const generateStudentGuidePDF = async (
   yPos += 3;
   addRequisitosTable();
   
-  // SECCIÓN 3.2: FUNCIONAMIENTO, RECURSOS Y UTILIDADES - CON CAPTURAS DEL CAMPUS
-  addSubsectionTitle('3.2', 'FUNCIONAMIENTO, RECURSOS Y UTILIDADES');
-  addParagraph('Cada vez que accedas al Campus Virtual te aparecerá una pantalla con todos los módulos formativos y/o unidades formativas que componen tu curso. Pulsando sobre el nombre del módulo formativo o unidad formativa podrás acceder al contenido.');
+  // SECCIÓN 3.2: FUNCIONAMIENTO, RECURSOS Y UTILIDADES - ADAPTADO A NUESTRO CAMPUS
+  addSubsectionTitle('3.2', 'FUNCIONAMIENTO, RECURSOS Y UTILIDADES DEL CAMPUS');
+  addParagraph('Cada vez que accedas al Campus Virtual te aparecerá una pantalla con todos los cursos en los que estás matriculado/a. Pulsando sobre el nombre del curso podrás acceder al contenido.');
   yPos += 5;
   
-  addParagraph('Como puedes observar en la parte alta de la pantalla puedes encontrar el nombre de la acción formativa que estas cursando, el módulo y/o unidad formativa, así como la barra de duración del curso.');
-  yPos += 5;
-  
-  addParagraph('Además, dispones de tres áreas diferenciadas:');
+  addParagraph('La navegación principal del curso se estructura en el MENÚ LATERAL IZQUIERDO:');
   yPos += 8;
   
-  // A) ORGANIZARME - con tabla de iconos
-  addInfoBox('A) ORGANIZARME', false);
-  yPos += 3;
-  addParagraph('En la zona izquierda de tu pantalla encontrarás el área ORGANIZARME, donde dispones de toda la información sobre la planificación del curso (fechas de realización, tus progresos, la agenda etc.).');
-  yPos += 5;
-  
-  addParagraph('En esta área vas a encontrar los siguientes iconos:');
-  yPos += 3;
-  
-  // Tabla de iconos ORGANIZARME
+  // Tabla del menú de navegación del campus
   autoTable(doc, {
     startY: yPos,
-    head: [['ICONO', 'DESCRIPCIÓN']],
+    head: [['OPCIÓN DEL MENÚ', 'EQUIVALENTE SEPE', 'DESCRIPCIÓN']],
     body: [
-      ['📋', 'CÓMO HACER MI CURSO'],
-      ['📅', 'MI AGENDA'],
-      ['📝', 'MENSAJES PENDIENTES'],
-      ['✏️', 'MIS PROGRESOS'],
+      ['Inicio', 'INTRODUCCIÓN', 'Bienvenida, objetivos y vídeo de presentación'],
+      ['Guía del Alumno', 'CÓMO HACER MI CURSO', 'Este documento que estás leyendo'],
+      ['Programa Formativo', 'PROGRAMACIÓN DIDÁCTICA', 'Estructura y objetivos del certificado'],
+      ['Plan de Trabajo', 'PLAN DE TRABAJO', 'Planificación didáctica y calendario'],
+      ['Cronograma', 'CRONOGRAMA', 'Línea temporal del curso'],
+      ['Módulos', 'FORMACIÓN EN CAMPUS', 'Contenido formativo por unidades'],
+      ['Calificaciones', 'MIS PROGRESOS', 'Tu progreso y notas'],
+      ['Exámenes', 'EVALUACIÓN', 'Test y pruebas de evaluación'],
+      ['Tutorías', 'TUTORÍAS', 'Sesiones presenciales y virtuales'],
+      ['Calendario', 'MI AGENDA', 'Agenda con todos los eventos'],
+      ['Foro', 'FOROS', 'Debates y consultas'],
+      ['Tiempos Invertidos', 'SEGUIMIENTO SEPE', 'Registro de tiempo de formación'],
     ],
-    margin: { left: margin + 20, right: margin + 20 },
+    margin: { left: margin, right: margin },
     headStyles: {
       fillColor: TEAL_COLOR,
       textColor: WHITE,
-      fontSize: 10,
+      fontSize: 8,
       fontStyle: 'bold',
       halign: 'center',
     },
     bodyStyles: {
-      fontSize: 10,
+      fontSize: 8,
       textColor: BLACK,
-      halign: 'left',
     },
     columnStyles: {
-      0: { cellWidth: 25, halign: 'center' },
-      1: { cellWidth: 100, fontStyle: 'bold', textColor: TEAL_COLOR },
+      0: { cellWidth: 45, fontStyle: 'bold' },
+      1: { cellWidth: 45, textColor: TEAL_COLOR },
+      2: { cellWidth: 80 },
     },
     alternateRowStyles: {
       fillColor: LIGHT_TEAL,
@@ -761,53 +757,33 @@ export const generateStudentGuidePDF = async (
   });
   yPos = (doc as any).lastAutoTable.finalY + 10;
   
-  // CÓMO HACER MI CURSO detalle
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...TEAL_COLOR);
-  doc.text('CÓMO HACER MI CURSO', margin, yPos);
-  doc.setDrawColor(...BLACK);
-  doc.line(margin, yPos + 1, margin + 50, yPos + 1); // Subrayado
+  addParagraph('Dispones de tres áreas diferenciadas para organizar tu formación:');
   yPos += 8;
   
-  addParagraph('Incluye los diferentes documentos que te explicarán cómo está estructurado tu curso:');
+  // A) ORGANIZARME
+  addInfoBox('A) ORGANIZARME - Planificación y Seguimiento', false);
+  yPos += 3;
+  addParagraph('En el menú lateral y la cabecera del curso encontrarás herramientas para organizarte:');
+  yPos += 3;
+  
   addBulletList([
-    'Guía del alumno: podrás descargarte en PDF este documento que explica todo lo que necesitas saber para el desarrollo de tu curso, entre ellos el calendario de impartición del curso y el plan de trabajo donde se recogen todas las actividades que deberás realizar en las fechas planificadas.',
-    'Guía de navegación del CONTENIDO INTERACTIVO MULTIMEDIA (CIM).',
+    'GUÍA DEL ALUMNO: Este documento con toda la información del curso',
+    'PLAN DE TRABAJO: Planificación semanal de contenidos y actividades',
+    'CRONOGRAMA: Visualización de fechas de inicio/fin de cada módulo',
+    'CALENDARIO: Eventos, tutorías y fechas de entrega',
+    'CALIFICACIONES: Seguimiento de tu progreso y notas',
   ]);
   
-  // MI AGENDA detalle
+  // MIS PROGRESOS (CALIFICACIONES) detalle
+  checkPageBreak(30);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  checkPageBreak(30);
-  doc.text('MI AGENDA', margin, yPos);
-  doc.line(margin, yPos + 1, margin + 30, yPos + 1);
+  doc.text('CALIFICACIONES (equivalente a "MIS PROGRESOS")', margin, yPos);
+  doc.line(margin, yPos + 1, margin + 90, yPos + 1);
   yPos += 8;
   
-  addParagraph('En "Mi Agenda" te detallaremos la planificación de tu curso; los vídeos didácticos que debes de visualizar, cuándo tienes chat de tutorías al que debes asistir, el día propuesto de entrega de casos prácticos, etc.');
-  yPos += 3;
-  addParagraph('Es muy importante que hagas un seguimiento continuo de tu agenda para poder asegurarte una evolución óptima de tu curso.');
-  yPos += 3;
-  addParagraph('Cuando accedas a la Agenda encontrarás un calendario donde se especificará, por días concretos, las tareas, eventos, evaluaciones, o cualquier otra información relativa a la planificación de tu curso.');
-  yPos += 5;
-  addParagraph('Cuando se acerque la fecha señalada de un nuevo evento, recibirás un recordatorio del mismo a través de los siguientes medios:');
-  addBulletList([
-    'Correo electrónico externo.',
-    'Correo electrónico interno.',
-    'Mensaje emergente, aparecerá cuando accedes al Campus.',
-  ]);
-  
-  // MIS PROGRESOS detalle
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...TEAL_COLOR);
-  checkPageBreak(30);
-  doc.text('MIS PROGRESOS', margin, yPos);
-  doc.line(margin, yPos + 1, margin + 40, yPos + 1);
-  yPos += 8;
-  
-  addParagraph('En este módulo podrá realizar el seguimiento de todos los progresos realizados en base a su actividad en el campus y sus evaluaciones.');
+  addParagraph('En la sección "Calificaciones" podrás realizar el seguimiento de todos tus progresos:');
   yPos += 3;
   
   // Tabla de calificaciones
@@ -886,47 +862,41 @@ export const generateStudentGuidePDF = async (
   });
   yPos = (doc as any).lastAutoTable.finalY + 15;
   
-  // B) COMUNICARME - con tabla de iconos
+  // B) COMUNICARME - Herramientas de comunicación del campus
   checkPageBreak(60);
-  addInfoBox('B) COMUNICARME', false);
+  addInfoBox('B) COMUNICARME - Herramientas de Comunicación', false);
   yPos += 3;
-  addParagraph('En la parte derecha podrás ver el área COMUNICARME donde podrás acceder a todas las herramientas para comunicarte con tu tutor/a-formador/a así como con el resto de alumnos/as del curso.');
+  addParagraph('En el Campus dispones de varias herramientas para comunicarte con tu tutor/a-formador/a y con el resto de alumnos/as:');
   yPos += 5;
   
-  addParagraph('En esta área vas a encontrar los siguientes iconos:');
-  yPos += 3;
-  
-  // Tabla de iconos COMUNICARME
+  // Tabla de herramientas de comunicación adaptada a nuestro campus
   autoTable(doc, {
     startY: yPos,
-    head: [['ICONO', 'DESCRIPCIÓN']],
+    head: [['HERRAMIENTA EN EL CAMPUS', 'EQUIVALENTE SEPE', 'CÓMO ACCEDER']],
     body: [
-      ['👤', 'MI PERFIL'],
-      ['👥', 'MIS CONTACTOS'],
-      ['📧', 'CORREO'],
-      ['💬', 'CHAT'],
-      ['📱', 'CONTACTA EN DIRECTO'],
-      ['🔔', 'MENSAJES EMERGENTES'],
-      ['🌐', 'REDES SOCIALES'],
-      ['❓', 'CAU'],
-      ['👨‍🏫', 'TUTORES FORMADORES'],
+      ['Botón CONTACTO (cabecera)', 'CORREO / MENSAJERÍA', 'Pulsa "Contacto" en la cabecera del curso'],
+      ['WhatsApp Dudas', 'CHAT / CONTACTA EN DIRECTO', 'Botón "WhatsApp Dudas" en la cabecera'],
+      ['Foro del Curso', 'FOROS DE DEBATE', 'Menú lateral > Foro'],
+      ['Mi Perfil (icono usuario)', 'MI PERFIL', 'Esquina superior derecha > icono usuario'],
+      ['Tutorías', 'TUTORÍAS VIRTUALES', 'Menú lateral > Tutorías'],
+      ['Centro de Atención (CAU)', 'CAU', 'Datos en la Guía del Alumno'],
     ],
-    margin: { left: margin + 20, right: margin + 20 },
+    margin: { left: margin, right: margin },
     headStyles: {
       fillColor: TEAL_COLOR,
       textColor: WHITE,
-      fontSize: 10,
+      fontSize: 8,
       fontStyle: 'bold',
       halign: 'center',
     },
     bodyStyles: {
-      fontSize: 10,
+      fontSize: 8,
       textColor: BLACK,
-      halign: 'left',
     },
     columnStyles: {
-      0: { cellWidth: 25, halign: 'center' },
-      1: { cellWidth: 100, fontStyle: 'bold', textColor: TEAL_COLOR },
+      0: { cellWidth: 50, fontStyle: 'bold' },
+      1: { cellWidth: 45, textColor: TEAL_COLOR },
+      2: { cellWidth: 75 },
     },
     alternateRowStyles: {
       fillColor: LIGHT_TEAL,
@@ -936,61 +906,75 @@ export const generateStudentGuidePDF = async (
   });
   yPos = (doc as any).lastAutoTable.finalY + 10;
   
-  // MI PERFIL detalle
+  // Detalle de cómo contactar con el tutor
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
   checkPageBreak(25);
-  doc.text('MI PERFIL', margin, yPos);
-  doc.line(margin, yPos + 1, margin + 25, yPos + 1);
+  doc.text('CÓMO CONTACTAR CON TU TUTOR/A', margin, yPos);
+  doc.line(margin, yPos + 1, margin + 70, yPos + 1);
   yPos += 8;
   
-  addParagraph('En el icono Mi Perfil señalarás tus datos personales, para que otros compañeros tengan acceso a esa información y puedan acceder a ti en cualquier momento a través del correo electrónico que facilites. Así podréis recibir ayuda mutua y el aprendizaje será más fructífero.');
-  addParagraph('Debes completar todos los datos requeridos en la ventana emergente que se abre al pinchar en el icono.');
-  yPos += 3;
-  addParagraph('No te olvides de completar tus datos de Twitter, Linkedin y Facebook, así como la dirección de tu blog personal en caso de disponer de uno. De esta forma podrás compartir información, a través de herramientas personales de contacto, con el resto del alumnado favoreciendo el aprendizaje colaborativo y mejorando la comunicación.');
+  addParagraph('Tienes varias opciones para contactar con tu tutor-formador:');
+  addBulletList([
+    'MENSAJERÍA INTERNA: Pulsa el botón "Contacto" en la cabecera del curso y escribe tu mensaje',
+    'WHATSAPP: Usa el botón "WhatsApp Dudas" para consultas rápidas (665 673 416)',
+    'FORO: Para dudas sobre el contenido que puedan beneficiar a otros compañeros',
+    'EMAIL: formacion.empleate@gmail.com',
+  ]);
+  yPos += 5;
   
-  // MIS CONTACTOS detalle
+  // FORO detalle
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
   checkPageBreak(25);
-  doc.text('MIS CONTACTOS', margin, yPos);
+  doc.text('FORO DEL CURSO', margin, yPos);
   doc.line(margin, yPos + 1, margin + 40, yPos + 1);
   yPos += 8;
   
-  addParagraph('En este icono tendrás acceso al listado de alumnos que está matriculado en este curso. Así como el resto del equipo de docentes del curso. Podrás identificar qué alumnos y tutores-formadores están conectados en ese momento mediante un punto de color verde que aparecerá junto a su nombre.');
-  yPos += 8;
-  
-  // C) RECURSOS
-  checkPageBreak(40);
-  addInfoBox('C) RECURSOS', false);
-  yPos += 3;
-  addParagraph('En la parte central encontrarás todos los RECURSOS para desarrollar la formación, organizados de forma secuencial según el momento en el que debas consultarlos o utilizarlos.');
+  addParagraph('El Foro es una herramienta de comunicación asíncrona donde podrás:');
+  addBulletList([
+    'Consultar dudas sobre el contenido de las unidades didácticas',
+    'Participar en debates propuestos por el tutor-formador',
+    'Ver las consultas de otros compañeros y sus respuestas',
+    'Plantear temas de interés relacionados con la formación',
+  ]);
   yPos += 5;
   
-  addParagraph('Áreas disponibles en la zona central:');
+  // C) RECURSOS - Zona central adaptada a nuestro campus
+  checkPageBreak(60);
+  addInfoBox('C) RECURSOS - Contenido Formativo', false);
+  yPos += 3;
+  addParagraph('En el menú "Módulos" encontrarás todo el contenido formativo organizado de la siguiente manera:');
+  yPos += 5;
   
-  // Tabla de áreas de recursos
+  // Estructura de contenidos
   autoTable(doc, {
     startY: yPos,
+    head: [['ESTRUCTURA DEL CONTENIDO', 'DESCRIPCIÓN']],
     body: [
-      [{ content: 'INTRODUCCIÓN', styles: { fillColor: TEAL_COLOR, textColor: WHITE, fontStyle: 'bold' } }],
-      [{ content: 'FORMACIÓN EN CAMPUS', styles: { fillColor: [70, 130, 180], textColor: WHITE, fontStyle: 'bold' } }],
-      ['   Unidad Didáctica 1...'],
-      ['   Unidad Didáctica 2...'],
-      ['   Biblioteca'],
-      [{ content: 'TUTORÍAS PRESENCIALES', styles: { fillColor: [218, 165, 32], textColor: BLACK, fontStyle: 'bold' } }],
-      [{ content: 'TUTORÍA VIRTUAL', styles: { fillColor: [100, 149, 237], textColor: WHITE, fontStyle: 'bold' } }],
-      [{ content: 'EVALUACIÓN', styles: { fillColor: [169, 169, 169], textColor: BLACK, fontStyle: 'bold' } }],
+      ['MÓDULOS FORMATIVOS (MF)', 'Grandes bloques de contenido (ej: MF0969_1)'],
+      ['  → UNIDADES FORMATIVAS (UF)', 'Subdivisiones del módulo (ej: UF0517, UF0518...)'],
+      ['      → TEMARIO / CIM', 'Contenido Interactivo Multimedia con el temario teórico'],
+      ['      → CONTENIDO INTERACTIVO', 'Vídeos, audios, presentaciones, documentos'],
+      ['      → ACTIVIDADES', 'Casos prácticos y ejercicios evaluables'],
+      ['      → EVALUACIONES', 'Test de cada unidad formativa'],
     ],
-    margin: { left: margin + 20, right: margin + 20 },
+    margin: { left: margin, right: margin },
     bodyStyles: {
       fontSize: 9,
       textColor: BLACK,
     },
-    tableLineColor: [200, 200, 200],
-    tableLineWidth: 0.2,
+    columnStyles: {
+      0: { cellWidth: 70 },
+      1: { cellWidth: 100 },
+    },
+    alternateRowStyles: {
+      fillColor: LIGHT_TEAL,
+    },
+    tableLineColor: TEAL_COLOR,
+    tableLineWidth: 0.3,
   });
   yPos = (doc as any).lastAutoTable.finalY + 15;
   
