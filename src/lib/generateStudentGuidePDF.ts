@@ -120,9 +120,9 @@ export const generateStudentGuidePDF = async (
     
     items.forEach((item) => {
       checkPageBreak(8);
-      // Viñeta circular teal
+      // Viñeta cuadrada teal
       doc.setFillColor(...TEAL_COLOR);
-      doc.circle(margin + 2, yPos - 1.5, 1, 'F');
+      doc.rect(margin + 1, yPos - 2.5, 2.5, 2.5, 'F');
       
       const lines = doc.splitTextToSize(item, contentWidth - 10);
       lines.forEach((line: string, index: number) => {
@@ -131,6 +131,204 @@ export const generateStudentGuidePDF = async (
       yPos += lines.length * 4.5 + 2;
     });
     yPos += 3;
+  };
+
+  // Añadir caja con borde lateral izquierdo teal (estilo de las capturas)
+  const addBorderedBox = (title: string, content: string[], letter?: string) => {
+    const boxWidth = contentWidth - 10;
+    const xPos = margin + 5;
+    const lineHeight = 5;
+    
+    // Calcular altura necesaria
+    let totalLines = 0;
+    const formattedContent = content.map(item => {
+      const lines = doc.splitTextToSize(item, boxWidth - 15);
+      totalLines += lines.length;
+      return lines;
+    });
+    
+    const titleHeight = title ? 10 : 0;
+    const boxHeight = titleHeight + (totalLines * lineHeight) + 15;
+    
+    checkPageBreak(boxHeight + 10);
+    
+    // Borde izquierdo teal grueso
+    doc.setFillColor(...TEAL_COLOR);
+    doc.rect(xPos - 3, yPos - 4, 4, boxHeight, 'F');
+    
+    // Contorno del recuadro
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.3);
+    doc.rect(xPos + 1, yPos - 4, boxWidth, boxHeight);
+    
+    let currentY = yPos;
+    
+    // Título en negrita si existe
+    if (title) {
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...BLACK);
+      
+      const fullTitle = letter ? `${letter}) ${title}` : title;
+      doc.text(fullTitle, xPos + 8, currentY + 3);
+      currentY += 12;
+    }
+    
+    // Contenido
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...BLACK);
+    
+    content.forEach((item, itemIndex) => {
+      formattedContent[itemIndex].forEach((line: string, lineIndex: number) => {
+        const prefix = lineIndex === 0 && item.trim().match(/^[a-z]\)/) ? '' : 
+                      lineIndex === 0 ? '    ' : '    ';
+        doc.text(prefix + line, xPos + 8, currentY);
+        currentY += lineHeight;
+      });
+    });
+    
+    yPos += boxHeight + 8;
+  };
+
+  // Añadir tabla de módulos formativos con fechas (como en las capturas)
+  const addModulosFormativosTable = () => {
+    checkPageBreak(120);
+    
+    autoTable(doc, {
+      startY: yPos,
+      head: [['MÓDULOS FORMATIVOS', 'HORAS', 'FECHA INICIO', 'FECHA FIN', 'TUTORÍAS PRESENCIALES (*)', 'PRUEBA DE EVALUACIÓN FINAL (*) (**)']],
+      body: [
+        ['MF0969_1 Técnicas administrativas básicas de oficina', '150', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo'],
+        ['   UF0517: Organización empresarial y de recursos humanos', '30', '', '', '', ''],
+        ['   UF0518: Gestión auxiliar de la correspondencia y paquetería', '30', '', '', '', ''],
+        ['   UF0519: Gestión auxiliar de documentación económico-administrativa', '90', '', '', '', ''],
+        ['MF0970_1 Operaciones básicas de comunicación', '120', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo'],
+        ['   UF0520: Comunicación en las relaciones profesionales', '50', '', '', '', ''],
+        ['   UF0521: Comunicación oral y escrita en la empresa', '70', '', '', '', ''],
+        ['MF0971_1 Reproducción y archivo', '120', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo'],
+        ['   UF0513: Gestión auxiliar de archivo', '60', '', '', '', ''],
+        ['   UF0514: Gestión auxiliar de reproducción', '60', '', '', '', ''],
+        ['MP0112: Módulo de prácticas profesionales no laborales', '40', 'Ver Plan de Trabajo', 'Ver Plan de Trabajo', '-', '-'],
+      ],
+      margin: { left: margin, right: margin },
+      headStyles: {
+        fillColor: TEAL_COLOR,
+        textColor: WHITE,
+        fontSize: 7,
+        fontStyle: 'bold',
+        halign: 'center',
+        valign: 'middle',
+      },
+      bodyStyles: {
+        fontSize: 7,
+        textColor: BLACK,
+        valign: 'middle',
+      },
+      columnStyles: {
+        0: { cellWidth: 55 },
+        1: { cellWidth: 15, halign: 'center' },
+        2: { cellWidth: 25, halign: 'center' },
+        3: { cellWidth: 25, halign: 'center' },
+        4: { cellWidth: 25, halign: 'center' },
+        5: { cellWidth: 25, halign: 'center' },
+      },
+      alternateRowStyles: {
+        fillColor: LIGHT_TEAL,
+      },
+      tableLineColor: TEAL_COLOR,
+      tableLineWidth: 0.3,
+    });
+    
+    yPos = (doc as any).lastAutoTable.finalY + 5;
+    
+    // Notas al pie
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...BLACK);
+    doc.text('(*) En estas fechas deberás asistir a las sesiones de tutorías y pruebas de evaluación presenciales en el Centro de Formación.', margin, yPos);
+    yPos += 5;
+    doc.text('(**) De forma excepcional, la prueba de evaluación se podrá desarrollar al finalizar cada unidad formativa.', margin, yPos);
+    yPos += 10;
+  };
+
+  // Añadir tabla de aplicaciones informáticas requeridas
+  const addAplicacionesInformaticasTable = () => {
+    checkPageBreak(80);
+    
+    autoTable(doc, {
+      startY: yPos,
+      head: [['MÓDULOS FORMATIVOS', 'UNIDADES FORMATIVAS', 'APLICACIONES INFORMÁTICAS', 'INSTRUCCIONES PARA ACCEDER']],
+      body: [
+        ['MF0969_1\nTécnicas administrativas básicas de oficina', 'UF0517\nUF0518\nUF0519', 'Microsoft Office (Word, Excel)\nLibreOffice\nPDF Reader', 'En el Contenido Interactivo Multimedia (CIM) encontrarás un enlace y las instrucciones para descargarte esta/s aplicación/es informática/s'],
+        ['MF0970_1\nOperaciones básicas de comunicación', 'UF0520\nUF0521', 'Microsoft Outlook o similar\nNavegador web', 'Tu tutor-formador te facilitará las instrucciones y las claves para acceder a esta/s aplicación/es informática/s'],
+        ['MF0971_1\nReproducción y archivo', 'UF0513\nUF0514', 'Sistemas de gestión de archivos\nSoftware de digitalización', 'En la UD correspondiente del CIM encontrarás el enlace y las instrucciones'],
+      ],
+      margin: { left: margin, right: margin },
+      headStyles: {
+        fillColor: TEAL_COLOR,
+        textColor: WHITE,
+        fontSize: 8,
+        fontStyle: 'bold',
+        halign: 'center',
+        valign: 'middle',
+      },
+      bodyStyles: {
+        fontSize: 8,
+        textColor: BLACK,
+        valign: 'top',
+      },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 50 },
+        3: { cellWidth: 55 },
+      },
+      alternateRowStyles: {
+        fillColor: LIGHT_TEAL,
+      },
+      tableLineColor: TEAL_COLOR,
+      tableLineWidth: 0.3,
+    });
+    
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+  };
+
+  // Añadir sección con icono y texto (para descripciones tipo CIM)
+  const addIconSection = (title: string, description: string, isLink = false) => {
+    checkPageBreak(20);
+    
+    // Icono cuadrado con borde teal
+    doc.setFillColor(...LIGHT_TEAL);
+    doc.setDrawColor(...TEAL_COLOR);
+    doc.setLineWidth(0.5);
+    doc.rect(margin, yPos - 4, 8, 8, 'FD');
+    
+    // Título en teal (subrayado si es link)
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...TEAL_COLOR);
+    doc.text(title, margin + 12, yPos);
+    
+    if (isLink) {
+      doc.line(margin + 12, yPos + 1, margin + 12 + doc.getTextWidth(title), yPos + 1);
+    }
+    
+    yPos += 6;
+    
+    // Descripción
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...BLACK);
+    
+    const lines = doc.splitTextToSize(description, contentWidth - 15);
+    lines.forEach((line: string) => {
+      checkPageBreak(5);
+      doc.text(line, margin + 12, yPos);
+      yPos += 4.5;
+    });
+    
+    yPos += 5;
   };
 
   // Añadir tabla con estilo profesional
@@ -796,46 +994,158 @@ export const generateStudentGuidePDF = async (
   });
   yPos = (doc as any).lastAutoTable.finalY + 15;
   
-  // SECCIÓN 4: FECHAS Y LUGAR
+  // SECCIÓN 4: FECHAS Y LUGAR DE REALIZACIÓN
   addMainSectionTitle('4', 'FECHAS Y LUGAR DE REALIZACIÓN');
   addParagraph('Las fechas de realización de este curso son variables según la convocatoria en la que te encuentres matriculado/a.');
-  addParagraph('Deberás desarrollar cada módulo formativo/unidad formativa según el calendario establecido en el PLAN DE TRABAJO.');
   yPos += 5;
-  addInfoBox('DIRECCIÓN DEL CENTRO DE FORMACIÓN:\nC/ Marqués de Mirasol, 19 - Talavera de la Reina, Toledo.');
   
-  // SECCIÓN 5: METODOLOGÍA
+  // Tabla de fechas inicio/fin
+  autoTable(doc, {
+    startY: yPos,
+    body: [
+      [{ content: 'FECHA INICIO:', styles: { fontStyle: 'bold' } }, 'Ver Plan de Trabajo adjunto'],
+      [{ content: 'FECHA FIN:', styles: { fontStyle: 'bold' } }, 'Ver Plan de Trabajo adjunto'],
+    ],
+    margin: { left: margin + 30, right: margin + 30 },
+    bodyStyles: {
+      fontSize: 10,
+      textColor: BLACK,
+    },
+    columnStyles: {
+      0: { cellWidth: 40 },
+      1: { cellWidth: 60 },
+    },
+    tableLineColor: BLACK,
+    tableLineWidth: 0.3,
+  });
+  yPos = (doc as any).lastAutoTable.finalY + 10;
+  
+  addParagraph('En concreto, deberás desarrollar cada módulo formativo/unidad formativa en las siguientes fechas:');
+  yPos += 5;
+  
+  addModulosFormativosTable();
+  
+  addInfoBox('DIRECCIÓN DEL CENTRO DE FORMACIÓN');
+  yPos -= 5;
+  addParagraph('Calle Marqués de Mirasol 19, Talavera de la Reina, Toledo');
+  yPos += 10;
+  
+  // SECCIÓN 5: METODOLOGÍA DE ESTUDIO
   addMainSectionTitle('5', 'METODOLOGÍA DE ESTUDIO');
+  addParagraph('En este apartado de METODOLOGÍA DE ESTUDIO te facilitamos las orientaciones y explicaciones necesarias para que sepas cómo debes realizar el curso y las posibilidades que te ofrece el Campus Virtual para el estudio.');
+  yPos += 5;
+  addParagraph('A continuación, te presentamos de forma esquemática cada uno de los pasos que debes seguir para el desarrollo del curso:');
+  yPos += 8;
   
   addSubsectionTitle('5.1', 'TAREAS/ACTIVIDADES');
-  addParagraph('El proceso formativo se desarrolla siguiendo estas fases:');
+  addParagraph('Para conocer qué contenidos debes estudiar o qué actividades debes realizar en cada momento, debes acudir a tu PLAN DE TRABAJO, que encontrarás en el Anexo I de esta guía, o al icono de MI AGENDA que encontrarás en el Campus Virtual en la parte izquierda de tu pantalla.');
+  yPos += 8;
+  
+  // Cajas con borde lateral A) B) C) D) E) como en las capturas
+  addBorderedBox('INTRODUCCIÓN AL MÓDULO FORMATIVO/UNIDAD FORMATIVA', [
+    'Al inicio de cada módulo formativo o unidad formativa:',
+    'a. Acude al chat o la sesión presencial de la sesión inicial.',
+    'b. Consulta los objetivos y contenidos, en el documento PDF o a través del vídeo de presentación.',
+    'c. Realiza el test de conocimientos previos.'
+  ], 'A');
+  
+  addBorderedBox('DESARROLLA TU FORMACIÓN EN EL CAMPUS VIRTUAL', [
+    'En cada unidad didáctica:',
+    'a. Estudia los contenidos multimedia y amplía tus conocimientos con los materiales complementarios.',
+    'b. Consulta los documentos y vídeos de apoyo.',
+    'c. Realiza las actividades de aprendizaje.',
+    'd. Participa en los foros de debate.',
+    'e. Realiza el test de autoevaluación en Campus.'
+  ], 'B');
+  
+  addBorderedBox('DESARROLLA LA FORMACIÓN EN LA TUTORÍA PRESENCIAL', [
+    'En la fecha y lugar que se te indique debes asistir a las tutorías presenciales en el Centro de formación. Consulta el cuaderno del alumno.'
+  ], 'C');
+  
+  addBorderedBox('PARTICIPA EN LAS TUTORÍAS VIRTUALES', [
+    'Acude a la tutoría virtual grupal (a través de la herramienta de chat o "Contacta en directo").'
+  ], 'D');
+  
+  addBorderedBox('REALIZA LAS PRUEBAS DE EVALUACIÓN', [
+    'Al finalizar cada módulo o unidad formativa deberás realizar las siguientes pruebas de evaluación:',
+    '- TEST FINAL de evaluación en Campus.',
+    '- También debes responder a las cuestiones planteadas en el Cuestionario de Evaluación de la Calidad que ayudarán a mejorar la formación.',
+    '- PRUEBA DE EVALUACIÓN FINAL PRESENCIAL en el Centro de formación, al finalizar todas las unidades formativas que componen el módulo formativo.'
+  ], 'E');
+  
+  // A) INTRODUCCIÓN AL MÓDULO FORMATIVO - Detallado
+  checkPageBreak(80);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...BLACK);
+  doc.text('A) INTRODUCCIÓN AL MÓDULO FORMATIVO O UNIDAD FORMATIVA:', margin, yPos);
+  yPos += 5;
+  doc.text('CUESTIONARIO DE CONOCIMIENTOS PREVIOS Y OBJETIVOS DE APRENDIZAJE', margin, yPos);
+  yPos += 10;
+  
+  addParagraph('Al comenzar cada módulo formativo o unidad formativa debes consultar en la parte central del Campus Virtual el apartado INTRODUCCIÓN:');
+  yPos += 5;
+  
+  addParagraph('En esta área encontrarás:');
   yPos += 3;
   
-  addInfoBox('A) INTRODUCCIÓN AL MÓDULO FORMATIVO O UNIDAD FORMATIVA');
+  addIconSection('Vídeo de presentación', 'de la Unidad Formativa o Módulo Formativo.');
+  addIconSection('Documento PDF', 'donde podrás consultar los objetivos y contenidos de la Unidad formativa o Módulo Formativo.');
+  addIconSection('Acceso al chat de la sesión inicial', 'El día de comienzo del curso, a través de la herramienta de chat habilitada, el tutor/a-formador/a del módulo formativo/unidad formativa correspondiente, te informará tanto de cuestiones generales relativas a la organización de la formación como otras específicas relativas a la presentación de tutores-formadores, exposición de objetivos que se persiguen alcanzar con la formación, actividades de aprendizaje y pruebas de evaluación que debes realizar, etc. La hora de esta sesión inicial puedes consultarla en el documento PLAN DE TRABAJO, adjunto a esta guía, o a través del apartado MI AGENDA del Campus Virtual.');
+  
+  addParagraph('La sesión inicial puede ser también presencial, en ese caso tu tutor-formador te informará con antelación.');
+  yPos += 5;
+  
+  addIconSection('Test de conocimientos previos', 'Antes de comenzar a estudiar los contenidos de la unidad formativa o módulo formativo, debes cumplimentar un cuestionario en el que deberás indicar tus conocimientos previos sobre el contenido que vas a cursar, las motivaciones para realizar esta formación y los resultados que esperas obtener.');
+  yPos += 8;
+  
+  // B) DESARROLLA LA FORMACIÓN DEL MÓDULO
+  checkPageBreak(80);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...BLACK);
+  doc.text('B) DESARROLLA LA FORMACIÓN DEL MÓDULO FORMATIVO O UNIDAD', margin, yPos);
+  yPos += 5;
+  doc.text('FORMATIVA EN EL CAMPUS VIRTUAL', margin, yPos);
+  yPos += 10;
+  
+  addParagraph('Los recursos para desarrollar la formación en el Campus Virtual se encuentran en el apartado FORMACIÓN EN CAMPUS organizados en unidades didácticas.');
+  yPos += 5;
+  addParagraph('En cada unidad didáctica deberás desarrollar el siguiente proceso de aprendizaje:');
+  yPos += 5;
+  
+  addParagraph('1º) Estudia los contenidos, es decir, lee, visualiza o escucha los contenidos de la unidad didáctica expuestos en el Contenido Interactivo Multimedia (CIM).');
+  yPos += 5;
+  
+  addIconSection('CONTENIDO INTERACTIVO MULTIMEDIA', 'El Contenido Interactivo Multimedia puede incluir uno o varios de los siguientes recursos que son de obligada lectura, visualización y/o audición:', true);
+  
   addBulletList([
-    'Visualiza el vídeo de presentación',
-    'Descarga los objetivos y contenidos que vas a estudiar',
-    'Acude a la videoconferencia de presentación con tu tutor formador',
-    'Realiza el cuestionario de conocimientos previos',
+    'Documentos de lectura.',
+    'Manual pdf: existe la opción de visualizar e imprimir el contenido teórico en formato pdf, con el objetivo de facilitar su lectura y el análisis de la información para su posterior estudio.',
+    'Vídeos didácticos: donde profesionales de la materia profundizan y/o analizan las implicaciones de diferentes conceptos/procedimientos (vídeos explicativos) o muestran la aplicación de procedimientos y/o técnicas específicas (vídeos demostrativos).',
+    'Enlaces Web.',
+    'Demo y/o tutoriales de aplicaciones informáticas.',
+    'Glosario.'
   ]);
   
-  addInfoBox('B) DESARROLLA LA FORMACIÓN EN EL CAMPUS VIRTUAL');
-  addBulletList([
-    'Estudia los contenidos de cada unidad didáctica (Contenido Interactivo Multimedia)',
-    'Realiza los ejercicios de autoevaluación',
-    'Consulta el material didáctico complementario',
-    'Realiza las actividades de aprendizaje propuestas',
-    'Participa en los foros disponibles',
-  ]);
+  // Guía de navegación del CIM
+  checkPageBreak(50);
+  addInfoBox('GUÍA DE NAVEGACIÓN DEL CIM');
+  yPos -= 5;
+  addParagraph('Para conocer cómo navegar a través de los Contenidos Interactivos Multimedia consulta la "Guía de navegación del CIM" que se encuentra en el icono "Cómo hacer mi curso".');
+  yPos += 5;
+  addParagraph('En todo momento podrás visualizar qué apartados has visto o cuáles te quedan por ver gracias al índice de la izquierda. En él se muestran los puntos y subpuntos que conforman la unidad didáctica de la unidad/módulo en cuestión.');
+  yPos += 5;
+  addParagraph('El signo "más" te permite desplegar el punto y mostrarte el subpunto o subpuntos en cuestión. Y el "tic verde" te indica qué punto o subpunto ha sido visualizado.');
+  yPos += 10;
   
-  addInfoBox('C) DESARROLLA LA FORMACIÓN EN EL CENTRO DE FORMACIÓN');
-  addParagraph('En las fechas y lugar indicados en el PLAN DE TRABAJO, deberás asistir a las sesiones presenciales donde se trabajarán los conocimientos adquiridos en la plataforma.');
+  // Aplicaciones informáticas
+  addSubsectionTitle('5.2', 'APLICACIONES INFORMÁTICAS');
+  addParagraph('Para este certificado de profesionalidad, vas a necesitar las siguientes aplicaciones informáticas:');
+  yPos += 5;
+  addAplicacionesInformaticasTable();
   
-  addInfoBox('D) REALIZA LAS PRUEBAS DE EVALUACIÓN');
-  addBulletList([
-    'TEST FINAL EN CAMPUS (CIM)',
-    'PRUEBA DE EVALUACIÓN FINAL PRESENCIAL',
-    'CUESTIONARIO DE SATISFACCIÓN',
-  ]);
+  addParagraph('Para instalar estas aplicaciones informáticas vas a disponer de unas instrucciones que se te irán facilitando junto con los contenidos del curso en el momento en el que se trate sobre cada aplicación informática, como se muestra en la imagen más abajo. Además, tu tutor-formador te facilitará las instrucciones precisas para llevar a cabo la instalación cuando sea necesario o necesites ayuda.');
   
   // SECCIÓN 6: SISTEMA DE TUTORÍAS
   addMainSectionTitle('6', 'SISTEMA DE TUTORÍAS');
@@ -978,10 +1288,11 @@ export const generateStudentGuidePDF = async (
   
   yPos = (doc as any).lastAutoTable.finalY + 15;
   
-  // ANEXO
-  checkPageBreak(40);
+  // ANEXO I
+  checkPageBreak(60);
   addMainSectionTitle('ANEXO I', 'CALENDARIO Y PLAN DE TRABAJO');
-  addParagraph('En este anexo encontrarás la planificación detallada por semanas, así como la secuencia de las actividades y tareas programadas para realizar en cada unidad didáctica.');
+  addParagraph('En el ANEXO I "CALENDARIO Y PLAN DE TRABAJO" podrás encontrar la planificación por semanas, así como la secuencia de las actividades y tareas programadas para realizar en cada unidad didáctica.');
+  yPos += 5;
   addParagraph('Consulta con tu tutor/a-formador/a las fechas específicas de tu convocatoria.');
   yPos += 5;
   addParagraph('Este documento incluye:');
