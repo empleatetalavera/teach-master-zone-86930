@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2 } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1463,28 +1463,24 @@ export default function CourseView() {
                                                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                                                     </button>
                                                     
-                                                    {/* Material Complementario */}
-                                                    <div className="mt-3 ml-2 space-y-2">
-                                                      <div className="flex items-center justify-between">
-                                                        <button
-                                                          onClick={() => openContentViewer(unit.id, unit.title, 'document')}
-                                                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
-                                                        >
-                                                          <FileText className="h-4 w-4 text-blue-500" />
-                                                          <span>Documentos de apoyo</span>
-                                                          <Circle className="h-3 w-3 text-muted-foreground/50" />
-                                                        </button>
-                                                      </div>
-                                                      <div className="flex items-center justify-between">
-                                                        <button
-                                                          onClick={() => openContentViewer(unit.id, unit.title, 'exercise')}
-                                                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
-                                                        >
-                                                          <FileQuestion className="h-4 w-4 text-amber-500" />
-                                                          <span>Ejercicios interactivos</span>
-                                                          <Circle className="h-3 w-3 text-muted-foreground/50" />
-                                                        </button>
-                                                      </div>
+                                                    {/* Botones de acceso al contenido */}
+                                                    <div className="flex items-center gap-3 mt-3">
+                                                      <Button
+                                                        variant="outline"
+                                                        className="flex items-center gap-2 rounded-full border-2"
+                                                        onClick={() => openScormViewer(unit.id, unit.title)}
+                                                      >
+                                                        <Play className="h-4 w-4 text-red-500" />
+                                                        <span>Temario Interactivo</span>
+                                                      </Button>
+                                                      <Button
+                                                        variant="outline"
+                                                        className="flex items-center gap-2 rounded-full border-2"
+                                                        onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
+                                                      >
+                                                        <MonitorPlay className="h-4 w-4 text-blue-500" />
+                                                        <span>Multimedia</span>
+                                                      </Button>
                                                     </div>
                                                   </div>
                                                 </div>
