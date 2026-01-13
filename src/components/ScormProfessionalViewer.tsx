@@ -18,8 +18,9 @@ import {
   ClipboardList, Play, Headphones, Video, Send, X, MessageCircle,
   BarChart3, BookMarked, HelpCircle, Check, Building2, Users, 
   Briefcase, FileSpreadsheet, Mail, Package, Calculator, CreditCard,
-  Palette, Sparkles
+  Palette, Sparkles, Edit2
 } from "lucide-react";
+import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generateUF0519ComprehensiveSlides } from "./scorm/UF0519SlidesGenerator";
 import { ContentSlide, IndexItem, QuizQuestion, ExtendedContentSlide } from "./scorm/types";
@@ -1529,8 +1530,12 @@ export default function ScormProfessionalViewer({
   unitTitle,
   enrollmentId
 }: ScormProfessionalViewerProps) {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { toast } = useToast();
+  
+  // Editor state
+  const [syllabusEditorOpen, setSyllabusEditorOpen] = useState(false);
+  const isTeacherOrAdmin = userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin';
   
   const [slides, setSlides] = useState<ContentSlide[]>([]);
   const [loadingSlides, setLoadingSlides] = useState(true);
@@ -1756,6 +1761,18 @@ export default function ScormProfessionalViewer({
               <span className="text-sm font-medium">{unitTitle}</span>
             </div>
             <div className="flex items-center gap-2">
+              {/* Edit button for admins/teachers */}
+              {isTeacherOrAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 bg-white/20 hover:bg-white/30 text-white border-white/30 border"
+                  onClick={() => setSyllabusEditorOpen(true)}
+                >
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  Editar
+                </Button>
+              )}
               <Palette className="h-4 w-4" />
               <Select 
                 value={selectedTheme.id} 
@@ -2479,6 +2496,21 @@ export default function ScormProfessionalViewer({
           )}
         </div>
       </DialogContent>
+      
+      {/* Syllabus Editor Modal */}
+      <SyllabusEditor
+        open={syllabusEditorOpen}
+        onOpenChange={(isOpen) => {
+          setSyllabusEditorOpen(isOpen);
+          // Reload slides when editor closes
+          if (!isOpen) {
+            // Trigger a reload by setting loadingSlides
+            setLoadingSlides(true);
+          }
+        }}
+        unitId={unitId}
+        unitTitle={unitTitle}
+      />
     </Dialog>
   );
 }

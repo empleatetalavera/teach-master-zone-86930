@@ -36,6 +36,7 @@ import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ActivitySubmissionViewer } from "@/components/ActivitySubmissionViewer";
 import { useUnitProgress } from "@/hooks/useUnitProgress";
+import { ModuleEvaluationTest } from "@/components/ModuleEvaluationTest";
 
 interface Course {
   id: string;
@@ -1690,8 +1691,39 @@ export default function CourseView() {
                                       })}
                                     </div>
                                   )}
-                                </div>
 
+                                  {/* TEST DE EVALUACIÓN DEL MÓDULO - 50 preguntas */}
+                                  <Accordion type="single" collapsible className="w-full border-t pt-4">
+                                    <AccordionItem value="module-test" className="border rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30">
+                                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white">
+                                            <ClipboardList className="h-5 w-5" />
+                                          </div>
+                                          <div className="text-left">
+                                            <h4 className="font-semibold text-green-900 dark:text-green-100">Test de Evaluación del Módulo</h4>
+                                            <p className="text-xs text-green-600 dark:text-green-300">50 preguntas tipo test sobre todo el contenido del módulo</p>
+                                          </div>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent className="px-4 pb-4">
+                                        <ModuleEvaluationTest 
+                                          moduleId={module.id}
+                                          moduleTitle={module.title}
+                                          enrollmentId={enrollment?.id}
+                                          inline={true}
+                                          onComplete={(results) => {
+                                            toast({
+                                              title: "Test completado",
+                                              description: `Has obtenido ${results.score}% en el test del módulo`,
+                                            });
+                                          }}
+                                        />
+                                      </AccordionContent>
+                                    </AccordionItem>
+                                  </Accordion>
+
+                                </div>
                               </div>
                             </CardContent>
                           </AccordionContent>
