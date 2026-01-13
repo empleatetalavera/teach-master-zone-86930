@@ -21,6 +21,7 @@ import { UnitActivityManager } from "@/components/UnitActivityManager";
 import { CourseSchedule } from "@/components/CourseSchedule";
 import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
+import { SEPEGradesSection } from "@/components/SEPEGradesSection";
 import ScormProfessionalViewer from "@/components/ScormProfessionalViewer";
 
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
@@ -583,14 +584,16 @@ export default function CourseView() {
                   </button>
                   <button
                     onClick={() => setActiveTab("modules")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "modules" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "modules" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                   >
-                    Módulos
+                    <BookOpen className="h-4 w-4" />
+                    Formación en Campus
                   </button>
                   <button
                     onClick={() => setActiveTab("grades")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "grades" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "grades" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                   >
+                    <BarChart3 className="h-4 w-4" />
                     Calificaciones
                   </button>
                   <button
@@ -1054,10 +1057,11 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="grades" className="space-y-4">
-            <GradeBreakdown 
+            <SEPEGradesSection 
               courseId={courseId!} 
               enrollmentId={enrollment?.id || ''} 
-              enableBreakdown={course.enable_grade_breakdown}
+              modules={modules}
+              isEditable={userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher'}
             />
           </TabsContent>
 
@@ -1079,7 +1083,7 @@ export default function CourseView() {
             </Card>
 
             <div>
-              <h2 className="text-lg font-semibold">Unidades Formativas / Módulos</h2>
+              <h2 className="text-lg font-semibold">Formación en Campus - Módulos Formativos</h2>
               <p className="text-sm text-muted-foreground">
                 Haz clic en cada módulo para expandir y ver su contenido
               </p>
