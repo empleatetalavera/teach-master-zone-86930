@@ -1,8 +1,112 @@
-// Contenido completo de la Guía del Alumno - Transcrito del PDF oficial
+// Contenido completo de la Guía del Alumno - Adaptado al Campus TalentCloudSolution
+// Mapeado de recursos del campus a la nomenclatura SEPE
 export const studentGuideContent = {
   title: "GUÍA DEL ALUMNO",
   subtitle: "Certificado de Profesionalidad de Operaciones Auxiliares de Servicios Administrativos y Generales",
   code: "ADGG0408",
+  
+  // Mapeo de recursos del campus a terminología SEPE
+  campusResourceMapping: {
+    // A) ORGANIZARME - Área izquierda
+    organizarme: {
+      miAgenda: {
+        campusName: "Calendario",
+        sepeEquivalent: "MI AGENDA",
+        description: "Consulta las fechas de tutorías, entregas y evaluaciones"
+      },
+      misProgresos: {
+        campusName: "Calificaciones",
+        sepeEquivalent: "MIS PROGRESOS",
+        description: "Seguimiento de tu progreso y notas en el curso"
+      },
+      comoHacerMiCurso: {
+        campusName: "Guía del Alumno + Programa Formativo",
+        sepeEquivalent: "CÓMO HACER MI CURSO",
+        description: "Documentación sobre cómo está estructurado el curso"
+      },
+      planDeTrabajo: {
+        campusName: "Plan de Trabajo / Mi Agenda",
+        sepeEquivalent: "PLAN DE TRABAJO",
+        description: "Planificación didáctica y fechas del curso"
+      }
+    },
+    // B) COMUNICARME - Área derecha
+    comunicarme: {
+      miPerfil: {
+        campusName: "Perfil (icono usuario)",
+        sepeEquivalent: "MI PERFIL",
+        description: "Datos personales y documentación"
+      },
+      misContactos: {
+        campusName: "Contacto (botón en cabecera del curso)",
+        sepeEquivalent: "MIS CONTACTOS",
+        description: "Comunicación con tutor y soporte"
+      },
+      correo: {
+        campusName: "Mensajería del Campus",
+        sepeEquivalent: "CORREO",
+        description: "Correo interno para comunicarte con tutores"
+      },
+      chat: {
+        campusName: "WhatsApp Dudas",
+        sepeEquivalent: "CHAT / CONTACTA EN DIRECTO",
+        description: "Comunicación directa por WhatsApp"
+      },
+      foro: {
+        campusName: "Foro",
+        sepeEquivalent: "FOROS",
+        description: "Debates y consultas con compañeros y tutores"
+      }
+    },
+    // C) RECURSOS - Área central
+    recursos: {
+      introduccion: {
+        campusName: "Pestaña Inicio",
+        sepeEquivalent: "INTRODUCCIÓN",
+        description: "Vídeo de presentación y objetivos del curso"
+      },
+      formacionEnCampus: {
+        campusName: "Módulos > Unidades Formativas > Contenido Interactivo",
+        sepeEquivalent: "FORMACIÓN EN CAMPUS",
+        description: "Acceso a los contenidos multimedia (SCORM/CIM)"
+      },
+      contenidoInteractivo: {
+        campusName: "Temario Interactivo (ScormProfessionalViewer)",
+        sepeEquivalent: "CONTENIDO INTERACTIVO MULTIMEDIA (CIM)",
+        description: "Contenido teórico con índice, test y ejercicios integrados"
+      },
+      materialComplementario: {
+        campusName: "Descargas (dentro del visor) + PDFs de manuales",
+        sepeEquivalent: "MATERIAL COMPLEMENTARIO",
+        description: "Documentos PDF, vídeos y audios de apoyo"
+      },
+      actividadesAprendizaje: {
+        campusName: "Actividades (botón en cada UF)",
+        sepeEquivalent: "ACTIVIDADES DE APRENDIZAJE",
+        description: "Casos prácticos y ejercicios evaluables"
+      },
+      evaluaciones: {
+        campusName: "Exámenes",
+        sepeEquivalent: "EVALUACIÓN",
+        description: "Test de evaluación y pruebas finales"
+      },
+      tutoriasPresenciales: {
+        campusName: "Tutorías",
+        sepeEquivalent: "TUTORÍAS PRESENCIALES",
+        description: "Sesiones presenciales en el centro de formación"
+      },
+      cronograma: {
+        campusName: "Cronograma",
+        sepeEquivalent: "CRONOGRAMA DEL CURSO",
+        description: "Línea temporal de módulos y fechas"
+      },
+      tiemposInvertidos: {
+        campusName: "Tiempos Invertidos",
+        sepeEquivalent: "SEGUIMIENTO DEL TIEMPO",
+        description: "Registro del tiempo de formación"
+      }
+    }
+  },
   
   sections: [
     {
@@ -165,91 +269,115 @@ REQUISITOS TÉCNICOS DEL SISTEMA:
 CONEXIÓN A INTERNET: Se recomienda un ancho de banda mínimo de 1 Mbps.
 
 NAVEGADORES Y VERSIONES:
-• Internet Explorer, versión superior o igual a 10.0
-• Mozilla Firefox, versión superior o igual a 5.0
-• Google Chrome, versión superior o igual a 5.0
+• Google Chrome (recomendado), versión actualizada
+• Mozilla Firefox, versión actualizada
+• Microsoft Edge, versión actualizada
 
 RESOLUCIÓN MÍNIMA DE PANTALLA: Se aconseja una resolución mínima de pantalla de 1024 x 768 píxeles.
 
-OFFICE: 2003 o superior.
+OFFICE: 2016 o superior / LibreOffice.
 
-JAVA: http://www.java.com/es/download
-
-ACROBAT READER: http://get.adobe.com/es/reader/
-
-WINZIP: http://www.winzip.com
+ACROBAT READER: https://get.adobe.com/es/reader/
 
 Hardware mínimo:
 • Monitor (recomendado 17")
 • Teclado y ratón
-• Procesador Intel Core i3
-• Memoria (RAM) 2Gb
+• Procesador Intel Core i3 o equivalente
+• Memoria (RAM) 4Gb
 
 Se recomienda que el sistema siempre tenga instaladas todas las actualizaciones disponibles que provea el fabricante.`
         },
         {
           number: "3.2",
-          title: "FUNCIONAMIENTO, RECURSOS Y UTILIDADES",
-          content: `Cada vez que accedas al Campus Virtual te aparecerá una pantalla con todos los módulos formativos y/o unidades formativas que componen tu curso. Pulsando sobre el nombre del módulo formativo o unidad formativa que vayas a realizar en ese momento podrás acceder al contenido y el resto de materiales didácticos y recursos del Campus.
+          title: "FUNCIONAMIENTO, RECURSOS Y UTILIDADES DEL CAMPUS",
+          content: `Cada vez que accedas al Campus Virtual te aparecerá una pantalla con todos los cursos en los que estás matriculado/a. Pulsando sobre el nombre del curso podrás acceder al contenido y el resto de materiales didácticos y recursos.
 
-Dispones de tres áreas diferenciadas:
+La navegación principal del curso se estructura en el MENÚ LATERAL IZQUIERDO con las siguientes opciones:
 
-A) ORGANIZARME
-En la zona izquierda de tu pantalla encontrarás el área ORGANIZARME, donde dispones de toda la información sobre la planificación del curso (fechas de realización, tus progresos, la agenda etc.).
+📋 INICIO - Bienvenida y objetivos del curso
+📚 GUÍA DEL ALUMNO - Este documento que estás leyendo
+📝 PROGRAMA FORMATIVO - Estructura y objetivos específicos
+📅 PLAN DE TRABAJO - Planificación didáctica y fechas
+📆 CRONOGRAMA - Línea temporal del curso
+📂 MÓDULOS - Contenido formativo organizado por unidades
+📊 CALIFICACIONES - Tu progreso y notas
+✅ EXÁMENES - Evaluaciones programadas
+👥 TUTORÍAS - Sesiones presenciales y virtuales
+📅 CALENDARIO - Agenda con todos los eventos
+💬 FORO - Debates y consultas
+⏱️ TIEMPOS INVERTIDOS - Registro de dedicación
 
-Recursos disponibles:
-• CÓMO HACER MI CURSO: Incluye los diferentes documentos que te explicarán cómo está estructurado tu curso.
-• MI AGENDA: Te proporciona un calendario donde están visibles los próximos eventos programados.
-• MENSAJES PENDIENTES: Temas pendientes relacionados con el correo electrónico interno o temas del foro sin leer.
-• MIS PROGRESOS: Podrás saber en cada momento tus avances en el curso.
+CÓMO ACCEDER A LOS CONTENIDOS:
 
-B) COMUNICARME
-En la parte derecha podrás ver el área COMUNICARME donde podrás acceder a todas las herramientas para comunicarte con tu tutor/a-formador/a así como con el resto de alumnos/as del curso.
+1. Haz clic en "Módulos" en el menú lateral
+2. Despliega el módulo formativo pulsando sobre él
+3. Dentro de cada módulo encontrarás las Unidades Formativas
+4. En cada Unidad Formativa dispones de:
+   • CONTENIDO INTERACTIVO (CIM) - El temario teórico con ejercicios
+   • VÍDEOS, AUDIOS Y DOCUMENTOS - Material complementario
+   • ACTIVIDADES - Casos prácticos y ejercicios evaluables
+   • TEST DE AUTOEVALUACIÓN - Pruebas de conocimiento
 
-Recursos disponibles:
-• MI PERFIL: Señalarás tus datos personales para que otros compañeros tengan acceso a esa información.
-• MIS CONTACTOS: Listado de alumnos matriculados y equipo de docentes del curso.
-• CORREO: Correo interno del Campus para ponerte en contacto con compañeros y profesores.
-• CONTACTA EN DIRECTO: Para realizar tutorías virtuales a través de videollamada.
-• CHAT: Lugar de encuentro con alumnos y alumnas que están formándose en tu mismo curso.
-• MENSAJES EMERGENTES: Mensajes de información importante que te saltarán directamente en pantalla.
+HERRAMIENTAS DE COMUNICACIÓN:
 
-C) RECURSOS
-En la parte central encontrarás todos los RECURSOS para desarrollar la formación, organizados de forma secuencial según el momento en el que debas consultarlos o utilizarlos.
-
-Áreas disponibles:
-• INTRODUCCIÓN: Información general sobre el módulo formativo o unidad formativa.
-• FORMACIÓN EN CAMPUS: Todos los recursos para estudiar y desarrollar las actividades.
-• TUTORÍAS PRESENCIALES: Actividades programadas en las sesiones presenciales.
-• TUTORÍA GRUPAL: Acceso a las salas de chat para tutorías grupales.
-• EVALUACIÓN: Información sobre criterios de evaluación y pruebas.`
+Para contactar con tu tutor/a-formador/a dispones de:
+• Botón "CONTACTO" en la cabecera del curso → Mensajería interna
+• Botón "WHATSAPP DUDAS" → Chat directo con el centro
+• FORO del curso → Consultas públicas con otros alumnos`
         },
         {
           number: "3.3",
-          title: "AYUDA, PREGUNTAS FRECUENTES Y VISITA GUIADA DEL CAMPUS VIRTUAL",
-          content: `Antes de comenzar a usar el Campus es recomendable que visualices los vídeos disponibles en el Centro de Atención al Usuario que te van a mostrar cómo puedes utilizar el Campus y aprovechar todas sus funcionalidades.
+          title: "EL CONTENIDO INTERACTIVO MULTIMEDIA (CIM) / TEMARIO",
+          content: `El Contenido Interactivo Multimedia es el corazón de tu formación online. Se accede desde cada Unidad Formativa pulsando el botón "TEMARIO".
 
-AYUDA PARA USO DEL CAMPUS VIRTUAL:
-En el Campus Virtual, en el icono del Centro de Atención a Usuarios (CAU), dispones de vídeos tutoriales que muestran el manejo del Campus que te ayudarán a resolver tus dudas sobre su funcionamiento.
+ESTRUCTURA DEL VISOR INTERACTIVO:
 
-Antes de plantear tu consulta o incidencia técnica, puedes encontrar información sobre el funcionamiento del Campus accediendo a la visita virtual y consultando las preguntas frecuentes.`
+📑 ÍNDICE LATERAL IZQUIERDO
+• Muestra todos los puntos y subpuntos del temario
+• Un "tick verde" indica los apartados ya completados
+• Puedes navegar pulsando directamente sobre cualquier punto
+
+📊 BARRA SUPERIOR
+• Glosario - Definiciones de términos clave
+• Descargas - PDFs del manual para imprimir
+• Ejercicios - Actividades prácticas integradas
+• Test - Cuestionarios de autoevaluación
+
+📖 ÁREA CENTRAL DE CONTENIDO
+• Texto teórico con explicaciones detalladas
+• Tablas y esquemas interactivos
+• Imágenes y gráficos explicativos
+• Vídeos y audios integrados
+• Ejercicios y tests con feedback inmediato
+
+🤖 ASISTENTE DE AYUDA
+• En la esquina inferior derecha encontrarás un asistente
+• Puedes consultarle dudas sobre el contenido
+• Te ayudará con la navegación por el temario
+
+RECURSOS COMPLEMENTARIOS DISPONIBLES:
+
+En el visor y en la sección de Descargas encontrarás:
+• 📄 Documentos de apoyo (PDFs del temario)
+• 🎥 Vídeos de apoyo y demostrativos
+• 🔊 Audios explicativos
+• 🔗 Enlaces a recursos externos`
         },
         {
           number: "3.4",
           title: "APLICACIONES INFORMÁTICAS",
-          content: `Además del Campus Virtual, para desarrollar la formación vas a necesitar disponer de otras aplicaciones informáticas sobre las que tratan los contenidos que vas a estudiar y las actividades que vas a tener que desarrollar.
+          content: `Para este certificado de profesionalidad, vas a necesitar las siguientes aplicaciones informáticas:
 
-Para este certificado de profesionalidad, vas a necesitar las siguientes aplicaciones informáticas:
+• UF0517: Organización empresarial y de recursos humanos - No se requiere software adicional.
+• UF0518: Gestión auxiliar de la correspondencia - No se requiere software adicional.
+• UF0519: Gestión auxiliar de documentación - No se requiere software adicional.
+• UF0520: Comunicación en las relaciones profesionales - No se requiere software adicional.
+• UF0521: Comunicación oral y escrita en la empresa - Procesador de textos: Microsoft Word o LibreOffice Writer
+• UF0513: Gestión auxiliar de archivo - Aplicaciones de ofimática: LibreOffice, Adobe Reader, Microsoft Excel
+• UF0514: Gestión auxiliar de reproducción - Microsoft Word, PowerPoint o LibreOffice Impress, Adobe Reader
 
-• UF0517: Organización empresarial y de recursos humanos - No se requiere.
-• UF0518: Gestión auxiliar de la correspondencia y paquetería en la empresa - No se requiere.
-• UF0519: Gestión auxiliar de documentación económico-administrativa y comercial - No se requiere.
-• UF0520: Comunicación en las relaciones profesionales - No se requiere.
-• UF0521: Comunicación oral y escrita en la empresa - Procesador de textos: Microsoft Word
-• UF0513: Gestión auxiliar de archivo - Software Gestor de base de datos: Openoffice, VLC Media player, Winamp, Adobe Reader, Microsoft Excel, Microsoft Access
-• UF0514: Gestión auxiliar de reproducción - Microsoft Word, Power Point, Adobe Reader
-
-Tu tutor-formador te facilitará las claves para acceder a la versión educativa de las aplicaciones informáticas cuando sea necesario.`
+CÓMO ACCEDER A LAS APLICACIONES:
+Las instrucciones para descargar e instalar las aplicaciones necesarias las encontrarás en cada Unidad Formativa correspondiente, dentro del Contenido Interactivo Multimedia. Tu tutor-formador te facilitará también las instrucciones necesarias.`
         }
       ]
     },
