@@ -1477,21 +1477,11 @@ export default function CourseView() {
                                                       </div>
                                                       <div className="flex items-center justify-between">
                                                         <button
-                                                          onClick={() => openContentViewer(unit.id, unit.title, 'video')}
+                                                          onClick={() => openContentViewer(unit.id, unit.title, 'exercise')}
                                                           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
                                                         >
-                                                          <Video className="h-4 w-4 text-red-500" />
-                                                          <span>Vídeos de apoyo</span>
-                                                          <Circle className="h-3 w-3 text-muted-foreground/50" />
-                                                        </button>
-                                                      </div>
-                                                      <div className="flex items-center justify-between">
-                                                        <button
-                                                          onClick={() => openContentViewer(unit.id, unit.title, 'audio')}
-                                                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
-                                                        >
-                                                          <Headphones className="h-4 w-4 text-purple-500" />
-                                                          <span>Audio de apoyo</span>
+                                                          <FileQuestion className="h-4 w-4 text-amber-500" />
+                                                          <span>Ejercicios interactivos</span>
                                                           <Circle className="h-3 w-3 text-muted-foreground/50" />
                                                         </button>
                                                       </div>
