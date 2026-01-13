@@ -118,12 +118,23 @@ const CONTENT_THEMES = [
     id: 'corporate-sepe', 
     name: '🏛️ Corporativo SEPE', 
     headerBg: 'bg-gradient-to-r from-primary to-primary/80',
-    contentBg: 'bg-gradient-to-br from-sky-50 via-white to-teal-50',
-    cardBg: 'bg-white/90 backdrop-blur',
+    contentBg: 'bg-slate-50',
+    cardBg: 'bg-white',
     accent: 'text-primary',
     accentBg: 'bg-primary',
-    border: 'border-primary/30',
+    border: 'border-primary',
     highlight: 'bg-primary/10',
+  },
+  { 
+    id: 'ispring-teal', 
+    name: '✨ iSpring Profesional', 
+    headerBg: 'bg-gradient-to-r from-teal-600 to-teal-500',
+    contentBg: 'bg-white',
+    cardBg: 'bg-white',
+    accent: 'text-teal-600',
+    accentBg: 'bg-teal-600',
+    border: 'border-teal-500',
+    highlight: 'bg-teal-50',
   },
 ];
 
@@ -1551,7 +1562,7 @@ export default function ScormProfessionalViewer({
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('content');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [selectedTheme, setSelectedTheme] = useState(CONTENT_THEMES[5]); // Default: Corporate SEPE
+  const [selectedTheme, setSelectedTheme] = useState(CONTENT_THEMES[6]); // Default: iSpring Teal
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
@@ -2099,19 +2110,168 @@ export default function ScormProfessionalViewer({
                           </div>
                         </CardContent>
                       </Card>
-                    ) : (
-                      /* REGULAR CONTENT SLIDE */
-                      <div className="space-y-4">
-                        <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:text-primary prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-table:border-collapse prose-td:border prose-td:p-2 prose-th:border prose-th:p-2 prose-th:bg-muted prose-blockquote:border-l-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {currentSlide?.content || ''}
-                          </ReactMarkdown>
+                    ) : currentSlide?.type === 'intro' ? (
+                      /* INTRO/COVER SLIDE - iSpring/Canva Style */
+                      <div className="relative min-h-[500px] rounded-2xl overflow-hidden bg-white">
+                        {/* Main layout - split design */}
+                        <div className="flex h-full">
+                          {/* Left side - Decorative collage */}
+                          <div className="w-1/2 relative">
+                            {/* Diagonal grid of images and teal blocks */}
+                            <div className="absolute inset-0 overflow-hidden">
+                              <div className="grid grid-cols-3 gap-2 transform rotate-12 scale-125 -translate-x-8 -translate-y-8">
+                                <div className="h-32 bg-primary rounded-xl" />
+                                <div className="h-32 bg-primary/80 rounded-xl overflow-hidden">
+                                  <img 
+                                    src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=300" 
+                                    alt="Team collaboration" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="h-32 bg-primary rounded-xl" />
+                                <div className="h-32 bg-primary/70 rounded-xl overflow-hidden">
+                                  <img 
+                                    src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=300" 
+                                    alt="Office work" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="h-32 bg-primary rounded-xl" />
+                                <div className="h-32 bg-primary/60 rounded-xl overflow-hidden">
+                                  <img 
+                                    src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=300" 
+                                    alt="Business meeting" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="h-32 bg-primary rounded-xl" />
+                                <div className="h-32 bg-primary/50 rounded-xl" />
+                                <div className="h-32 bg-primary rounded-xl" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right side - Content */}
+                          <div className="w-1/2 flex flex-col justify-between p-8 z-10">
+                            {/* Center logo placeholder */}
+                            <div className="flex justify-center">
+                              <div className="text-center">
+                                <div className="inline-flex items-center gap-2 text-primary">
+                                  <Building2 className="h-8 w-8" />
+                                  <span className="text-2xl font-bold">CENTRO DE FORMACIÓN</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Title section */}
+                            <div className="text-center space-y-4">
+                              <h1 className="text-4xl font-black text-slate-800 leading-tight">
+                                {currentSlide.title.replace(/^.*? - /, '').toUpperCase()}
+                              </h1>
+                              <div className="w-24 h-1 bg-primary mx-auto rounded-full" />
+                            </div>
+
+                            {/* SEPE logo placeholder */}
+                            <div className="flex justify-center">
+                              <div className="flex items-center gap-4 px-4 py-2 bg-amber-50 rounded-lg border border-amber-200">
+                                <div className="text-xs text-slate-600">
+                                  <span className="font-semibold">MINISTERIO DE TRABAJO</span>
+                                  <br />
+                                  <span>Y ECONOMÍA SOCIAL</span>
+                                </div>
+                                <div className="text-amber-600 font-bold text-lg">SEPE</div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        {currentSlide?.keyTerms && (
-                          <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t">
-                            <span className="text-sm font-medium text-muted-foreground">🔑 Términos clave:</span>
+                      </div>
+                    ) : (
+                      /* REGULAR CONTENT SLIDE - iSpring/Canva Professional Style */
+                      <div className="relative">
+                        {/* Professional card with teal border */}
+                        <div className="bg-white rounded-2xl border-4 border-primary shadow-xl overflow-hidden">
+                          {/* Content area */}
+                          <div className="p-8">
+                            {/* Process headings with section letters (A, B, C...) */}
+                            <div className="prose prose-lg max-w-none 
+                              prose-headings:font-black prose-headings:text-slate-800
+                              prose-h1:text-3xl prose-h1:mb-6
+                              prose-h2:text-xl prose-h2:mb-4
+                              prose-h3:text-lg prose-h3:font-bold prose-h3:text-slate-700
+                              prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-base
+                              prose-ul:space-y-1
+                              prose-li:text-primary prose-li:font-medium
+                              prose-a:text-primary prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
+                              prose-strong:text-slate-800
+                              prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-3 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:italic
+                              prose-table:border-collapse
+                              prose-td:border prose-td:border-slate-200 prose-td:p-3
+                              prose-th:border prose-th:border-slate-200 prose-th:p-3 prose-th:bg-primary/10 prose-th:font-bold
+                            ">
+                              <ReactMarkdown 
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  // Custom list items with teal color
+                                  li: ({ children }) => (
+                                    <li className="text-primary font-medium">
+                                      {children}
+                                    </li>
+                                  ),
+                                  // Links in teal with colon styling
+                                  a: ({ children, href }) => (
+                                    <a href={href} className="text-primary font-semibold hover:underline">
+                                      {children}
+                                    </a>
+                                  ),
+                                  // Headers with proper styling
+                                  h1: ({ children }) => (
+                                    <h1 className="text-3xl font-black text-slate-800 mb-6">
+                                      {children}
+                                    </h1>
+                                  ),
+                                  h2: ({ children }) => (
+                                    <div className="flex items-start gap-3 mb-4">
+                                      <div className="w-4 h-4 bg-primary rounded mt-1 flex-shrink-0" />
+                                      <h2 className="text-xl font-black text-slate-800 m-0">
+                                        {children}
+                                      </h2>
+                                    </div>
+                                  ),
+                                  h3: ({ children }) => (
+                                    <h3 className="text-lg font-bold text-slate-700 mb-3">
+                                      {children}
+                                    </h3>
+                                  ),
+                                  p: ({ children }) => (
+                                    <p className="text-slate-600 leading-relaxed mb-4">
+                                      {children}
+                                    </p>
+                                  ),
+                                  // Styled blockquotes
+                                  blockquote: ({ children }) => (
+                                    <blockquote className="border-l-4 border-primary bg-primary/5 py-3 px-4 rounded-r-lg my-4 not-italic">
+                                      {children}
+                                    </blockquote>
+                                  ),
+                                }}
+                              >
+                                {currentSlide?.content || ''}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Key terms bar at bottom */}
+                        {currentSlide?.keyTerms && currentSlide.keyTerms.length > 0 && (
+                          <div className="mt-4 flex flex-wrap items-center gap-2 px-2">
+                            <span className="text-sm font-semibold text-slate-500">🔑 Términos clave:</span>
                             {currentSlide.keyTerms.map((term, idx) => (
-                              <Badge key={idx} variant="secondary" className="bg-primary/10 text-primary">{term}</Badge>
+                              <Badge 
+                                key={idx} 
+                                className="bg-primary/10 text-primary border border-primary/20 font-medium"
+                              >
+                                {term}
+                              </Badge>
                             ))}
                           </div>
                         )}
@@ -2223,44 +2383,49 @@ export default function ScormProfessionalViewer({
               </div>
             </ScrollArea>
 
-            {/* Bottom navigation */}
-            <div className="bg-white dark:bg-slate-800 border-t px-6 py-4 flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={handlePrev}
-                disabled={currentSlideIndex === 0}
-                className="gap-2"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Anterior
-              </Button>
+            {/* Bottom navigation - iSpring style with colored bar */}
+            <div className="relative">
+              {/* Colored progress bar at the very bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-500 via-primary to-purple-500" />
+              
+              <div className="bg-white dark:bg-slate-800 border-t px-6 py-4 pb-5 flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  onClick={handlePrev}
+                  disabled={currentSlideIndex === 0}
+                  className="gap-2 hover:bg-primary/10 hover:text-primary hover:border-primary transition-all"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
 
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">Página</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={slides.length}
-                  value={currentSlideIndex + 1}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value) - 1;
-                    if (val >= 0 && val < slides.length) {
-                      setCurrentSlideIndex(val);
-                    }
-                  }}
-                  className="w-16 text-center font-bold"
-                />
-                <span className="text-sm text-muted-foreground">de <strong>{slides.length}</strong></span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground">Página</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={slides.length}
+                    value={currentSlideIndex + 1}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) - 1;
+                      if (val >= 0 && val < slides.length) {
+                        setCurrentSlideIndex(val);
+                      }
+                    }}
+                    className="w-16 text-center font-bold border-2 border-primary/30 focus:border-primary"
+                  />
+                  <span className="text-sm text-muted-foreground">de <strong className="text-primary">{slides.length}</strong></span>
+                </div>
+
+                <Button
+                  onClick={handleNext}
+                  disabled={currentSlideIndex === slides.length - 1}
+                  className="gap-2 bg-primary hover:bg-primary/90"
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-
-              <Button
-                onClick={handleNext}
-                disabled={currentSlideIndex === slides.length - 1}
-                className="gap-2"
-              >
-                Siguiente
-                <ChevronRight className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
