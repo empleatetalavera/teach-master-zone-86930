@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generateUF0519ComprehensiveSlides } from "./scorm/UF0519SlidesGenerator";
-import { ContentSlide } from "./scorm/types";
+import { ContentSlide, IndexItem, QuizQuestion, ExtendedContentSlide } from "./scorm/types";
 
 interface ScormProfessionalViewerProps {
   open: boolean;
@@ -32,32 +32,7 @@ interface ScormProfessionalViewerProps {
   enrollmentId?: string;
 }
 
-interface ContentSlide {
-  id: string;
-  type: 'intro' | 'content' | 'quiz' | 'summary' | 'exercise' | 'table' | 'checklist';
-  title: string;
-  content: string;
-  keyTerms?: string[];
-  quiz?: QuizQuestion;
-  section?: string;
-  tableData?: { headers: string[]; rows: string[][] };
-  checklistItems?: { id: string; text: string; checked?: boolean }[];
-}
-
-interface QuizQuestion {
-  id: string;
-  question: string;
-  options: { id: string; text: string; isCorrect: boolean }[];
-  explanation: string;
-  hint?: string;
-}
-
-interface IndexItem {
-  id: string;
-  title: string;
-  subItems?: { id: string; title: string; completed?: boolean }[];
-  completed?: boolean;
-}
+// Types imported from ./scorm/types - no local duplicates needed
 
 // Theme definitions - iSpring/Canva style
 const CONTENT_THEMES = [
