@@ -12,9 +12,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { PDFToSyllabusImporter } from "@/components/PDFToSyllabusImporter";
 import {
   Plus, Trash2, Save, Loader2, GripVertical, Eye, Edit2, FileText,
-  HelpCircle, CheckSquare, Table2, BookOpen, X, Copy, ArrowUp, ArrowDown
+  HelpCircle, CheckSquare, Table2, BookOpen, X, Copy, ArrowUp, ArrowDown, Upload
 } from "lucide-react";
 
 interface SyllabusEditorProps {
@@ -57,6 +58,7 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [selectedSlide, setSelectedSlide] = useState<SlideData | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [showPDFImporter, setShowPDFImporter] = useState(false);
 
   useEffect(() => {
     if (open && unitId) {
@@ -320,6 +322,10 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
               <DialogDescription className="mt-1">{unitTitle}</DialogDescription>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowPDFImporter(true)}>
+                <Upload className="h-4 w-4 mr-1" />
+                Importar PDF
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setPreviewMode(!previewMode)}>
                 <Eye className="h-4 w-4 mr-1" />
                 {previewMode ? 'Editar' : 'Vista previa'}
@@ -593,6 +599,15 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
           </div>
         </div>
       </DialogContent>
+
+      {/* PDF Importer Modal */}
+      <PDFToSyllabusImporter
+        open={showPDFImporter}
+        onOpenChange={setShowPDFImporter}
+        unitId={unitId}
+        unitTitle={unitTitle}
+        onImportComplete={loadSlides}
+      />
     </Dialog>
   );
 }
