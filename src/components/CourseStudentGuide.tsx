@@ -9,6 +9,7 @@ import { useCenterBranding } from "@/hooks/useCenterBranding";
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { generateStudentGuidePDF } from "@/lib/generateStudentGuidePDF";
 
 interface CourseStudentGuideProps {
   course: {
@@ -62,8 +63,12 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
     </CollapsibleTrigger>
   );
 
-  const handleDownloadPDF = () => {
-    window.open('/documents/guia_alumno_ADGG0408.pdf', '_blank');
+  const handleDownloadPDF = async () => {
+    await generateStudentGuidePDF(course.title, {
+      centerName: branding.centerName,
+      centerLogo: branding.centerLogo,
+      primaryColor: branding.primaryColor
+    });
   };
 
   return (
