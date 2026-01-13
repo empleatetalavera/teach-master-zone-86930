@@ -169,6 +169,7 @@ export default function AdminCourseSettings() {
                 support_phone: selectedCourse.support_phone,
                 tutor_cv_url: selectedCourse.tutor_cv_url,
                 campus_guide_url: selectedCourse.campus_guide_url,
+                tutor_id: selectedCourse.tutor_id,
               }}
               onUpdate={() => loadCourseDetails(selectedCourse.id)}
             />

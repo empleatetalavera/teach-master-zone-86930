@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Upload, X, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Upload, X, Plus, User, Save } from "lucide-react";
 
 interface CourseSettingsProps {
   courseId: string;
@@ -20,8 +21,14 @@ interface CourseSettingsProps {
     support_phone?: string;
     tutor_cv_url?: string;
     campus_guide_url?: string;
+    tutor_id?: string;
   };
   onUpdate?: () => void;
+}
+
+interface TeacherProfile {
+  id: string;
+  full_name: string;
 }
 
 export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettingsProps) {
@@ -35,6 +42,131 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
     initialData?.specific_objectives || []
   );
   const [newObjective, setNewObjective] = useState("");
+  
+  // Tutor management state
+  const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
+  const [selectedTutorId, setSelectedTutorId] = useState<string>(initialData?.tutor_id || "");
+  const [tutorName, setTutorName] = useState("");
+  const [savingTutor, setSavingTutor] = useState(false);
+  const [loadingTeachers, setLoadingTeachers] = useState(true);
+
+  // Load teachers list
+  useEffect(() => {
+    const loadTeachers = async () => {
+      setLoadingTeachers(true);
+      try {
+        // Get users with teacher role
+        const { data: userRolesData, error: rolesError } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .in("role", ["teacher", "admin", "super_admin"]);
+        
+        if (rolesError) throw rolesError;
+        
+        if (userRolesData && userRolesData.length > 0) {
+          const userIds = userRolesData.map(ur => ur.user_id);
+          const { data: profilesData, error: profilesError } = await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", userIds)
+            .order("full_name");
+          
+          if (profilesError) throw profilesError;
+          setTeachers(profilesData || []);
+          
+          // Load current tutor name if exists
+          if (initialData?.tutor_id) {
+            const currentTutor = profilesData?.find(p => p.id === initialData.tutor_id);
+            if (currentTutor) {
+              setTutorName(currentTutor.full_name || "");
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error loading teachers:", error);
+      } finally {
+        setLoadingTeachers(false);
+      }
+    };
+    
+    loadTeachers();
+  }, [initialData?.tutor_id]);
+
+  // Handle tutor assignment
+  const handleTutorChange = async (tutorId: string) => {
+    setSelectedTutorId(tutorId);
+    const selectedTeacher = teachers.find(t => t.id === tutorId);
+    if (selectedTeacher) {
+      setTutorName(selectedTeacher.full_name || "");
+    }
+    
+    setSavingTutor(true);
+    try {
+      const { error } = await supabase
+        .from("courses")
+        .update({ tutor_id: tutorId })
+        .eq("id", courseId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Tutor asignado",
+        description: `${selectedTeacher?.full_name || 'Tutor'} ha sido asignado al curso`,
+      });
+      
+      onUpdate?.();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingTutor(false);
+    }
+  };
+
+  // Handle tutor name update
+  const handleUpdateTutorName = async () => {
+    if (!selectedTutorId || !tutorName.trim()) {
+      toast({
+        title: "Error",
+        description: "Primero selecciona un tutor y escribe su nombre",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingTutor(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: tutorName })
+        .eq("id", selectedTutorId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Nombre actualizado",
+        description: "El nombre del tutor ha sido actualizado correctamente",
+      });
+      
+      // Refresh teachers list
+      setTeachers(prev => prev.map(t => 
+        t.id === selectedTutorId ? { ...t, full_name: tutorName } : t
+      ));
+      
+      onUpdate?.();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingTutor(false);
+    }
+  };
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
@@ -383,6 +515,90 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
 
   return (
     <div className="space-y-6">
+      {/* Tutor Assignment Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Asignación de Tutor/a
+          </CardTitle>
+          <CardDescription>
+            Selecciona y edita el nombre del tutor/a asignado al curso
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="tutor-select">Seleccionar Tutor/a</Label>
+              {loadingTeachers ? (
+                <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Cargando tutores...</span>
+                </div>
+              ) : (
+                <Select 
+                  value={selectedTutorId} 
+                  onValueChange={handleTutorChange}
+                  disabled={savingTutor}
+                >
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Selecciona un tutor/a" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.full_name || "Sin nombre"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            
+            <div>
+              <Label htmlFor="tutor-name">Nombre del Tutor/a</Label>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  id="tutor-name"
+                  value={tutorName}
+                  onChange={(e) => setTutorName(e.target.value)}
+                  placeholder="Nombre completo del tutor/a"
+                  disabled={!selectedTutorId || savingTutor}
+                />
+                <Button 
+                  onClick={handleUpdateTutorName}
+                  disabled={!selectedTutorId || !tutorName.trim() || savingTutor}
+                  size="icon"
+                >
+                  {savingTutor ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Edita el nombre que se mostrará a los alumnos
+              </p>
+            </div>
+          </div>
+          
+          {selectedTutorId && tutorName && (
+            <div className="p-3 bg-primary/5 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
+                  {tutorName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-medium">{tutorName}</p>
+                  <p className="text-xs text-muted-foreground">Tutor/a asignado/a al curso</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Video de Presentación</CardTitle>
