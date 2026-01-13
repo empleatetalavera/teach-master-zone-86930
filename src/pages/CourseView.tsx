@@ -34,6 +34,7 @@ import { PlatformHelpResources } from "@/components/PlatformHelpResources";
 import { CourseForum } from "@/components/CourseForum";
 import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
+import { ActivitySubmissionViewer } from "@/components/ActivitySubmissionViewer";
 
 interface Course {
   id: string;
@@ -124,12 +125,21 @@ export default function CourseView() {
 
   // Activity manager state
   const [activityManagerOpen, setActivityManagerOpen] = useState(false);
+  
+  // Activity submission viewer state
+  const [activitySubmissionOpen, setActivitySubmissionOpen] = useState(false);
+  const [selectedActivityId, setSelectedActivityId] = useState<string>("");
 
   // SCORM content viewer state
   const [scormViewerOpen, setScormViewerOpen] = useState(false);
 
   // Syllabus editor state
   const [syllabusEditorOpen, setSyllabusEditorOpen] = useState(false);
+  
+  const openActivitySubmission = (activityId: string) => {
+    setSelectedActivityId(activityId);
+    setActivitySubmissionOpen(true);
+  };
 
   const openContentViewer = (unitId: string, unitTitle: string, contentType: 'video' | 'document' | 'audio' | 'scorm' | 'exercise' | 'presentation') => {
     setSelectedUnitId(unitId);
@@ -1508,15 +1518,25 @@ export default function CourseView() {
                                                     <div className="space-y-2">
                                                       {unit.activities && unit.activities.length > 0 ? (
                                                         unit.activities.map((activity: any, actIdx: number) => (
-                                                          <div key={activity.id} className="border rounded-lg p-3 bg-orange-50/50">
+                                                          <div key={activity.id} className="border rounded-lg p-3 bg-orange-50/50 hover:bg-orange-100/50 transition-colors cursor-pointer"
+                                                            onClick={() => {
+                                                              if (userRole === 'student') {
+                                                                openActivitySubmission(activity.id);
+                                                              } else {
+                                                                openActivityManager(unit.id, unit.title);
+                                                              }
+                                                            }}
+                                                          >
                                                             <div className="flex items-center gap-2">
                                                               <Checkbox checked={activity.completed} className="h-4 w-4" />
-                                                              <button
-                                                                onClick={() => openActivityManager(unit.id, unit.title)}
-                                                                className="flex-1 text-left text-primary hover:text-primary/80 transition-colors text-sm font-medium"
-                                                              >
+                                                              <span className="flex-1 text-left text-primary hover:text-primary/80 transition-colors text-sm font-medium">
                                                                 Actividad {actIdx + 1}: {activity.title}
-                                                              </button>
+                                                              </span>
+                                                              {activity.max_score && (
+                                                                <Badge variant="outline" className="text-xs">
+                                                                  Punt: {activity.max_score}
+                                                                </Badge>
+                                                              )}
                                                               {activity.completed && <CheckCircle2 className="h-4 w-4 text-green-500" />}
                                                             </div>
                                                             {activity.due_date && (
@@ -2152,6 +2172,14 @@ export default function CourseView() {
         onOpenChange={setSyllabusEditorOpen}
         unitId={selectedUnitId}
         unitTitle={selectedUnitTitle}
+      />
+
+      {/* Activity Submission Viewer Dialog */}
+      <ActivitySubmissionViewer
+        open={activitySubmissionOpen}
+        onOpenChange={setActivitySubmissionOpen}
+        activityId={selectedActivityId}
+        enrollmentId={enrollment?.id || ""}
       />
     </div>
   );
