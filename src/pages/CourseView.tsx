@@ -35,6 +35,7 @@ import { CourseForum } from "@/components/CourseForum";
 import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ActivitySubmissionViewer } from "@/components/ActivitySubmissionViewer";
+import { useUnitProgress } from "@/hooks/useUnitProgress";
 
 interface Course {
   id: string;
@@ -432,6 +433,17 @@ export default function CourseView() {
       </div>
     );
   }
+
+  // Extract all formative unit IDs for progress tracking
+  const allFormativeUnitIds = modules.flatMap(m => 
+    (m.formative_units || []).map(u => u.id)
+  );
+
+  // Use unit progress hook
+  const { getUnitProgress, updateContentProgress, updateActivityProgress } = useUnitProgress({
+    enrollmentId: enrollment?.id || null,
+    formativeUnitIds: allFormativeUnitIds,
+  });
 
   // Obtener próxima evaluación
   const nextEvaluation = modules
@@ -1418,14 +1430,21 @@ export default function CourseView() {
                                     </div>
                                   ) : (
                                     <div className="space-y-0">
-                                      {moduleUnits.map((unit, unitIndex) => (
+                                      {moduleUnits.map((unit, unitIndex) => {
+                                        const unitProgress = getUnitProgress(unit.id);
+                                        return (
                                         <Accordion key={unit.id} type="single" collapsible>
                                           <AccordionItem value={unit.id} className="border-0">
                                             <AccordionTrigger className="hover:no-underline p-0">
                                               <div className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80">
-                                                <span className="text-left">
-                                                  Unidad Didáctica {unitIndex + 1}. {unit.title}
-                                                </span>
+                                                <div className="flex items-center gap-3 flex-1">
+                                                  <span className="text-left">
+                                                    Unidad Didáctica {unitIndex + 1}. {unit.title}
+                                                  </span>
+                                                  <Badge variant="secondary" className="bg-white/20 text-white text-xs">
+                                                    {unitProgress.overall_progress}% completado
+                                                  </Badge>
+                                                </div>
                                                 <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                                               </div>
                                             </AccordionTrigger>
@@ -1439,7 +1458,12 @@ export default function CourseView() {
                                                   </div>
                                                   <div className="flex-1">
                                                     <div className="flex items-center justify-between mb-2">
-                                                      <h5 className="font-semibold text-foreground">Contenido interactivo</h5>
+                                                      <div className="flex items-center gap-2">
+                                                        <h5 className="font-semibold text-foreground">Contenido interactivo</h5>
+                                                        <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-0.5 rounded-full">
+                                                          {unitProgress.content_progress}%
+                                                        </span>
+                                                      </div>
                                                       {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
                                                         <div className="flex items-center gap-1">
                                                           <Button 
@@ -1473,6 +1497,14 @@ export default function CourseView() {
                                                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                                                     </button>
                                                     
+                                                    {/* Barra de progreso del contenido */}
+                                                    <div className="flex items-center gap-2 mt-2 mb-3">
+                                                      <Progress value={unitProgress.content_progress} className="h-2 flex-1" />
+                                                      <span className="text-xs font-medium text-muted-foreground min-w-[40px]">
+                                                        {unitProgress.content_progress}%
+                                                      </span>
+                                                    </div>
+
                                                     {/* Botones de acceso al contenido */}
                                                     <div className="flex items-center gap-3 mt-3">
                                                       <Button
@@ -1502,7 +1534,12 @@ export default function CourseView() {
                                                   </div>
                                                   <div className="flex-1">
                                                     <div className="flex items-center justify-between mb-2">
-                                                      <h5 className="font-semibold text-foreground">Actividades de aprendizaje evaluables</h5>
+                                                      <div className="flex items-center gap-2">
+                                                        <h5 className="font-semibold text-foreground">Actividades de aprendizaje evaluables</h5>
+                                                        <span className="text-xs text-muted-foreground bg-orange-100 px-2 py-0.5 rounded-full">
+                                                          {unitProgress.activities_progress}%
+                                                        </span>
+                                                      </div>
                                                       {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
                                                         <Button 
                                                           size="sm" 
@@ -1515,6 +1552,15 @@ export default function CourseView() {
                                                         </Button>
                                                       )}
                                                     </div>
+                                                    
+                                                    {/* Barra de progreso de actividades */}
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                      <Progress value={unitProgress.activities_progress} className="h-2 flex-1" />
+                                                      <span className="text-xs font-medium text-muted-foreground min-w-[40px]">
+                                                        {unitProgress.activities_progress}%
+                                                      </span>
+                                                    </div>
+
                                                     <div className="space-y-2">
                                                       {unit.activities && unit.activities.length > 0 ? (
                                                         unit.activities.map((activity: any, actIdx: number) => (
@@ -1642,7 +1688,8 @@ export default function CourseView() {
                                             </AccordionContent>
                                           </AccordionItem>
                                         </Accordion>
-                                      ))}
+                                        );
+                                      })}
                                     </div>
                                   )}
                                 </div>
