@@ -224,7 +224,7 @@ Las **Administraciones Públicas** son el conjunto de órganos y entidades que e
   },
   {
     id: "uf0517-ud1-009",
-    type: "flashcards",
+    type: "content",
     title: "2.3 Tarjetas: Órganos del Estado",
     section: "2. Entidades Públicas",
     content: `# 🎴 Tarjetas de Estudio: Órganos Constitucionales
@@ -451,7 +451,7 @@ La **S.L.** es la forma jurídica más utilizada en España por su flexibilidad 
   },
   {
     id: "uf0517-ud1-018",
-    type: "flashcards",
+    type: "content",
     title: "3.4 Tarjetas: Órganos Societarios",
     section: "3. Entidades Privadas",
     content: `# 🎴 Órganos de Gobierno de las Sociedades
@@ -717,7 +717,7 @@ Los trabajadores dependen de varios jefes especializados en diferentes funciones
   },
   {
     id: "uf0517-ud1-027",
-    type: "flashcards",
+    type: "content",
     title: "4.6 Tarjetas: Conceptos de Organización",
     section: "4. Estructura Organizativa",
     content: `# 🎴 Conceptos Clave de Organización
@@ -1045,7 +1045,7 @@ Gestiona los recursos económicos y documentales de la empresa.
   },
   {
     id: "uf0517-ud1-039",
-    type: "flashcards",
+    type: "content",
     title: "6.5 Tarjetas: Departamentos",
     section: "6. Departamentos Empresariales",
     content: `# 🎴 Conceptos de los Departamentos Empresariales`,
@@ -1293,7 +1293,7 @@ Son los principios que orientan el comportamiento de la organización y sus miem
   },
   {
     id: "uf0517-ud1-049",
-    type: "flashcards",
+    type: "content",
     title: "8.3 Tarjetas: Cultura Organizacional",
     section: "8. Cultura Organizacional",
     content: `# 🎴 Conceptos de Cultura Empresarial`,
@@ -1514,7 +1514,7 @@ El **RGPD** (Reglamento General de Protección de Datos) es la normativa europea
   },
   {
     id: "uf0517-ud1-057",
-    type: "flashcards",
+    type: "content",
     title: "10.3 Tarjetas: Normativa",
     section: "10. Normativa Básica",
     content: `# 🎴 Conceptos Legales Clave`,
