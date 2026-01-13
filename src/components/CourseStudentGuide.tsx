@@ -8,6 +8,7 @@ import {
 import { useCenterBranding } from "@/hooks/useCenterBranding";
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 interface CourseStudentGuideProps {
   course: {
@@ -61,6 +62,10 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
     </CollapsibleTrigger>
   );
 
+  const handleDownloadPDF = () => {
+    window.open('/documents/guia_alumno_ADGG0408.pdf', '_blank');
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
@@ -86,6 +91,18 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
             <span className="text-sm font-medium">{course.duration_hours} horas</span>
           </div>
         )}
+        
+        {/* Botón descargar PDF */}
+        <div className="mt-4">
+          <Button 
+            onClick={handleDownloadPDF} 
+            variant="outline" 
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Descargar Guía del Alumno (PDF)
+          </Button>
+        </div>
       </div>
 
       {/* Section 1: Presentación */}
