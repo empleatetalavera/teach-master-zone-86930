@@ -25,6 +25,7 @@ import ScormProfessionalViewer from "@/components/ScormProfessionalViewer";
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
 import { CourseWorkPlan } from "@/components/CourseWorkPlan";
+import { PreAssessmentTest } from "@/components/PreAssessmentTest";
 
 interface Course {
   id: string;
@@ -1061,6 +1062,13 @@ export default function CourseView() {
                           <AccordionContent>
                             <CardContent className="pt-0 border-t bg-muted/20">
                               <div className="space-y-4 pt-4">
+                                {/* Test de Conocimientos Previos */}
+                                <PreAssessmentTest 
+                                  moduleId={module.id}
+                                  moduleTitle={module.title}
+                                  onComplete={(results) => console.log('Assessment results:', results)}
+                                />
+
                                 {/* Fila 1: Mapa Conceptual y Objetivos */}
                                 <div className="grid lg:grid-cols-2 gap-4">
                                   <div className="bg-background rounded-lg p-4 border">
