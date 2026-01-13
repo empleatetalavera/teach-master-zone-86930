@@ -16,12 +16,14 @@ import {
 } from "lucide-react";
 
 interface ModuleEvaluationTestProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   moduleId: string;
   moduleTitle: string;
-  courseId: string;
+  courseId?: string;
   enrollmentId?: string;
+  inline?: boolean;
+  onComplete?: (result: TestResult) => void;
 }
 
 interface Question {
@@ -743,7 +745,9 @@ export function ModuleEvaluationTest({
   moduleId,
   moduleTitle,
   courseId,
-  enrollmentId
+  enrollmentId,
+  inline = false,
+  onComplete
 }: ModuleEvaluationTestProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -757,9 +761,9 @@ export function ModuleEvaluationTest({
   const [timeRemaining, setTimeRemaining] = useState(60 * 60); // 60 minutes in seconds
   const [showReview, setShowReview] = useState(false);
 
-  // Load questions when dialog opens
+  // Load questions when dialog opens or component mounts (inline mode)
   useEffect(() => {
-    if (open && !testStarted) {
+    if ((open || inline) && !testStarted) {
       setQuestions(generateModuleQuestions(moduleTitle));
       setAnswers({});
       setCurrentQuestionIndex(0);
@@ -767,7 +771,7 @@ export function ModuleEvaluationTest({
       setResult(null);
       setShowReview(false);
     }
-  }, [open, moduleTitle, testStarted]);
+  }, [open, inline, moduleTitle, testStarted]);
 
   // Timer
   useEffect(() => {
@@ -862,35 +866,28 @@ export function ModuleEvaluationTest({
   const currentQuestion = questions[currentQuestionIndex];
   const progress = questions.length > 0 ? ((Object.keys(answers).length) / questions.length) * 100 : 0;
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <FileQuestion className="h-5 w-5 text-primary" />
-            </div>
-            Test de Evaluación del Módulo
-          </DialogTitle>
-          <DialogDescription>
-            {moduleTitle} - 50 preguntas tipo test
-          </DialogDescription>
-        </DialogHeader>
+  // Call onComplete when test is finished
+  useEffect(() => {
+    if (result && onComplete) {
+      onComplete(result);
+    }
+  }, [result, onComplete]);
 
-        <ScrollArea className="flex-1 px-1">
-          {!testStarted ? (
-            /* Start Screen */
-            <div className="space-y-6 py-8">
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center">
-                  <FileQuestion className="h-10 w-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold">Evaluación Final del Módulo</h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Este test evalúa todos los conocimientos adquiridos en el módulo. 
-                  Dispones de 60 minutos para completar las 50 preguntas.
-                </p>
-              </div>
+  const testContent = (
+    <ScrollArea className="flex-1 px-1">
+      {!testStarted ? (
+        /* Start Screen */
+        <div className="space-y-6 py-8">
+          <div className="text-center space-y-4">
+            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center">
+              <FileQuestion className="h-10 w-10 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold">Evaluación Final del Módulo</h3>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Este test evalúa todos los conocimientos adquiridos en el módulo. 
+              Dispones de 60 minutos para completar las 50 preguntas.
+            </p>
+          </div>
 
               <div className="grid gap-4 md:grid-cols-3 max-w-2xl mx-auto">
                 <Card className="text-center">
@@ -1139,6 +1136,33 @@ export function ModuleEvaluationTest({
             </div>
           )}
         </ScrollArea>
+      );
+
+  // If inline mode, render without Dialog
+  if (inline) {
+    return (
+      <div className="w-full">
+        {testContent}
+      </div>
+    );
+  }
+
+  // Otherwise, render with Dialog
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <FileQuestion className="h-5 w-5 text-primary" />
+            </div>
+            Test de Evaluación del Módulo
+          </DialogTitle>
+          <DialogDescription>
+            {moduleTitle} - 50 preguntas tipo test
+          </DialogDescription>
+        </DialogHeader>
+        {testContent}
       </DialogContent>
     </Dialog>
   );
