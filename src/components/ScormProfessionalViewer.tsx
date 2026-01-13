@@ -1557,8 +1557,12 @@ export default function ScormProfessionalViewer({
   // Load slides from database
   useEffect(() => {
     const loadSlidesFromDatabase = async () => {
-      if (!open || !unitId) return;
+      if (!open || !unitId) {
+        console.log("[ScormProfessionalViewer] Skipping load - open:", open, "unitId:", unitId);
+        return;
+      }
       
+      console.log("[ScormProfessionalViewer] Loading slides for unitId:", unitId);
       setLoadingSlides(true);
       try {
         const { data, error } = await supabase
@@ -1567,6 +1571,8 @@ export default function ScormProfessionalViewer({
           .eq("formative_unit_id", unitId)
           .eq("is_active", true)
           .order("order_index");
+
+        console.log("[ScormProfessionalViewer] Query result - data:", data?.length, "error:", error);
 
         if (error) throw error;
         
