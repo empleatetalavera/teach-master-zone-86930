@@ -6,7 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -1280,7 +1281,7 @@ export default function CourseView() {
 
                                 {/* FORMACIÓN EN CAMPUS - Estilo SEPE Homologado */}
                                 <div className="border-t pt-4">
-                                  <div className="bg-[#1a3a4a] text-white px-4 py-2 font-semibold text-sm uppercase tracking-wide rounded-t-md">
+                                  <div className="bg-primary text-primary-foreground px-4 py-2 font-semibold text-sm uppercase tracking-wide rounded-t-md">
                                     FORMACIÓN EN CAMPUS
                                   </div>
                                   
@@ -1293,19 +1294,12 @@ export default function CourseView() {
                                       {moduleUnits.map((unit, unitIndex) => (
                                         <Accordion key={unit.id} type="single" collapsible>
                                           <AccordionItem value={unit.id} className="border-0">
-                                            <AccordionTrigger className="hover:no-underline p-0 [&[data-state=open]>div>.ampliar-text]:hidden [&[data-state=closed]>div>.contraer-text]:hidden">
-                                              <div className={`w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm ${
-                                                unitIndex === 0 
-                                                  ? 'bg-gradient-to-r from-[#2a7a9a] to-[#3a8aaa]' 
-                                                  : 'bg-gradient-to-r from-[#1a5a7a] to-[#2a6a8a]'
-                                              }`}>
+                                            <AccordionTrigger className="hover:no-underline p-0">
+                                              <div className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80">
                                                 <span className="text-left">
                                                   Unidad Didáctica {unitIndex + 1}. {unit.title}
                                                 </span>
-                                                <div className="flex items-center gap-2">
-                                                  <span className="contraer-text text-xs uppercase tracking-wide">CONTRAER</span>
-                                                  <span className="ampliar-text text-xs uppercase tracking-wide">AMPLIAR</span>
-                                                </div>
+                                                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                                               </div>
                                             </AccordionTrigger>
                                             <AccordionContent className="p-0">
@@ -1313,14 +1307,27 @@ export default function CourseView() {
                                                 
                                                 {/* Contenido Interactivo - Estilo SEPE */}
                                                 <div className="flex items-start gap-3">
-                                                  <div className="p-2 bg-purple-100 rounded">
-                                                    <Layers className="h-5 w-5 text-purple-600" />
+                                                  <div className="p-2 bg-primary/10 rounded">
+                                                    <Layers className="h-5 w-5 text-primary" />
                                                   </div>
                                                   <div className="flex-1">
-                                                    <h5 className="font-semibold text-slate-700 mb-2">Contenido interactivo</h5>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                      <h5 className="font-semibold text-foreground">Contenido interactivo</h5>
+                                                      {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                        <Button 
+                                                          size="sm" 
+                                                          variant="ghost" 
+                                                          className="h-7 text-xs gap-1"
+                                                          onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
+                                                        >
+                                                          <Plus className="h-3 w-3" />
+                                                          Añadir
+                                                        </Button>
+                                                      )}
+                                                    </div>
                                                     <button
                                                       onClick={() => openScormViewer(unit.id, unit.title)}
-                                                      className="flex items-center gap-2 text-[#2a7a9a] hover:text-[#1a5a7a] transition-colors group"
+                                                      className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors group"
                                                     >
                                                       <span className="text-sm">
                                                         {unitIndex + 1}. {unit.title}
@@ -1330,27 +1337,36 @@ export default function CourseView() {
                                                     
                                                     {/* Material Complementario */}
                                                     <div className="mt-3 ml-2 space-y-2">
-                                                      <button
-                                                        onClick={() => openContentViewer(unit.id, unit.title, 'document')}
-                                                        className="flex items-center gap-2 text-sm text-slate-600 hover:text-[#2a7a9a]"
-                                                      >
-                                                        <FileText className="h-4 w-4 text-blue-500" />
-                                                        <span>Documentos de apoyo</span>
-                                                      </button>
-                                                      <button
-                                                        onClick={() => openContentViewer(unit.id, unit.title, 'video')}
-                                                        className="flex items-center gap-2 text-sm text-slate-600 hover:text-[#2a7a9a]"
-                                                      >
-                                                        <Video className="h-4 w-4 text-red-500" />
-                                                        <span>Vídeos de apoyo</span>
-                                                      </button>
-                                                      <button
-                                                        onClick={() => openContentViewer(unit.id, unit.title, 'audio')}
-                                                        className="flex items-center gap-2 text-sm text-slate-600 hover:text-[#2a7a9a]"
-                                                      >
-                                                        <Headphones className="h-4 w-4 text-purple-500" />
-                                                        <span>Audio de apoyo</span>
-                                                      </button>
+                                                      <div className="flex items-center justify-between">
+                                                        <button
+                                                          onClick={() => openContentViewer(unit.id, unit.title, 'document')}
+                                                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+                                                        >
+                                                          <FileText className="h-4 w-4 text-blue-500" />
+                                                          <span>Documentos de apoyo</span>
+                                                          <Circle className="h-3 w-3 text-muted-foreground/50" />
+                                                        </button>
+                                                      </div>
+                                                      <div className="flex items-center justify-between">
+                                                        <button
+                                                          onClick={() => openContentViewer(unit.id, unit.title, 'video')}
+                                                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+                                                        >
+                                                          <Video className="h-4 w-4 text-red-500" />
+                                                          <span>Vídeos de apoyo</span>
+                                                          <Circle className="h-3 w-3 text-muted-foreground/50" />
+                                                        </button>
+                                                      </div>
+                                                      <div className="flex items-center justify-between">
+                                                        <button
+                                                          onClick={() => openContentViewer(unit.id, unit.title, 'audio')}
+                                                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+                                                        >
+                                                          <Headphones className="h-4 w-4 text-purple-500" />
+                                                          <span>Audio de apoyo</span>
+                                                          <Circle className="h-3 w-3 text-muted-foreground/50" />
+                                                        </button>
+                                                      </div>
                                                     </div>
                                                   </div>
                                                 </div>
@@ -1361,40 +1377,64 @@ export default function CourseView() {
                                                     <ClipboardList className="h-5 w-5 text-orange-600" />
                                                   </div>
                                                   <div className="flex-1">
-                                                    <h5 className="font-semibold text-slate-700 mb-2">Actividades de aprendizaje evaluables</h5>
-                                                    <div className="space-y-1">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                      <h5 className="font-semibold text-foreground">Actividades de aprendizaje evaluables</h5>
+                                                      {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                        <Button 
+                                                          size="sm" 
+                                                          variant="ghost" 
+                                                          className="h-7 text-xs gap-1"
+                                                          onClick={() => openActivityManager(unit.id, unit.title)}
+                                                        >
+                                                          <Plus className="h-3 w-3" />
+                                                          Añadir
+                                                        </Button>
+                                                      )}
+                                                    </div>
+                                                    <div className="space-y-2">
                                                       {unit.activities && unit.activities.length > 0 ? (
                                                         unit.activities.map((activity: any, actIdx: number) => (
-                                                          <button
-                                                            key={activity.id}
-                                                            onClick={() => openActivityManager(unit.id, unit.title)}
-                                                            className="flex items-center gap-2 text-[#2a7a9a] hover:text-[#1a5a7a] transition-colors text-sm"
-                                                          >
-                                                            <span>Actividad {actIdx + 1}_{activity.title}</span>
+                                                          <div key={activity.id} className="flex items-center gap-2">
+                                                            <Checkbox checked={activity.completed} className="h-4 w-4" />
+                                                            <button
+                                                              onClick={() => openActivityManager(unit.id, unit.title)}
+                                                              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm"
+                                                            >
+                                                              <span>Actividad {actIdx + 1}: {activity.title}</span>
+                                                            </button>
                                                             {activity.completed && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-                                                          </button>
+                                                          </div>
                                                         ))
                                                       ) : (
                                                         <>
-                                                          <button
-                                                            onClick={() => openActivityManager(unit.id, unit.title)}
-                                                            className="flex items-center gap-2 text-[#2a7a9a] hover:text-[#1a5a7a] transition-colors text-sm"
-                                                          >
-                                                            <span>Actividad 1_Caso práctico</span>
+                                                          <div className="flex items-center gap-2">
+                                                            <Checkbox checked={true} className="h-4 w-4" />
+                                                            <button
+                                                              onClick={() => openActivityManager(unit.id, unit.title)}
+                                                              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm"
+                                                            >
+                                                              <span>Actividad 1: Caso práctico</span>
+                                                            </button>
                                                             <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                                          </button>
-                                                          <button
-                                                            onClick={() => openActivityManager(unit.id, unit.title)}
-                                                            className="text-[#2a7a9a] hover:text-[#1a5a7a] transition-colors text-sm"
-                                                          >
-                                                            Actividad 2_Ejercicio teórico práctico
-                                                          </button>
-                                                          <button
-                                                            onClick={() => openActivityManager(unit.id, unit.title)}
-                                                            className="text-[#2a7a9a] hover:text-[#1a5a7a] transition-colors text-sm"
-                                                          >
-                                                            Actividad 3_Caso práctico
-                                                          </button>
+                                                          </div>
+                                                          <div className="flex items-center gap-2">
+                                                            <Checkbox checked={false} className="h-4 w-4" />
+                                                            <button
+                                                              onClick={() => openActivityManager(unit.id, unit.title)}
+                                                              className="text-primary hover:text-primary/80 transition-colors text-sm"
+                                                            >
+                                                              Actividad 2: Ejercicio teórico práctico
+                                                            </button>
+                                                          </div>
+                                                          <div className="flex items-center gap-2">
+                                                            <Checkbox checked={false} className="h-4 w-4" />
+                                                            <button
+                                                              onClick={() => openActivityManager(unit.id, unit.title)}
+                                                              className="text-primary hover:text-primary/80 transition-colors text-sm"
+                                                            >
+                                                              Actividad 3: Caso práctico
+                                                            </button>
+                                                          </div>
                                                         </>
                                                       )}
                                                     </div>
@@ -1509,6 +1549,27 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="exams" className="space-y-4">
+            {/* Info Banner sobre fechas y obligatoriedad */}
+            <Card className="bg-primary/5 border-primary/20">
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <Calendar className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium text-primary">Fechas Exámenes Presenciales</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Los exámenes presenciales son <strong className="text-foreground">obligatorios</strong> para la obtención del certificado de profesionalidad. 
+                      Debes superar todos los módulos con una nota mínima del 50% para poder presentarte al examen final presencial.
+                    </p>
+                    <div className="mt-3 p-3 bg-background rounded-lg border">
+                      <p className="text-sm font-medium">📅 1ª Convocatoria: {course.end_date ? new Date(course.end_date).toLocaleDateString("es-ES", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Por determinar'}</p>
+                      <p className="text-sm font-medium mt-1">📅 2ª Convocatoria: Por determinar</p>
+                      <p className="text-xs text-muted-foreground mt-2">📍 Ubicación: Centro de Formación</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {exams.length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center text-muted-foreground">
@@ -1518,11 +1579,11 @@ export default function CourseView() {
               </Card>
             ) : (
               exams.map((exam) => (
-                <Card key={exam.id}>
+                <Card key={exam.id} className="border-l-4 border-l-primary">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
+                        <FileText className="h-5 w-5 text-primary" />
                         {exam.title}
                       </span>
                       <Badge variant={exam.evaluation_attempts?.some((a: any) => a.status === 'completed') ? "default" : "secondary"}>
@@ -1534,16 +1595,16 @@ export default function CourseView() {
                     )}
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-4 text-sm flex-wrap">
                       <span className="text-muted-foreground">
-                        Nota mínima: <strong>{exam.passing_score}%</strong>
+                        Nota mínima: <strong className="text-foreground">{exam.passing_score}%</strong>
                       </span>
                       <span className="text-muted-foreground">
-                        Intentos: <strong>{exam.max_attempts || "Ilimitados"}</strong>
+                        Intentos: <strong className="text-foreground">{exam.max_attempts || "Ilimitados"}</strong>
                       </span>
                       {exam.time_limit_minutes && (
                         <span className="text-muted-foreground">
-                          Tiempo: <strong>{exam.time_limit_minutes} min</strong>
+                          Tiempo: <strong className="text-foreground">{exam.time_limit_minutes} min</strong>
                         </span>
                       )}
                     </div>
@@ -1570,6 +1631,36 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="tutorials" className="space-y-4">
+            {/* Info Banner sobre fechas y obligatoriedad */}
+            <Card className="bg-primary/5 border-primary/20">
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <Calendar className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium text-primary">Fechas Tutorías Presenciales</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      La asistencia a las tutorías presenciales es <strong className="text-foreground">obligatoria</strong> según la normativa SEPE para certificados de profesionalidad. 
+                      Se requiere un mínimo del 75% de asistencia para poder presentarse al examen final.
+                    </p>
+                    <div className="mt-3 grid gap-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span>Asistencia mínima requerida: <strong>75%</strong></span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span>Participación activa en las sesiones</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span>Resolución de dudas con el tutor</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {tutorials.length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center text-muted-foreground">
@@ -1579,14 +1670,16 @@ export default function CourseView() {
               </Card>
             ) : (
               tutorials.map((tutorial) => (
-                <Card key={tutorial.id}>
+                <Card key={tutorial.id} className="border-l-4 border-l-primary">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
+                      <MessageSquare className="h-5 w-5 text-primary" />
                       {tutorial.title}
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
                       {new Date(tutorial.start_time).toLocaleString("es-ES", {
+                        weekday: 'long',
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -1599,21 +1692,30 @@ export default function CourseView() {
                       })}`}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-2">
+                  <CardContent className="space-y-3">
                     {tutorial.description && (
                       <p className="text-sm text-muted-foreground">{tutorial.description}</p>
                     )}
+                    
+                    <div className="flex items-center gap-2">
+                      <Badge variant={tutorial.is_mandatory ? "destructive" : "secondary"}>
+                        {tutorial.is_mandatory !== false ? "Obligatoria" : "Opcional"}
+                      </Badge>
+                    </div>
+
+                    {tutorial.location && (
+                      <div className="flex items-center gap-2 text-sm p-3 bg-muted rounded-lg">
+                        <MapIcon className="h-4 w-4 text-muted-foreground" />
+                        <span><strong>Ubicación:</strong> {tutorial.location}</span>
+                      </div>
+                    )}
+
                     {tutorial.meeting_url && (
                       <Button className="w-full" asChild>
                         <a href={tutorial.meeting_url} target="_blank" rel="noopener noreferrer">
-                          Acceder a la Tutoría
+                          Acceder a la Tutoría Virtual
                         </a>
                       </Button>
-                    )}
-                    {tutorial.location && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <span className="font-medium">Ubicación:</span> {tutorial.location}
-                      </p>
                     )}
                   </CardContent>
                 </Card>
