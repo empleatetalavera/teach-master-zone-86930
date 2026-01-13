@@ -282,7 +282,7 @@ export default function CourseView() {
       // Load forum topics
       const { data: topicsData } = await supabase
         .from("forum_topics")
-        .select("*, profiles(full_name)")
+        .select("*")
         .eq("course_id", courseId)
         .order("created_at", { ascending: false })
         .limit(10);

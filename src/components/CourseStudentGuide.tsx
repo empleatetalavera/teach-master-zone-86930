@@ -3,7 +3,7 @@ import {
   CheckCircle2, HelpCircle, Phone, Mail, GraduationCap, Target, ShieldCheck, 
   HeadphonesIcon, Settings, Play, ChevronDown, ChevronUp, AlertCircle, 
   Download, Video, Headphones, Building2, Briefcase, Globe, ListChecks,
-  UserCheck, ClipboardList, Lightbulb, Folder, Timer
+  UserCheck, ClipboardList, Lightbulb, Folder, Timer, FileDown
 } from "lucide-react";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
 import { useState } from "react";
