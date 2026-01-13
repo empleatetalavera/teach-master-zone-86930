@@ -953,7 +953,8 @@ export default function CourseView() {
                 <CourseTrainingProgram 
                   course={course} 
                   modules={modules}
-                  centerSlug={centerSlug} 
+                  centerSlug={centerSlug}
+                  isEditable={userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin'}
                 />
               </CardContent>
             </Card>

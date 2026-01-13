@@ -458,6 +458,50 @@ export type Database = {
           },
         ]
       }
+      course_annexes: {
+        Row: {
+          annex_type: string
+          course_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          annex_type: string
+          course_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          annex_type?: string
+          course_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_annexes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_center_assignments: {
         Row: {
           assigned_at: string | null
