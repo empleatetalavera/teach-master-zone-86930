@@ -13,10 +13,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { PDFToSyllabusImporter } from "@/components/PDFToSyllabusImporter";
+import { generateUF0517UD1Slides } from "@/components/scorm/UF0517UD1SlidesGenerator";
+import { generateUF0517UD2Slides } from "@/components/scorm/UF0517UD2SlidesGenerator";
+import { generateUF0519ComprehensiveSlides } from "@/components/scorm/UF0519SlidesGenerator";
 import {
   Plus, Trash2, Save, Loader2, GripVertical, Eye, Edit2, FileText,
   HelpCircle, CheckSquare, Table2, BookOpen, X, Copy, ArrowUp, ArrowDown, Upload,
-  Image, Target, MousePointerClick, AlertCircle, Info, Lightbulb, AlertTriangle
+  Image, Target, MousePointerClick, AlertCircle, Info, Lightbulb, AlertTriangle, Sparkles
 } from "lucide-react";
 
 interface SyllabusEditorProps {
@@ -81,6 +84,7 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [selectedSlide, setSelectedSlide] = useState<SlideData | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
@@ -164,6 +168,106 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
       toast({ title: "Slide añadido" });
     } catch (error) {
       toast({ title: "Error", description: "No se pudo añadir el slide", variant: "destructive" });
+    }
+  };
+
+  // Determine which template to use based on unit title
+  const getTemplateSlides = () => {
+    const title = unitTitle.toLowerCase();
+    
+    // UF0517 - UD1: Organización de entidades
+    if (title.includes('uf0517') && (title.includes('organiza') || title.includes('empresa'))) {
+      return generateUF0517UD1Slides();
+    }
+    
+    // UF0517 - UD2: Recursos Humanos (check if it's UD2 based on content)
+    if (title.includes('recursos humanos')) {
+      return generateUF0517UD2Slides();
+    }
+    
+    // UF0519 - Documentación económico-administrativa
+    if (title.includes('uf0519') || title.includes('económico') || title.includes('documentación')) {
+      return generateUF0519ComprehensiveSlides();
+    }
+    
+    return null;
+  };
+
+  const handleGenerateFromTemplate = async () => {
+    const templateSlides = getTemplateSlides();
+    
+    if (!templateSlides || templateSlides.length === 0) {
+      toast({ 
+        title: "Sin plantilla disponible", 
+        description: "No hay plantilla predefinida para esta unidad. Usa 'Importar PDF' para generar contenido.",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    if (slides.length > 0) {
+      if (!confirm(`Ya existen ${slides.length} slides. ¿Deseas añadir ${templateSlides.length} slides más desde la plantilla?`)) {
+        return;
+      }
+    }
+
+    setGenerating(true);
+    try {
+      const startIndex = slides.length > 0 ? Math.max(...slides.map(s => s.order_index)) + 1 : 0;
+      
+      // Insert slides in batches of 10 for better performance
+      const batchSize = 10;
+      let insertedCount = 0;
+      
+      for (let i = 0; i < templateSlides.length; i += batchSize) {
+        const batch = templateSlides.slice(i, i + batchSize);
+        const slidesToInsert = batch.map((slide, idx) => {
+          // Cast to string to avoid TypeScript comparison issues with extended types
+          const slideType = String(slide.type);
+          return {
+            formative_unit_id: unitId,
+            slide_type: slideType === 'flashcards' ? 'content' : slideType,
+            title: slide.title || `Slide ${startIndex + i + idx + 1}`,
+            section_title: slide.section || null,
+            content: slide.content || null,
+            key_terms: slide.keyTerms || [],
+            order_index: startIndex + i + idx,
+            is_active: true,
+            table_data: slide.tableData || null,
+            quiz_data: slide.quiz ? {
+              question: slide.quiz.question,
+              options: slide.quiz.options,
+              explanation: slide.quiz.explanation,
+              hint: slide.quiz.hint
+            } : null,
+            checklist_items: slide.checklistItems || null,
+          };
+        });
+
+        const { error } = await supabase
+          .from('unit_syllabus_slides')
+          .insert(slidesToInsert);
+
+        if (error) throw error;
+        insertedCount += batch.length;
+      }
+
+      toast({ 
+        title: "Plantilla generada",
+        description: `Se añadieron ${insertedCount} slides desde la plantilla.`
+      });
+      
+      // Reload slides
+      await loadSlides();
+    } catch (error) {
+      console.error("Error generating from template:", error);
+      toast({ 
+        title: "Error", 
+        description: "No se pudieron generar los slides desde la plantilla",
+        variant: "destructive" 
+      });
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -364,6 +468,22 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
               <DialogDescription className="mt-1">{unitTitle}</DialogDescription>
             </div>
             <div className="flex items-center gap-2">
+              {slides.length === 0 && getTemplateSlides() && (
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={handleGenerateFromTemplate}
+                  disabled={generating}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                >
+                  {generating ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-1" />
+                  )}
+                  Generar Plantilla
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => setShowPDFImporter(true)}>
                 <Upload className="h-4 w-4 mr-1" />
                 Importar PDF
