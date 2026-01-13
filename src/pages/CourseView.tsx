@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { TimeTrackingReport } from "@/components/TimeTrackingReport";
 import { QualityAuditView } from "@/components/QualityAuditView";
 import { UnitContentViewer } from "@/components/UnitContentViewer";
+import { InteractiveMultimediaViewer } from "@/components/InteractiveMultimediaViewer";
 import { UnitActivityManager } from "@/components/UnitActivityManager";
 import { CourseSchedule } from "@/components/CourseSchedule";
 import { CourseCalendar } from "@/components/CourseCalendar";
@@ -1844,8 +1845,8 @@ export default function CourseView() {
         </div>
       </div>
 
-      {/* Content Viewer Dialog */}
-      <UnitContentViewer
+      {/* Content Viewer Dialog - Professional Design */}
+      <InteractiveMultimediaViewer
         open={contentViewerOpen}
         onOpenChange={setContentViewerOpen}
         unitId={selectedUnitId}
