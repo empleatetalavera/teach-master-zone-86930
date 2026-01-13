@@ -365,233 +365,278 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
 
       {/* Section 3: Campus Virtual */}
       <Collapsible open={openSections.campus}>
-        <SectionHeader id="campus" icon={Monitor} number="3" title="EL CAMPUS VIRTUAL" />
+        <SectionHeader id="campus" icon={Monitor} number="3" title="EL CAMPUS VIRTUAL Y LAS APLICACIONES INFORMÁTICAS" />
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
+            {/* Intro */}
+            <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-l-4 border-primary p-4 rounded-r-lg">
+              <p className="text-sm font-medium">
+                CONOCE EL CAMPUS VIRTUAL ANTES DE INICIAR TU CURSO…
+              </p>
+              <ul className="mt-2 text-sm text-muted-foreground space-y-1">
+                <li>• Diez días antes de la fecha de inicio te serán enviadas tus claves de acceso al Campus Virtual.</li>
+                <li>• Deberás acceder al Campus para verificar que tus claves son correctas antes del inicio del curso.</li>
+              </ul>
+            </div>
+
             {/* 3.1 Requisitos Técnicos */}
             <div>
               <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                <span className="text-primary">3.1</span> Requisitos Técnicos del Equipo
+                <span className="text-primary">3.1</span> Requisitos Técnicos del Equipo Informático
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="border rounded-lg p-4 bg-gray-50">
                   <h4 className="font-semibold mb-3 text-primary flex items-center gap-2">
                     <Settings className="h-4 w-4" />
-                    Hardware
+                    Conexión y Navegadores
                   </h4>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Procesador: 2 GHz o superior
+                      Ancho de banda mínimo de 1 Mbps
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Memoria RAM: 4 GB mínimo (8 GB recomendado)
+                      Google Chrome (recomendado), Firefox, Edge
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Resolución: 1024x768 o superior
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Tarjeta de sonido y altavoces
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Webcam y micrófono (para tutorías virtuales)
+                      Resolución mínima: 1024 x 768 px
                     </li>
                   </ul>
                 </div>
                 <div className="border rounded-lg p-4 bg-gray-50">
                   <h4 className="font-semibold mb-3 text-primary flex items-center gap-2">
                     <Globe className="h-4 w-4" />
-                    Software y Conexión
+                    Hardware y Software
                   </h4>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Chrome, Firefox, Edge o Safari (actualizado)
+                      Procesador Intel Core i3 / RAM 4Gb
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      JavaScript y cookies habilitados
+                      Office 2016+ / LibreOffice
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Lector de documentos PDF
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Conexión a Internet: mínimo 2 Mbps
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Cliente de correo electrónico
+                      Acrobat Reader / Lector PDF
                     </li>
                   </ul>
                 </div>
               </div>
             </div>
 
-            {/* 3.2 Funcionamiento y Recursos */}
+            {/* 3.2 Funcionamiento y Recursos - TABLA SEPE */}
             <div>
               <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                <span className="text-primary">3.2</span> Funcionamiento, Recursos y Utilidades
+                <span className="text-primary">3.2</span> Funcionamiento, Recursos y Utilidades del Campus
               </h3>
               
               <p className="text-sm text-muted-foreground mb-4">
-                El campus virtual está organizado en tres áreas principales:
+                La navegación principal del curso se estructura en el <strong>MENÚ LATERAL IZQUIERDO</strong> con las siguientes opciones:
               </p>
 
-              <div className="space-y-4">
-                {/* Área A: Organizarme */}
-                <div className="border-2 border-blue-200 rounded-lg overflow-hidden">
-                  <div className="bg-blue-100 p-3">
-                    <h4 className="font-bold text-blue-800 flex items-center gap-2">
-                      <Folder className="h-5 w-5" />
-                      A) ORGANIZARME
-                    </h4>
-                    <p className="text-xs text-blue-700 mt-1">
-                      Zona izquierda de la pantalla - Planificación del curso
-                    </p>
-                  </div>
-                  <div className="p-4 grid md:grid-cols-2 gap-3">
-                    <div className="flex items-start gap-2 text-sm">
-                      <FileText className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <div>
-                        <strong>Cómo hacer mi curso</strong>
-                        <p className="text-xs text-muted-foreground">Guía del alumno y guía de navegación</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Calendar className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <div>
-                        <strong>Mi agenda</strong>
-                        <p className="text-xs text-muted-foreground">Planificación y eventos del curso</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <div>
-                        <strong>Mensajes pendientes</strong>
-                        <p className="text-xs text-muted-foreground">Correos y foros sin leer</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Target className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <div>
-                        <strong>Mis progresos</strong>
-                        <p className="text-xs text-muted-foreground">Avances, conexiones y calificaciones</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* Tabla de Menú del Campus */}
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full border-collapse border text-sm">
+                  <thead>
+                    <tr className="bg-primary/10">
+                      <th className="border p-3 text-left font-semibold">Menú Campus</th>
+                      <th className="border p-3 text-left font-semibold">Equivalente SEPE</th>
+                      <th className="border p-3 text-left font-semibold">Descripción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border p-3 font-medium">📋 Inicio</td>
+                      <td className="border p-3">INTRODUCCIÓN</td>
+                      <td className="border p-3 text-muted-foreground">Bienvenida y objetivos del curso</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">📚 Guía del Alumno</td>
+                      <td className="border p-3">CÓMO HACER MI CURSO</td>
+                      <td className="border p-3 text-muted-foreground">Este documento con toda la información</td>
+                    </tr>
+                    <tr>
+                      <td className="border p-3 font-medium">📝 Programa Formativo</td>
+                      <td className="border p-3">PLANIFICACIÓN DIDÁCTICA</td>
+                      <td className="border p-3 text-muted-foreground">Estructura y objetivos específicos</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">📅 Plan de Trabajo</td>
+                      <td className="border p-3">MI AGENDA / PLAN DE TRABAJO</td>
+                      <td className="border p-3 text-muted-foreground">Planificación didáctica y fechas</td>
+                    </tr>
+                    <tr>
+                      <td className="border p-3 font-medium">📆 Cronograma</td>
+                      <td className="border p-3">CRONOGRAMA DEL CURSO</td>
+                      <td className="border p-3 text-muted-foreground">Línea temporal del curso</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">📂 Módulos</td>
+                      <td className="border p-3">FORMACIÓN EN CAMPUS</td>
+                      <td className="border p-3 text-muted-foreground">Contenido formativo por unidades</td>
+                    </tr>
+                    <tr>
+                      <td className="border p-3 font-medium">📊 Calificaciones</td>
+                      <td className="border p-3">MIS PROGRESOS</td>
+                      <td className="border p-3 text-muted-foreground">Tu progreso y notas en el curso</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">✅ Exámenes</td>
+                      <td className="border p-3">EVALUACIÓN</td>
+                      <td className="border p-3 text-muted-foreground">Evaluaciones programadas</td>
+                    </tr>
+                    <tr>
+                      <td className="border p-3 font-medium">👥 Tutorías</td>
+                      <td className="border p-3">TUTORÍAS PRESENCIALES</td>
+                      <td className="border p-3 text-muted-foreground">Sesiones presenciales y virtuales</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">📅 Calendario</td>
+                      <td className="border p-3">MI AGENDA</td>
+                      <td className="border p-3 text-muted-foreground">Agenda con todos los eventos</td>
+                    </tr>
+                    <tr>
+                      <td className="border p-3 font-medium">💬 Foro</td>
+                      <td className="border p-3">FOROS</td>
+                      <td className="border p-3 text-muted-foreground">Debates y consultas</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">⏱️ Tiempos Invertidos</td>
+                      <td className="border p-3">SEGUIMIENTO DEL TIEMPO</td>
+                      <td className="border p-3 text-muted-foreground">Registro de dedicación SEPE</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
-                {/* Área B: Comunicarme */}
-                <div className="border-2 border-green-200 rounded-lg overflow-hidden">
-                  <div className="bg-green-100 p-3">
-                    <h4 className="font-bold text-green-800 flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      B) COMUNICARME
-                    </h4>
-                    <p className="text-xs text-green-700 mt-1">
-                      Zona derecha de la pantalla - Herramientas de comunicación
-                    </p>
-                  </div>
-                  <div className="p-4 grid md:grid-cols-2 gap-3">
-                    <div className="flex items-start gap-2 text-sm">
-                      <UserCheck className="h-4 w-4 text-green-600 mt-0.5" />
-                      <div>
-                        <strong>Mi perfil</strong>
-                        <p className="text-xs text-muted-foreground">Datos personales y redes sociales</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Users className="h-4 w-4 text-green-600 mt-0.5" />
-                      <div>
-                        <strong>Mis contactos</strong>
-                        <p className="text-xs text-muted-foreground">Compañeros y tutores del curso</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-green-600 mt-0.5" />
-                      <div>
-                        <strong>Correo interno</strong>
-                        <p className="text-xs text-muted-foreground">Comunicación con tutores</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <MessageSquare className="h-4 w-4 text-green-600 mt-0.5" />
-                      <div>
-                        <strong>Chat / Contacta en directo</strong>
-                        <p className="text-xs text-muted-foreground">Tutorías virtuales en tiempo real</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Área C: Recursos */}
-                <div className="border-2 border-amber-200 rounded-lg overflow-hidden">
-                  <div className="bg-amber-100 p-3">
-                    <h4 className="font-bold text-amber-800 flex items-center gap-2">
-                      <BookOpen className="h-5 w-5" />
-                      C) RECURSOS
-                    </h4>
-                    <p className="text-xs text-amber-700 mt-1">
-                      Parte central de la pantalla - Material formativo
-                    </p>
-                  </div>
-                  <div className="p-4">
-                    <div className="grid gap-3">
-                      <div className="flex items-center gap-3 p-2 bg-amber-50 rounded text-sm">
-                        <span className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">1</span>
-                        <div>
-                          <strong>INTRODUCCIÓN</strong>
-                          <span className="text-muted-foreground ml-2">Vídeo presentación, objetivos, cuestionario previo</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-2 bg-amber-50 rounded text-sm">
-                        <span className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">2</span>
-                        <div>
-                          <strong>FORMACIÓN EN CAMPUS</strong>
-                          <span className="text-muted-foreground ml-2">Contenidos, actividades, material complementario</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-2 bg-amber-50 rounded text-sm">
-                        <span className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">3</span>
-                        <div>
-                          <strong>TUTORÍAS PRESENCIALES</strong>
-                          <span className="text-muted-foreground ml-2">Sesiones presenciales en centro</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-2 bg-amber-50 rounded text-sm">
-                        <span className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">4</span>
-                        <div>
-                          <strong>EVALUACIÓN</strong>
-                          <span className="text-muted-foreground ml-2">Test final y prueba presencial</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* Herramientas de Comunicación */}
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-primary" />
+                Herramientas de Comunicación
+              </h4>
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full border-collapse border text-sm">
+                  <thead>
+                    <tr className="bg-green-100">
+                      <th className="border p-3 text-left font-semibold">Recurso Campus</th>
+                      <th className="border p-3 text-left font-semibold">Equivalente SEPE</th>
+                      <th className="border p-3 text-left font-semibold">Cómo usarlo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border p-3 font-medium">Perfil (icono usuario)</td>
+                      <td className="border p-3">MI PERFIL</td>
+                      <td className="border p-3 text-muted-foreground">Editar datos personales y foto</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">Botón "Contacto"</td>
+                      <td className="border p-3">MIS CONTACTOS / CORREO</td>
+                      <td className="border p-3 text-muted-foreground">Mensajería interna con tutor</td>
+                    </tr>
+                    <tr>
+                      <td className="border p-3 font-medium">WhatsApp Dudas</td>
+                      <td className="border p-3">CHAT / CONTACTA EN DIRECTO</td>
+                      <td className="border p-3 text-muted-foreground">Comunicación directa rápida</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">Foro del curso</td>
+                      <td className="border p-3">FOROS</td>
+                      <td className="border p-3 text-muted-foreground">Debates con compañeros y tutores</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            {/* 3.3 Ayuda */}
+            {/* 3.3 Contenido Interactivo Multimedia (CIM) */}
             <div>
               <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                <span className="text-primary">3.3</span> Ayuda y Preguntas Frecuentes
+                <span className="text-primary">3.3</span> El Contenido Interactivo Multimedia (CIM) / Temario
+              </h3>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-900">
+                  El <strong>Contenido Interactivo Multimedia (CIM)</strong> es el corazón de tu formación online. 
+                  Se accede desde cada Unidad Formativa pulsando el botón <strong>"TEMARIO"</strong>.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
+                    <ListChecks className="h-4 w-4" />
+                    Índice Lateral Izquierdo
+                  </h4>
+                  <ul className="text-sm space-y-1 text-muted-foreground">
+                    <li>• Muestra todos los puntos del temario</li>
+                    <li>• Un "tick verde" indica apartados completados</li>
+                    <li>• Navega pulsando sobre cualquier punto</li>
+                  </ul>
+                </div>
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
+                    <Play className="h-4 w-4" />
+                    Barra Superior
+                  </h4>
+                  <ul className="text-sm space-y-1 text-muted-foreground">
+                    <li>• <strong>Glosario</strong> - Definiciones clave</li>
+                    <li>• <strong>Descargas</strong> - PDFs del manual</li>
+                    <li>• <strong>Ejercicios</strong> - Actividades prácticas</li>
+                    <li>• <strong>Test</strong> - Autoevaluaciones</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Estructura del Contenido */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border text-sm">
+                  <thead>
+                    <tr className="bg-amber-100">
+                      <th className="border p-3 text-left font-semibold">Sección del CIM</th>
+                      <th className="border p-3 text-left font-semibold">Contenido</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border p-3 font-medium">Área Central</td>
+                      <td className="border p-3 text-muted-foreground">Texto teórico, tablas, imágenes, vídeos y tests integrados</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">Descargas</td>
+                      <td className="border p-3 text-muted-foreground">PDFs del manual para estudio offline</td>
+                    </tr>
+                    <tr>
+                      <td className="border p-3 font-medium">Ejercicios</td>
+                      <td className="border p-3 text-muted-foreground">Actividades prácticas con feedback inmediato</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="border p-3 font-medium">Asistente IA</td>
+                      <td className="border p-3 text-muted-foreground">Ayuda contextual y resolución de dudas</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 3.4 Ayuda */}
+            <div>
+              <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                <span className="text-primary">3.4</span> Ayuda y Preguntas Frecuentes
               </h3>
               <div className="bg-gray-50 rounded-lg p-4 flex items-start gap-3">
                 <HelpCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm mb-2">
-                    Antes de comenzar a usar el Campus es recomendable que visualices los vídeos disponibles 
-                    en el <strong>Centro de Atención al Usuario (CAU)</strong> que te mostrarán cómo puedes 
-                    utilizar el Campus y aprovechar todas sus funcionalidades.
+                    Antes de comenzar es recomendable que visualices los recursos de ayuda disponibles 
+                    en la sección de <strong>Soporte</strong> que te mostrarán cómo utilizar el Campus.
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    También dispones de un apartado de preguntas frecuentes (FAQ's) para resolver dudas.
+                    También dispones de un apartado de preguntas frecuentes (FAQ's) para resolver dudas comunes.
                   </p>
                 </div>
               </div>
