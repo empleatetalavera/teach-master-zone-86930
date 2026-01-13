@@ -2872,6 +2872,60 @@ export type Database = {
           },
         ]
       }
+      unit_progress: {
+        Row: {
+          activities_progress: number | null
+          content_progress: number | null
+          created_at: string
+          enrollment_id: string
+          formative_unit_id: string
+          id: string
+          last_accessed_at: string | null
+          overall_progress: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activities_progress?: number | null
+          content_progress?: number | null
+          created_at?: string
+          enrollment_id: string
+          formative_unit_id: string
+          id?: string
+          last_accessed_at?: string | null
+          overall_progress?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activities_progress?: number | null
+          content_progress?: number | null
+          created_at?: string
+          enrollment_id?: string
+          formative_unit_id?: string
+          id?: string
+          last_accessed_at?: string | null
+          overall_progress?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unit_progress_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unit_progress_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       unit_syllabus_slides: {
         Row: {
           buttons: Json | null
