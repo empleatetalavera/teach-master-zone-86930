@@ -625,11 +625,13 @@ export type Database = {
           objectives: string | null
           specific_objectives: Json | null
           start_date: string | null
+          student_guide_pdf_url: string | null
           support_email: string | null
           support_phone: string | null
           thumbnail_url: string | null
           title: string
           training_center_id: string | null
+          training_program_pdf_url: string | null
           tutor_cv_url: string | null
           tutor_id: string | null
           updated_at: string | null
@@ -653,11 +655,13 @@ export type Database = {
           objectives?: string | null
           specific_objectives?: Json | null
           start_date?: string | null
+          student_guide_pdf_url?: string | null
           support_email?: string | null
           support_phone?: string | null
           thumbnail_url?: string | null
           title: string
           training_center_id?: string | null
+          training_program_pdf_url?: string | null
           tutor_cv_url?: string | null
           tutor_id?: string | null
           updated_at?: string | null
@@ -681,11 +685,13 @@ export type Database = {
           objectives?: string | null
           specific_objectives?: Json | null
           start_date?: string | null
+          student_guide_pdf_url?: string | null
           support_email?: string | null
           support_phone?: string | null
           thumbnail_url?: string | null
           title?: string
           training_center_id?: string | null
+          training_program_pdf_url?: string | null
           tutor_cv_url?: string | null
           tutor_id?: string | null
           updated_at?: string | null

@@ -26,6 +26,8 @@ import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
 import { CourseWorkPlan } from "@/components/CourseWorkPlan";
 import { PreAssessmentTest } from "@/components/PreAssessmentTest";
+import { CourseDocumentUploader } from "@/components/CourseDocumentUploader";
+import { PlatformHelpResources } from "@/components/PlatformHelpResources";
 
 interface Course {
   id: string;
@@ -50,6 +52,8 @@ interface Course {
   enable_grade_breakdown?: boolean;
   ficha_certificado_url?: string;
   boe_url?: string;
+  student_guide_pdf_url?: string | null;
+  training_program_pdf_url?: string | null;
 }
 
 interface Module {
@@ -636,6 +640,20 @@ export default function CourseView() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
 
           <TabsContent value="intro" className="space-y-6">
+            {/* Document Uploader for Admins */}
+            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+              <CourseDocumentUploader
+                courseId={courseId || ''}
+                studentGuidePdfUrl={course.student_guide_pdf_url}
+                trainingProgramPdfUrl={course.training_program_pdf_url}
+                onUpdate={loadCourseData}
+                isAdmin={true}
+              />
+            )}
+
+            {/* Platform Help Resources */}
+            <PlatformHelpResources centerSlug={centerSlug} />
+
             <Card>
               <CardHeader>
                 <CardTitle>Guía de Uso de la Plataforma</CardTitle>
@@ -938,27 +956,91 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="student-guide" className="space-y-4">
-            <Card>
-              <CardContent className="p-6">
-                <CourseStudentGuide 
-                  course={course} 
-                  centerSlug={centerSlug} 
-                />
-              </CardContent>
-            </Card>
+            {course.student_guide_pdf_url ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookMarked className="h-5 w-5 text-primary" />
+                    Guía del Alumno (PDF)
+                  </CardTitle>
+                  <CardDescription>Documento oficial de la guía del alumno para este curso</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                    <iframe
+                      src={`${course.student_guide_pdf_url}#toolbar=1&navpanes=0`}
+                      className="w-full h-full"
+                      title="Guía del Alumno"
+                    />
+                  </div>
+                  <Button asChild className="w-full">
+                    <a 
+                      href={course.student_guide_pdf_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Descargar Guía del Alumno (PDF)
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-6">
+                  <CourseStudentGuide 
+                    course={course} 
+                    centerSlug={centerSlug} 
+                  />
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="training-program" className="space-y-4">
-            <Card>
-              <CardContent className="p-6">
-                <CourseTrainingProgram 
-                  course={course} 
-                  modules={modules}
-                  centerSlug={centerSlug}
-                  isEditable={userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin'}
-                />
-              </CardContent>
-            </Card>
+            {course.training_program_pdf_url ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-primary" />
+                    Programa Formativo (PDF)
+                  </CardTitle>
+                  <CardDescription>Documento oficial del programa formativo para este curso</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
+                    <iframe
+                      src={`${course.training_program_pdf_url}#toolbar=1&navpanes=0`}
+                      className="w-full h-full"
+                      title="Programa Formativo"
+                    />
+                  </div>
+                  <Button asChild className="w-full">
+                    <a 
+                      href={course.training_program_pdf_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Descargar Programa Formativo (PDF)
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-6">
+                  <CourseTrainingProgram 
+                    course={course} 
+                    modules={modules}
+                    centerSlug={centerSlug}
+                    isEditable={userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin'}
+                  />
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="work-plan" className="space-y-4">
