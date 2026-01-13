@@ -2872,6 +2872,68 @@ export type Database = {
           },
         ]
       }
+      unit_syllabus_slides: {
+        Row: {
+          checklist_items: Json | null
+          content: string | null
+          created_at: string | null
+          created_by: string | null
+          formative_unit_id: string
+          id: string
+          is_active: boolean | null
+          key_terms: string[] | null
+          order_index: number
+          quiz_data: Json | null
+          section_title: string | null
+          slide_type: string
+          table_data: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          checklist_items?: Json | null
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          formative_unit_id: string
+          id?: string
+          is_active?: boolean | null
+          key_terms?: string[] | null
+          order_index?: number
+          quiz_data?: Json | null
+          section_title?: string | null
+          slide_type?: string
+          table_data?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          checklist_items?: Json | null
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          formative_unit_id?: string
+          id?: string
+          is_active?: boolean | null
+          key_terms?: string[] | null
+          order_index?: number
+          quiz_data?: Json | null
+          section_title?: string | null
+          slide_type?: string
+          table_data?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unit_syllabus_slides_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
