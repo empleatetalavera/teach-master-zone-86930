@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  ClipboardList, Plus, Loader2, Trash2, X, Calendar, FileText
+  ClipboardList, Plus, Loader2, Trash2, X, Calendar, FileText, Pencil, Save
 } from "lucide-react";
 
 interface UnitActivityManagerProps {
@@ -46,6 +46,7 @@ export function UnitActivityManager({
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
 
   // Form state
   const [newTitle, setNewTitle] = useState("");
@@ -167,6 +168,73 @@ export function UnitActivityManager({
         variant: "destructive"
       });
     }
+  };
+
+  const handleEditActivity = (activity: Activity) => {
+    setEditingActivity(activity);
+    setNewTitle(activity.title);
+    setNewDescription(activity.description);
+    setNewInstructions(activity.instructions || "");
+    setNewMaxScore(activity.max_score?.toString() || "100");
+    setNewDueDate(activity.due_date || "");
+    setNewSubmissionType((activity.submission_type as "text" | "file" | "url" | "both") || "text");
+    setShowAddForm(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingActivity || !newTitle.trim() || !newDescription.trim()) {
+      toast({
+        title: "Error",
+        description: "El título y la descripción son obligatorios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("development_activities")
+        .update({
+          title: newTitle,
+          description: newDescription,
+          instructions: newInstructions || null,
+          max_score: newMaxScore ? parseInt(newMaxScore) : 100,
+          due_date: newDueDate || null,
+          submission_type: newSubmissionType,
+        })
+        .eq("id", editingActivity.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Actividad actualizada",
+        description: "Los cambios se han guardado correctamente",
+      });
+
+      cancelEdit();
+      loadActivities();
+    } catch (error: any) {
+      console.error("Error updating activity:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la actividad",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingActivity(null);
+    setNewTitle("");
+    setNewDescription("");
+    setNewInstructions("");
+    setNewMaxScore("100");
+    setNewDueDate("");
+    setNewSubmissionType("text");
+    setAllowLateSubmission(false);
   };
 
   const renderAddForm = () => (
@@ -293,7 +361,7 @@ export function UnitActivityManager({
         ) : (
           <div className="space-y-4">
             {/* Add button for teachers/admins */}
-            {isTeacherOrAdmin && !showAddForm && (
+            {isTeacherOrAdmin && !showAddForm && !editingActivity && (
               <Button onClick={() => setShowAddForm(true)} variant="outline" className="w-full">
                 <Plus className="h-4 w-4 mr-2" />
                 Añadir Actividad
@@ -303,8 +371,101 @@ export function UnitActivityManager({
             {/* Add form */}
             {showAddForm && renderAddForm()}
 
+            {/* Edit form */}
+            {editingActivity && (
+              <div className="space-y-4 p-4 border rounded-lg bg-primary/5 border-primary/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Pencil className="h-4 w-4 text-primary" />
+                    Editar Actividad
+                  </h4>
+                  <Button variant="ghost" size="sm" onClick={cancelEdit}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid gap-4">
+                  <div>
+                    <Label htmlFor="edit-title">Título *</Label>
+                    <Input
+                      id="edit-title"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="edit-description">Descripción *</Label>
+                    <Textarea
+                      id="edit-description"
+                      value={newDescription}
+                      onChange={(e) => setNewDescription(e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-instructions">Instrucciones</Label>
+                    <Textarea
+                      id="edit-instructions"
+                      value={newInstructions}
+                      onChange={(e) => setNewInstructions(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-score">Puntuación máxima</Label>
+                      <Input
+                        id="edit-score"
+                        type="number"
+                        value={newMaxScore}
+                        onChange={(e) => setNewMaxScore(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="edit-due-date">Fecha límite</Label>
+                      <Input
+                        id="edit-due-date"
+                        type="datetime-local"
+                        value={newDueDate}
+                        onChange={(e) => setNewDueDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-submission-type">Tipo de entrega</Label>
+                    <Select value={newSubmissionType} onValueChange={(val) => setNewSubmissionType(val as "text" | "file" | "url" | "both")}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="text">Texto</SelectItem>
+                        <SelectItem value="file">Archivo</SelectItem>
+                        <SelectItem value="url">URL</SelectItem>
+                        <SelectItem value="both">Mixto (texto + archivo)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button onClick={handleSaveEdit} disabled={saving} className="flex-1">
+                      {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      Guardar Cambios
+                    </Button>
+                    <Button variant="outline" onClick={cancelEdit}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Activities list */}
-            {activities.length === 0 && !showAddForm ? (
+            {activities.length === 0 && !showAddForm && !editingActivity ? (
               <div className="text-center py-12">
                 <ClipboardList className="h-16 w-16 mx-auto mb-4 text-primary opacity-50" />
                 <p className="text-lg font-medium mb-2">No hay actividades</p>
@@ -320,7 +481,11 @@ export function UnitActivityManager({
                 {activities.map((activity) => (
                   <div 
                     key={activity.id}
-                    className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                    className={`p-4 border rounded-lg transition-colors ${
+                      editingActivity?.id === activity.id 
+                        ? 'bg-primary/5 border-primary/30' 
+                        : 'hover:bg-muted/50'
+                    }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -350,14 +515,25 @@ export function UnitActivityManager({
                         </div>
                       </div>
                       
-                      {isTeacherOrAdmin && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleDeleteActivity(activity.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                      {isTeacherOrAdmin && !editingActivity && (
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleEditActivity(activity)}
+                            title="Editar actividad"
+                          >
+                            <Pencil className="h-4 w-4 text-primary" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleDeleteActivity(activity.id)}
+                            title="Eliminar actividad"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>

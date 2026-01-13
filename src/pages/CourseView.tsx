@@ -2064,7 +2064,7 @@ export default function CourseView() {
                       variant="ghost" 
                       size="icon" 
                       className="h-7 w-7"
-                      onClick={() => navigate(`/dashboard/admin/courses/${courseId}/settings`)}
+                      onClick={() => navigate(`/dashboard/admin/course-settings/${courseId}`)}
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
