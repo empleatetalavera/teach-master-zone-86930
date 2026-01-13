@@ -645,6 +645,26 @@ export default function CourseView() {
           {/* Main Content */}
           <div className="min-w-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+              {/* Mobile Tab Navigation */}
+              <div className="lg:hidden overflow-x-auto pb-2">
+                <TabsList className="w-max min-w-full flex h-auto p-1 gap-1">
+                  <TabsTrigger value="intro" className="text-xs px-2 py-1.5">Inicio</TabsTrigger>
+                  <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
+                  <TabsTrigger value="training-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>
+                  <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>
+                  <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>
+                  <TabsTrigger value="modules" className="text-xs px-2 py-1.5">Formación</TabsTrigger>
+                  <TabsTrigger value="grades" className="text-xs px-2 py-1.5">Calificaciones</TabsTrigger>
+                  <TabsTrigger value="exams" className="text-xs px-2 py-1.5">Exámenes</TabsTrigger>
+                  <TabsTrigger value="tutorials" className="text-xs px-2 py-1.5">Tutorías</TabsTrigger>
+                  <TabsTrigger value="calendar" className="text-xs px-2 py-1.5">Calendario</TabsTrigger>
+                  <TabsTrigger value="forum" className="text-xs px-2 py-1.5">Foro</TabsTrigger>
+                  <TabsTrigger value="time-tracking" className="text-xs px-2 py-1.5">Tiempos</TabsTrigger>
+                  {(userRole === 'auditor' || userRole === 'admin') && (
+                    <TabsTrigger value="audit" className="text-xs px-2 py-1.5">Auditoría</TabsTrigger>
+                  )}
+                </TabsList>
+              </div>
 
           <TabsContent value="intro" className="space-y-6">
             {/* Document Uploader for Admins */}
