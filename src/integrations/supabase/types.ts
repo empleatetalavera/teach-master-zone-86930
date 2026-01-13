@@ -2874,14 +2874,18 @@ export type Database = {
       }
       unit_syllabus_slides: {
         Row: {
+          buttons: Json | null
           checklist_items: Json | null
           content: string | null
           created_at: string | null
           created_by: string | null
           formative_unit_id: string
+          highlight_boxes: Json | null
           id: string
+          images: Json | null
           is_active: boolean | null
           key_terms: string[] | null
+          objectives: Json | null
           order_index: number
           quiz_data: Json | null
           section_title: string | null
@@ -2891,14 +2895,18 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          buttons?: Json | null
           checklist_items?: Json | null
           content?: string | null
           created_at?: string | null
           created_by?: string | null
           formative_unit_id: string
+          highlight_boxes?: Json | null
           id?: string
+          images?: Json | null
           is_active?: boolean | null
           key_terms?: string[] | null
+          objectives?: Json | null
           order_index?: number
           quiz_data?: Json | null
           section_title?: string | null
@@ -2908,14 +2916,18 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          buttons?: Json | null
           checklist_items?: Json | null
           content?: string | null
           created_at?: string | null
           created_by?: string | null
           formative_unit_id?: string
+          highlight_boxes?: Json | null
           id?: string
+          images?: Json | null
           is_active?: boolean | null
           key_terms?: string[] | null
+          objectives?: Json | null
           order_index?: number
           quiz_data?: Json | null
           section_title?: string | null
