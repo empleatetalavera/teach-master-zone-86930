@@ -28,6 +28,7 @@ import { CourseWorkPlan } from "@/components/CourseWorkPlan";
 import { PreAssessmentTest } from "@/components/PreAssessmentTest";
 import { CourseDocumentUploader } from "@/components/CourseDocumentUploader";
 import { PlatformHelpResources } from "@/components/PlatformHelpResources";
+import { CourseForum } from "@/components/CourseForum";
 
 interface Course {
   id: string;
@@ -1700,41 +1701,11 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="forum" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Foro de discusión</CardTitle>
-                    <CardDescription>Participa en las conversaciones del curso</CardDescription>
-                  </div>
-                  <Button>Nuevo tema</Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {forumTopics.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No hay temas en el foro</p>
-                ) : (
-                  <div className="space-y-4">
-                    {forumTopics.map((topic) => (
-                      <Card key={topic.id} className="p-4 cursor-pointer hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-semibold">{topic.title}</h4>
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{topic.content}</p>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                              <span>Por: {topic.profiles?.full_name || "Usuario"}</span>
-                              <span>{new Date(topic.created_at).toLocaleDateString('es-ES')}</span>
-                              <span>{topic.views_count} vistas</span>
-                            </div>
-                          </div>
-                          {topic.is_pinned && <Badge variant="secondary">Fijado</Badge>}
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <CourseForum 
+              courseId={courseId!}
+              isAdmin={userRole === 'admin' || userRole === 'super_admin'}
+              isEditable={userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher'}
+            />
           </TabsContent>
 
           <TabsContent value="time-tracking" className="space-y-4">
