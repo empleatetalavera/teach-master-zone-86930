@@ -118,6 +118,17 @@ export default function CourseView() {
   const [activeTab, setActiveTab] = useState<string>("intro");
   const [centerSlug, setCenterSlug] = useState<string | null>(null);
   
+  // Extract all formative unit IDs for progress tracking
+  const allFormativeUnitIds = modules.flatMap(m => 
+    (m.formative_units || []).map(u => u.id)
+  );
+
+  // Use unit progress hook - must be called before any conditional returns
+  const { getUnitProgress, updateContentProgress, updateActivityProgress } = useUnitProgress({
+    enrollmentId: enrollment?.id || null,
+    formativeUnitIds: allFormativeUnitIds,
+  });
+  
   // Content viewer state
   const [contentViewerOpen, setContentViewerOpen] = useState(false);
   const [selectedUnitId, setSelectedUnitId] = useState<string>("");
@@ -434,16 +445,7 @@ export default function CourseView() {
     );
   }
 
-  // Extract all formative unit IDs for progress tracking
-  const allFormativeUnitIds = modules.flatMap(m => 
-    (m.formative_units || []).map(u => u.id)
-  );
-
-  // Use unit progress hook
-  const { getUnitProgress, updateContentProgress, updateActivityProgress } = useUnitProgress({
-    enrollmentId: enrollment?.id || null,
-    formativeUnitIds: allFormativeUnitIds,
-  });
+  // Obtener próxima evaluación
 
   // Obtener próxima evaluación
   const nextEvaluation = modules
