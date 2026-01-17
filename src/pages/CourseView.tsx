@@ -6,11 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TutorMessaging } from "@/components/TutorMessaging";
 import { GradesSection } from "@/components/GradesSection";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -2388,6 +2389,42 @@ export default function CourseView() {
               </CardContent>
             </Card>
 
+            {/* Tutorías Presenciales */}
+            <Collapsible defaultOpen={false}>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium uppercase tracking-wide text-primary flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        Tutorías Presenciales
+                      </CardTitle>
+                      <span className="text-xs text-primary hover:underline">Expandir/Contraer</span>
+                    </div>
+                  </CollapsibleTrigger>
+                </CardHeader>
+                <CollapsibleContent>
+                  <CardContent className="space-y-3 pt-0">
+                    <div className="flex items-center gap-2 text-sm">
+                      <FileText className="h-4 w-4 text-primary" />
+                      <span>Cuaderno del alumno</span>
+                      <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
+                    </div>
+                    <div className="border-t pt-3 space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        En la fecha y lugar que te indicamos en el documento <span className="font-semibold text-foreground">PLAN DE TRABAJO</span> y a través de <span className="font-semibold text-foreground">MI AGENDA</span>, deberás asistir a las sesiones presenciales donde se trabajarán los conocimientos que has ido adquiriendo en la plataforma.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        En estas sesiones se desarrollarán actividades de aprendizaje y/o pruebas de evaluación, de las que tu tutor/a-formador/a te informará previamente.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Durante la realización de estas tutorías presenciales contarás con un formador, que puede ser uno de tus tutores-formadores o un profesional distinto, que te explicará y guiará para el desarrollo de las actividades planteadas.
+                      </p>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
 
             {/* Progreso del Curso */}
             <Card>
