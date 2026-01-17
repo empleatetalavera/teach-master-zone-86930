@@ -101,6 +101,98 @@ interface FormativeUnit {
   activities?: any[];
 }
 
+// Component to show student's enrolled courses
+function MyCoursesList({ currentCourseId }: { currentCourseId: string }) {
+  const [courses, setCourses] = useState<{ id: string; title: string; progress: number; thumbnail_url?: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select(`
+          progress_percentage,
+          courses:course_id (
+            id,
+            title,
+            thumbnail_url
+          )
+        `)
+        .eq('user_id', user.id);
+      
+      if (!error && data) {
+        const enrolledCourses = data
+          .filter((e: any) => e.courses)
+          .map((e: any) => ({
+            id: e.courses.id,
+            title: e.courses.title,
+            progress: e.progress_percentage || 0,
+            thumbnail_url: e.courses.thumbnail_url
+          }));
+        setCourses(enrolledCourses);
+      }
+      setLoading(false);
+    };
+
+    loadCourses();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="p-4 flex items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (courses.length === 0) {
+    return (
+      <div className="p-4 text-center text-muted-foreground">
+        <GraduationCap className="h-8 w-8 mx-auto mb-2 opacity-50" />
+        <p className="text-sm">No tienes cursos matriculados</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-h-[300px] overflow-y-auto">
+      {courses.map((c) => (
+        <button
+          key={c.id}
+          onClick={() => navigate(`/course/${c.id}`)}
+          className={`w-full p-3 flex items-center gap-3 hover:bg-muted/50 transition-colors border-b last:border-b-0 text-left ${
+            c.id === currentCourseId ? 'bg-primary/10' : ''
+          }`}
+        >
+          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {c.thumbnail_url ? (
+              <img src={c.thumbnail_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <BookOpen className="h-5 w-5 text-primary" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`font-medium text-sm truncate ${c.id === currentCourseId ? 'text-primary' : ''}`}>
+              {c.title}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <Progress value={c.progress} className="h-1.5 flex-1" />
+              <span className="text-xs text-muted-foreground">{c.progress}%</span>
+            </div>
+          </div>
+          {c.id === currentCourseId && (
+            <Badge variant="secondary" className="text-xs">Actual</Badge>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function CourseView() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -526,6 +618,27 @@ export default function CourseView() {
                 <span>{enrollment?.progress_percentage || 0}% completado</span>
               </div>
               <div className="ml-auto flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <GraduationCap className="h-4 w-4 mr-2" />
+                      Mis Cursos
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[350px] p-0" align="end">
+                    <div className="p-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <GraduationCap className="h-5 w-5 text-primary" />
+                        Mis Formaciones Activas
+                      </h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Accede a tus cursos matriculados
+                      </p>
+                    </div>
+                    <MyCoursesList currentCourseId={courseId!} />
+                  </PopoverContent>
+                </Popover>
+
                 <Button
                   variant="outline"
                   size="sm"
