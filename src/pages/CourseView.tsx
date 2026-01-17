@@ -2308,6 +2308,33 @@ export default function CourseView() {
               </CardContent>
             </Card>
 
+            {/* Mi Perfil */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Mi Perfil
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  En el icono <span className="font-semibold text-foreground">Mi Perfil</span> señalarás tus datos personales, para que otros compañeros tengan acceso a esa información y puedan acceder a ti en cualquier momento a través del correo electrónico que facilites. Así podréis recibir ayuda mutua y el aprendizaje será más fructífero.
+                </p>
+                <p className="text-xs text-muted-foreground italic">
+                  Debes completar todos los datos requeridos en la ventana emergente que se abre al pinchar en el icono.
+                </p>
+                <Button 
+                  className="w-full" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/profile')}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Ver Mi Perfil
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Progreso del Curso */}
             <Card>
               <CardHeader className="pb-2">
