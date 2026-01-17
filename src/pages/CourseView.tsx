@@ -2389,15 +2389,15 @@ export default function CourseView() {
               </CardContent>
             </Card>
 
-            {/* Tutorías Presenciales */}
+            {/* Tutorías Virtuales */}
             <Collapsible defaultOpen={false}>
               <Card>
                 <CardHeader className="pb-2">
                   <CollapsibleTrigger className="w-full">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium uppercase tracking-wide text-primary flex items-center gap-2">
-                        <BookOpen className="h-4 w-4" />
-                        Tutorías Presenciales
+                        <Video className="h-4 w-4" />
+                        Tutorías Virtuales
                       </CardTitle>
                       <span className="text-xs text-primary hover:underline">Expandir/Contraer</span>
                     </div>
@@ -2405,22 +2405,15 @@ export default function CourseView() {
                 </CardHeader>
                 <CollapsibleContent>
                   <CardContent className="space-y-3 pt-0">
-                    <div className="flex items-center gap-2 text-sm">
-                      <FileText className="h-4 w-4 text-primary" />
-                      <span>Cuaderno del alumno</span>
-                      <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
-                    </div>
-                    <div className="border-t pt-3 space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        En la fecha y lugar que te indicamos en el documento <span className="font-semibold text-foreground">PLAN DE TRABAJO</span> y a través de <span className="font-semibold text-foreground">MI AGENDA</span>, deberás asistir a las sesiones presenciales donde se trabajarán los conocimientos que has ido adquiriendo en la plataforma.
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        En estas sesiones se desarrollarán actividades de aprendizaje y/o pruebas de evaluación, de las que tu tutor/a-formador/a te informará previamente.
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Durante la realización de estas tutorías presenciales contarás con un formador, que puede ser uno de tus tutores-formadores o un profesional distinto, que te explicará y guiará para el desarrollo de las actividades planteadas.
-                      </p>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Las tutorías virtuales son sesiones en línea donde podrás conectar con tu tutor/a y compañeros/as en tiempo real.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Consulta en <span className="font-semibold text-foreground">MI AGENDA</span> las fechas y horarios programados para las sesiones de videoconferencia.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Recibirás el enlace de acceso a través de la mensajería interna del campus antes de cada sesión.
+                    </p>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
