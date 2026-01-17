@@ -1072,6 +1072,47 @@ export default function CourseView() {
               />
             )}
             
+            {/* Credenciales de prueba - Solo visible para evaluadores (inspector, auditor) */}
+            {(userRole === 'inspector' || userRole === 'auditor') && (
+              <Card className="border-amber-300 bg-amber-50/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-amber-800 text-lg">
+                    <ShieldCheck className="h-5 w-5" />
+                    Credenciales de Prueba para Evaluación
+                  </CardTitle>
+                  <CardDescription className="text-amber-700">
+                    Utilice estas credenciales para acceder a la plataforma como alumno o tutor-formador
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="bg-teal-600 text-white p-2 text-left font-semibold border" colSpan={2}>CLAVE ALUMNO</th>
+                          <th className="bg-teal-600 text-white p-2 text-left font-semibold border" colSpan={2}>CLAVE TUTOR-FORMADOR</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="bg-white">
+                          <td className="border p-2 text-muted-foreground">Usuario:</td>
+                          <td className="border p-2 font-mono font-medium">alumnocertificados</td>
+                          <td className="border p-2 text-muted-foreground">Usuario:</td>
+                          <td className="border p-2 font-mono font-medium">tutorcertificados</td>
+                        </tr>
+                        <tr className="bg-muted/30">
+                          <td className="border p-2 text-muted-foreground">Contraseña:</td>
+                          <td className="border p-2 font-mono font-medium">d123456-A</td>
+                          <td className="border p-2 text-muted-foreground">Contraseña:</td>
+                          <td className="border p-2 font-mono font-medium">d123456-T</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {course.training_program_pdf_url ? (
               <Card>
                 <CardHeader>
