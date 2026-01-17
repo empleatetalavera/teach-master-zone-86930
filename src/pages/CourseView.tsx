@@ -823,24 +823,21 @@ export default function CourseView() {
                   <CardContent className="p-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       {course.ficha_certificado_url && (
-                        <div className="group space-y-4">
+                        <div className="space-y-4">
                           <h4 className="font-semibold flex items-center gap-2 text-amber-700 dark:text-amber-400">
                             <FileText className="h-5 w-5" />
                             Ficha del Certificado
                           </h4>
-                          <div className="aspect-[4/3] bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl overflow-hidden border-2 border-amber-200 dark:border-amber-800 relative">
-                            <iframe
-                              src={`${course.ficha_certificado_url}#toolbar=0&navpanes=0&scrollbar=0`}
-                              className="w-full h-full"
-                              title="Ficha del Certificado de Profesionalidad"
-                              loading="lazy"
-                            />
-                            {/* Fallback overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-amber-100/90 to-orange-100/90 dark:from-amber-900/90 dark:to-orange-900/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                              <FileText className="h-16 w-16 text-amber-600 mb-3" />
-                              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Ficha del Certificado</p>
-                              <p className="text-xs text-amber-600 dark:text-amber-400">Documento PDF oficial</p>
+                          <div className="aspect-[4/3] bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border-2 border-amber-200 dark:border-amber-800 flex flex-col items-center justify-center">
+                            <div className="p-4 bg-amber-100 dark:bg-amber-900/40 rounded-2xl mb-4">
+                              <FileText className="h-16 w-16 text-amber-600 dark:text-amber-400" />
                             </div>
+                            <p className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-1">Ficha del Certificado</p>
+                            <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">Documento PDF oficial</p>
+                            <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Disponible
+                            </Badge>
                           </div>
                           <Button asChild variant="default" className="w-full bg-amber-600 hover:bg-amber-700">
                             <a 
@@ -856,24 +853,21 @@ export default function CourseView() {
                         </div>
                       )}
                       {course.boe_url && (
-                        <div className="group space-y-4">
+                        <div className="space-y-4">
                           <h4 className="font-semibold flex items-center gap-2 text-amber-700 dark:text-amber-400">
                             <FileText className="h-5 w-5" />
                             Boletín Oficial del Estado (BOE)
                           </h4>
-                          <div className="aspect-[4/3] bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl overflow-hidden border-2 border-amber-200 dark:border-amber-800 relative">
-                            <iframe
-                              src={`${course.boe_url}#toolbar=0&navpanes=0&scrollbar=0`}
-                              className="w-full h-full"
-                              title="BOE del Certificado"
-                              loading="lazy"
-                            />
-                            {/* Fallback overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-amber-100/90 to-orange-100/90 dark:from-amber-900/90 dark:to-orange-900/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                              <FileText className="h-16 w-16 text-amber-600 mb-3" />
-                              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Boletín Oficial del Estado</p>
-                              <p className="text-xs text-amber-600 dark:text-amber-400">Documento PDF oficial</p>
+                          <div className="aspect-[4/3] bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border-2 border-amber-200 dark:border-amber-800 flex flex-col items-center justify-center">
+                            <div className="p-4 bg-amber-100 dark:bg-amber-900/40 rounded-2xl mb-4">
+                              <BookOpen className="h-16 w-16 text-amber-600 dark:text-amber-400" />
                             </div>
+                            <p className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-1">BOE Oficial</p>
+                            <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">Documento normativo</p>
+                            <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Disponible
+                            </Badge>
                           </div>
                           <Button asChild variant="default" className="w-full bg-amber-600 hover:bg-amber-700">
                             <a 
