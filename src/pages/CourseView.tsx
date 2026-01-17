@@ -1312,12 +1312,12 @@ export default function CourseView() {
                   <CardDescription>Documento oficial del programa formativo para este curso</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden border">
-                    <iframe
-                      src={`${course.training_program_pdf_url}#toolbar=1&navpanes=0`}
-                      className="w-full h-full"
-                      title="Programa Formativo"
-                    />
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <FileText className="h-16 w-16 text-primary mb-4" />
+                    <h3 className="font-semibold text-lg mb-2">Programa Formativo Disponible</h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Documento PDF con la programación didáctica del curso
+                    </p>
                   </div>
                   <Button asChild className="w-full">
                     <a 
