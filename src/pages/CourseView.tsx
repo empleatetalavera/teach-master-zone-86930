@@ -2399,7 +2399,6 @@ export default function CourseView() {
                         <Video className="h-4 w-4" />
                         Tutorías Virtuales
                       </CardTitle>
-                      <span className="text-xs text-primary hover:underline">Expandir/Contraer</span>
                     </div>
                   </CollapsibleTrigger>
                 </CardHeader>
