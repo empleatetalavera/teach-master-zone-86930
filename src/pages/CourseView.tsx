@@ -1090,9 +1090,9 @@ export default function CourseView() {
                       <tbody>
                         <tr className="bg-white">
                           <td className="border p-2 text-muted-foreground">Usuario:</td>
-                          <td className="border p-2 font-mono font-medium text-xs">alumnocertificados@talentcloudsolution.es</td>
+                          <td className="border p-2 font-mono font-medium">alumnocertificados</td>
                           <td className="border p-2 text-muted-foreground">Usuario:</td>
-                          <td className="border p-2 font-mono font-medium text-xs">tutorcertificados@talentcloudsolution.es</td>
+                          <td className="border p-2 font-mono font-medium">tutorcertificados</td>
                         </tr>
                         <tr className="bg-muted/30">
                           <td className="border p-2 text-muted-foreground">Contraseña:</td>
