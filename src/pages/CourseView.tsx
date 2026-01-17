@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -636,6 +636,34 @@ export default function CourseView() {
                       </p>
                     </div>
                     <MyCoursesList currentCourseId={courseId!} />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="relative">
+                      <Inbox className="h-4 w-4 mr-2" />
+                      Mensajes Pendientes
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[380px] p-0" align="end">
+                    <div className="p-4 border-b bg-gradient-to-r from-amber-500/10 to-amber-500/5">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <Inbox className="h-5 w-5 text-amber-600" />
+                        Mensajes Pendientes
+                      </h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Correo interno y foros sin leer
+                      </p>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-dashed">
+                        <Bell className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-muted-foreground">
+                          Aquí te aparecerán los temas que tienes pendientes directamente relacionados con el correo electrónico interno o temas del foro sin leer.
+                        </p>
+                      </div>
+                    </div>
                   </PopoverContent>
                 </Popover>
 
