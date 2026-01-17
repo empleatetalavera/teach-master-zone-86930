@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -2331,6 +2331,53 @@ export default function CourseView() {
                 >
                   <User className="w-4 h-4 mr-2" />
                   Ver Mi Perfil
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Centro de Atención al Usuario (CAU) */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5 text-primary" />
+                  Centro de Atención al Usuario (CAU)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Si tienes alguna duda o consulta técnica, puedes contactar con el <span className="font-semibold text-foreground">Centro de Atención al Usuario</span> a través de este icono.
+                </p>
+                
+                <p className="text-sm text-muted-foreground">
+                  Para cualquier duda sobre el funcionamiento del Campus Virtual, dispones de un enlace para consultar la <span className="font-semibold text-foreground">Ayuda del Campus Virtual</span>. A través del desplegable, accederás a <span className="font-semibold text-foreground">vídeos tutoriales</span> o "paseos virtuales" por las distintas áreas y secciones del Campus Virtual donde aprenderás a navegar y utilizar todas las herramientas disponibles.
+                </p>
+
+                <p className="text-sm text-muted-foreground">
+                  También puedes enviar consultas a través de correo electrónico o contactando telefónicamente.
+                </p>
+
+                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <a href="mailto:formacion.empleate@gmail.com" className="text-primary hover:underline">
+                      formacion.empleate@gmail.com
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-primary" />
+                    <span>665 673 416</span>
+                    <span className="text-muted-foreground text-xs">(09:00 - 14:00)</span>
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/campus-guide')}
+                >
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  Ayuda del Campus Virtual
                 </Button>
               </CardContent>
             </Card>
