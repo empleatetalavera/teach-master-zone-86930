@@ -12,8 +12,15 @@ import { supabase } from "@/integrations/supabase/client";
 import authBackground from "@/assets/auth-background.jpg";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
 
+// Schema for login identifier (email or username)
+const identifierSchema = z.string()
+  .min(3, "El identificador debe tener al menos 3 caracteres")
+  .max(255, "Identificador demasiado largo");
 const emailSchema = z.string().email("Email inválido").max(255, "Email demasiado largo");
 const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 caracteres").max(100, "Contraseña demasiado larga");
+
+// Helper to check if string is an email
+const isEmail = (value: string) => value.includes('@');
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -114,7 +121,7 @@ export default function Auth() {
     
     // Validate inputs
     try {
-      emailSchema.parse(loginEmail);
+      identifierSchema.parse(loginEmail);
       passwordSchema.parse(loginPassword);
     } catch (error: any) {
       toast({
@@ -128,9 +135,29 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
+      let emailToUse = loginEmail.toLowerCase().trim();
+
+      // If not an email, try to find user by username
+      if (!isEmail(loginEmail)) {
+        const { data: userData, error: lookupError } = await supabase
+          .rpc('get_email_by_username', { p_username: loginEmail.trim() });
+        
+        if (lookupError || !userData || userData.length === 0) {
+          toast({
+            title: "Usuario no encontrado",
+            description: "No existe ningún usuario con ese nombre de usuario",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        emailToUse = userData[0].email;
+      }
+
       // Check if account is locked
       const { data: lockStatus } = await supabase
-        .rpc('is_account_locked', { p_email: loginEmail.toLowerCase().trim() });
+        .rpc('is_account_locked', { p_email: emailToUse });
 
       if (lockStatus && lockStatus.length > 0 && lockStatus[0].is_locked) {
         const unlockTime = new Date(lockStatus[0].unlock_time);
@@ -145,14 +172,14 @@ export default function Auth() {
         return;
       }
 
-      // Attempt login
-      const { error } = await signIn(loginEmail, loginPassword);
+      // Attempt login with the resolved email
+      const { error } = await signIn(emailToUse, loginPassword);
 
       if (error) {
         toast({
           title: "Error al iniciar sesión",
           description: error.message === "Invalid login credentials" 
-            ? "Email o contraseña incorrectos" 
+            ? "Usuario o contraseña incorrectos" 
             : error.message,
           variant: "destructive",
         });
@@ -328,11 +355,11 @@ export default function Auth() {
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
+                <Label htmlFor="login-email">Email o Usuario</Label>
                 <Input
                   id="login-email"
-                  type="email"
-                  placeholder="tu@email.com"
+                  type="text"
+                  placeholder="tu@email.com o tu_usuario"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   required
