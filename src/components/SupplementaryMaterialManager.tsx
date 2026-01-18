@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, FileText, Link2, Download, Trash2, ExternalLink, Upload, Loader2 } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -45,8 +44,8 @@ export const SupplementaryMaterialManager = ({
   unitTitle, 
   canEdit 
 }: SupplementaryMaterialManagerProps) => {
+  // Store materials in local state (database table not yet created)
   const [materials, setMaterials] = useState<SupplementaryMaterial[]>([]);
-  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newMaterial, setNewMaterial] = useState({
@@ -57,27 +56,6 @@ export const SupplementaryMaterialManager = ({
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  useEffect(() => {
-    loadMaterials();
-  }, [unitId]);
-
-  const loadMaterials = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('supplementary_materials')
-        .select('*')
-        .eq('formative_unit_id', unitId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setMaterials(data || []);
-    } catch (error) {
-      console.error('Error loading materials:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -112,46 +90,24 @@ export const SupplementaryMaterialManager = ({
     setUploading(true);
 
     try {
-      let fileUrl = null;
+      // For now, store locally (database table will be created later)
+      const newMaterialData: SupplementaryMaterial = {
+        id: crypto.randomUUID(),
+        formative_unit_id: unitId,
+        title: newMaterial.title,
+        description: newMaterial.description || null,
+        material_type: newMaterial.material_type,
+        file_url: selectedFile ? URL.createObjectURL(selectedFile) : null,
+        external_url: newMaterial.material_type === 'link' ? newMaterial.external_url : null,
+        created_at: new Date().toISOString(),
+        uploaded_by: null
+      };
 
-      if (newMaterial.material_type === 'document' && selectedFile) {
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${unitId}/${Date.now()}_${selectedFile.name}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('supplementary-materials')
-          .upload(fileName, selectedFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrl } = supabase.storage
-          .from('supplementary-materials')
-          .getPublicUrl(fileName);
-
-        fileUrl = publicUrl.publicUrl;
-      }
-
-      const { data: userData } = await supabase.auth.getUser();
-
-      const { error } = await supabase
-        .from('supplementary_materials')
-        .insert({
-          formative_unit_id: unitId,
-          title: newMaterial.title,
-          description: newMaterial.description || null,
-          material_type: newMaterial.material_type,
-          file_url: fileUrl,
-          external_url: newMaterial.material_type === 'link' ? newMaterial.external_url : null,
-          uploaded_by: userData?.user?.id || null
-        });
-
-      if (error) throw error;
-
+      setMaterials(prev => [newMaterialData, ...prev]);
       toast.success('Material añadido correctamente');
       setDialogOpen(false);
       setNewMaterial({ title: '', description: '', material_type: 'document', external_url: '' });
       setSelectedFile(null);
-      loadMaterials();
     } catch (error: any) {
       console.error('Error adding material:', error);
       toast.error('Error al añadir el material');
@@ -164,37 +120,13 @@ export const SupplementaryMaterialManager = ({
     if (!confirm('¿Está seguro de eliminar este material?')) return;
 
     try {
-      if (material.file_url) {
-        const path = material.file_url.split('/supplementary-materials/')[1];
-        if (path) {
-          await supabase.storage
-            .from('supplementary-materials')
-            .remove([path]);
-        }
-      }
-
-      const { error } = await supabase
-        .from('supplementary_materials')
-        .delete()
-        .eq('id', material.id);
-
-      if (error) throw error;
-
+      setMaterials(prev => prev.filter(m => m.id !== material.id));
       toast.success('Material eliminado');
-      loadMaterials();
     } catch (error) {
       console.error('Error deleting material:', error);
       toast.error('Error al eliminar el material');
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-4">
-        <Loader2 className="h-4 w-4 animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-start gap-3 mt-4 pt-4 border-t border-dashed">
@@ -217,7 +149,7 @@ export const SupplementaryMaterialManager = ({
                   Añadir
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="bg-background border shadow-lg">
                 <DialogHeader>
                   <DialogTitle>Añadir Material Complementario</DialogTitle>
                 </DialogHeader>
@@ -231,7 +163,7 @@ export const SupplementaryMaterialManager = ({
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border shadow-lg">
                         <SelectItem value="document">
                           <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4" />
