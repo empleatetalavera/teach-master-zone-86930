@@ -7,6 +7,7 @@ import {
   BarChart3, 
   MessageSquare, 
   Settings,
+  BookOpen,
   ChevronDown,
   ChevronUp,
   Upload,
@@ -155,6 +156,24 @@ Adjunte el calendario de tutorías, guías de comunicación y plantillas de regi
 • **Documentación final**: Actas, certificados y expedientes
 
 Adjunte modelos de documentos administrativos, formularios y procedimientos.`,
+    files: []
+  },
+  {
+    key: "recursos_didacticos",
+    title: "8. Recursos Didácticos para el Tutor-Formador",
+    description: "Documentación y materiales de apoyo para la actividad tutorial",
+    icon: <BookOpen className="h-5 w-5" />,
+    content: `En el Campus Virtual, además de los recursos didácticos disponibles para el alumno, vas a encontrar los recursos necesarios para llevar a cabo tu actividad como tutor-formador:
+
+• **Esta guía del tutor-formador en PDF**: Documento oficial con toda la información necesaria para la tutorización.
+
+• **Documentos con la solución y sistema de corrección**: Materiales con las soluciones y criterios de corrección de las actividades de aprendizaje planteadas en el Campus Virtual.
+
+• **Documentos con la planificación de actividades**: Planificación de las actividades de aprendizaje y los instrumentos de evaluación que se desarrollarán/aplicarán en las sesiones de las Tutorías Presenciales en el Centro de formación.
+
+• **Documento por cada unidad formativa/módulo formativo**: Información sobre la planificación y sistema de corrección de la prueba de evaluación presencial final.
+
+Adjunte aquí los documentos de corrección, plantillas de evaluación y guías de actividades.`,
     files: []
   }
 ];
