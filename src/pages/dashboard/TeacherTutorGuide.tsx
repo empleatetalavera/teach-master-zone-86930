@@ -61,12 +61,18 @@ Adjunte aquí la programación didáctica, ficha técnica del curso y cualquier 
     title: "2. Alumnos y Equipo Docente",
     description: "Listado de participantes y coordinación del equipo",
     icon: <Users className="h-5 w-5" />,
-    content: `Información sobre los participantes y el equipo:
+    content: `Puedes obtener una lista de los participantes en el módulo formativo que tutorizas a través de varias vías:
 
-• **Listado de alumnos**: Datos de los participantes matriculados
-• **Equipo docente**: Tutores, formadores y personal de apoyo
-• **Coordinación**: Responsables y canales de comunicación
-• **Roles y funciones**: Descripción de responsabilidades de cada miembro
+• **Elaborar listado propio**: A través de ADMINISTRACIÓN → INFORMES → Informe de alumnos
+
+**MIS CONTACTOS**
+
+En el icono MIS CONTACTOS encontrarás la información sobre el resto de los miembros del equipo docente. Podrás contactar con los alumnos y con el equipo de tutores-formadores a través de los siguientes medios:
+
+• **Correo electrónico interno del Campus Virtual**: Mensajería interna para comunicación directa con alumnos y otros tutores.
+• **Chat del Campus Virtual**: Comunicación instantánea con usuarios conectados.
+• **Foros del Campus Virtual**: Dispondrás de un foro para tutores-formadores de toda la acción formativa, y otro foro de tutores-formadores específico por cada módulo formativo.
+• **Correo electrónico externo**: Para comunicaciones fuera del campus cuando sea necesario.
 
 Adjunte aquí el listado de alumnos, fichas del equipo docente y organigramas.`,
     files: []
