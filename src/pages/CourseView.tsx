@@ -1233,12 +1233,36 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="student-guide" className="space-y-4">
-            {/* CIM Navigation Guide Notice */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>💡 Nota:</strong> Para consultar información de cómo navegar a través de los Contenidos Interactivos Multimedia consulta la <strong>"Guía de navegación del CIM"</strong> que se encuentra en el icono de la Guía del Alumno.
-              </p>
-            </div>
+            {/* CIM Navigation Guide Download Card */}
+            <Card className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-900/20 dark:to-teal-900/20 border-blue-200 dark:border-blue-800">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <MonitorPlay className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm">Guía de Navegación del CIM</h4>
+                      <p className="text-xs text-muted-foreground">Manual de uso del Contenido Interactivo Multimedia</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="shrink-0"
+                    onClick={async () => {
+                      const { generateCIMNavigationGuidePDF } = await import('@/lib/generateCIMNavigationGuidePDF');
+                      await generateCIMNavigationGuidePDF({
+                        centerName: centerName || 'Empléate Talavera Formación'
+                      });
+                    }}
+                  >
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Descargar PDF
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
             
             {/* Admin uploader for custom student guide */}
             {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
@@ -1295,12 +1319,36 @@ export default function CourseView() {
 
           {/* Tutor Guide Tab - Only for teachers */}
           <TabsContent value="tutor-guide" className="space-y-4">
-            {/* CIM Navigation Guide Notice */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>💡 Nota:</strong> Para consultar información de cómo navegar a través de los Contenidos Interactivos Multimedia consulta la <strong>"Guía de navegación del CIM"</strong> que se encuentra en el icono de la Guía del Tutor.
-              </p>
-            </div>
+            {/* CIM Navigation Guide Download Card */}
+            <Card className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-900/20 dark:to-teal-900/20 border-blue-200 dark:border-blue-800">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <MonitorPlay className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm">Guía de Navegación del CIM</h4>
+                      <p className="text-xs text-muted-foreground">Manual de uso del Contenido Interactivo Multimedia</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="shrink-0"
+                    onClick={async () => {
+                      const { generateCIMNavigationGuidePDF } = await import('@/lib/generateCIMNavigationGuidePDF');
+                      await generateCIMNavigationGuidePDF({
+                        centerName: centerName || 'Empléate Talavera Formación'
+                      });
+                    }}
+                  >
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Descargar PDF
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
             
             <SingleDocumentUploader
               courseId={courseId || ''}
