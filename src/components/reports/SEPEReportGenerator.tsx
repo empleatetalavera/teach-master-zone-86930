@@ -35,6 +35,7 @@ import {
   UserPlus,
   TrendingUp,
   Briefcase,
+  ClipboardList,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -157,6 +158,14 @@ const SEPE_REPORT_TYPES: SEPEReportType[] = [
     description: "Número y porcentaje de alumnos que inician, completan y abandonan con causas",
     icon: TrendingUp,
     category: "Alumnado",
+  },
+  // Encuestas
+  {
+    id: "seguimiento-encuestas",
+    name: "Seguimiento de Encuestas",
+    description: "Resultados de cuestionarios de evaluación diagnóstica y calidad de la formación",
+    icon: ClipboardList,
+    category: "Encuestas",
   },
 ];
 
@@ -352,6 +361,9 @@ export default function SEPEReportGenerator() {
           break;
         case "alumnos-iniciados-abandonos":
           await generateCompletionReport(doc, yPosition);
+          break;
+        case "seguimiento-encuestas":
+          await generateSurveyTrackingReport(doc, yPosition);
           break;
         default:
           doc.text("Selecciona un tipo de informe válido", 14, yPosition);
@@ -1531,6 +1543,191 @@ export default function SEPEReportGenerator() {
       headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 8 },
       bodyStyles: { fontSize: 7 },
     });
+  };
+
+  // 14. Informe de Seguimiento de Encuestas
+  const generateSurveyTrackingReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id, enrolled_at")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+    const enrollmentIds = enrollments.map((e) => e.id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    // Get evaluation attempts for pre-assessment (diagnostic)
+    const { data: evaluations } = await supabase
+      .from("evaluations")
+      .select("id, title")
+      .eq("course_id", filters.courseId);
+
+    const { data: attempts } = await supabase
+      .from("evaluation_attempts")
+      .select("evaluation_id, user_id, score, completed_at, status, answers")
+      .in("enrollment_id", enrollmentIds)
+      .eq("status", "completed");
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+    const evaluationMap = new Map(evaluations?.map((e) => [e.id, e.title]) || []);
+
+    // Classify evaluations by type
+    const diagnosticEvals: string[] = [];
+    const qualityEvals: string[] = [];
+    const otherEvals: string[] = [];
+
+    evaluations?.forEach((e) => {
+      const lowerTitle = e.title.toLowerCase();
+      if (lowerTitle.includes("diagnóstic") || lowerTitle.includes("previo") || lowerTitle.includes("inicial") || lowerTitle.includes("pre-assessment")) {
+        diagnosticEvals.push(e.id);
+      } else if (lowerTitle.includes("calidad") || lowerTitle.includes("satisfacción") || lowerTitle.includes("encuesta")) {
+        qualityEvals.push(e.id);
+      } else {
+        otherEvals.push(e.id);
+      }
+    });
+
+    // Calculate stats per user
+    interface UserSurveyData {
+      diagnosticCompleted: boolean;
+      diagnosticScore: number | null;
+      diagnosticDate: string | null;
+      qualityCompleted: boolean;
+      qualityScore: number | null;
+      qualityDate: string | null;
+      totalSurveys: number;
+    }
+
+    const userSurveys: Record<string, UserSurveyData> = {};
+
+    attempts?.forEach((a) => {
+      if (!userSurveys[a.user_id]) {
+        userSurveys[a.user_id] = {
+          diagnosticCompleted: false,
+          diagnosticScore: null,
+          diagnosticDate: null,
+          qualityCompleted: false,
+          qualityScore: null,
+          qualityDate: null,
+          totalSurveys: 0,
+        };
+      }
+
+      userSurveys[a.user_id].totalSurveys++;
+
+      if (diagnosticEvals.includes(a.evaluation_id)) {
+        userSurveys[a.user_id].diagnosticCompleted = true;
+        userSurveys[a.user_id].diagnosticScore = a.score;
+        userSurveys[a.user_id].diagnosticDate = a.completed_at;
+      }
+
+      if (qualityEvals.includes(a.evaluation_id)) {
+        userSurveys[a.user_id].qualityCompleted = true;
+        userSurveys[a.user_id].qualityScore = a.score;
+        userSurveys[a.user_id].qualityDate = a.completed_at;
+      }
+    });
+
+    // Calculate summary stats
+    const totalStudents = enrollments.length;
+    const diagnosticCompleted = Object.values(userSurveys).filter((u) => u.diagnosticCompleted).length;
+    const qualityCompleted = Object.values(userSurveys).filter((u) => u.qualityCompleted).length;
+
+    // Calculate average scores
+    const diagnosticScores = Object.values(userSurveys).filter((u) => u.diagnosticScore !== null).map((u) => u.diagnosticScore!);
+    const qualityScores = Object.values(userSurveys).filter((u) => u.qualityScore !== null).map((u) => u.qualityScore!);
+    
+    const avgDiagnostic = diagnosticScores.length > 0 
+      ? (diagnosticScores.reduce((a, b) => a + b, 0) / diagnosticScores.length).toFixed(1)
+      : "-";
+    const avgQuality = qualityScores.length > 0 
+      ? (qualityScores.reduce((a, b) => a + b, 0) / qualityScores.length).toFixed(1)
+      : "-";
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME DE SEGUIMIENTO DE ENCUESTAS", 14, startY);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total de alumnos matriculados: ${totalStudents}`, 14, startY + 12);
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("CUESTIONARIO DE EVALUACIÓN DIAGNÓSTICA (Conocimientos Previos):", 14, startY + 24);
+    doc.setFont("helvetica", "normal");
+    doc.text(`  • Alumnos que han completado: ${diagnosticCompleted} (${totalStudents > 0 ? ((diagnosticCompleted / totalStudents) * 100).toFixed(1) : 0}%)`, 14, startY + 31);
+    doc.text(`  • Puntuación media: ${avgDiagnostic}`, 14, startY + 38);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("CUESTIONARIO DE EVALUACIÓN DE LA CALIDAD DE LA FORMACIÓN:", 14, startY + 50);
+    doc.setFont("helvetica", "normal");
+    doc.text(`  • Alumnos que han completado: ${qualityCompleted} (${totalStudents > 0 ? ((qualityCompleted / totalStudents) * 100).toFixed(1) : 0}%)`, 14, startY + 57);
+    doc.text(`  • Puntuación media: ${avgQuality}`, 14, startY + 64);
+
+    // Detailed table per student
+    doc.setFont("helvetica", "bold");
+    doc.text("DETALLE POR ALUMNO:", 14, startY + 78);
+
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      const survey = userSurveys[e.user_id] || {
+        diagnosticCompleted: false,
+        diagnosticScore: null,
+        diagnosticDate: null,
+        qualityCompleted: false,
+        qualityScore: null,
+        qualityDate: null,
+        totalSurveys: 0,
+      };
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        survey.diagnosticCompleted ? "Sí" : "No",
+        survey.diagnosticScore !== null ? survey.diagnosticScore.toString() : "-",
+        survey.diagnosticDate ? format(new Date(survey.diagnosticDate), "dd/MM/yyyy") : "-",
+        survey.qualityCompleted ? "Sí" : "No",
+        survey.qualityScore !== null ? survey.qualityScore.toString() : "-",
+        survey.qualityDate ? format(new Date(survey.qualityDate), "dd/MM/yyyy") : "-",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: startY + 85,
+      head: [["DNI", "Nombre", "Diag. Realizado", "Punt. Diag.", "Fecha Diag.", "Calidad Realiz.", "Punt. Calidad", "Fecha Calidad"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 7 },
+      bodyStyles: { fontSize: 6 },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        1: { cellWidth: 32 },
+        2: { cellWidth: 18 },
+        3: { cellWidth: 16 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 18 },
+        6: { cellWidth: 16 },
+        7: { cellWidth: 20 },
+      },
+    });
+
+    // Add note about accessing survey results
+    const finalY = (doc as any).lastAutoTable?.finalY || startY + 150;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "italic");
+    doc.text(
+      "Nota: Los resultados detallados de cada cuestionario pueden consultarse en Administración > Informes > Seguimiento de Encuestas.",
+      14,
+      finalY + 10
+    );
   };
 
   return (
