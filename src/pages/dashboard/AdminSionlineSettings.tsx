@@ -833,25 +833,20 @@ export default function AdminSionlineSettings() {
                         </p>
                       </div>
 
-                      <div className="pt-4 border-t border-slate-300">
-                        <Button 
-                          className="w-full bg-slate-700 text-white hover:bg-slate-800"
-                          onClick={() => {
-                            navigator.clipboard.writeText(
-                              `ACCESO PARA LA VALORACIÓN DE LA PLATAFORMA:\nURL: ${selectedCenter.url_valoracion || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.cif || 'default'}`}\nAdmin: ${selectedCenter.admin_username || ''} / ${selectedCenter.admin_password || ''}\nAlumno: ${selectedCenter.alumno_username || ''} / ${selectedCenter.alumno_password || ''}\nTutor: ${selectedCenter.tutor_username || ''} / ${selectedCenter.tutor_password || ''}\n\nACCESO PARA EL SEGUIMIENTO:\nURL: ${selectedCenter.url_seguimiento}\nCredenciales: ${selectedCenter.credenciales_seguimiento}`
-                            );
-                            toast.success("Todos los datos copiados al portapapeles");
-                          }}
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copiar todos los datos para SEPE
-                        </Button>
+                      {/* Resultado De La Validación */}
+                      <div className="pt-4 border-t border-slate-300 space-y-2">
+                        <Label className="font-semibold text-slate-600 italic">Resultado De La Validacion:</Label>
+                        <div className="bg-white border border-slate-300 rounded p-4">
+                          <p className="font-bold text-slate-800">CON ERRORES</p>
+                          <p className="text-sm text-slate-600">
+                            No ha sido posible realizar una conexión satisfactoria con la URL de seguimiento.
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="pt-2">
+                      <div className="pt-4 flex justify-end">
                         <Button 
-                          variant="outline"
-                          className="w-full bg-blue-800 text-white hover:bg-blue-900"
+                          className="bg-slate-700 text-white hover:bg-slate-800 px-8"
                           onClick={() => {
                             toast.success("Validación del servicio web iniciada");
                           }}
@@ -859,6 +854,22 @@ export default function AdminSionlineSettings() {
                           AUTOVALIDAR SERVICIO WEB
                         </Button>
                       </div>
+                    </div>
+
+                    {/* Botón copiar todos los datos */}
+                    <div className="pt-4">
+                      <Button 
+                        className="w-full bg-slate-600 text-white hover:bg-slate-700"
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            `ACCESO PARA LA VALORACIÓN DE LA PLATAFORMA:\nURL: ${selectedCenter.training_center?.custom_domain || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.slug || selectedCenter.training_center?.cif || 'default'}`}\nAdmin: ${selectedCenter.training_center?.contact_email || ''}\nAlumno: alumnocertificados / d123456-A\nTutor: tutorcertificados / d123456-T\n\nACCESO PARA EL SEGUIMIENTO:\nURL: ${selectedCenter.url_seguimiento}\nCredenciales: ${selectedCenter.credenciales_seguimiento}`
+                          );
+                          toast.success("Todos los datos copiados al portapapeles");
+                        }}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copiar todos los datos para SEPE
+                      </Button>
                     </div>
                   </div>
 
