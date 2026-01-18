@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -23,12 +24,22 @@ import {
   BarChart3,
   Loader2,
   BookOpen,
+  MessageSquare,
+  Mail,
+  Archive,
+  LogIn,
+  Award,
+  ClipboardCheck,
+  UserCheck,
+  UserX,
+  UserPlus,
+  TrendingUp,
+  Briefcase,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
-
 
 interface Course {
   id: string;
@@ -48,40 +59,115 @@ interface SEPEReportType {
   name: string;
   description: string;
   icon: React.ElementType;
+  category: string;
 }
 
 const SEPE_REPORT_TYPES: SEPEReportType[] = [
+  // Acceso y Participación
   {
-    id: "tiempo-tutorizacion",
-    name: "Tiempo Invertido (Tutorización)",
-    description: "Tiempo dedicado por alumno en tutorización y seguimiento",
+    id: "accesos",
+    name: "Informe de Accesos",
+    description: "Número y porcentaje de accesos a la plataforma, áreas visitadas, fechas y horas",
+    icon: LogIn,
+    category: "Acceso y Participación",
+  },
+  {
+    id: "archivador",
+    name: "Informe Archivador",
+    description: "Historial de documentos subidos y recursos utilizados por el alumnado",
+    icon: Archive,
+    category: "Acceso y Participación",
+  },
+  {
+    id: "foros",
+    name: "Informe Foros",
+    description: "Participación en foros: temas creados, respuestas y aportaciones",
+    icon: MessageSquare,
+    category: "Acceso y Participación",
+  },
+  {
+    id: "mails",
+    name: "Informe Mails",
+    description: "Mensajes enviados y recibidos a través de las herramientas de comunicación",
+    icon: Mail,
+    category: "Acceso y Participación",
+  },
+  // Tiempos
+  {
+    id: "tiempos-invertidos",
+    name: "Informe Tiempos Invertidos",
+    description: "Tiempo medio por módulo/unidad formativa y de la acción formativa en conjunto",
     icon: Clock,
+    category: "Tiempos",
   },
+  // Calificaciones
   {
-    id: "tiempo-imparticion",
-    name: "Tiempo Invertido (Impartición)",
-    description: "Tiempo dedicado por alumno en contenidos formativos",
+    id: "calificaciones-aprendizaje",
+    name: "Calificaciones durante el Aprendizaje",
+    description: "Resultados de trabajos, actividades y pruebas clasificados por módulos/UF",
     icon: BookOpen,
+    category: "Calificaciones",
   },
   {
-    id: "calificaciones",
-    name: "Calificaciones Individualizadas",
-    description: "Informe detallado de notas con intentos por alumno",
+    id: "prueba-final",
+    name: "Informe Prueba Final",
+    description: "Resultados de evaluación final de módulo/UF, número y porcentaje de aptos",
     icon: GraduationCap,
+    category: "Calificaciones",
   },
   {
-    id: "seguimiento",
-    name: "Seguimiento Individualizado",
-    description: "Métricas completas de seguimiento por alumno",
+    id: "evaluacion",
+    name: "Informe de Evaluación",
+    description: "Puntuación final ponderada (30% aprendizaje + 70% prueba final) por convocatoria",
+    icon: ClipboardCheck,
+    category: "Calificaciones",
+  },
+  // Alumnado
+  {
+    id: "alumnos-aptos",
+    name: "Informe Alumnos Aptos (Formación)",
+    description: "Número y porcentaje de alumnos que superan cada módulo y la acción formativa",
+    icon: UserCheck,
+    category: "Alumnado",
+  },
+  {
+    id: "alumnos-aptos-practicas",
+    name: "Informe Alumnos Aptos (Prácticas)",
+    description: "Alumnos que superan el módulo de formación práctica en centros de trabajo",
+    icon: Briefcase,
+    category: "Alumnado",
+  },
+  {
+    id: "detallado-alumnos",
+    name: "Informe Detallado Alumnos",
+    description: "Perfil del alumnado: sexo, edad, nivel formativo, situación laboral, etc.",
     icon: Users,
+    category: "Alumnado",
   },
   {
-    id: "tiempos-resumen",
-    name: "Tiempos Invertidos (Resumen)",
-    description: "Resumen de tiempos con estadísticas generales",
-    icon: BarChart3,
+    id: "alta-baja-alumnos",
+    name: "Informe Alta/Baja Alumnos",
+    description: "Altas, modificaciones y bajas por módulo/acción formativa con fechas",
+    icon: UserPlus,
+    category: "Alumnado",
+  },
+  {
+    id: "alumnos-iniciados-abandonos",
+    name: "Alumnos Iniciados, Completados y Abandonos",
+    description: "Número y porcentaje de alumnos que inician, completan y abandonan con causas",
+    icon: TrendingUp,
+    category: "Alumnado",
   },
 ];
+
+// Group reports by category
+const groupedReports = SEPE_REPORT_TYPES.reduce((acc, report) => {
+  if (!acc[report.category]) {
+    acc[report.category] = [];
+  }
+  acc[report.category].push(report);
+  return acc;
+}, {} as Record<string, SEPEReportType[]>);
 
 export default function SEPEReportGenerator() {
   const { user, userRole } = useAuth();
@@ -89,7 +175,7 @@ export default function SEPEReportGenerator() {
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedReport, setSelectedReport] = useState<string>("tiempo-tutorizacion");
+  const [selectedReport, setSelectedReport] = useState<string>("accesos");
   const [filters, setFilters] = useState({
     courseId: "",
     studentId: "",
@@ -119,7 +205,6 @@ export default function SEPEReportGenerator() {
       .eq("is_active", true)
       .order("title");
 
-    // For teachers, only show their assigned courses
     if (userRole === 'teacher') {
       query = query.eq("tutor_id", user.id);
     }
@@ -161,7 +246,7 @@ export default function SEPEReportGenerator() {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     
     if (days > 0) {
       return `${days}d ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
@@ -180,7 +265,6 @@ export default function SEPEReportGenerator() {
     }
 
     setLoading(true);
-    console.log("Generating PDF for course:", filters.courseId, "Report type:", selectedReport);
 
     try {
       // Get user profile and training center info
@@ -188,7 +272,7 @@ export default function SEPEReportGenerator() {
         .from("profiles")
         .select("full_name, training_center_id")
         .eq("id", user?.id)
-        .single();
+        .maybeSingle();
 
       let centerName = "Centro de Formación";
       if (profileData?.training_center_id) {
@@ -196,7 +280,7 @@ export default function SEPEReportGenerator() {
           .from("training_centers")
           .select("name")
           .eq("id", profileData.training_center_id)
-          .single();
+          .maybeSingle();
         if (centerData?.name) {
           centerName = centerData.name;
         }
@@ -209,10 +293,8 @@ export default function SEPEReportGenerator() {
       const reportType = SEPE_REPORT_TYPES.find((r) => r.id === selectedReport);
       const generationDate = format(new Date(), "dd/MM/yyyy 'a las' HH:mm", { locale: es });
 
-      console.log("Course found:", course?.title, "Report type:", reportType?.name);
-
       // Header
-      doc.setFontSize(18);
+      doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.text(reportType?.name || "Informe SEPE", 14, 20);
 
@@ -223,22 +305,53 @@ export default function SEPEReportGenerator() {
       doc.text(`Código Grupo: ${filters.groupCode || "N/A"}`, 14, 42);
       doc.text(`Generado por: ${generatorName}`, 14, 48);
       doc.text(`Fecha: ${generationDate}`, 14, 54);
+      
+      if (filters.startDate || filters.endDate) {
+        doc.text(`Período: ${filters.startDate || 'Inicio'} - ${filters.endDate || 'Fin'}`, 14, 60);
+      }
 
-      let yPosition = 64;
+      let yPosition = filters.startDate || filters.endDate ? 70 : 64;
 
+      // Generate specific report based on selection
       switch (selectedReport) {
-        case "tiempo-tutorizacion":
-        case "tiempo-imparticion":
+        case "accesos":
+          await generateAccessReport(doc, yPosition);
+          break;
+        case "archivador":
+          await generateArchiveReport(doc, yPosition);
+          break;
+        case "foros":
+          await generateForumReport(doc, yPosition);
+          break;
+        case "mails":
+          await generateMailsReport(doc, yPosition);
+          break;
+        case "tiempos-invertidos":
           await generateTimeReport(doc, yPosition);
           break;
-        case "calificaciones":
-          await generateGradesReport(doc, yPosition);
+        case "calificaciones-aprendizaje":
+          await generateLearningGradesReport(doc, yPosition);
           break;
-        case "seguimiento":
-          await generateTrackingReport(doc, yPosition);
+        case "prueba-final":
+          await generateFinalExamReport(doc, yPosition);
           break;
-        case "tiempos-resumen":
-          await generateTimeSummaryReport(doc, yPosition);
+        case "evaluacion":
+          await generateEvaluationReport(doc, yPosition);
+          break;
+        case "alumnos-aptos":
+          await generatePassedStudentsReport(doc, yPosition);
+          break;
+        case "alumnos-aptos-practicas":
+          await generatePracticePassedReport(doc, yPosition);
+          break;
+        case "detallado-alumnos":
+          await generateDetailedStudentsReport(doc, yPosition);
+          break;
+        case "alta-baja-alumnos":
+          await generateEnrollmentChangesReport(doc, yPosition);
+          break;
+        case "alumnos-iniciados-abandonos":
+          await generateCompletionReport(doc, yPosition);
           break;
         default:
           doc.text("Selecciona un tipo de informe válido", 14, yPosition);
@@ -256,7 +369,7 @@ export default function SEPEReportGenerator() {
           { align: "center" }
         );
         doc.text(
-          `${centerName} | Generado por: ${generatorName} - ${generationDate}`,
+          `${centerName} | ${generatorName} - ${generationDate}`,
           14,
           doc.internal.pageSize.height - 10
         );
@@ -264,7 +377,6 @@ export default function SEPEReportGenerator() {
 
       // Save PDF
       const fileName = `${(reportType?.name || "Informe").replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd_HHmm")}.pdf`;
-      console.log("Saving PDF as:", fileName);
       doc.save(fileName);
 
       toast({
@@ -283,30 +395,362 @@ export default function SEPEReportGenerator() {
     }
   };
 
-  const generateTimeReport = async (doc: jsPDF, startY: number) => {
-    // Get enrollments with time data
+  // ========== REPORT GENERATORS ==========
+
+  // 1. Informe de Accesos
+  const generateAccessReport = async (doc: jsPDF, startY: number) => {
     const { data: enrollments } = await supabase
       .from("enrollments")
-      .select(`
-        id,
-        user_id,
-        progress_percentage,
-        enrolled_at,
-        last_accessed_at
-      `)
+      .select("id, user_id, enrolled_at, last_accessed_at")
       .eq("course_id", filters.courseId);
 
-    if (!enrollments || enrollments.length === 0) {
+    if (!enrollments?.length) {
       doc.text("No hay datos de alumnos para este curso", 14, startY);
       return;
     }
 
-    // Get profiles
     const userIds = enrollments.map((e) => e.user_id);
+
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, full_name, dni_nie")
       .in("id", userIds);
+
+    const { data: sessions } = await supabase
+      .from("user_sessions")
+      .select("user_id, started_at, ended_at, duration_seconds, session_type, course_id")
+      .in("user_id", userIds);
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+    const totalStudents = enrollments.length;
+
+    // Calculate access stats per user
+    const userAccess: Record<string, { 
+      totalAccesses: number; 
+      totalTime: number; 
+      lastAccess: string | null;
+      areas: Set<string>;
+    }> = {};
+
+    sessions?.forEach((s) => {
+      if (!userAccess[s.user_id]) {
+        userAccess[s.user_id] = { totalAccesses: 0, totalTime: 0, lastAccess: null, areas: new Set() };
+      }
+      userAccess[s.user_id].totalAccesses++;
+      userAccess[s.user_id].totalTime += s.duration_seconds || 0;
+      if (!userAccess[s.user_id].lastAccess || s.started_at > userAccess[s.user_id].lastAccess!) {
+        userAccess[s.user_id].lastAccess = s.started_at;
+      }
+      if (s.session_type) userAccess[s.user_id].areas.add(s.session_type);
+    });
+
+    // Count students who have accessed
+    const studentsWithAccess = Object.keys(userAccess).length;
+    const accessPercentage = totalStudents > 0 ? ((studentsWithAccess / totalStudents) * 100).toFixed(1) : "0";
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("RESUMEN DE ACCESOS", 14, startY);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total de alumnos matriculados: ${totalStudents}`, 14, startY + 10);
+    doc.text(`Alumnos que han accedido: ${studentsWithAccess} (${accessPercentage}%)`, 14, startY + 17);
+
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      const access = userAccess[e.user_id] || { totalAccesses: 0, totalTime: 0, lastAccess: null, areas: new Set() };
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        access.totalAccesses.toString(),
+        formatDuration(access.totalTime),
+        access.lastAccess ? format(new Date(access.lastAccess), "dd/MM/yyyy HH:mm") : "-",
+        Array.from(access.areas).join(", ") || "-",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: startY + 25,
+      head: [["DNI", "Nombre", "Nº Accesos", "Tiempo Total", "Último Acceso", "Áreas Visitadas"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 35 },
+        5: { cellWidth: 35 },
+      },
+    });
+  };
+
+  // 2. Informe Archivador
+  const generateArchiveReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+    const enrollmentIds = enrollments.map((e) => e.id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    // Get activity submissions (documents uploaded by students)
+    const { data: submissions } = await supabase
+      .from("activity_submissions")
+      .select("enrollment_id, file_name, submitted_at, user_id")
+      .in("enrollment_id", enrollmentIds)
+      .not("file_name", "is", null);
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    // Count documents per user
+    const userDocs: Record<string, { count: number; lastUpload: string | null; files: string[] }> = {};
+    submissions?.forEach((s) => {
+      if (!userDocs[s.user_id]) {
+        userDocs[s.user_id] = { count: 0, lastUpload: null, files: [] };
+      }
+      userDocs[s.user_id].count++;
+      if (s.file_name) userDocs[s.user_id].files.push(s.file_name);
+      if (!userDocs[s.user_id].lastUpload || (s.submitted_at && s.submitted_at > userDocs[s.user_id].lastUpload!)) {
+        userDocs[s.user_id].lastUpload = s.submitted_at;
+      }
+    });
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME ARCHIVADOR - DOCUMENTOS SUBIDOS", 14, startY);
+
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      const docs = userDocs[e.user_id] || { count: 0, lastUpload: null, files: [] };
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        docs.count.toString(),
+        docs.lastUpload ? format(new Date(docs.lastUpload), "dd/MM/yyyy") : "-",
+        docs.files.slice(0, 3).join(", ") + (docs.files.length > 3 ? "..." : "") || "-",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: startY + 10,
+      head: [["DNI", "Nombre", "Documentos", "Última Subida", "Archivos"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8 },
+    });
+  };
+
+  // 3. Informe Foros
+  const generateForumReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    // Get forum topics created by these users
+    const { data: topics } = await supabase
+      .from("forum_topics")
+      .select("id, created_by, created_at, title")
+      .eq("course_id", filters.courseId)
+      .in("created_by", userIds);
+
+    // Get forum replies by these users
+    const { data: replies } = await supabase
+      .from("forum_replies")
+      .select("id, created_by, created_at, topic_id")
+      .in("created_by", userIds);
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    // Calculate participation per user
+    const userForum: Record<string, { topics: number; replies: number; lastActivity: string | null }> = {};
+    
+    topics?.forEach((t) => {
+      if (!userForum[t.created_by]) userForum[t.created_by] = { topics: 0, replies: 0, lastActivity: null };
+      userForum[t.created_by].topics++;
+      if (!userForum[t.created_by].lastActivity || t.created_at > userForum[t.created_by].lastActivity!) {
+        userForum[t.created_by].lastActivity = t.created_at;
+      }
+    });
+
+    replies?.forEach((r) => {
+      if (!userForum[r.created_by]) userForum[r.created_by] = { topics: 0, replies: 0, lastActivity: null };
+      userForum[r.created_by].replies++;
+      if (!userForum[r.created_by].lastActivity || r.created_at > userForum[r.created_by].lastActivity!) {
+        userForum[r.created_by].lastActivity = r.created_at;
+      }
+    });
+
+    const totalParticipants = Object.keys(userForum).length;
+    const participationRate = enrollments.length > 0 ? ((totalParticipants / enrollments.length) * 100).toFixed(1) : "0";
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME DE PARTICIPACIÓN EN FOROS", 14, startY);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total de alumnos: ${enrollments.length}`, 14, startY + 10);
+    doc.text(`Alumnos participantes: ${totalParticipants} (${participationRate}%)`, 14, startY + 17);
+    doc.text(`Total de temas creados: ${topics?.length || 0}`, 14, startY + 24);
+    doc.text(`Total de respuestas: ${replies?.length || 0}`, 14, startY + 31);
+
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      const forum = userForum[e.user_id] || { topics: 0, replies: 0, lastActivity: null };
+      const totalContributions = forum.topics + forum.replies;
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        forum.topics.toString(),
+        forum.replies.toString(),
+        totalContributions.toString(),
+        forum.lastActivity ? format(new Date(forum.lastActivity), "dd/MM/yyyy") : "-",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: startY + 40,
+      head: [["DNI", "Nombre", "Temas Creados", "Respuestas", "Total Aportaciones", "Última Actividad"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+    });
+  };
+
+  // 4. Informe Mails
+  const generateMailsReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    // Get communications (messages) for this course
+    const { data: sentMessages } = await supabase
+      .from("communications")
+      .select("id, sender_id, created_at, communication_type")
+      .eq("course_id", filters.courseId)
+      .in("sender_id", userIds);
+
+    const { data: receivedMessages } = await supabase
+      .from("communications")
+      .select("id, receiver_id, created_at, is_read")
+      .eq("course_id", filters.courseId)
+      .in("receiver_id", userIds);
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    // Calculate message stats per user
+    const userMails: Record<string, { sent: number; received: number; read: number; lastSent: string | null }> = {};
+    
+    sentMessages?.forEach((m) => {
+      if (!userMails[m.sender_id]) userMails[m.sender_id] = { sent: 0, received: 0, read: 0, lastSent: null };
+      userMails[m.sender_id].sent++;
+      if (!userMails[m.sender_id].lastSent || m.created_at > userMails[m.sender_id].lastSent!) {
+        userMails[m.sender_id].lastSent = m.created_at;
+      }
+    });
+
+    receivedMessages?.forEach((m) => {
+      if (!m.receiver_id) return;
+      if (!userMails[m.receiver_id]) userMails[m.receiver_id] = { sent: 0, received: 0, read: 0, lastSent: null };
+      userMails[m.receiver_id].received++;
+      if (m.is_read) userMails[m.receiver_id].read++;
+    });
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME DE MENSAJERÍA Y COMUNICACIONES", 14, startY);
+
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      const mails = userMails[e.user_id] || { sent: 0, received: 0, read: 0, lastSent: null };
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        mails.sent.toString(),
+        mails.received.toString(),
+        mails.read.toString(),
+        mails.lastSent ? format(new Date(mails.lastSent), "dd/MM/yyyy") : "-",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: startY + 10,
+      head: [["DNI", "Nombre", "Enviados", "Recibidos", "Leídos", "Último Envío"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8 },
+    });
+  };
+
+  // 5. Informe Tiempos Invertidos
+  const generateTimeReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id, progress_percentage")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    // Get modules for the course
+    const { data: modules } = await supabase
+      .from("modules")
+      .select("id, title")
+      .eq("course_id", filters.courseId)
+      .order("order_index");
 
     // Get content interactions for time data
     const { data: interactions } = await supabase
@@ -314,434 +758,839 @@ export default function SEPEReportGenerator() {
       .select("user_id, time_spent_seconds, module_id")
       .in("user_id", userIds);
 
-    // Calculate time per user
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+    const moduleMap = new Map(modules?.map((m) => [m.id, m.title]) || []);
+
+    // Calculate time per user per module
+    const timeByUserModule: Record<string, Record<string, number>> = {};
     const timeByUser: Record<string, number> = {};
+
     interactions?.forEach((i) => {
+      if (!timeByUserModule[i.user_id]) timeByUserModule[i.user_id] = {};
+      timeByUserModule[i.user_id][i.module_id] = (timeByUserModule[i.user_id][i.module_id] || 0) + i.time_spent_seconds;
       timeByUser[i.user_id] = (timeByUser[i.user_id] || 0) + i.time_spent_seconds;
     });
 
-    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+    // Calculate averages
+    const totalTime = Object.values(timeByUser).reduce((a, b) => a + b, 0);
+    const avgTime = enrollments.length > 0 ? totalTime / enrollments.length : 0;
 
-    // Prepare table data
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME DE TIEMPOS INVERTIDOS", 14, startY);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Tiempo total de la acción formativa: ${formatDuration(totalTime)}`, 14, startY + 10);
+    doc.text(`Tiempo medio por alumno: ${formatDuration(Math.round(avgTime))}`, 14, startY + 17);
+
+    // Main student time table
     const tableData = enrollments.map((e) => {
       const profile = profileMap.get(e.user_id);
-      const totalSeconds = timeByUser[e.user_id] || 0;
+      const userTime = timeByUser[e.user_id] || 0;
       return [
         profile?.dni_nie || "",
         profile?.full_name || "Sin nombre",
         "ALUMNO/A",
-        formatDuration(totalSeconds),
+        formatDuration(userTime),
+        `${e.progress_percentage || 0}%`,
       ];
-    });
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Listado de Alumnos", 14, startY);
+    }).sort((a, b) => parseInt(b[3]) - parseInt(a[3]));
 
     autoTable(doc, {
-      startY: startY + 5,
-      head: [["NIF", "Nombre Completo", "Perfil", "Tiempo Total"]],
+      startY: startY + 25,
+      head: [["DNI", "Nombre", "Perfil", "Tiempo Total", "Progreso"]],
       body: tableData,
       theme: "grid",
-      headStyles: {
-        fillColor: [59, 130, 246],
-        textColor: 255,
-        fontSize: 9,
-      },
-      bodyStyles: {
-        fontSize: 8,
-      },
-      columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 60 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 35 },
-      },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8 },
     });
 
-    // Summary
-    const totalTime = Object.values(timeByUser).reduce((a, b) => a + b, 0);
-    const avgTime = enrollments.length > 0 ? totalTime / enrollments.length : 0;
-
-    const summaryY = (doc as any).lastAutoTable.finalY + 15;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("Resumen", 14, summaryY);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Total de alumnos: ${enrollments.length}`, 14, summaryY + 7);
-    doc.text(`Tiempo total invertido: ${formatDuration(totalTime)}`, 14, summaryY + 14);
-    doc.text(`Tiempo medio por alumno: ${formatDuration(Math.round(avgTime))}`, 14, summaryY + 21);
-  };
-
-  const generateGradesReport = async (doc: jsPDF, startY: number) => {
-    // Get evaluation attempts
-    const { data: attempts } = await supabase
-      .from("evaluation_attempts")
-      .select(`
-        id,
-        user_id,
-        evaluation_id,
-        score,
-        status,
-        attempt_number,
-        completed_at,
-        created_at
-      `)
-      .order("created_at", { ascending: false });
-
-    // Filter by course enrollments
-    const { data: enrollments } = await supabase
-      .from("enrollments")
-      .select("user_id")
-      .eq("course_id", filters.courseId);
-
-    const enrolledUserIds = new Set(enrollments?.map((e) => e.user_id) || []);
-    const filteredAttempts = attempts?.filter((a) => enrolledUserIds.has(a.user_id)) || [];
-
-    // Get profiles
-    const userIds = [...new Set(filteredAttempts.map((a) => a.user_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, dni_nie")
-      .in("id", userIds);
-
-    // Get evaluations
-    const evalIds = [...new Set(filteredAttempts.map((a) => a.evaluation_id))];
-    const { data: evaluations } = await supabase
-      .from("evaluations")
-      .select("id, title")
-      .in("id", evalIds);
-
-    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
-    const evalMap = new Map(evaluations?.map((e) => [e.id, e.title]) || []);
-
-    // Group by user
-    const userAttempts: Record<string, typeof filteredAttempts> = {};
-    filteredAttempts.forEach((a) => {
-      if (!userAttempts[a.user_id]) userAttempts[a.user_id] = [];
-      userAttempts[a.user_id].push(a);
-    });
-
-    let currentY = startY;
-
-    for (const userId of Object.keys(userAttempts)) {
-      const profile = profileMap.get(userId);
-      const attempts = userAttempts[userId];
-
-      // Check if we need a new page
-      if (currentY > 250) {
-        doc.addPage();
-        currentY = 20;
-      }
-
+    // Time per module summary
+    if (modules?.length) {
+      const summaryY = (doc as any).lastAutoTable.finalY + 15;
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text(`Alumno: ${profile?.full_name || "Sin nombre"}`, 14, currentY);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(`DNI: ${profile?.dni_nie || "N/A"}`, 14, currentY + 6);
+      doc.text("Tiempo medio por Módulo/Unidad Formativa", 14, summaryY);
 
-      const tableData = attempts.map((a) => [
-        a.completed_at ? format(new Date(a.completed_at), "dd/MM/yyyy") : "-",
-        evalMap.get(a.evaluation_id) || "Evaluación",
-        `Intento ${a.attempt_number}`,
-        a.score !== null ? `${a.score}%` : "-",
-        a.status === "completed" ? "Completado" : a.status,
-      ]);
+      const moduleTimeData = modules.map((m) => {
+        const totalModuleTime = Object.values(timeByUserModule).reduce((sum, userModules) => {
+          return sum + (userModules[m.id] || 0);
+        }, 0);
+        const avgModuleTime = enrollments.length > 0 ? totalModuleTime / enrollments.length : 0;
+        return [m.title.substring(0, 50), formatDuration(Math.round(avgModuleTime))];
+      });
 
       autoTable(doc, {
-        startY: currentY + 10,
-        head: [["Fecha", "Evaluación", "Intento", "Calificación", "Estado"]],
-        body: tableData,
+        startY: summaryY + 5,
+        head: [["Módulo/UF", "Tiempo Medio"]],
+        body: moduleTimeData,
         theme: "grid",
-        headStyles: {
-          fillColor: [59, 130, 246],
-          textColor: 255,
-          fontSize: 8,
-        },
-        bodyStyles: {
-          fontSize: 7,
-        },
+        headStyles: { fillColor: [34, 197, 94], textColor: 255, fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
       });
-
-      currentY = (doc as any).lastAutoTable.finalY + 15;
     }
   };
 
-  const generateTrackingReport = async (doc: jsPDF, startY: number) => {
-    // Get enrollments
-    const { data: enrollments } = await supabase
-      .from("enrollments")
-      .select(`
-        id,
-        user_id,
-        progress_percentage,
-        enrolled_at,
-        last_accessed_at,
-        completed_at
-      `)
-      .eq("course_id", filters.courseId);
-
-    if (!enrollments || enrollments.length === 0) {
-      doc.text("No hay datos de alumnos para este curso", 14, startY);
-      return;
-    }
-
-    const userIds = enrollments.map((e) => e.user_id);
-
-    // Get profiles
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, dni_nie")
-      .in("id", userIds);
-
-    // Get content interactions
-    const { data: interactions } = await supabase
-      .from("content_interactions")
-      .select("user_id, time_spent_seconds, completed")
-      .in("user_id", userIds);
-
-    // Get evaluation attempts
-    const { data: attempts } = await supabase
-      .from("evaluation_attempts")
-      .select("user_id, status, score")
-      .in("user_id", userIds);
-
-    // Get user sessions
-    const { data: sessions } = await supabase
-      .from("user_sessions")
-      .select("user_id, started_at")
-      .in("user_id", userIds);
-
-    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
-
-    // Calculate metrics per user
-    const userMetrics: Record<string, any> = {};
-    enrollments.forEach((e) => {
-      userMetrics[e.user_id] = {
-        enrollment: e,
-        totalTime: 0,
-        completedModules: 0,
-        totalTests: 0,
-        passedTests: 0,
-        accesses: 0,
-      };
-    });
-
-    interactions?.forEach((i) => {
-      if (userMetrics[i.user_id]) {
-        userMetrics[i.user_id].totalTime += i.time_spent_seconds;
-        if (i.completed) userMetrics[i.user_id].completedModules++;
-      }
-    });
-
-    attempts?.forEach((a) => {
-      if (userMetrics[a.user_id]) {
-        userMetrics[a.user_id].totalTests++;
-        if (a.status === "completed" && a.score && a.score >= 50) {
-          userMetrics[a.user_id].passedTests++;
-        }
-      }
-    });
-
-    sessions?.forEach((s) => {
-      if (userMetrics[s.user_id]) {
-        userMetrics[s.user_id].accesses++;
-      }
-    });
-
-    let currentY = startY;
-
-    for (const userId of Object.keys(userMetrics)) {
-      const profile = profileMap.get(userId);
-      const metrics = userMetrics[userId];
-      const enrollment = metrics.enrollment;
-
-      if (currentY > 220) {
-        doc.addPage();
-        currentY = 20;
-      }
-
-      // Student header
-      doc.setFillColor(240, 240, 240);
-      doc.rect(14, currentY - 5, 180, 12, "F");
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text(profile?.full_name?.toUpperCase() || "SIN NOMBRE", 16, currentY + 3);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(`DNI: ${profile?.dni_nie || "N/A"}`, 140, currentY + 3);
-
-      currentY += 15;
-
-      // Student details table
-      const detailsData = [
-        ["Fecha Inicio", enrollment.enrolled_at ? format(new Date(enrollment.enrolled_at), "dd/MM/yyyy") : "-"],
-        ["Último Acceso", enrollment.last_accessed_at ? format(new Date(enrollment.last_accessed_at), "dd/MM/yyyy HH:mm") : "-"],
-        ["Tiempo Total", formatDuration(metrics.totalTime)],
-        ["Total Accesos", metrics.accesses.toString()],
-        ["Progreso", `${enrollment.progress_percentage || 0}%`],
-        ["Tests Realizados", `${metrics.passedTests}/${metrics.totalTests}`],
-      ];
-
-      autoTable(doc, {
-        startY: currentY,
-        body: detailsData,
-        theme: "plain",
-        bodyStyles: {
-          fontSize: 8,
-        },
-        columnStyles: {
-          0: { cellWidth: 40, fontStyle: "bold" },
-          1: { cellWidth: 50 },
-        },
-      });
-
-      // Progress bar
-      const progressY = (doc as any).lastAutoTable.finalY + 5;
-      const progress = enrollment.progress_percentage || 0;
-      doc.setDrawColor(200, 200, 200);
-      doc.rect(14, progressY, 100, 6);
-      doc.setFillColor(34, 197, 94);
-      doc.rect(14, progressY, progress, 6, "F");
-      doc.setFontSize(8);
-      doc.text(`Ritmo: ${progress}%`, 120, progressY + 5);
-
-      currentY = progressY + 20;
-    }
-  };
-
-  const generateTimeSummaryReport = async (doc: jsPDF, startY: number) => {
-    // Similar to time report but with summary statistics
+  // 6. Calificaciones durante el Aprendizaje
+  const generateLearningGradesReport = async (doc: jsPDF, startY: number) => {
     const { data: enrollments } = await supabase
       .from("enrollments")
       .select("id, user_id")
       .eq("course_id", filters.courseId);
 
-    if (!enrollments || enrollments.length === 0) {
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+    const enrollmentIds = enrollments.map((e) => e.id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    // Get activity submissions
+    const { data: submissions } = await supabase
+      .from("activity_submissions")
+      .select("enrollment_id, user_id, score, status, activity_id")
+      .in("enrollment_id", enrollmentIds);
+
+    // Get evaluations (non-final)
+    const { data: attempts } = await supabase
+      .from("evaluation_attempts")
+      .select("user_id, score, status, evaluation_id")
+      .in("user_id", userIds)
+      .eq("status", "completed");
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    // Calculate grades per user
+    const userGrades: Record<string, { 
+      activityScores: number[]; 
+      evalScores: number[];
+      avgActivity: number;
+      avgEval: number;
+    }> = {};
+
+    submissions?.forEach((s) => {
+      if (s.score !== null && s.status === 'graded') {
+        if (!userGrades[s.user_id]) userGrades[s.user_id] = { activityScores: [], evalScores: [], avgActivity: 0, avgEval: 0 };
+        userGrades[s.user_id].activityScores.push(s.score);
+      }
+    });
+
+    attempts?.forEach((a) => {
+      if (a.score !== null) {
+        if (!userGrades[a.user_id]) userGrades[a.user_id] = { activityScores: [], evalScores: [], avgActivity: 0, avgEval: 0 };
+        userGrades[a.user_id].evalScores.push(a.score);
+      }
+    });
+
+    // Calculate averages
+    Object.keys(userGrades).forEach((userId) => {
+      const g = userGrades[userId];
+      g.avgActivity = g.activityScores.length > 0 ? g.activityScores.reduce((a, b) => a + b, 0) / g.activityScores.length : 0;
+      g.avgEval = g.evalScores.length > 0 ? g.evalScores.reduce((a, b) => a + b, 0) / g.evalScores.length : 0;
+    });
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("CALIFICACIONES DURANTE EL PROCESO DE APRENDIZAJE", 14, startY);
+
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      const grades = userGrades[e.user_id] || { activityScores: [], evalScores: [], avgActivity: 0, avgEval: 0 };
+      const overallAvg = (grades.avgActivity + grades.avgEval) / 2;
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        grades.activityScores.length.toString(),
+        grades.avgActivity.toFixed(1) + "%",
+        grades.evalScores.length.toString(),
+        grades.avgEval.toFixed(1) + "%",
+        overallAvg.toFixed(1) + "%",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: startY + 10,
+      head: [["DNI", "Nombre", "Actividades", "Media Act.", "Pruebas", "Media Pruebas", "Media Total"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+    });
+  };
+
+  // 7. Informe Prueba Final
+  const generateFinalExamReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
       doc.text("No hay datos de alumnos para este curso", 14, startY);
       return;
     }
 
     const userIds = enrollments.map((e) => e.user_id);
 
-    // Get profiles
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, full_name, dni_nie")
       .in("id", userIds);
 
-    // Get content interactions
-    const { data: interactions } = await supabase
-      .from("content_interactions")
-      .select("user_id, time_spent_seconds")
-      .in("user_id", userIds);
+    // Get final evaluations for this course
+    const { data: evaluations } = await supabase
+      .from("evaluations")
+      .select("id, title, module_id, passing_score")
+      .eq("course_id", filters.courseId);
+
+    // Get all attempts
+    const { data: attempts } = await supabase
+      .from("evaluation_attempts")
+      .select("user_id, evaluation_id, score, status, attempt_number, completed_at")
+      .in("user_id", userIds)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false });
 
     const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+    const evalMap = new Map(evaluations?.map((e) => [e.id, e]) || []);
 
-    // Calculate time per user
-    const timeByUser: Record<string, number> = {};
-    interactions?.forEach((i) => {
-      timeByUser[i.user_id] = (timeByUser[i.user_id] || 0) + i.time_spent_seconds;
+    // Get best scores per user per evaluation
+    const userBestScores: Record<string, Record<string, { score: number; passed: boolean; convocatoria: number }>> = {};
+    
+    attempts?.forEach((a) => {
+      const eval_ = evalMap.get(a.evaluation_id);
+      if (!eval_ || a.score === null) return;
+      
+      if (!userBestScores[a.user_id]) userBestScores[a.user_id] = {};
+      
+      const current = userBestScores[a.user_id][a.evaluation_id];
+      if (!current || a.score > current.score) {
+        userBestScores[a.user_id][a.evaluation_id] = {
+          score: a.score,
+          passed: a.score >= eval_.passing_score,
+          convocatoria: a.attempt_number,
+        };
+      }
     });
 
-    // Table data
-    const tableData = enrollments.map((e) => {
-      const profile = profileMap.get(e.user_id);
-      const totalSeconds = timeByUser[e.user_id] || 0;
-      return {
-        name: profile?.full_name || "Sin nombre",
-        dni: profile?.dni_nie || "",
-        time: totalSeconds,
-      };
-    }).sort((a, b) => b.time - a.time); // Sort by time descending
+    // Calculate pass statistics
+    let totalPassed = 0;
+    enrollments.forEach((e) => {
+      const userScores = userBestScores[e.user_id];
+      if (userScores) {
+        const allPassed = evaluations?.every((eval_) => userScores[eval_.id]?.passed) || false;
+        if (allPassed) totalPassed++;
+      }
+    });
+
+    const passRate = enrollments.length > 0 ? ((totalPassed / enrollments.length) * 100).toFixed(1) : "0";
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("TIEMPO INVERTIDO", 14, startY);
+    doc.text("INFORME PRUEBA FINAL DE MÓDULO", 14, startY);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total de alumnos: ${enrollments.length}`, 14, startY + 10);
+    doc.text(`Alumnos que superan la prueba final: ${totalPassed} (${passRate}%)`, 14, startY + 17);
+
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      const userScores = userBestScores[e.user_id] || {};
+      const scores = Object.values(userScores);
+      const avgScore = scores.length > 0 ? scores.reduce((sum, s) => sum + s.score, 0) / scores.length : 0;
+      const allPassed = evaluations?.every((eval_) => userScores[eval_.id]?.passed) || false;
+      
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        avgScore.toFixed(1) + "%",
+        allPassed ? "APTO" : "NO APTO",
+        scores.length > 0 ? Math.max(...scores.map(s => s.convocatoria)).toString() + "ª" : "-",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: startY + 25,
+      head: [["DNI", "Nombre", "Puntuación", "Estado", "Convocatoria"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8 },
+    });
+  };
+
+  // 8. Informe de Evaluación (30% + 70%)
+  const generateEvaluationReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+    const enrollmentIds = enrollments.map((e) => e.id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    // Get activity grades (30%)
+    const { data: submissions } = await supabase
+      .from("activity_submissions")
+      .select("user_id, score, status")
+      .in("enrollment_id", enrollmentIds)
+      .eq("status", "graded");
+
+    // Get evaluation grades (70%)
+    const { data: attempts } = await supabase
+      .from("evaluation_attempts")
+      .select("user_id, score, status")
+      .in("user_id", userIds)
+      .eq("status", "completed");
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    // Calculate weighted grades
+    const userGrades: Record<string, { 
+      learningAvg: number; 
+      finalAvg: number; 
+      weightedTotal: number;
+      passed: boolean;
+      convocatoria: number;
+    }> = {};
+
+    // Learning grades (30%)
+    const learningScores: Record<string, number[]> = {};
+    submissions?.forEach((s) => {
+      if (s.score !== null) {
+        if (!learningScores[s.user_id]) learningScores[s.user_id] = [];
+        learningScores[s.user_id].push(s.score);
+      }
+    });
+
+    // Final grades (70%)
+    const finalScores: Record<string, number[]> = {};
+    attempts?.forEach((a) => {
+      if (a.score !== null) {
+        if (!finalScores[a.user_id]) finalScores[a.user_id] = [];
+        finalScores[a.user_id].push(a.score);
+      }
+    });
+
+    enrollments.forEach((e) => {
+      const learning = learningScores[e.user_id] || [];
+      const final = finalScores[e.user_id] || [];
+      
+      const learningAvg = learning.length > 0 ? learning.reduce((a, b) => a + b, 0) / learning.length : 0;
+      const finalAvg = final.length > 0 ? final.reduce((a, b) => a + b, 0) / final.length : 0;
+      
+      // Weighted: 30% learning + 70% final
+      const weightedTotal = (learningAvg * 0.3) + (finalAvg * 0.7);
+      
+      userGrades[e.user_id] = {
+        learningAvg,
+        finalAvg,
+        weightedTotal,
+        passed: finalAvg >= 50 && weightedTotal >= 50, // Must pass final with ≥5 and have weighted ≥5
+        convocatoria: final.length > 0 ? 1 : 0,
+      };
+    });
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME DE EVALUACIÓN - PUNTUACIÓN FINAL PONDERADA", 14, startY);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Ponderación: 30% Evaluación durante el aprendizaje + 70% Prueba final", 14, startY + 10);
+
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      const grades = userGrades[e.user_id] || { learningAvg: 0, finalAvg: 0, weightedTotal: 0, passed: false, convocatoria: 0 };
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        grades.learningAvg.toFixed(1) + "%",
+        grades.finalAvg.toFixed(1) + "%",
+        grades.weightedTotal.toFixed(1) + "%",
+        grades.passed ? "APTO" : "NO APTO",
+        grades.convocatoria > 0 ? grades.convocatoria + "ª" : "-",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: startY + 18,
+      head: [["DNI", "Nombre", "Aprendizaje (30%)", "Final (70%)", "Puntuación Final", "Estado", "Convocatoria"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+    });
+  };
+
+  // 9. Informe Alumnos Aptos (Formación)
+  const generatePassedStudentsReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id, progress_percentage, completed_at")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    // Get modules
+    const { data: modules } = await supabase
+      .from("modules")
+      .select("id, title")
+      .eq("course_id", filters.courseId)
+      .order("order_index");
+
+    // Get module progress
+    const enrollmentIds = enrollments.map((e) => e.id);
+    const { data: moduleProgress } = await supabase
+      .from("module_progress")
+      .select("enrollment_id, module_id, completed")
+      .in("enrollment_id", enrollmentIds);
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+    const enrollmentMap = new Map(enrollments.map((e) => [e.id, e.user_id]));
+
+    // Calculate module completion per user
+    const userModules: Record<string, Record<string, boolean>> = {};
+    moduleProgress?.forEach((mp) => {
+      const userId = enrollmentMap.get(mp.enrollment_id);
+      if (userId) {
+        if (!userModules[userId]) userModules[userId] = {};
+        userModules[userId][mp.module_id] = mp.completed || false;
+      }
+    });
+
+    // Statistics per module
+    const moduleStats = modules?.map((m) => {
+      const passed = Object.values(userModules).filter((um) => um[m.id]).length;
+      return { 
+        title: m.title, 
+        passed, 
+        percentage: enrollments.length > 0 ? ((passed / enrollments.length) * 100).toFixed(1) : "0" 
+      };
+    }) || [];
+
+    // Total course completion
+    const completedCourse = enrollments.filter((e) => e.completed_at || e.progress_percentage === 100).length;
+    const courseCompletionRate = enrollments.length > 0 ? ((completedCourse / enrollments.length) * 100).toFixed(1) : "0";
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME ALUMNOS APTOS - FORMACIÓN", 14, startY);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total de alumnos: ${enrollments.length}`, 14, startY + 10);
+    doc.text(`Alumnos que completan la acción formativa: ${completedCourse} (${courseCompletionRate}%)`, 14, startY + 17);
+
+    // Module breakdown table
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("Superación por Módulo", 14, startY + 30);
+
+    const moduleTableData = moduleStats.map((m) => [
+      m.title.substring(0, 60),
+      m.passed.toString(),
+      m.percentage + "%",
+    ]);
+
+    autoTable(doc, {
+      startY: startY + 35,
+      head: [["Módulo", "Alumnos Aptos", "Porcentaje"]],
+      body: moduleTableData,
+      theme: "grid",
+      headStyles: { fillColor: [34, 197, 94], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8 },
+    });
+
+    // Individual student status
+    const studentY = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("Estado Individual del Alumnado", 14, studentY);
+
+    const studentTableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      const modulesCompleted = Object.values(userModules[e.user_id] || {}).filter(Boolean).length;
+      const totalModules = modules?.length || 0;
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        `${modulesCompleted}/${totalModules}`,
+        e.completed_at ? "APTO" : "EN CURSO",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: studentY + 5,
+      head: [["DNI", "Nombre", "Módulos Superados", "Estado"]],
+      body: studentTableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8 },
+    });
+  };
+
+  // 10. Informe Alumnos Aptos (Prácticas)
+  const generatePracticePassedReport = async (doc: jsPDF, startY: number) => {
+    // This would typically come from a dedicated practices/internships table
+    // For now, we'll show a placeholder structure
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME ALUMNOS APTOS - MÓDULO DE PRÁCTICAS (FCT)", 14, startY);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Este informe incluye el seguimiento del módulo de formación práctica en centros de trabajo.", 14, startY + 10);
+
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id, completed_at")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY + 25);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    // For now, show enrollment data (in a real system this would come from an internships table)
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        "-", // Company
+        "-", // Hours
+        e.completed_at ? "APTO" : "PENDIENTE",
+      ];
+    });
+
+    autoTable(doc, {
+      startY: startY + 20,
+      head: [["DNI", "Nombre", "Centro de Trabajo", "Horas Realizadas", "Estado"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8 },
+    });
+
+    const noteY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "italic");
+    doc.text("Nota: El módulo de prácticas requiere configuración específica del convenio con empresas.", 14, noteY);
+  };
+
+  // 11. Informe Detallado Alumnos (Perfil)
+  const generateDetailedStudentsReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id, enrolled_at")
+      .eq("course_id", filters.courseId);
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie, phone, address, province, city")
+      .in("id", userIds);
+
+    // Get employment data from separate table
+    const { data: employmentData } = await supabase
+      .from("student_employment_data")
+      .select("user_id, employment_status, education_level")
+      .in("user_id", userIds);
+
+    const employmentMap = new Map(employmentData?.map((e) => [e.user_id, e]) || []);
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME DETALLADO DEL PERFIL DEL ALUMNADO", 14, startY);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total de alumnos: ${enrollments.length}`, 14, startY + 10);
+
+    const tableData = profiles?.map((p) => {
+      const employment = employmentMap.get(p.id);
+      return [
+        p.dni_nie || "-",
+        p.full_name || "Sin nombre",
+        "-", // Gender not in profiles
+        "-", // Age not in profiles
+        employment?.education_level || "-",
+        employment?.employment_status || "-",
+        p.province || p.city || "-",
+      ];
+    }) || [];
+
+    autoTable(doc, {
+      startY: startY + 18,
+      head: [["DNI", "Nombre", "Sexo", "Edad", "Nivel Formativo", "Situación Laboral", "Provincia"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 12 },
+        3: { cellWidth: 12 },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 30 },
+        6: { cellWidth: 30 },
+      },
+    });
+  };
+
+  // 12. Informe Alta/Baja Alumnos
+  const generateEnrollmentChangesReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id, enrolled_at, completed_at")
+      .eq("course_id", filters.courseId)
+      .order("enrolled_at", { ascending: true });
+
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
+
+    const userIds = enrollments.map((e) => e.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORME DE ALTAS, MODIFICACIONES Y BAJAS", 14, startY);
+
+    const tableData = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      return [
+        profile?.dni_nie || "",
+        profile?.full_name || "Sin nombre",
+        "ALTA",
+        e.enrolled_at ? format(new Date(e.enrolled_at), "dd/MM/yyyy") : "-",
+        e.completed_at ? "Completado" : "Activo",
+      ];
+    });
 
     autoTable(doc, {
       startY: startY + 10,
-      head: [["NIF", "Nombre", "Apellidos", "Perfil", "Tiempo Total"]],
-      body: tableData.map((d) => {
-        const nameParts = d.name.split(" ");
-        const firstName = nameParts[0] || "";
-        const lastName = nameParts.slice(1).join(" ") || "";
-        return [d.dni, firstName, lastName, "ALUMNO/A", formatDuration(d.time)];
-      }),
+      head: [["DNI", "Nombre", "Tipo", "Fecha", "Estado Actual"]],
+      body: tableData,
       theme: "grid",
-      headStyles: {
-        fillColor: [59, 130, 246],
-        textColor: 255,
-        fontSize: 9,
-      },
-      bodyStyles: {
-        fontSize: 8,
-      },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8 },
     });
 
-    // Summary chart area (simplified bar representation)
-    const summaryY = (doc as any).lastAutoTable.finalY + 15;
+    // Summary
+    const summaryY = (doc as any).lastAutoTable.finalY + 10;
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("Total de tiempos invertidos", 14, summaryY);
+    doc.text("Resumen", 14, summaryY);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total de altas: ${enrollments.length}`, 14, summaryY + 7);
+    doc.text(`Alumnos activos: ${enrollments.filter((e) => !e.completed_at).length}`, 14, summaryY + 14);
+    doc.text(`Alumnos que completaron: ${enrollments.filter((e) => e.completed_at).length}`, 14, summaryY + 21);
+  };
 
-    // Draw simple bar chart
-    const maxTime = Math.max(...tableData.map((d) => d.time), 1);
-    const barHeight = 8;
-    let chartY = summaryY + 10;
+  // 13. Informe Alumnos Iniciados, Completados y Abandonos
+  const generateCompletionReport = async (doc: jsPDF, startY: number) => {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("id, user_id, enrolled_at, completed_at, progress_percentage, last_accessed_at")
+      .eq("course_id", filters.courseId);
 
-    tableData.slice(0, 10).forEach((d, index) => {
-      const barWidth = (d.time / maxTime) * 100;
-      const nameParts = d.name.split(" ");
-      const shortName = nameParts[0] || "Alumno";
+    if (!enrollments?.length) {
+      doc.text("No hay datos de alumnos para este curso", 14, startY);
+      return;
+    }
 
-      doc.setFillColor(59, 130, 246);
-      doc.rect(50, chartY + index * (barHeight + 3), barWidth, barHeight, "F");
-      doc.setFontSize(7);
-      doc.text(shortName.substring(0, 15), 14, chartY + index * (barHeight + 3) + 6);
-      doc.text(formatDuration(d.time), 155, chartY + index * (barHeight + 3) + 6);
+    const userIds = enrollments.map((e) => e.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, dni_nie")
+      .in("id", userIds);
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    // Classify students
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    let initiated = 0;
+    let completed = 0;
+    let abandoned = 0;
+    let active = 0;
+
+    const studentStatus = enrollments.map((e) => {
+      const profile = profileMap.get(e.user_id);
+      let status = "Iniciado";
+      let cause = "-";
+      
+      initiated++;
+
+      if (e.completed_at || e.progress_percentage === 100) {
+        status = "Completado";
+        completed++;
+      } else if (e.last_accessed_at && new Date(e.last_accessed_at) < thirtyDaysAgo && (e.progress_percentage || 0) < 100) {
+        status = "Abandono";
+        abandoned++;
+        cause = "Inactividad >30 días";
+      } else {
+        status = "Activo";
+        active++;
+      }
+
+      return {
+        dni: profile?.dni_nie || "",
+        name: profile?.full_name || "Sin nombre",
+        status,
+        progress: e.progress_percentage || 0,
+        lastAccess: e.last_accessed_at,
+        cause,
+      };
     });
 
-    // Total summary
-    const totalY = chartY + Math.min(tableData.length, 10) * (barHeight + 3) + 15;
-    const totalTime = tableData.reduce((sum, d) => sum + d.time, 0);
-    doc.setFontSize(10);
+    const total = enrollments.length;
+    
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text(`Tiempo total del grupo: ${formatDuration(totalTime)}`, 14, totalY);
+    doc.text("INFORME DE ALUMNOS INICIADOS, COMPLETADOS Y ABANDONOS", 14, startY);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total matriculados: ${total}`, 14, startY + 10);
+    doc.text(`Alumnos que inician: ${initiated} (100%)`, 14, startY + 17);
+    doc.text(`Alumnos que completan: ${completed} (${((completed / total) * 100).toFixed(1)}%)`, 14, startY + 24);
+    doc.text(`Alumnos activos: ${active} (${((active / total) * 100).toFixed(1)}%)`, 14, startY + 31);
+    doc.text(`Alumnos que abandonan: ${abandoned} (${((abandoned / total) * 100).toFixed(1)}%)`, 14, startY + 38);
+
+    const tableData = studentStatus.map((s) => [
+      s.dni,
+      s.name,
+      s.status,
+      s.progress + "%",
+      s.lastAccess ? format(new Date(s.lastAccess), "dd/MM/yyyy") : "-",
+      s.cause,
+    ]);
+
+    autoTable(doc, {
+      startY: startY + 48,
+      head: [["DNI", "Nombre", "Estado", "Progreso", "Último Acceso", "Causa Baja"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 8 },
+      bodyStyles: { fontSize: 7 },
+    });
   };
 
   return (
     <div className="space-y-6">
-      {/* Report Type Selection */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        {SEPE_REPORT_TYPES.map((type) => (
-          <Card
-            key={type.id}
-            className={`cursor-pointer transition-all hover:shadow-md ${
-              selectedReport === type.id ? "border-primary bg-primary/5 ring-2 ring-primary" : ""
-            }`}
-            onClick={() => setSelectedReport(type.id)}
-          >
-            <CardHeader className="p-4">
-              <div className="flex items-start justify-between">
-                <type.icon
-                  className={`h-6 w-6 ${
-                    selectedReport === type.id ? "text-primary" : "text-muted-foreground"
-                  }`}
-                />
-                {selectedReport === type.id && (
-                  <Badge variant="default" className="text-xs">
-                    Seleccionado
-                  </Badge>
-                )}
+      {/* Report Type Selection - Grouped by Category */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Seleccionar Tipo de Informe</CardTitle>
+          <CardDescription>
+            Elige el tipo de informe SEPE que deseas generar
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[400px] pr-4">
+            {Object.entries(groupedReports).map(([category, reports]) => (
+              <div key={category} className="mb-6">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                  {category}
+                </h3>
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {reports.map((type) => (
+                    <Card
+                      key={type.id}
+                      className={`cursor-pointer transition-all hover:shadow-md ${
+                        selectedReport === type.id 
+                          ? "border-primary bg-primary/5 ring-2 ring-primary" 
+                          : "hover:border-primary/50"
+                      }`}
+                      onClick={() => setSelectedReport(type.id)}
+                    >
+                      <CardHeader className="p-3">
+                        <div className="flex items-start gap-3">
+                          <type.icon
+                            className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
+                              selectedReport === type.id ? "text-primary" : "text-muted-foreground"
+                            }`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-sm truncate">{type.name}</CardTitle>
+                              {selectedReport === type.id && (
+                                <Badge variant="default" className="text-[10px] px-1.5 py-0">
+                                  ✓
+                                </Badge>
+                              )}
+                            </div>
+                            <CardDescription className="text-xs mt-1 line-clamp-2">
+                              {type.description}
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
               </div>
-              <CardTitle className="text-sm mt-2">{type.name}</CardTitle>
-              <CardDescription className="text-xs">{type.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
+            ))}
+          </ScrollArea>
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <Card>
@@ -751,7 +1600,7 @@ export default function SEPEReportGenerator() {
             Configuración del Informe
           </CardTitle>
           <CardDescription>
-            Selecciona los filtros para generar el informe SEPE
+            Selecciona los filtros para generar el informe
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -827,7 +1676,7 @@ export default function SEPEReportGenerator() {
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button onClick={generatePDF} disabled={loading || !filters.courseId}>
+            <Button onClick={generatePDF} disabled={loading || !filters.courseId} size="lg">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
