@@ -81,7 +81,8 @@ const adminItems = [
 const teacherItems = [
   { title: "Dashboard", url: "/dashboard/teacher", icon: LayoutDashboard },
   { title: "Mis Cursos", url: "/dashboard/teacher/courses", icon: BookOpen },
-  { title: "Alumnos", url: "/dashboard/teacher/students", icon: Users },
+  { title: "Alumnos y Equipo", url: "/dashboard/teacher/team", icon: Users },
+  { title: "Seguimiento Alumnos", url: "/dashboard/teacher/students", icon: UserCircle },
   { title: "Evaluar Actividades", url: "/dashboard/teacher/grade-activities", icon: ClipboardList },
   { title: "Cronograma", url: "/dashboard/teacher/calendar", icon: Calendar },
   { title: "Informes", url: "/dashboard/teacher/reports", icon: BarChart },
