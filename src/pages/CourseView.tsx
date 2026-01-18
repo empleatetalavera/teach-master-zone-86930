@@ -2615,10 +2615,10 @@ export default function CourseView() {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    {tutorProfile?.full_name ? tutorProfile.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'TU'}
+                    {tutorProfile?.full_name ? tutorProfile.full_name.replace(/\s*\(Prueba SEPE\)/gi, '').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'TU'}
                   </div>
                   <div>
-                    <p className="font-semibold">{tutorProfile?.full_name || 'Tutor del curso'}</p>
+                    <p className="font-semibold">{tutorProfile?.full_name?.replace(/\s*\(Prueba SEPE\)/gi, '') || 'Tutor del curso'}</p>
                     <p className="text-xs text-muted-foreground">Tutor/a especializado/a</p>
                   </div>
                 </div>
@@ -2814,17 +2814,26 @@ export default function CourseView() {
 
             {/* Progreso - Diferente para tutor y alumno */}
             {userRole === 'teacher' ? (
-              <Card>
-                <CardHeader className="pb-2 bg-gradient-to-r from-teal-600 to-emerald-600 rounded-t-lg">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2 text-white">
-                    <Users className="h-4 w-4" />
-                    Progreso de mis Alumnos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <TutorStudentProgress courseId={courseId!} />
-                </CardContent>
-              </Card>
+              <Collapsible defaultOpen={false}>
+                <Card>
+                  <CardHeader className="pb-2 bg-gradient-to-r from-teal-600 to-emerald-600 rounded-t-lg">
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2 text-white">
+                          <Users className="h-4 w-4" />
+                          Progreso de mis Alumnos
+                        </CardTitle>
+                        <ChevronDown className="h-4 w-4 text-white" />
+                      </div>
+                    </CollapsibleTrigger>
+                  </CardHeader>
+                  <CollapsibleContent>
+                    <CardContent className="pt-4">
+                      <TutorStudentProgress courseId={courseId!} />
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             ) : (
               <Card>
                 <CardHeader className="pb-2">
