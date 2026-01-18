@@ -577,7 +577,7 @@ export default function AdminSionlineSettings() {
                         <Label className="font-bold text-slate-700">Credenciales De Acceso:</Label>
                       </div>
 
-                      {/* Usuario Administrador - FIJO como el admin del centro */}
+                      {/* Usuario Administrador - FIJO: admincertificados / d123456-D */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-blue-200">
                         <div className="space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
@@ -585,14 +585,14 @@ export default function AdminSionlineSettings() {
                           </Label>
                           <div className="flex items-center gap-2">
                             <Input
-                              value={selectedCenter.training_center?.contact_email || 'admin@centro.es'}
+                              value="admincertificados"
                               readOnly
-                              className="font-mono text-sm bg-white border-2 border-blue-300"
+                              className="font-mono text-sm bg-white border-2 border-blue-300 font-bold"
                             />
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => copyToClipboard(selectedCenter.training_center?.contact_email || 'admin@centro.es', "Usuario admin")}
+                              onClick={() => copyToClipboard("admincertificados", "Usuario admin")}
                               className="shrink-0"
                             >
                               <Copy className="w-4 h-4" />
@@ -605,21 +605,39 @@ export default function AdminSionlineSettings() {
                           </Label>
                           <div className="flex items-center gap-2">
                             <Input
-                              value="(Contraseña del administrador del centro)"
+                              value="d123456-D"
                               readOnly
-                              className="font-mono text-sm bg-gray-50 border-2 border-blue-300"
+                              className="font-mono text-sm bg-white border-2 border-blue-300 font-bold"
                             />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => copyToClipboard("d123456-D", "Contraseña admin")}
+                              className="shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                         <div className="md:col-span-2 space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Confirmar Contraseña:
                           </Label>
-                          <Input
-                            value="(Misma contraseña)"
-                            readOnly
-                            className="font-mono text-sm bg-gray-50 border-2 border-blue-300"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value="d123456-D"
+                              readOnly
+                              className="font-mono text-sm bg-white border-2 border-blue-300 font-bold"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => copyToClipboard("d123456-D", "Contraseña admin")}
+                              className="shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
 
