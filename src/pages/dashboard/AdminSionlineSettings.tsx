@@ -24,7 +24,10 @@ import {
   Copy,
   Plus,
   Trash2,
-  Euro
+  Euro,
+  GraduationCap,
+  Users,
+  Clock
 } from "lucide-react";
 
 interface TrainingCenter {
@@ -804,52 +807,308 @@ export default function AdminSionlineSettings() {
 
         {/* Service Information */}
         <TabsContent value="info">
-          <Card>
-            <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
-              <CardTitle className="text-center text-2xl">
-                Servicio de Seguimiento SOAP SEPE
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">¿Qué es este servicio?</h3>
-                  <p className="text-muted-foreground">
-                    Proporciona una URL de seguimiento válida necesaria para la inscripción 
-                    o acreditación de entidades de formación en la modalidad de teleformación ante SEPE.
-                  </p>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
+                <CardTitle className="text-center text-2xl">
+                  Modelo de Datos para Seguimiento SEPE - Teleformación
+                </CardTitle>
+                <CardDescription className="text-center text-primary-foreground/80">
+                  Según Orden TMS/369/2019 y Anexo V - Servicio Público de Empleo Estatal
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  <Alert className="border-amber-200 bg-amber-50">
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                      <strong>Requisito Legal:</strong> La URL de seguimiento es obligatoria según el artículo 27 de la Orden ESS/1897/2013 
+                      para centros que imparten formación en modalidad de teleformación con fondos no públicos.
+                    </AlertDescription>
+                  </Alert>
+
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      ¿Qué es el Servicio SOAP de Seguimiento?
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Es un servicio web obligatorio que implementa el Protocolo Simple Object Access Protocol (SOAP) 1.1 sobre HTTPS, 
+                      conforme al estándar Web Services Security UsernameToken Profile 1.0 OASIS Standard 200401. 
+                      Este servicio permite al SEPE realizar el seguimiento de las acciones formativas impartidas en modalidad de teleformación.
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <h4 className="font-semibold text-blue-800 mb-2">Operaciones del Servicio</h4>
+                      <ul className="text-sm text-blue-700 space-y-1">
+                        <li>• <code>crearCentro</code> - Crear centro de formación</li>
+                        <li>• <code>obtenerDatosCentro</code> - Obtener datos del centro</li>
+                        <li>• <code>crearAccion</code> - Crear acción formativa</li>
+                        <li>• <code>obtenerListaAcciones</code> - Listar acciones iniciadas</li>
+                        <li>• <code>obtenerAccion</code> - Obtener datos de una acción</li>
+                        <li>• <code>eliminarAccion</code> - Eliminar acción formativa</li>
+                      </ul>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                      <h4 className="font-semibold text-green-800 mb-2">Códigos de Retorno</h4>
+                      <ul className="text-sm text-green-700 space-y-1">
+                        <li>• <code>0</code> - Operación correcta</li>
+                        <li>• <code>1</code> - Centro/Acción inexistente</li>
+                        <li>• <code>2</code> - Error en parámetro</li>
+                        <li>• <code>-1</code> - Error inesperado</li>
+                        <li>• <code>-2</code> - WS no disponible</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  A. Datos Identificativos del Centro
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-muted">
+                        <th className="border p-2 text-left font-semibold">Campo</th>
+                        <th className="border p-2 text-left font-semibold">Descripción</th>
+                        <th className="border p-2 text-left font-semibold">Formato</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border p-2 font-mono text-xs">ID_CENTRO</td>
+                        <td className="border p-2">Identificador compuesto: ORIGEN_CENTRO + CODIGO_CENTRO</td>
+                        <td className="border p-2 text-xs">20 + 8000XXXXXXXX</td>
+                      </tr>
+                      <tr className="bg-muted/50">
+                        <td className="border p-2 font-mono text-xs">ORIGEN_CENTRO</td>
+                        <td className="border p-2">Siempre valor 20 (SEPE)</td>
+                        <td className="border p-2 text-xs">Numérico 2 dígitos</td>
+                      </tr>
+                      <tr>
+                        <td className="border p-2 font-mono text-xs">CODIGO_CENTRO</td>
+                        <td className="border p-2">80 (teleformación) + secuencial de 8 dígitos</td>
+                        <td className="border p-2 text-xs">10 caracteres</td>
+                      </tr>
+                      <tr className="bg-muted/50">
+                        <td className="border p-2 font-mono text-xs">NOMBRE_CENTRO</td>
+                        <td className="border p-2">Denominación o nombre comercial del centro</td>
+                        <td className="border p-2 text-xs">Alfanumérico</td>
+                      </tr>
+                      <tr>
+                        <td className="border p-2 font-mono text-xs">URL_PLATAFORMA</td>
+                        <td className="border p-2">Dirección web donde se desarrolla la formación</td>
+                        <td className="border p-2 text-xs">URL válida</td>
+                      </tr>
+                      <tr className="bg-muted/50">
+                        <td className="border p-2 font-mono text-xs">URL_SEGUIMIENTO</td>
+                        <td className="border p-2">Dirección del servicio web SOAP de seguimiento</td>
+                        <td className="border p-2 text-xs">URL HTTPS + ?wsdl</td>
+                      </tr>
+                      <tr>
+                        <td className="border p-2 font-mono text-xs">TELEFONO</td>
+                        <td className="border p-2">Contacto numérico del centro</td>
+                        <td className="border p-2 text-xs">Numérico</td>
+                      </tr>
+                      <tr className="bg-muted/50">
+                        <td className="border p-2 font-mono text-xs">EMAIL</td>
+                        <td className="border p-2">Correo electrónico de contacto</td>
+                        <td className="border p-2 text-xs">Email válido</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  B. Acción Formativa
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-muted">
+                        <th className="border p-2 text-left font-semibold">Campo</th>
+                        <th className="border p-2 text-left font-semibold">Descripción</th>
+                        <th className="border p-2 text-left font-semibold">Valores</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border p-2 font-mono text-xs">ID_ACCION</td>
+                        <td className="border p-2">ORIGEN_ACCION + CODIGO_ACCION</td>
+                        <td className="border p-2 text-xs">20 + código asignado</td>
+                      </tr>
+                      <tr className="bg-muted/50">
+                        <td className="border p-2 font-mono text-xs">SITUACION</td>
+                        <td className="border p-2">Estado de la acción formativa</td>
+                        <td className="border p-2 text-xs">10=Solicitada, 20=Autorizada, 30=Iniciada, 40=Finalizada, 50=Cancelada</td>
+                      </tr>
+                      <tr>
+                        <td className="border p-2 font-mono text-xs">ID_ESPECIALIDAD_PRINCIPAL</td>
+                        <td className="border p-2">Código de especialidad del catálogo SEPE</td>
+                        <td className="border p-2 text-xs">ORIGEN + AREA + CODIGO</td>
+                      </tr>
+                      <tr className="bg-muted/50">
+                        <td className="border p-2 font-mono text-xs">DURACION</td>
+                        <td className="border p-2">Número de horas de la acción</td>
+                        <td className="border p-2 text-xs">Entero</td>
+                      </tr>
+                      <tr>
+                        <td className="border p-2 font-mono text-xs">FECHA_INICIO / FECHA_FIN</td>
+                        <td className="border p-2">Fechas de la acción formativa</td>
+                        <td className="border p-2 text-xs">Formato fecha</td>
+                      </tr>
+                      <tr className="bg-muted/50">
+                        <td className="border p-2 font-mono text-xs">IND_ITINERARIO_COMPLETO</td>
+                        <td className="border p-2">Si imparte todos los módulos</td>
+                        <td className="border p-2 text-xs">SI / NO</td>
+                      </tr>
+                      <tr>
+                        <td className="border p-2 font-mono text-xs">TIPO_FINANCIACION</td>
+                        <td className="border p-2">Procedencia de fondos</td>
+                        <td className="border p-2 text-xs">PU=Pública, PR=Privada</td>
+                      </tr>
+                      <tr className="bg-muted/50">
+                        <td className="border p-2 font-mono text-xs">NUMERO_ASISTENTES</td>
+                        <td className="border p-2">Plazas ofertadas</td>
+                        <td className="border p-2 text-xs">Entero</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Datos de Seguimiento por Participante
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <h4 className="font-semibold text-purple-800 mb-2">Uso del Contenido</h4>
+                    <ul className="text-xs text-purple-700 space-y-1">
+                      <li>• Horario mañana (7:00-15:00)</li>
+                      <li>• Horario tarde (15:00-23:00)</li>
+                      <li>• Horario noche (23:00-7:00)</li>
+                      <li>• Nº participantes por franja</li>
+                      <li>• Nº accesos totales</li>
+                      <li>• Duración total (horas)</li>
+                    </ul>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <h4 className="font-semibold text-orange-800 mb-2">Seguimiento y Evaluación</h4>
+                    <ul className="text-xs text-orange-700 space-y-1">
+                      <li>• Nº actividades aprendizaje</li>
+                      <li>• Nº actividades evaluación</li>
+                      <li>• Nº intentos realizados</li>
+                      <li>• Tutorías presenciales</li>
+                      <li>• Evaluación final</li>
+                      <li>• Resultado y calificación</li>
+                    </ul>
+                  </div>
+                  <div className="bg-teal-50 p-4 rounded-lg border border-teal-200">
+                    <h4 className="font-semibold text-teal-800 mb-2">Identificación Participante</h4>
+                    <ul className="text-xs text-teal-700 space-y-1">
+                      <li>• Tipo documento (D/E/U/W/G/H)</li>
+                      <li>• Número documento (10 chars)</li>
+                      <li>• Letra NIF (cálculo mod 23)</li>
+                      <li>• Indicador competencias clave</li>
+                      <li>• Fecha alta / baja</li>
+                      <li>• Contrato formación (si aplica)</li>
+                    </ul>
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Beneficios de ofrecer este servicio</h3>
-                  <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                    <li>Servicio obligatorio para centros de formación que imparten teleformación</li>
-                    <li>Genera ingresos recurrentes por cada centro cliente</li>
-                    <li>Fideliza a tus clientes ofreciendo un servicio integral</li>
-                    <li>Gestionas todas las URLs desde un solo panel</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Cómo funciona</h3>
-                  <ol className="list-decimal list-inside text-muted-foreground space-y-1">
-                    <li>Un centro solicita el servicio de seguimiento SEPE</li>
-                    <li>Añades el centro y generas su URL personalizada con su CIF</li>
-                    <li>El centro usa esa URL en su acreditación ante SEPE</li>
-                    <li>Facturas trimestralmente a cada centro por el servicio</li>
-                  </ol>
-                </div>
-
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Importante:</strong> Cada centro necesita tener su CIF correctamente 
-                    registrado para generar su URL de seguimiento personalizada.
+                <Alert className="border-blue-200 bg-blue-50">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800">
+                    <strong>Periodicidad de actualización:</strong> Los datos deben permanecer actualizados con periodicidad no superior a 7 días. 
+                    Las fechas anteriores a la consulta menos 7 días se consideran reales; las futuras, previstas.
                   </AlertDescription>
                 </Alert>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Períodos de Seguimiento
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-muted rounded-lg">
+                      <div className="text-2xl font-bold text-primary">Inicio</div>
+                      <p className="text-sm text-muted-foreground">Al comunicar inicio de la acción</p>
+                    </div>
+                    <div className="text-center p-4 bg-muted rounded-lg">
+                      <div className="text-2xl font-bold text-primary">Durante</div>
+                      <p className="text-sm text-muted-foreground">Periodicidad según SEPE</p>
+                    </div>
+                    <div className="text-center p-4 bg-muted rounded-lg">
+                      <div className="text-2xl font-bold text-primary">90 días</div>
+                      <p className="text-sm text-muted-foreground">Tras finalización para certificar</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground text-center">
+                    La información debe estar disponible hasta 30 días después de la fecha de fin prevista, 
+                    siempre que la formación superada haya sido certificada por el SEPE.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Configuración Técnica Requerida</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-semibold mb-2">Protocolo</h4>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• SOAP 1.1 sobre HTTPS (SSL)</li>
+                        <li>• WS-Security UsernameToken Profile 1.0</li>
+                        <li>• Credenciales tipo wsse:PasswordText</li>
+                        <li>• WSDL accesible añadiendo ?wsdl a la URL</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Seguridad y Cumplimiento</h4>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Ley Orgánica 3/2018 (LOPD-GDD)</li>
+                        <li>• Reglamento (UE) 2016/679 (RGPD)</li>
+                        <li>• Consentimiento expreso del alumnado</li>
+                        <li>• Medidas técnicas de seguridad</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
