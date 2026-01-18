@@ -60,6 +60,7 @@ import TeacherStudents from "./pages/dashboard/TeacherStudents";
 import CourseDetailSEPE from "./pages/dashboard/CourseDetailSEPE";
 import TeacherStudentDetail from "./pages/dashboard/TeacherStudentDetail";
 import TeacherReports from "./pages/dashboard/TeacherReports";
+import TeacherTeamAndStudents from "./pages/dashboard/TeacherTeamAndStudents";
 import TeacherProfile from "./pages/dashboard/TeacherProfile";
 import TeacherCalendar from "./pages/dashboard/TeacherCalendar";
 import AlertSettings from "./pages/dashboard/AlertSettings";
@@ -141,6 +142,7 @@ function AppRoutes() {
           <Route path="teacher/courses/:courseId" element={<CourseDetailSEPE />} />
           <Route path="teacher/courses/:courseId/edit" element={<CourseContentEditor />} />
           <Route path="teacher/students" element={<TeacherStudents />} />
+          <Route path="teacher/team" element={<TeacherTeamAndStudents />} />
           <Route path="teacher/students/:studentId" element={<TeacherStudentDetail />} />
           <Route path="teacher/reports" element={<TeacherReports />} />
           <Route path="teacher/profile" element={<TeacherProfile />} />
