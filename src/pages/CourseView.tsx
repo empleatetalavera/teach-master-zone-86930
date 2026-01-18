@@ -42,6 +42,7 @@ import { ActivitySubmissionViewer } from "@/components/ActivitySubmissionViewer"
 import { useUnitProgress } from "@/hooks/useUnitProgress";
 import { ModuleEvaluationTest } from "@/components/ModuleEvaluationTest";
 import { TeacherActivityCorrectionPanel } from "@/components/TeacherActivityCorrectionPanel";
+import { TutorStudentProgress } from "@/components/TutorStudentProgress";
 
 interface Course {
   id: string;
@@ -2751,32 +2752,46 @@ export default function CourseView() {
               </Card>
             </Collapsible>
 
-            {/* Progreso del Curso */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                  Mi Progreso
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary">{enrollment?.progress_percentage || 0}%</p>
-                  <p className="text-xs text-muted-foreground">completado</p>
-                </div>
-                <Progress value={enrollment?.progress_percentage || 0} className="h-2" />
-                <div className="grid grid-cols-2 gap-2 text-xs text-center">
-                  <div className="p-2 bg-muted/50 rounded">
-                    <p className="font-medium">{modules.length}</p>
-                    <p className="text-muted-foreground">Módulos</p>
+            {/* Progreso - Diferente para tutor y alumno */}
+            {userRole === 'teacher' ? (
+              <Card>
+                <CardHeader className="pb-2 bg-gradient-to-r from-teal-600 to-emerald-600 rounded-t-lg">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2 text-white">
+                    <Users className="h-4 w-4" />
+                    Progreso de mis Alumnos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <TutorStudentProgress courseId={courseId!} />
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    Mi Progreso
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-primary">{enrollment?.progress_percentage || 0}%</p>
+                    <p className="text-xs text-muted-foreground">completado</p>
                   </div>
-                  <div className="p-2 bg-muted/50 rounded">
-                    <p className="font-medium">{course.duration_hours}h</p>
-                    <p className="text-muted-foreground">Duración</p>
+                  <Progress value={enrollment?.progress_percentage || 0} className="h-2" />
+                  <div className="grid grid-cols-2 gap-2 text-xs text-center">
+                    <div className="p-2 bg-muted/50 rounded">
+                      <p className="font-medium">{modules.length}</p>
+                      <p className="text-muted-foreground">Módulos</p>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded">
+                      <p className="font-medium">{course.duration_hours}h</p>
+                      <p className="text-muted-foreground">Duración</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Cronograma Mini */}
             <Card>
