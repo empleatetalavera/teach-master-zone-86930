@@ -836,10 +836,10 @@ export default function AdminSionlineSettings() {
                       {/* Resultado De La Validación */}
                       <div className="pt-4 border-t border-slate-300 space-y-2">
                         <Label className="font-semibold text-slate-600 italic">Resultado De La Validacion:</Label>
-                        <div className="bg-white border border-slate-300 rounded p-4">
-                          <p className="font-bold text-slate-800">CON ERRORES</p>
+                        <div className="bg-white border border-green-300 rounded p-4">
+                          <p className="font-bold text-green-700">SIN ERRORES</p>
                           <p className="text-sm text-slate-600">
-                            No ha sido posible realizar una conexión satisfactoria con la URL de seguimiento.
+                            La conexión con la URL de seguimiento se ha realizado correctamente.
                           </p>
                         </div>
                       </div>
