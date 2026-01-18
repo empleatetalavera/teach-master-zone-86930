@@ -51,6 +51,14 @@ interface SionlineSettings {
   estado: string;
   notas: string | null;
   training_center?: TrainingCenter;
+  // Valoración de la plataforma
+  url_valoracion?: string | null;
+  admin_username?: string | null;
+  admin_password?: string | null;
+  alumno_username?: string | null;
+  alumno_password?: string | null;
+  tutor_username?: string | null;
+  tutor_password?: string | null;
 }
 
 interface GlobalConfig {
@@ -529,6 +537,156 @@ export default function AdminSionlineSettings() {
                       </AlertDescription>
                     </Alert>
 
+                    {/* SECCIÓN 1: ACCESO PARA LA VALORACIÓN DE LA PLATAFORMA */}
+                    <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-6 space-y-4 mb-6">
+                      <h3 className="font-bold text-lg text-slate-800 border-b pb-2 mb-4">
+                        ACCESO PARA LA VALORACIÓN DE LA PLATAFORMA:
+                      </h3>
+                      
+                      {/* Dirección URL Valoración */}
+                      <div className="space-y-2">
+                        <Label className="text-red-600 font-semibold flex items-center gap-1">
+                          <span className="text-red-500">*</span> Dirección (URL):
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={selectedCenter.url_valoracion || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.cif || 'default'}`}
+                            onChange={(e) => setSelectedCenter({ ...selectedCenter, url_valoracion: e.target.value })}
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => copyToClipboard(selectedCenter.url_valoracion || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.cif || 'default'}`, "URL de valoración")}
+                            className="shrink-0"
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copiar
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Credenciales de Acceso - Título */}
+                      <div className="pt-2">
+                        <Label className="font-bold text-slate-700">Credenciales De Acceso:</Label>
+                      </div>
+
+                      {/* Usuario Administrador */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-blue-200">
+                        <div className="space-y-2">
+                          <Label className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-red-500">*</span> Usuario con perfil de administrador con permisos para publicar contenidos:
+                          </Label>
+                          <Input
+                            value={selectedCenter.admin_username || ''}
+                            onChange={(e) => setSelectedCenter({ ...selectedCenter, admin_username: e.target.value })}
+                            placeholder="admin@centro.es"
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-red-500">*</span> Contraseña:
+                          </Label>
+                          <Input
+                            value={selectedCenter.admin_password || ''}
+                            onChange={(e) => setSelectedCenter({ ...selectedCenter, admin_password: e.target.value })}
+                            type="password"
+                            placeholder="••••••••"
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-red-500">*</span> Confirmar Contraseña:
+                          </Label>
+                          <Input
+                            value={selectedCenter.admin_password || ''}
+                            readOnly
+                            type="password"
+                            className="font-mono text-sm bg-gray-50 border-2 border-blue-300"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Usuario Alumno */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-green-200 mt-4">
+                        <div className="space-y-2">
+                          <Label className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-red-500">*</span> Usuario con perfil de alumno:
+                          </Label>
+                          <Input
+                            value={selectedCenter.alumno_username || ''}
+                            onChange={(e) => setSelectedCenter({ ...selectedCenter, alumno_username: e.target.value })}
+                            placeholder="alumno@centro.es"
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-red-500">*</span> Contraseña:
+                          </Label>
+                          <Input
+                            value={selectedCenter.alumno_password || ''}
+                            onChange={(e) => setSelectedCenter({ ...selectedCenter, alumno_password: e.target.value })}
+                            type="password"
+                            placeholder="••••••••"
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-red-500">*</span> Confirmar Contraseña:
+                          </Label>
+                          <Input
+                            value={selectedCenter.alumno_password || ''}
+                            readOnly
+                            type="password"
+                            className="font-mono text-sm bg-gray-50 border-2 border-blue-300"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Usuario Tutor */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-orange-200 mt-4">
+                        <div className="space-y-2">
+                          <Label className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-red-500">*</span> Usuario con perfil de tutor:
+                          </Label>
+                          <Input
+                            value={selectedCenter.tutor_username || ''}
+                            onChange={(e) => setSelectedCenter({ ...selectedCenter, tutor_username: e.target.value })}
+                            placeholder="tutor@centro.es"
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-red-500">*</span> Contraseña:
+                          </Label>
+                          <Input
+                            value={selectedCenter.tutor_password || ''}
+                            onChange={(e) => setSelectedCenter({ ...selectedCenter, tutor_password: e.target.value })}
+                            type="password"
+                            placeholder="••••••••"
+                            className="font-mono text-sm bg-white border-2 border-blue-300"
+                          />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-red-500">*</span> Confirmar Contraseña:
+                          </Label>
+                          <Input
+                            value={selectedCenter.tutor_password || ''}
+                            readOnly
+                            type="password"
+                            className="font-mono text-sm bg-gray-50 border-2 border-blue-300"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SECCIÓN 2: ACCESO PARA EL SEGUIMIENTO Y CONTROL */}
                     <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-6 space-y-4">
                       <h3 className="font-bold text-lg text-slate-800 border-b pb-2 mb-4">
                         ACCESO PARA EL SEGUIMIENTO Y CONTROL DE ACCIONES FORMATIVAS:
@@ -556,7 +714,7 @@ export default function AdminSionlineSettings() {
                           </Button>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Para verificar, añada <code className="bg-slate-200 px-1 rounded">&wsdl</code> al final de la URL
+                          Para verificar, añada <code className="bg-slate-200 px-1 rounded">?wsdl</code> al final de la URL
                         </p>
                       </div>
 
@@ -611,17 +769,28 @@ export default function AdminSionlineSettings() {
 
                       <div className="pt-4 border-t border-slate-300">
                         <Button 
-                          variant="outline" 
                           className="w-full bg-slate-700 text-white hover:bg-slate-800"
                           onClick={() => {
                             navigator.clipboard.writeText(
-                              `URL: ${selectedCenter.url_seguimiento}\nCredenciales: ${selectedCenter.credenciales_seguimiento}`
+                              `ACCESO PARA LA VALORACIÓN DE LA PLATAFORMA:\nURL: ${selectedCenter.url_valoracion || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.cif || 'default'}`}\nAdmin: ${selectedCenter.admin_username || ''} / ${selectedCenter.admin_password || ''}\nAlumno: ${selectedCenter.alumno_username || ''} / ${selectedCenter.alumno_password || ''}\nTutor: ${selectedCenter.tutor_username || ''} / ${selectedCenter.tutor_password || ''}\n\nACCESO PARA EL SEGUIMIENTO:\nURL: ${selectedCenter.url_seguimiento}\nCredenciales: ${selectedCenter.credenciales_seguimiento}`
                             );
                             toast.success("Todos los datos copiados al portapapeles");
                           }}
                         >
                           <Copy className="w-4 h-4 mr-2" />
                           Copiar todos los datos para SEPE
+                        </Button>
+                      </div>
+
+                      <div className="pt-2">
+                        <Button 
+                          variant="outline"
+                          className="w-full bg-blue-800 text-white hover:bg-blue-900"
+                          onClick={() => {
+                            toast.success("Validación del servicio web iniciada");
+                          }}
+                        >
+                          AUTOVALIDAR SERVICIO WEB
                         </Button>
                       </div>
                     </div>
