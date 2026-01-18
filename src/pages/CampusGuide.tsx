@@ -2,16 +2,29 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
-import CampusVirtualGuide from "@/components/CampusVirtualGuide";
+import { generateCampusGuidePDF } from "@/lib/generateCampusGuidePDF";
+import { useState } from "react";
 
 export default function CampusGuide() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const centerSlug = searchParams.get("center");
   const { branding, loading } = useCenterBranding(centerSlug);
+  const [generating, setGenerating] = useState(false);
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadPDF = async () => {
+    setGenerating(true);
+    try {
+      await generateCampusGuidePDF({
+        centerName: branding.centerName,
+        centerLogo: branding.centerLogo,
+        primaryColor: branding.primaryColor,
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   if (loading) {
@@ -37,15 +50,44 @@ export default function CampusGuide() {
             )}
             <span className="font-semibold text-lg hidden md:block">{branding.centerName}</span>
           </div>
-          <Button onClick={handlePrint}>
-            <Download className="h-4 w-4 mr-2" />
-            Descargar PDF
+          <Button onClick={handleDownloadPDF} disabled={generating}>
+            {generating ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            {generating ? 'Generando...' : 'Descargar PDF'}
           </Button>
         </div>
       </div>
 
-      {/* Interactive Campus Virtual Guide */}
-      <CampusVirtualGuide />
+      {/* PDF Preview Message */}
+      <div className="container max-w-4xl mx-auto py-12 px-4">
+        <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Download className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-800 mb-4">
+            Guía del Campus Virtual
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            Manual de Usuario para el Alumno - Campus Empleate
+          </p>
+          <p className="text-sm text-slate-600 mb-8">
+            Este documento contiene toda la información necesaria para navegar y utilizar 
+            el Campus Virtual, incluyendo requisitos técnicos, acceso a la plataforma, 
+            estructura del curso, evaluaciones y comunicación con el tutor.
+          </p>
+          <Button size="lg" onClick={handleDownloadPDF} disabled={generating}>
+            {generating ? (
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-5 w-5 mr-2" />
+            )}
+            {generating ? 'Generando PDF...' : 'Descargar Guía en PDF'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
