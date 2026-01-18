@@ -37,6 +37,9 @@ interface TrainingCenter {
   address_line: string | null;
   postal_code: string | null;
   city: string | null;
+  contact_email: string | null;
+  custom_domain: string | null;
+  slug: string | null;
 }
 
 interface SionlineSettings {
@@ -111,7 +114,7 @@ export default function AdminSionlineSettings() {
       // Load all training centers
       const { data: centersData } = await supabase
         .from('training_centers')
-        .select('id, name, cif, address_line, postal_code, city')
+        .select('id, name, cif, address_line, postal_code, city, contact_email, custom_domain, slug')
         .eq('is_active', true);
 
       // Load sionline settings with center info
@@ -125,16 +128,16 @@ export default function AdminSionlineSettings() {
           const center = centersData.find(c => c.id === setting.training_center_id);
           return {
             ...setting,
-            training_center: center || { id: setting.training_center_id, name: 'Centro no encontrado', cif: null, address_line: null, postal_code: null, city: null }
+            training_center: center || { id: setting.training_center_id, name: 'Centro no encontrado', cif: null, address_line: null, postal_code: null, city: null, contact_email: null, custom_domain: null, slug: null }
           };
         });
         
-        setCentersWithSettings(centersWithSettingsList);
+        setCentersWithSettings(centersWithSettingsList as any);
 
         // Find centers without settings
         const centersWithSettingsIds = settingsData.map(s => s.training_center_id);
         const available = centersData.filter(c => !centersWithSettingsIds.includes(c.id));
-        setAvailableCenters(available);
+        setAvailableCenters(available as TrainingCenter[]);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -543,27 +546,30 @@ export default function AdminSionlineSettings() {
                         ACCESO PARA LA VALORACIÓN DE LA PLATAFORMA:
                       </h3>
                       
-                      {/* Dirección URL Valoración */}
+                      {/* Dirección URL Valoración - Usa el custom_domain del centro */}
                       <div className="space-y-2">
                         <Label className="text-red-600 font-semibold flex items-center gap-1">
                           <span className="text-red-500">*</span> Dirección (URL):
                         </Label>
                         <div className="flex items-center gap-2">
                           <Input
-                            value={selectedCenter.url_valoracion || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.cif || 'default'}`}
-                            onChange={(e) => setSelectedCenter({ ...selectedCenter, url_valoracion: e.target.value })}
+                            value={selectedCenter.training_center?.custom_domain || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.slug || selectedCenter.training_center?.cif || 'default'}`}
+                            readOnly
                             className="font-mono text-sm bg-white border-2 border-blue-300"
                           />
                           <Button 
                             variant="default" 
                             size="sm"
-                            onClick={() => copyToClipboard(selectedCenter.url_valoracion || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.cif || 'default'}`, "URL de valoración")}
+                            onClick={() => copyToClipboard(selectedCenter.training_center?.custom_domain || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.slug || selectedCenter.training_center?.cif || 'default'}`, "URL de valoración")}
                             className="shrink-0"
                           >
                             <Copy className="w-4 h-4 mr-2" />
                             Copiar
                           </Button>
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                          Configura el dominio personalizado en la sección "Centros de Formación"
+                        </p>
                       </div>
 
                       {/* Credenciales de Acceso - Título */}
@@ -571,117 +577,177 @@ export default function AdminSionlineSettings() {
                         <Label className="font-bold text-slate-700">Credenciales De Acceso:</Label>
                       </div>
 
-                      {/* Usuario Administrador */}
+                      {/* Usuario Administrador - FIJO como el admin del centro */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-blue-200">
                         <div className="space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Usuario con perfil de administrador con permisos para publicar contenidos:
                           </Label>
-                          <Input
-                            value={selectedCenter.admin_username || ''}
-                            onChange={(e) => setSelectedCenter({ ...selectedCenter, admin_username: e.target.value })}
-                            placeholder="admin@centro.es"
-                            className="font-mono text-sm bg-white border-2 border-blue-300"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={selectedCenter.training_center?.contact_email || 'admin@centro.es'}
+                              readOnly
+                              className="font-mono text-sm bg-white border-2 border-blue-300"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => copyToClipboard(selectedCenter.training_center?.contact_email || 'admin@centro.es', "Usuario admin")}
+                              className="shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Contraseña:
                           </Label>
-                          <Input
-                            value={selectedCenter.admin_password || ''}
-                            onChange={(e) => setSelectedCenter({ ...selectedCenter, admin_password: e.target.value })}
-                            type="password"
-                            placeholder="••••••••"
-                            className="font-mono text-sm bg-white border-2 border-blue-300"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value="(Contraseña del administrador del centro)"
+                              readOnly
+                              className="font-mono text-sm bg-gray-50 border-2 border-blue-300"
+                            />
+                          </div>
                         </div>
                         <div className="md:col-span-2 space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Confirmar Contraseña:
                           </Label>
                           <Input
-                            value={selectedCenter.admin_password || ''}
+                            value="(Misma contraseña)"
                             readOnly
-                            type="password"
                             className="font-mono text-sm bg-gray-50 border-2 border-blue-300"
                           />
                         </div>
                       </div>
 
-                      {/* Usuario Alumno */}
+                      {/* Usuario Alumno - FIJO: alumnocertificados / d123456-A */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-green-200 mt-4">
                         <div className="space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Usuario con perfil de alumno:
                           </Label>
-                          <Input
-                            value={selectedCenter.alumno_username || ''}
-                            onChange={(e) => setSelectedCenter({ ...selectedCenter, alumno_username: e.target.value })}
-                            placeholder="alumno@centro.es"
-                            className="font-mono text-sm bg-white border-2 border-blue-300"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value="alumnocertificados"
+                              readOnly
+                              className="font-mono text-sm bg-white border-2 border-blue-300 font-bold"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => copyToClipboard("alumnocertificados", "Usuario alumno")}
+                              className="shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Contraseña:
                           </Label>
-                          <Input
-                            value={selectedCenter.alumno_password || ''}
-                            onChange={(e) => setSelectedCenter({ ...selectedCenter, alumno_password: e.target.value })}
-                            type="password"
-                            placeholder="••••••••"
-                            className="font-mono text-sm bg-white border-2 border-blue-300"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value="d123456-A"
+                              readOnly
+                              className="font-mono text-sm bg-white border-2 border-blue-300 font-bold"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => copyToClipboard("d123456-A", "Contraseña alumno")}
+                              className="shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                         <div className="md:col-span-2 space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Confirmar Contraseña:
                           </Label>
-                          <Input
-                            value={selectedCenter.alumno_password || ''}
-                            readOnly
-                            type="password"
-                            className="font-mono text-sm bg-gray-50 border-2 border-blue-300"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value="d123456-A"
+                              readOnly
+                              className="font-mono text-sm bg-white border-2 border-blue-300 font-bold"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => copyToClipboard("d123456-A", "Contraseña alumno")}
+                              className="shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Usuario Tutor */}
+                      {/* Usuario Tutor - FIJO: tutorcertificados / d123456-T */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-orange-200 mt-4">
                         <div className="space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Usuario con perfil de tutor:
                           </Label>
-                          <Input
-                            value={selectedCenter.tutor_username || ''}
-                            onChange={(e) => setSelectedCenter({ ...selectedCenter, tutor_username: e.target.value })}
-                            placeholder="tutor@centro.es"
-                            className="font-mono text-sm bg-white border-2 border-blue-300"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value="tutorcertificados"
+                              readOnly
+                              className="font-mono text-sm bg-white border-2 border-blue-300 font-bold"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => copyToClipboard("tutorcertificados", "Usuario tutor")}
+                              className="shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Contraseña:
                           </Label>
-                          <Input
-                            value={selectedCenter.tutor_password || ''}
-                            onChange={(e) => setSelectedCenter({ ...selectedCenter, tutor_password: e.target.value })}
-                            type="password"
-                            placeholder="••••••••"
-                            className="font-mono text-sm bg-white border-2 border-blue-300"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value="d123456-T"
+                              readOnly
+                              className="font-mono text-sm bg-white border-2 border-blue-300 font-bold"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => copyToClipboard("d123456-T", "Contraseña tutor")}
+                              className="shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                         <div className="md:col-span-2 space-y-2">
                           <Label className="text-red-600 font-semibold flex items-center gap-1">
                             <span className="text-red-500">*</span> Confirmar Contraseña:
                           </Label>
-                          <Input
-                            value={selectedCenter.tutor_password || ''}
-                            readOnly
-                            type="password"
-                            className="font-mono text-sm bg-gray-50 border-2 border-blue-300"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value="d123456-T"
+                              readOnly
+                              className="font-mono text-sm bg-white border-2 border-blue-300 font-bold"
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => copyToClipboard("d123456-T", "Contraseña tutor")}
+                              className="shrink-0"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>

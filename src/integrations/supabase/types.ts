@@ -2713,6 +2713,7 @@ export type Database = {
           contact_email: string | null
           contact_phone: string | null
           created_at: string | null
+          custom_domain: string | null
           email: string | null
           footer_text: string | null
           id: string
@@ -2739,6 +2740,7 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          custom_domain?: string | null
           email?: string | null
           footer_text?: string | null
           id?: string
@@ -2765,6 +2767,7 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          custom_domain?: string | null
           email?: string | null
           footer_text?: string | null
           id?: string
