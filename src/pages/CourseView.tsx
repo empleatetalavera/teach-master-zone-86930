@@ -738,10 +738,17 @@ export default function CourseView() {
                   asChild
                 >
                   <a 
-                    href={`https://wa.me/34665673416?text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`}
+                    href={`https://web.whatsapp.com/send?phone=34665673416&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"
+                    onClick={(e) => {
+                      // Try mobile WhatsApp first, fallback to web
+                      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                        e.preventDefault();
+                        window.open(`https://api.whatsapp.com/send?phone=34665673416&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`, '_blank');
+                      }
+                    }}
                   >
                     <MessageSquare className="h-4 w-4" />
                     WhatsApp Dudas
