@@ -114,6 +114,13 @@ export function SEPEGradesSection({ courseId, enrollmentId, modules = [], isEdit
         .eq("user_id", user!.id)
         .eq("status", "graded");
 
+      // Load presential grades (tutorías y exámenes presenciales)
+      const { data: presentialGrades } = await supabase
+        .from("presential_grades")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("course_id", courseId);
+
       // Calculate grades based on real data
       const evalScores = evaluations?.map(e => e.score || 0) || [];
       const activityScores = activities?.map(a => a.score || 0) || [];
@@ -135,8 +142,76 @@ export function SEPEGradesSection({ courseId, enrollmentId, modules = [], isEdit
         })
       }));
 
-      // Calculate overall status
+      // Update tutorías presenciales with real data
+      const tutoriaGrade = presentialGrades?.find(g => g.grade_type === 'tutoria_presencial');
+      if (tutoriaGrade) {
+        setTutoriasGrades(prev => ({
+          ...prev,
+          categories: prev.categories.map(cat => {
+            if (cat.id === 'actividades_pruebas') {
+              // Score is stored as 0-10, convert to percentage for display
+              const scorePercent = tutoriaGrade.score !== null ? (tutoriaGrade.score / (tutoriaGrade.max_score || 10)) * 100 : null;
+              return { 
+                ...cat, 
+                score: scorePercent !== null ? Math.round(scorePercent) : null, 
+                status: tutoriaGrade.score !== null ? 'evaluated' as const : 'pending' as const 
+              };
+            }
+            return cat;
+          })
+        }));
+      }
+
+      // Update final grades with presential exam data
+      const examenGrade = presentialGrades?.find(g => g.grade_type === 'examen_presencial');
+      const examen2convGrade = presentialGrades?.find(g => g.grade_type === 'examen_presencial_2conv');
+      
+      // Calculate global grade (campus + tutorías)
+      const campusScores = [...evalScores, ...activityScores];
+      const campusAvg = campusScores.length > 0 ? campusScores.reduce((a, b) => a + b, 0) / campusScores.length : null;
+      const tutoriaScore = tutoriaGrade?.score !== null ? (tutoriaGrade.score / (tutoriaGrade.max_score || 10)) * 100 : null;
+      
+      let globalScore = null;
+      if (campusAvg !== null && tutoriaScore !== null) {
+        globalScore = Math.round((campusAvg * 0.7) + (tutoriaScore * 0.3)); // 70% campus, 30% tutorías
+      } else if (campusAvg !== null) {
+        globalScore = Math.round(campusAvg);
+      }
+
+      setFinalGrades(prev => ({
+        ...prev,
+        categories: prev.categories.map(cat => {
+          if (cat.id === 'global' && globalScore !== null) {
+            return { ...cat, score: globalScore, status: 'evaluated' as const };
+          }
+          if (cat.id === 'prueba_final' && examenGrade) {
+            const scorePercent = examenGrade.score !== null ? (examenGrade.score / (examenGrade.max_score || 10)) * 100 : null;
+            return { 
+              ...cat, 
+              score: scorePercent !== null ? Math.round(scorePercent) : null, 
+              status: examenGrade.score !== null ? 'evaluated' as const : 'pending' as const 
+            };
+          }
+          if (cat.id === 'prueba_final_2' && examen2convGrade) {
+            const scorePercent = examen2convGrade.score !== null ? (examen2convGrade.score / (examen2convGrade.max_score || 10)) * 100 : null;
+            return { 
+              ...cat, 
+              score: scorePercent !== null ? Math.round(scorePercent) : null, 
+              status: examen2convGrade.score !== null ? 'evaluated' as const : 'pending' as const 
+            };
+          }
+          return cat;
+        })
+      }));
+
+      // Calculate overall status based on all grades including presential
       const allScores = [...evalScores, ...activityScores];
+      if (examenGrade?.score !== null) {
+        allScores.push((examenGrade.score / (examenGrade.max_score || 10)) * 100);
+      } else if (examen2convGrade?.score !== null) {
+        allScores.push((examen2convGrade.score / (examen2convGrade.max_score || 10)) * 100);
+      }
+      
       if (allScores.length > 0) {
         const avg = allScores.reduce((a, b) => a + b, 0) / allScores.length;
         if (avg >= 50) {
