@@ -2086,151 +2086,6 @@ export default function CourseView() {
               </div>
             )}
 
-            {/* RECURSOS DIDÁCTICOS PARA EL TUTOR-FORMADOR - Solo visible para tutores */}
-            {userRole === 'teacher' && (
-              <Accordion type="single" collapsible className="w-full mt-6">
-                <AccordionItem value="recursos-tutor" className="border-0">
-                  <AccordionTrigger className="bg-teal-700 text-white px-4 py-3 rounded-t-lg hover:no-underline data-[state=open]:rounded-b-none">
-                    <span className="font-bold text-lg flex items-center gap-2">
-                      <BookMarked className="h-5 w-5" />
-                      RECURSOS DIDÁCTICOS PARA EL TUTOR-FORMADOR
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="border border-t-0 rounded-b-lg p-0 bg-white">
-                    <div className="p-4 bg-teal-50 border-b">
-                      <p className="text-sm text-slate-700">
-                        En el Campus Virtual, además de los recursos didácticos disponibles para el alumno, vas a encontrar los recursos necesarios para llevar a cabo tu actividad como tutor-formador:
-                      </p>
-                    </div>
-                    <div className="space-y-0">
-                      {/* Guía del Tutor-Formador en PDF */}
-                      <div 
-                        className="flex items-center gap-3 p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          if (course?.tutor_guide_pdf_url) {
-                            window.open(course.tutor_guide_pdf_url, '_blank');
-                          } else {
-                            toast({
-                              title: "Guía del Tutor-Formador",
-                              description: "La guía del tutor-formador estará disponible próximamente.",
-                            });
-                          }
-                        }}
-                      >
-                        <div className="p-2 bg-teal-100 rounded">
-                          <FileText className="h-5 w-5 text-teal-600" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="text-sm font-medium text-slate-700">
-                            Guía del Tutor-Formador (PDF)
-                          </span>
-                          <p className="text-xs text-muted-foreground">
-                            Documento con todas las indicaciones para el desarrollo de la acción formativa
-                          </p>
-                        </div>
-                        <Badge className="text-xs bg-teal-600">PDF</Badge>
-                      </div>
-
-                      {/* Documentos de Actividades de Aprendizaje */}
-                      <div 
-                        className="flex items-center gap-3 p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          toast({
-                            title: "Documentos de Actividades",
-                            description: "Acceda a los documentos de actividades desde Administración/Seguimiento/Seguimiento de tareas al resolver cada actividad enviada por el alumno.",
-                          });
-                        }}
-                      >
-                        <div className="p-2 bg-blue-100 rounded">
-                          <ClipboardList className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="text-sm font-medium text-slate-700">
-                            Documentos de Actividades de Aprendizaje
-                          </span>
-                          <p className="text-xs text-muted-foreground">
-                            PDF por cada actividad con objetivos, resolución y sistema de evaluación/puntuación. Disponible en Seguimiento de tareas.
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="text-xs">Por actividad</Badge>
-                      </div>
-
-                      {/* Planificación de Tutorías Presenciales */}
-                      <div 
-                        className="flex items-center gap-3 p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          toast({
-                            title: "Planificación de Tutorías",
-                            description: "Documentos PDF con la planificación de actividades e instrumentos de evaluación para las tutorías presenciales.",
-                          });
-                        }}
-                      >
-                        <div className="p-2 bg-purple-100 rounded">
-                          <Calendar className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="text-sm font-medium text-slate-700">
-                            Planificación de Tutorías Presenciales
-                          </span>
-                          <p className="text-xs text-muted-foreground">
-                            Documentos PDF con planificación de actividades de aprendizaje e instrumentos de evaluación para tutorías presenciales
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="text-xs">Tutorías</Badge>
-                      </div>
-
-                      {/* Soluciones de Tests de Autoevaluación */}
-                      <div 
-                        className="flex items-center gap-3 p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          toast({
-                            title: "Soluciones de Tests",
-                            description: "Las soluciones de los tests de autoevaluación están disponibles debajo de cada CIM en 'Formación en Campus' y 'Evaluación'.",
-                          });
-                        }}
-                      >
-                        <div className="p-2 bg-green-100 rounded">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="text-sm font-medium text-slate-700">
-                            Soluciones de Tests de Autoevaluación
-                          </span>
-                          <p className="text-xs text-muted-foreground">
-                            Documento con las soluciones de cada Test de autoevaluación y del Test Final. Visible debajo de cada CIM.
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="text-xs">Tests</Badge>
-                      </div>
-
-                      {/* Planificación de Evaluación Presencial Final */}
-                      <div 
-                        className="flex items-center gap-3 p-4 hover:bg-slate-50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          toast({
-                            title: "Evaluación Presencial Final",
-                            description: "La información sobre la planificación de la prueba de evaluación presencial final está disponible en la región 'Evaluación'.",
-                          });
-                        }}
-                      >
-                        <div className="p-2 bg-red-100 rounded">
-                          <GraduationCap className="h-5 w-5 text-red-600" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="text-sm font-medium text-slate-700">
-                            Planificación de Evaluación Presencial Final
-                          </span>
-                          <p className="text-xs text-muted-foreground">
-                            Documento por cada unidad/módulo formativo con información sobre la planificación de la prueba presencial final. Consultar en 'Evaluación'.
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="text-xs">Presencial</Badge>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            )}
 
             {/* EVALUACIÓN GLOBAL - Al final de los módulos formativos */}
             <Accordion type="single" collapsible className="w-full mt-6">
@@ -2725,32 +2580,138 @@ export default function CourseView() {
               </CardContent>
             </Card>
 
-            {/* Mi Perfil */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
-                  Mi Perfil
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  En el icono <span className="font-semibold text-foreground">Mi Perfil</span> señalarás tus datos personales, para que otros compañeros tengan acceso a esa información y puedan acceder a ti en cualquier momento a través del correo electrónico que facilites. Así podréis recibir ayuda mutua y el aprendizaje será más fructífero.
-                </p>
-                <p className="text-xs text-muted-foreground italic">
-                  Debes completar todos los datos requeridos en la ventana emergente que se abre al pinchar en el icono.
-                </p>
-                <Button 
-                  className="w-full" 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate('/profile')}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Ver Mi Perfil
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Mi Perfil (alumnos) / Recursos Didácticos (tutores) */}
+            {userRole === 'teacher' ? (
+              <Card>
+                <CardHeader className="pb-2 bg-teal-700 rounded-t-lg">
+                  <CardTitle className="text-lg flex items-center gap-2 text-white">
+                    <BookMarked className="h-5 w-5" />
+                    Recursos del Tutor
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-0 p-0">
+                  <div className="p-3 bg-teal-50 border-b text-xs text-slate-600">
+                    Recursos necesarios para tu actividad como tutor-formador:
+                  </div>
+                  {/* Guía del Tutor-Formador */}
+                  <div 
+                    className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      if (course?.tutor_guide_pdf_url) {
+                        window.open(course.tutor_guide_pdf_url, '_blank');
+                      } else {
+                        toast({
+                          title: "Guía del Tutor-Formador",
+                          description: "La guía estará disponible próximamente.",
+                        });
+                      }
+                    }}
+                  >
+                    <div className="p-2 bg-teal-100 rounded">
+                      <FileText className="h-4 w-4 text-teal-600" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-slate-700">Guía del Tutor (PDF)</span>
+                    </div>
+                    <Badge className="text-xs bg-teal-600">PDF</Badge>
+                  </div>
+                  {/* Documentos de Actividades */}
+                  <div 
+                    className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      toast({
+                        title: "Documentos de Actividades",
+                        description: "Acceda desde Seguimiento de tareas al corregir cada actividad.",
+                      });
+                    }}
+                  >
+                    <div className="p-2 bg-blue-100 rounded">
+                      <ClipboardList className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-slate-700">Actividades de Aprendizaje</span>
+                    </div>
+                  </div>
+                  {/* Planificación Tutorías */}
+                  <div 
+                    className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      toast({
+                        title: "Planificación de Tutorías",
+                        description: "PDFs con planificación de actividades para tutorías presenciales.",
+                      });
+                    }}
+                  >
+                    <div className="p-2 bg-purple-100 rounded">
+                      <Calendar className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-slate-700">Tutorías Presenciales</span>
+                    </div>
+                  </div>
+                  {/* Soluciones Tests */}
+                  <div 
+                    className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      toast({
+                        title: "Soluciones de Tests",
+                        description: "Disponibles debajo de cada CIM en 'Formación en Campus'.",
+                      });
+                    }}
+                  >
+                    <div className="p-2 bg-green-100 rounded">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-slate-700">Soluciones Tests</span>
+                    </div>
+                  </div>
+                  {/* Evaluación Presencial */}
+                  <div 
+                    className="flex items-center gap-3 p-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      toast({
+                        title: "Evaluación Presencial Final",
+                        description: "Información disponible en la región 'Evaluación'.",
+                      });
+                    }}
+                  >
+                    <div className="p-2 bg-red-100 rounded">
+                      <GraduationCap className="h-4 w-4 text-red-600" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-slate-700">Eval. Presencial Final</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    Mi Perfil
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    En el icono <span className="font-semibold text-foreground">Mi Perfil</span> señalarás tus datos personales, para que otros compañeros tengan acceso a esa información y puedan acceder a ti en cualquier momento a través del correo electrónico que facilites. Así podréis recibir ayuda mutua y el aprendizaje será más fructífero.
+                  </p>
+                  <p className="text-xs text-muted-foreground italic">
+                    Debes completar todos los datos requeridos en la ventana emergente que se abre al pinchar en el icono.
+                  </p>
+                  <Button 
+                    className="w-full" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate('/profile')}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Ver Mi Perfil
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Tutorías Virtuales */}
             <Collapsible defaultOpen={false}>
