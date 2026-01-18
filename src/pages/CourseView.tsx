@@ -43,6 +43,7 @@ import { useUnitProgress } from "@/hooks/useUnitProgress";
 import { ModuleEvaluationTest } from "@/components/ModuleEvaluationTest";
 import { TeacherActivityCorrectionPanel } from "@/components/TeacherActivityCorrectionPanel";
 import { TutorStudentProgress } from "@/components/TutorStudentProgress";
+import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 
 interface Course {
   id: string;
@@ -2388,6 +2389,9 @@ export default function CourseView() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Guía de Tutorías Presenciales para docentes y alumnos */}
+            <TutoriasPresencialesGuide userRole={userRole} />
 
             {tutorials.length === 0 ? (
               <Card>
