@@ -1928,6 +1928,7 @@ export type Database = {
           province: string | null
           training_center_id: string | null
           updated_at: string | null
+          username: string | null
           visibility: Database["public"]["Enums"]["profile_visibility"] | null
         }
         Insert: {
@@ -1947,6 +1948,7 @@ export type Database = {
           province?: string | null
           training_center_id?: string | null
           updated_at?: string | null
+          username?: string | null
           visibility?: Database["public"]["Enums"]["profile_visibility"] | null
         }
         Update: {
@@ -1966,6 +1968,7 @@ export type Database = {
           province?: string | null
           training_center_id?: string | null
           updated_at?: string | null
+          username?: string | null
           visibility?: Database["public"]["Enums"]["profile_visibility"] | null
         }
         Relationships: [
@@ -3095,6 +3098,12 @@ export type Database = {
     }
     Functions: {
       clean_old_login_attempts: { Args: never; Returns: undefined }
+      get_email_by_username: {
+        Args: { p_username: string }
+        Returns: {
+          email: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
