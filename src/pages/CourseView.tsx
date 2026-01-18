@@ -35,6 +35,7 @@ import { PlatformHelpResources } from "@/components/PlatformHelpResources";
 import { CourseForum } from "@/components/CourseForum";
 import { TutorForum } from "@/components/TutorForum";
 import { UnitForum } from "@/components/UnitForum";
+import { SupplementaryMaterialManager } from "@/components/SupplementaryMaterialManager";
 import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ActivitySubmissionViewer } from "@/components/ActivitySubmissionViewer";
@@ -1863,6 +1864,27 @@ export default function CourseView() {
                                                         </Button>
                                                       )}
                                                     </div>
+                                                  </div>
+                                                </div>
+
+                                                {/* Material Didáctico Complementario */}
+                                                <div className="flex items-start gap-3 border-t pt-4 mt-4">
+                                                  <div className="p-2 bg-purple-100 rounded">
+                                                    <FileText className="h-5 w-5 text-purple-600" />
+                                                  </div>
+                                                  <div className="flex-1">
+                                                    <h5 className="font-semibold text-foreground mb-2">Material Didáctico Complementario</h5>
+                                                    <p className="text-sm text-muted-foreground mb-3">
+                                                      En este apartado se incluye material didáctico complementario que sirva de refuerzo y ampliación de conocimientos para el alumno en cada unidad didáctica. En concreto, este material puede adoptar los siguientes formatos:
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground mb-4 italic">
+                                                      Encontrarás archivos de documentos de texto o enlaces webs a documentos que servirán al alumno de ampliación y refuerzo del temario.
+                                                    </p>
+                                                    <SupplementaryMaterialManager 
+                                                      unitId={unit.id}
+                                                      unitTitle={unit.title}
+                                                      canEdit={userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin'}
+                                                    />
                                                   </div>
                                                 </div>
 
