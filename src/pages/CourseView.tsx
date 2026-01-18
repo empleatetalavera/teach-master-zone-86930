@@ -41,6 +41,7 @@ import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ActivitySubmissionViewer } from "@/components/ActivitySubmissionViewer";
 import { useUnitProgress } from "@/hooks/useUnitProgress";
 import { ModuleEvaluationTest } from "@/components/ModuleEvaluationTest";
+import { TeacherActivityCorrectionPanel } from "@/components/TeacherActivityCorrectionPanel";
 
 interface Course {
   id: string;
@@ -840,7 +841,7 @@ export default function CourseView() {
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "grades" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                   >
                     <BarChart3 className="h-4 w-4" />
-                    Calificaciones
+                    {userRole === 'teacher' ? 'Corrección de Actividades' : 'Calificaciones'}
                   </button>
                   <button
                     onClick={() => setActiveTab("exams")}
@@ -911,7 +912,7 @@ export default function CourseView() {
                   <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>
                   <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>
                   <TabsTrigger value="modules" className="text-xs px-2 py-1.5">Formación</TabsTrigger>
-                  <TabsTrigger value="grades" className="text-xs px-2 py-1.5">Calificaciones</TabsTrigger>
+                  <TabsTrigger value="grades" className="text-xs px-2 py-1.5">{userRole === 'teacher' ? 'Actividades' : 'Calificaciones'}</TabsTrigger>
                   <TabsTrigger value="exams" className="text-xs px-2 py-1.5">Exámenes</TabsTrigger>
                   <TabsTrigger value="tutorials" className="text-xs px-2 py-1.5">Tutorías</TabsTrigger>
                   <TabsTrigger value="calendar" className="text-xs px-2 py-1.5">Calendario</TabsTrigger>
@@ -1468,12 +1469,16 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="grades" className="space-y-4">
-            <SEPEGradesSection 
-              courseId={courseId!} 
-              enrollmentId={enrollment?.id || ''} 
-              modules={modules}
-              isEditable={userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher'}
-            />
+            {userRole === 'teacher' ? (
+              <TeacherActivityCorrectionPanel courseId={courseId!} />
+            ) : (
+              <SEPEGradesSection 
+                courseId={courseId!} 
+                enrollmentId={enrollment?.id || ''} 
+                modules={modules}
+                isEditable={userRole === 'admin' || userRole === 'super_admin'}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
