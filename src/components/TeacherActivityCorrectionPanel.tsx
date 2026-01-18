@@ -331,7 +331,7 @@ export function TeacherActivityCorrectionPanel({ courseId }: TeacherActivityCorr
                     <TableHead>Fecha resolución</TableHead>
                     <TableHead>Fecha calificación</TableHead>
                     <TableHead>Calificación</TableHead>
-                    <TableHead>Estado</TableHead>
+                    <TableHead>Observaciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -383,10 +383,17 @@ export function TeacherActivityCorrectionPanel({ courseId }: TeacherActivityCorr
                           </Badge>
                         ) : '-'}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant={submission.status === 'graded' ? 'default' : 'secondary'}>
-                          {submission.status === 'graded' ? 'Corregida' : 'Pendiente'}
-                        </Badge>
+                      <TableCell className="max-w-[200px]">
+                        {submission.feedback ? (
+                          <div className="flex items-start gap-2">
+                            <MessageSquare className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-muted-foreground line-clamp-2" title={submission.feedback}>
+                              {submission.feedback}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
