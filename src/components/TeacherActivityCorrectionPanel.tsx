@@ -20,11 +20,14 @@ import {
   CircleDot,
   AlertCircle,
   FileDown,
-  MessageSquare
+  MessageSquare,
+  GraduationCap
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PresentialGradingPanel } from "./PresentialGradingPanel";
 
 interface Submission {
   id: string;
@@ -65,6 +68,7 @@ export function TeacherActivityCorrectionPanel({ courseId }: TeacherActivityCorr
   const [searchUser, setSearchUser] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("actividades");
 
   useEffect(() => {
     loadSubmissions();
@@ -210,18 +214,32 @@ export function TeacherActivityCorrectionPanel({ courseId }: TeacherActivityCorr
 
   return (
     <div className="space-y-4">
-      {/* Header con título y descripción */}
-      <Card className="bg-slate-50">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <FileText className="h-5 w-5 text-primary" />
-            SEGUIMIENTO DE EJERCICIOS Y TAREAS
-          </CardTitle>
-          <CardDescription>
-            Este módulo permite realizar el seguimiento de las diversas tareas, su estado, sus adjuntos.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      {/* Tabs principales */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="actividades" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Ejercicios y Tareas
+          </TabsTrigger>
+          <TabsTrigger value="presencial" className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            Tutorías y Exámenes Presenciales
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="actividades" className="space-y-4 mt-4">
+          {/* Header con título y descripción */}
+          <Card className="bg-slate-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="h-5 w-5 text-primary" />
+                SEGUIMIENTO DE EJERCICIOS Y TAREAS
+              </CardTitle>
+              <CardDescription>
+                Este módulo permite realizar el seguimiento de las diversas tareas, su estado, sus adjuntos.
+              </CardDescription>
+            </CardHeader>
+          </Card>
 
       {/* Filtros */}
       <Card>
@@ -597,6 +615,12 @@ export function TeacherActivityCorrectionPanel({ courseId }: TeacherActivityCorr
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="presencial" className="mt-4">
+          <PresentialGradingPanel courseId={courseId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
