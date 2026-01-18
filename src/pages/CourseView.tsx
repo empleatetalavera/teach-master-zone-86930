@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +33,7 @@ import { PreAssessmentTest } from "@/components/PreAssessmentTest";
 import { SingleDocumentUploader } from "@/components/SingleDocumentUploader";
 import { PlatformHelpResources } from "@/components/PlatformHelpResources";
 import { CourseForum } from "@/components/CourseForum";
+import { TutorForum } from "@/components/TutorForum";
 import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ActivitySubmissionViewer } from "@/components/ActivitySubmissionViewer";
@@ -863,6 +864,15 @@ export default function CourseView() {
                   >
                     Foro
                   </button>
+                  {userRole === 'teacher' && (
+                    <button
+                      onClick={() => setActiveTab("tutor-forum")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutor-forum" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      <Users className="h-4 w-4" />
+                      Foros de Tutores
+                    </button>
+                  )}
                   <button
                     onClick={() => setActiveTab("time-tracking")}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "time-tracking" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
@@ -904,6 +914,9 @@ export default function CourseView() {
                   <TabsTrigger value="tutorials" className="text-xs px-2 py-1.5">Tutorías</TabsTrigger>
                   <TabsTrigger value="calendar" className="text-xs px-2 py-1.5">Calendario</TabsTrigger>
                   <TabsTrigger value="forum" className="text-xs px-2 py-1.5">Foro</TabsTrigger>
+                  {userRole === 'teacher' && (
+                    <TabsTrigger value="tutor-forum" className="text-xs px-2 py-1.5">Foro Tutores</TabsTrigger>
+                  )}
                   <TabsTrigger value="time-tracking" className="text-xs px-2 py-1.5">Tiempos</TabsTrigger>
                   {(userRole === 'auditor' || userRole === 'admin') && (
                     <TabsTrigger value="audit" className="text-xs px-2 py-1.5">Auditoría</TabsTrigger>
@@ -2372,6 +2385,16 @@ export default function CourseView() {
               isEditable={userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher'}
             />
           </TabsContent>
+
+          {userRole === 'teacher' && (
+            <TabsContent value="tutor-forum" className="space-y-4">
+              <TutorForum 
+                courseId={courseId!}
+                moduleId={modules.length > 0 ? modules[0].id : undefined}
+                courseTitle={course?.title || ""}
+              />
+            </TabsContent>
+          )}
 
           <TabsContent value="time-tracking" className="space-y-4">
             <TimeTrackingReport 
