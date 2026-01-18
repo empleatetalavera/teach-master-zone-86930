@@ -2136,6 +2136,32 @@ export default function CourseView() {
                       </div>
                       <Badge variant="secondary" className="text-xs">Recomendado</Badge>
                     </div>
+
+                    {/* Cuestionario de Satisfacción del Tutor-Formador - Solo visible para tutores */}
+                    {userRole === 'teacher' && (
+                      <div 
+                        className="flex items-center gap-3 p-4 bg-teal-50/50 hover:bg-teal-100/50 cursor-pointer transition-colors border-t"
+                        onClick={() => {
+                          toast({
+                            title: "Cuestionario del Tutor-Formador",
+                            description: "Accediendo al cuestionario de satisfacción del tutor-formador...",
+                          });
+                        }}
+                      >
+                        <div className="p-2 bg-teal-100 rounded">
+                          <User className="h-5 w-5 text-teal-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-slate-700">
+                            Cuestionario de Satisfacción del Tutor-Formador
+                          </span>
+                          <p className="text-xs text-muted-foreground">
+                            Encuesta de valoración exclusiva para el tutor sobre la acción formativa
+                          </p>
+                        </div>
+                        <Badge className="text-xs bg-teal-600">Solo Tutor</Badge>
+                      </div>
+                    )}
                   </div>
                 </AccordionContent>
               </AccordionItem>
