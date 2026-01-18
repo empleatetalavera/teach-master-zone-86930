@@ -27,6 +27,8 @@ interface TrainingCenter {
   address: string | null;
   is_active: boolean;
   created_at: string;
+  custom_domain: string | null;
+  slug: string | null;
 }
 
 export default function AdminTrainingCenters() {
@@ -49,6 +51,7 @@ export default function AdminTrainingCenters() {
     contact_phone: "",
     address: "",
     is_active: true,
+    custom_domain: "",
   });
 
   const [licenseData, setLicenseData] = useState({
@@ -260,6 +263,7 @@ export default function AdminTrainingCenters() {
       contact_phone: center.contact_phone || "",
       address: center.address || "",
       is_active: center.is_active,
+      custom_domain: center.custom_domain || "",
     });
     setLogoPreview(center.logo_url || null);
     setLogoFile(null);
@@ -319,6 +323,7 @@ export default function AdminTrainingCenters() {
       contact_phone: "",
       address: "",
       is_active: true,
+      custom_domain: "",
     });
     setLicenseData({
       create_license: true,
@@ -398,6 +403,19 @@ export default function AdminTrainingCenters() {
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     />
+                  </div>
+                  <div className="border-t pt-4 mt-4">
+                    <Label htmlFor="custom_domain" className="text-primary font-semibold">🌐 Dominio Personalizado del Aula</Label>
+                    <Input
+                      id="custom_domain"
+                      value={formData.custom_domain}
+                      onChange={(e) => setFormData({ ...formData, custom_domain: e.target.value })}
+                      placeholder="https://aula.micentro.es"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      URL del dominio propio del centro para acceso al aula virtual (ej: https://aula.formacion.es)
+                    </p>
                   </div>
                 </TabsContent>
 
