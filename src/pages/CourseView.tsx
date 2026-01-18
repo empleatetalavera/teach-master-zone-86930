@@ -218,6 +218,7 @@ export default function CourseView() {
   const [tutorProfile, setTutorProfile] = useState<{ full_name: string; avatar_url?: string } | null>(null);
   const [activeTab, setActiveTab] = useState<string>("intro");
   const [centerSlug, setCenterSlug] = useState<string | null>(null);
+  const [centerName, setCenterName] = useState<string>("");
   
   // Extract all formative unit IDs for progress tracking
   const allFormativeUnitIds = modules.flatMap(m => 
@@ -305,16 +306,19 @@ export default function CourseView() {
       };
       setCourse(parsedCourse as Course);
 
-      // Load center slug if course has a training center
+      // Load center slug and name if course has a training center
       if (courseData.training_center_id) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug")
+          .select("slug, name")
           .eq("id", courseData.training_center_id)
           .single();
         
         if (centerData?.slug) {
           setCenterSlug(centerData.slug);
+        }
+        if (centerData?.name) {
+          setCenterName(centerData.name);
         }
       }
 
@@ -2391,7 +2395,11 @@ export default function CourseView() {
             </Card>
 
             {/* Guía de Tutorías Presenciales para docentes y alumnos */}
-            <TutoriasPresencialesGuide userRole={userRole} />
+            <TutoriasPresencialesGuide 
+              userRole={userRole} 
+              courseName={course?.title}
+              centerName={centerName}
+            />
 
             {tutorials.length === 0 ? (
               <Card>
