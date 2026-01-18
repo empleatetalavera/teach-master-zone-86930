@@ -8,7 +8,7 @@ import { toast } from "sonner";
 interface SingleDocumentUploaderProps {
   courseId: string;
   documentUrl?: string | null;
-  documentType: 'guide' | 'program';
+  documentType: 'guide' | 'program' | 'tutor-guide';
   onUpdate: () => void;
   isAdmin?: boolean;
 }
@@ -23,9 +23,19 @@ export const SingleDocumentUploader: React.FC<SingleDocumentUploaderProps> = ({
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const documentLabel = documentType === 'guide' ? 'Guía del Alumno' : 'Programa Formativo';
-  const fileName = documentType === 'guide' ? 'guia-alumno' : 'programa-formativo';
-  const dbField = documentType === 'guide' ? 'student_guide_pdf_url' : 'training_program_pdf_url';
+  const getDocumentConfig = () => {
+    switch (documentType) {
+      case 'guide':
+        return { label: 'Guía del Alumno', fileName: 'guia-alumno', dbField: 'student_guide_pdf_url' };
+      case 'tutor-guide':
+        return { label: 'Guía del Tutor', fileName: 'guia-tutor', dbField: 'tutor_guide_pdf_url' };
+      case 'program':
+      default:
+        return { label: 'Programa Formativo', fileName: 'programa-formativo', dbField: 'training_program_pdf_url' };
+    }
+  };
+
+  const { label: documentLabel, fileName, dbField } = getDocumentConfig();
 
   const handleUpload = async (file: File) => {
     setUploading(true);

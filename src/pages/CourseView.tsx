@@ -64,6 +64,7 @@ interface Course {
   boe_url?: string;
   student_guide_pdf_url?: string | null;
   training_program_pdf_url?: string | null;
+  tutor_guide_pdf_url?: string | null;
 }
 
 interface Module {
@@ -787,13 +788,23 @@ export default function CourseView() {
                   >
                     Inicio
                   </button>
-                  <button
-                    onClick={() => setActiveTab("student-guide")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "student-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                  >
-                    <BookMarked className="h-4 w-4" />
-                    Guía del Alumno
-                  </button>
+                  {userRole === 'teacher' ? (
+                    <button
+                      onClick={() => setActiveTab("tutor-guide")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutor-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      <BookMarked className="h-4 w-4" />
+                      Guía del Tutor
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setActiveTab("student-guide")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "student-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      <BookMarked className="h-4 w-4" />
+                      Guía del Alumno
+                    </button>
+                  )}
                   <button
                     onClick={() => setActiveTab("training-program")}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "training-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
@@ -879,7 +890,11 @@ export default function CourseView() {
               <div className="lg:hidden overflow-x-auto pb-2">
                 <TabsList className="w-max min-w-full flex h-auto p-1 gap-1">
                   <TabsTrigger value="intro" className="text-xs px-2 py-1.5">Inicio</TabsTrigger>
-                  <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
+                  {userRole === 'teacher' ? (
+                    <TabsTrigger value="tutor-guide" className="text-xs px-2 py-1.5">Guía Tutor</TabsTrigger>
+                  ) : (
+                    <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
+                  )}
                   <TabsTrigger value="training-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>
                   <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>
                   <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>
@@ -1248,6 +1263,67 @@ export default function CourseView() {
               </Card>
             )}
           </TabsContent>
+
+          {/* Tutor Guide Tab - Only for teachers */}
+          <TabsContent value="tutor-guide" className="space-y-4">
+            <SingleDocumentUploader
+              courseId={courseId || ''}
+              documentUrl={course.tutor_guide_pdf_url}
+              documentType="tutor-guide"
+              onUpdate={loadCourseData}
+              isAdmin={true}
+            />
+            
+            {course.tutor_guide_pdf_url ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookMarked className="h-5 w-5 text-primary" />
+                    Guía del Tutor (PDF)
+                  </CardTitle>
+                  <CardDescription>Documento oficial de la guía del tutor-formador para este curso</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <FileText className="h-16 w-16 text-primary mb-4" />
+                    <h3 className="font-semibold text-lg mb-2">Guía del Tutor Disponible</h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Documento PDF con toda la información para el tutor-formador
+                    </p>
+                  </div>
+                  <Button asChild className="w-full">
+                    <a 
+                      href={course.tutor_guide_pdf_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Descargar Guía del Tutor (PDF)
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookMarked className="h-5 w-5 text-primary" />
+                    Guía del Tutor-Formador
+                  </CardTitle>
+                  <CardDescription>Sube el documento oficial de la guía del tutor para este certificado profesional</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                    <FileText className="h-12 w-12 mb-4 opacity-50" />
+                    <p className="text-sm">No hay guía del tutor subida todavía.</p>
+                    <p className="text-xs mt-2">Utiliza el panel de arriba para subir el PDF.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
 
           <TabsContent value="training-program" className="space-y-4">
             {/* Admin uploader for custom training program */}
