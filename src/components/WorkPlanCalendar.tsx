@@ -2,13 +2,21 @@ import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ChevronLeft, ChevronRight, BookOpen, ListChecks, ClipboardList, FileCheck, Users, Video, GraduationCap, AlertCircle } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, BookOpen, ListChecks, ClipboardList, FileCheck, Users, Video, GraduationCap, AlertCircle, Plus, Save, X, Loader2, MapPin, Link2 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isWithinInterval, startOfWeek, endOfWeek, isPast, isToday as isTodayFn, isFuture } from "date-fns";
 import { es } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/lib/auth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 interface WorkPlanEvent {
   id: string;
@@ -37,12 +45,30 @@ interface WorkPlanCalendarProps {
   }[];
   courseStartDate?: string | null;
   courseEndDate?: string | null;
+  userRole?: string;
 }
 
-export function WorkPlanCalendar({ courseId, modules, courseStartDate, courseEndDate }: WorkPlanCalendarProps) {
+export function WorkPlanCalendar({ courseId, modules, courseStartDate, courseEndDate, userRole }: WorkPlanCalendarProps) {
+  const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [events, setEvents] = useState<WorkPlanEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [saving, setSaving] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    event_type: 'tutorial',
+    start_time: '',
+    end_time: '',
+    location: '',
+    meeting_url: '',
+    is_mandatory: true
+  });
+
+  const canCreateEvents = userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin';
 
   useEffect(() => {
     loadEvents();
@@ -228,6 +254,71 @@ export function WorkPlanCalendar({ courseId, modules, courseStartDate, courseEnd
   const tutorialEvents = upcomingEvents.filter(e => e.type === 'tutorial');
   const examEvents = upcomingEvents.filter(e => e.type === 'exam');
 
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      event_type: 'tutorial',
+      start_time: '',
+      end_time: '',
+      location: '',
+      meeting_url: '',
+      is_mandatory: true
+    });
+    setSelectedDate(null);
+  };
+
+  const handleDayClick = (day: Date) => {
+    if (!canCreateEvents) return;
+    
+    setSelectedDate(day);
+    const dateStr = format(day, "yyyy-MM-dd'T'10:00");
+    setFormData(prev => ({
+      ...prev,
+      start_time: dateStr,
+      end_time: format(day, "yyyy-MM-dd'T'12:00")
+    }));
+    setShowAddDialog(true);
+  };
+
+  const handleSaveEvent = async () => {
+    if (!formData.title || !formData.start_time) {
+      toast.error('Por favor, introduce al menos un título y fecha');
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const { error } = await supabase
+        .from('course_events')
+        .insert({
+          course_id: courseId,
+          created_by: user?.id,
+          title: formData.title,
+          description: formData.description || null,
+          event_type: formData.event_type,
+          start_time: formData.start_time,
+          end_time: formData.end_time || null,
+          location: formData.location || null,
+          meeting_url: formData.meeting_url || null,
+          is_mandatory: formData.is_mandatory
+        });
+
+      if (error) throw error;
+      toast.success('Evento creado correctamente');
+
+      await loadEvents();
+      resetForm();
+      setShowAddDialog(false);
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast.error('Error al guardar el evento');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Card className="border-l-4 border-l-primary">
       <CardHeader>
@@ -314,17 +405,26 @@ export function WorkPlanCalendar({ courseId, modules, courseStartDate, courseEnd
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div
+                          onClick={() => handleDayClick(day)}
                           className={`
-                            min-h-[70px] p-1 border rounded-lg text-center relative
+                            min-h-[70px] p-1 border rounded-lg text-center relative group
                             ${!isCurrentMonth ? 'opacity-40' : ''}
                             ${isToday ? 'border-primary border-2 bg-primary/10' : ''}
                             ${inCourseRange && isCurrentMonth && !isToday ? 'bg-muted/50' : ''}
                             hover:bg-muted/80 transition-colors cursor-pointer
+                            ${canCreateEvents ? 'hover:border-primary/50' : ''}
                           `}
                         >
                           <span className={`text-sm ${isToday ? 'font-bold text-primary' : ''}`}>
                             {format(day, 'd')}
                           </span>
+                          
+                          {/* Add event hint for tutors */}
+                          {canCreateEvents && isCurrentMonth && (
+                            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Plus className="h-3 w-3 text-primary" />
+                            </div>
+                          )}
                           
                           {/* Event indicators */}
                           {dayEvents.length > 0 && (
@@ -342,13 +442,13 @@ export function WorkPlanCalendar({ courseId, modules, courseStartDate, courseEnd
                           )}
                         </div>
                       </TooltipTrigger>
-                      {dayEvents.length > 0 && (
-                        <TooltipContent side="top" className="max-w-[280px]">
-                          <div className="space-y-2">
-                            <p className="font-medium border-b pb-1">
-                              {format(day, "d 'de' MMMM", { locale: es })}
-                            </p>
-                            {dayEvents.map((event, i) => (
+                      <TooltipContent side="top" className="max-w-[280px]">
+                        <div className="space-y-2">
+                          <p className="font-medium border-b pb-1">
+                            {format(day, "d 'de' MMMM", { locale: es })}
+                          </p>
+                          {dayEvents.length > 0 ? (
+                            dayEvents.map((event, i) => (
                               <div key={i} className="flex items-start gap-2 text-xs">
                                 <div className={`p-1 rounded ${getEventColor(event.type)} text-white shrink-0`}>
                                   {getEventIcon(event.type)}
@@ -360,10 +460,12 @@ export function WorkPlanCalendar({ courseId, modules, courseStartDate, courseEnd
                                   )}
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        </TooltipContent>
-                      )}
+                            ))
+                          ) : canCreateEvents ? (
+                            <p className="text-xs text-muted-foreground">Haz clic para crear un evento</p>
+                          ) : null}
+                        </div>
+                      </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 );
@@ -491,6 +593,163 @@ export function WorkPlanCalendar({ courseId, modules, courseStartDate, courseEnd
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Dialog for creating events */}
+        <Dialog open={showAddDialog} onOpenChange={(open) => {
+          setShowAddDialog(open);
+          if (!open) resetForm();
+        }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                Añadir Evento - {selectedDate ? format(selectedDate, "d 'de' MMMM", { locale: es }) : ''}
+              </DialogTitle>
+              <DialogDescription>
+                Crea un evento que aparecerá en el calendario de tus alumnos
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label>Tipo de Evento *</Label>
+                <Select 
+                  value={formData.event_type} 
+                  onValueChange={(value) => setFormData({ ...formData, event_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tutorial">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-blue-600" />
+                        Tutoría Presencial
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="exam">
+                      <div className="flex items-center gap-2">
+                        <GraduationCap className="h-4 w-4 text-red-600" />
+                        Examen Presencial
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="live_session">
+                      <div className="flex items-center gap-2">
+                        <Video className="h-4 w-4 text-purple-600" />
+                        Sesión en Directo
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="activity_deadline">
+                      <div className="flex items-center gap-2">
+                        <ClipboardList className="h-4 w-4 text-amber-600" />
+                        Fecha de Entrega
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Título *</Label>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Ej: Tutoría presencial - Módulo 1"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Descripción</Label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Descripción del evento..."
+                  rows={2}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Fecha y Hora de Inicio *</Label>
+                  <Input
+                    type="datetime-local"
+                    value={formData.start_time}
+                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fecha y Hora de Fin</Label>
+                  <Input
+                    type="datetime-local"
+                    value={formData.end_time}
+                    onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Ubicación</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="Ej: C/ Marqués de Mirasol, 19 - Talavera"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>URL de Reunión Online</Label>
+                <div className="relative">
+                  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    value={formData.meeting_url}
+                    onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
+                    placeholder="https://meet.google.com/..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                  <Label className="font-medium">Asistencia Obligatoria</Label>
+                </div>
+                <Switch
+                  checked={formData.is_mandatory}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_mandatory: checked })}
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    resetForm();
+                    setShowAddDialog(false);
+                  }}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancelar
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={handleSaveEvent}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Guardar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

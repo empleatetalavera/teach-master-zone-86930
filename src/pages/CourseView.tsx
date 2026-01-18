@@ -738,7 +738,7 @@ export default function CourseView() {
                   asChild
                 >
                   <a 
-                    href="https://wa.me/34665673416?text=Hola,%20tengo%20una%20duda%20sobre%20el%20curso" 
+                    href={`https://wa.me/34665673416?text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"
@@ -1513,6 +1513,7 @@ export default function CourseView() {
               modules={modules}
               courseStartDate={course.start_date}
               courseEndDate={course.end_date}
+              userRole={userRole}
             />
             
             <CourseWorkPlan 
