@@ -2081,6 +2081,152 @@ export default function CourseView() {
               </div>
             )}
 
+            {/* RECURSOS DIDÁCTICOS PARA EL TUTOR-FORMADOR - Solo visible para tutores */}
+            {userRole === 'teacher' && (
+              <Accordion type="single" collapsible className="w-full mt-6">
+                <AccordionItem value="recursos-tutor" className="border-0">
+                  <AccordionTrigger className="bg-teal-700 text-white px-4 py-3 rounded-t-lg hover:no-underline data-[state=open]:rounded-b-none">
+                    <span className="font-bold text-lg flex items-center gap-2">
+                      <BookMarked className="h-5 w-5" />
+                      RECURSOS DIDÁCTICOS PARA EL TUTOR-FORMADOR
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="border border-t-0 rounded-b-lg p-0 bg-white">
+                    <div className="p-4 bg-teal-50 border-b">
+                      <p className="text-sm text-slate-700">
+                        En el Campus Virtual, además de los recursos didácticos disponibles para el alumno, vas a encontrar los recursos necesarios para llevar a cabo tu actividad como tutor-formador:
+                      </p>
+                    </div>
+                    <div className="space-y-0">
+                      {/* Guía del Tutor-Formador en PDF */}
+                      <div 
+                        className="flex items-center gap-3 p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          if (course?.tutor_guide_pdf_url) {
+                            window.open(course.tutor_guide_pdf_url, '_blank');
+                          } else {
+                            toast({
+                              title: "Guía del Tutor-Formador",
+                              description: "La guía del tutor-formador estará disponible próximamente.",
+                            });
+                          }
+                        }}
+                      >
+                        <div className="p-2 bg-teal-100 rounded">
+                          <FileText className="h-5 w-5 text-teal-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-slate-700">
+                            Guía del Tutor-Formador (PDF)
+                          </span>
+                          <p className="text-xs text-muted-foreground">
+                            Documento con todas las indicaciones para el desarrollo de la acción formativa
+                          </p>
+                        </div>
+                        <Badge className="text-xs bg-teal-600">PDF</Badge>
+                      </div>
+
+                      {/* Documentos de Actividades de Aprendizaje */}
+                      <div 
+                        className="flex items-center gap-3 p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          toast({
+                            title: "Documentos de Actividades",
+                            description: "Acceda a los documentos de actividades desde Administración/Seguimiento/Seguimiento de tareas al resolver cada actividad enviada por el alumno.",
+                          });
+                        }}
+                      >
+                        <div className="p-2 bg-blue-100 rounded">
+                          <ClipboardList className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-slate-700">
+                            Documentos de Actividades de Aprendizaje
+                          </span>
+                          <p className="text-xs text-muted-foreground">
+                            PDF por cada actividad con objetivos, resolución y sistema de evaluación/puntuación. Disponible en Seguimiento de tareas.
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">Por actividad</Badge>
+                      </div>
+
+                      {/* Planificación de Tutorías Presenciales */}
+                      <div 
+                        className="flex items-center gap-3 p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          toast({
+                            title: "Planificación de Tutorías",
+                            description: "Documentos PDF con la planificación de actividades e instrumentos de evaluación para las tutorías presenciales.",
+                          });
+                        }}
+                      >
+                        <div className="p-2 bg-purple-100 rounded">
+                          <Calendar className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-slate-700">
+                            Planificación de Tutorías Presenciales
+                          </span>
+                          <p className="text-xs text-muted-foreground">
+                            Documentos PDF con planificación de actividades de aprendizaje e instrumentos de evaluación para tutorías presenciales
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">Tutorías</Badge>
+                      </div>
+
+                      {/* Soluciones de Tests de Autoevaluación */}
+                      <div 
+                        className="flex items-center gap-3 p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          toast({
+                            title: "Soluciones de Tests",
+                            description: "Las soluciones de los tests de autoevaluación están disponibles debajo de cada CIM en 'Formación en Campus' y 'Evaluación'.",
+                          });
+                        }}
+                      >
+                        <div className="p-2 bg-green-100 rounded">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-slate-700">
+                            Soluciones de Tests de Autoevaluación
+                          </span>
+                          <p className="text-xs text-muted-foreground">
+                            Documento con las soluciones de cada Test de autoevaluación y del Test Final. Visible debajo de cada CIM.
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">Tests</Badge>
+                      </div>
+
+                      {/* Planificación de Evaluación Presencial Final */}
+                      <div 
+                        className="flex items-center gap-3 p-4 hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          toast({
+                            title: "Evaluación Presencial Final",
+                            description: "La información sobre la planificación de la prueba de evaluación presencial final está disponible en la región 'Evaluación'.",
+                          });
+                        }}
+                      >
+                        <div className="p-2 bg-red-100 rounded">
+                          <GraduationCap className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-slate-700">
+                            Planificación de Evaluación Presencial Final
+                          </span>
+                          <p className="text-xs text-muted-foreground">
+                            Documento por cada unidad/módulo formativo con información sobre la planificación de la prueba presencial final. Consultar en 'Evaluación'.
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">Presencial</Badge>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            )}
+
             {/* EVALUACIÓN GLOBAL - Al final de los módulos formativos */}
             <Accordion type="single" collapsible className="w-full mt-6">
               <AccordionItem value="evaluacion-global" className="border-0">
