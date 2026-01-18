@@ -1224,6 +1224,13 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="student-guide" className="space-y-4">
+            {/* CIM Navigation Guide Notice */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>💡 Nota:</strong> Para consultar información de cómo navegar a través de los Contenidos Interactivos Multimedia consulta la <strong>"Guía de navegación del CIM"</strong> que se encuentra en el icono de la Guía del Alumno.
+              </p>
+            </div>
+            
             {/* Admin uploader for custom student guide */}
             {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
               <SingleDocumentUploader
@@ -1279,6 +1286,13 @@ export default function CourseView() {
 
           {/* Tutor Guide Tab - Only for teachers */}
           <TabsContent value="tutor-guide" className="space-y-4">
+            {/* CIM Navigation Guide Notice */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>💡 Nota:</strong> Para consultar información de cómo navegar a través de los Contenidos Interactivos Multimedia consulta la <strong>"Guía de navegación del CIM"</strong> que se encuentra en el icono de la Guía del Tutor.
+              </p>
+            </div>
+            
             <SingleDocumentUploader
               courseId={courseId || ''}
               documentUrl={course.tutor_guide_pdf_url}
