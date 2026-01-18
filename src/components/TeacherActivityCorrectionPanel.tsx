@@ -426,6 +426,10 @@ export function TeacherActivityCorrectionPanel({ courseId }: TeacherActivityCorr
                   {selectedSubmission.development_activities?.description || 'Sin descripción'}
                 </p>
               </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <AlertCircle className="h-3 w-3" />
+                <span>Enunciado de la tarea que el alumno debe realizar</span>
+              </div>
             </div>
 
             <Separator />
@@ -448,9 +452,35 @@ export function TeacherActivityCorrectionPanel({ courseId }: TeacherActivityCorr
 
             <Separator />
 
+            {/* Tarea Grupal indicator */}
+            <div className="flex items-center gap-2 text-sm">
+              <input type="checkbox" disabled className="h-4 w-4" />
+              <span className="text-muted-foreground">Tarea Grupal</span>
+            </div>
+
+            {/* Solucionario - Archivo con propuesta de solución y sistema de corrección */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <FileText className="h-4 w-4 text-orange-500" />
+                Solucionario:
+              </Label>
+              <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <p className="text-sm text-orange-800">
+                  Archivo con propuesta de solución y sistema de corrección
+                </p>
+                <Button variant="outline" size="sm" className="mt-2 text-orange-700 border-orange-300 hover:bg-orange-100">
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Descargar solucionario (si disponible)
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
             {/* Respuesta del alumno */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Resolución del alumno:</Label>
+              <Label className="text-sm font-medium">Resolución:</Label>
+              <p className="text-xs text-muted-foreground mb-2">Respuesta tarea enviada por el alumno</p>
               <div className="p-4 bg-slate-50 rounded-lg border min-h-[100px]">
                 {selectedSubmission.submission_text || 'Sin texto de respuesta'}
               </div>
@@ -464,33 +494,51 @@ export function TeacherActivityCorrectionPanel({ courseId }: TeacherActivityCorr
 
             <Separator />
 
-            {/* Área de calificación */}
-            <div className="grid gap-4 md:grid-cols-2">
+            {/* Área de calificación - Espacio para indicar calificación y observaciones */}
+            <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="text-xs text-blue-700 mb-2">
+                Espacio para indicar la calificación y las observaciones de la corrección
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="score">Calificación (0-{selectedSubmission.development_activities?.max_score || 10}):</Label>
+                  <Input
+                    id="score"
+                    type="number"
+                    min="0"
+                    max={selectedSubmission.development_activities?.max_score || 10}
+                    value={score}
+                    onChange={(e) => setScore(e.target.value)}
+                    placeholder="Introduce la calificación"
+                    className="bg-white"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="score">Calificación (0-{selectedSubmission.development_activities?.max_score || 10}):</Label>
-                <Input
-                  id="score"
-                  type="number"
-                  min="0"
-                  max={selectedSubmission.development_activities?.max_score || 10}
-                  value={score}
-                  onChange={(e) => setScore(e.target.value)}
-                  placeholder="Introduce la calificación"
+                <Label htmlFor="feedback">Observaciones de la corrección:</Label>
+                <Textarea
+                  id="feedback"
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Escribe aquí tus observaciones y comentarios para el alumno..."
+                  rows={4}
+                  className="bg-white"
                 />
               </div>
             </div>
 
+            {/* Feedback indicator */}
             <div className="space-y-2">
-              <Label htmlFor="feedback">Observaciones de la corrección:</Label>
-              <Textarea
-                id="feedback"
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Escribe aquí tus observaciones y comentarios para el alumno..."
-                rows={4}
-              />
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-green-600" />
+                Feedback:
+              </Label>
               <p className="text-xs text-muted-foreground">
-                El alumno recibirá estas observaciones por correo electrónico.
+                Indicación de que la actividad se ha corregido y se ha informado al alumno sobre la valoración de su actividad.
+              </p>
+              <p className="text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
+                El alumno recibirá las observaciones por correo electrónico una vez guardes la calificación.
               </p>
             </div>
 
@@ -525,8 +573,8 @@ export function TeacherActivityCorrectionPanel({ courseId }: TeacherActivityCorr
             {selectedSubmission.status === 'graded' && (
               <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200 text-green-700">
                 <CheckCircle className="h-5 w-5" />
-                <span className="text-sm">
-                  Indicación de que la actividad se ha corregido y se ha informado al alumno sobre la valoración de su actividad.
+                <span className="text-sm font-medium">
+                  ✓ Actividad corregida - El alumno ha sido informado sobre la valoración de su actividad.
                 </span>
               </div>
             )}

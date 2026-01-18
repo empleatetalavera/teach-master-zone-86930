@@ -2582,109 +2582,118 @@ export default function CourseView() {
 
             {/* Mi Perfil (alumnos) / Recursos Didácticos (tutores) */}
             {userRole === 'teacher' ? (
-              <Card>
-                <CardHeader className="pb-2 bg-teal-700 rounded-t-lg">
-                  <CardTitle className="text-lg flex items-center gap-2 text-white">
-                    <BookMarked className="h-5 w-5" />
-                    Recursos del Tutor
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-0 p-0">
-                  <div className="p-3 bg-teal-50 border-b text-xs text-slate-600">
-                    Recursos necesarios para tu actividad como tutor-formador:
-                  </div>
-                  {/* Guía del Tutor-Formador */}
-                  <div 
-                    className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                    onClick={() => {
-                      if (course?.tutor_guide_pdf_url) {
-                        window.open(course.tutor_guide_pdf_url, '_blank');
-                      } else {
-                        toast({
-                          title: "Guía del Tutor-Formador",
-                          description: "La guía estará disponible próximamente.",
-                        });
-                      }
-                    }}
-                  >
-                    <div className="p-2 bg-teal-100 rounded">
-                      <FileText className="h-4 w-4 text-teal-600" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-medium text-slate-700">Guía del Tutor (PDF)</span>
-                    </div>
-                    <Badge className="text-xs bg-teal-600">PDF</Badge>
-                  </div>
-                  {/* Documentos de Actividades */}
-                  <div 
-                    className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                    onClick={() => {
-                      toast({
-                        title: "Documentos de Actividades",
-                        description: "Acceda desde Seguimiento de tareas al corregir cada actividad.",
-                      });
-                    }}
-                  >
-                    <div className="p-2 bg-blue-100 rounded">
-                      <ClipboardList className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-medium text-slate-700">Actividades de Aprendizaje</span>
-                    </div>
-                  </div>
-                  {/* Planificación Tutorías */}
-                  <div 
-                    className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                    onClick={() => {
-                      toast({
-                        title: "Planificación de Tutorías",
-                        description: "PDFs con planificación de actividades para tutorías presenciales.",
-                      });
-                    }}
-                  >
-                    <div className="p-2 bg-purple-100 rounded">
-                      <Calendar className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-medium text-slate-700">Tutorías Presenciales</span>
-                    </div>
-                  </div>
-                  {/* Soluciones Tests */}
-                  <div 
-                    className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                    onClick={() => {
-                      toast({
-                        title: "Soluciones de Tests",
-                        description: "Disponibles debajo de cada CIM en 'Formación en Campus'.",
-                      });
-                    }}
-                  >
-                    <div className="p-2 bg-green-100 rounded">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-medium text-slate-700">Soluciones Tests</span>
-                    </div>
-                  </div>
-                  {/* Evaluación Presencial */}
-                  <div 
-                    className="flex items-center gap-3 p-3 hover:bg-slate-50 cursor-pointer transition-colors"
-                    onClick={() => {
-                      toast({
-                        title: "Evaluación Presencial Final",
-                        description: "Información disponible en la región 'Evaluación'.",
-                      });
-                    }}
-                  >
-                    <div className="p-2 bg-red-100 rounded">
-                      <GraduationCap className="h-4 w-4 text-red-600" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-medium text-slate-700">Eval. Presencial Final</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <Collapsible defaultOpen={false}>
+                <Card>
+                  <CardHeader className="pb-2 bg-teal-700 rounded-t-lg">
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2 text-white">
+                          <BookMarked className="h-5 w-5" />
+                          Recursos del Tutor
+                        </CardTitle>
+                        <ChevronDown className="h-5 w-5 text-white" />
+                      </div>
+                    </CollapsibleTrigger>
+                  </CardHeader>
+                  <CollapsibleContent>
+                    <CardContent className="space-y-0 p-0">
+                      <div className="p-3 bg-teal-50 border-b text-xs text-slate-600">
+                        Recursos necesarios para tu actividad como tutor-formador:
+                      </div>
+                      {/* Guía del Tutor-Formador */}
+                      <div 
+                        className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          if (course?.tutor_guide_pdf_url) {
+                            window.open(course.tutor_guide_pdf_url, '_blank');
+                          } else {
+                            toast({
+                              title: "Guía del Tutor-Formador",
+                              description: "La guía estará disponible próximamente.",
+                            });
+                          }
+                        }}
+                      >
+                        <div className="p-2 bg-teal-100 rounded">
+                          <FileText className="h-4 w-4 text-teal-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-xs font-medium text-slate-700">Guía del Tutor (PDF)</span>
+                        </div>
+                        <Badge className="text-xs bg-teal-600">PDF</Badge>
+                      </div>
+                      {/* Documentos de Actividades */}
+                      <div 
+                        className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          toast({
+                            title: "Documentos de Actividades",
+                            description: "Acceda desde Seguimiento de tareas al corregir cada actividad.",
+                          });
+                        }}
+                      >
+                        <div className="p-2 bg-blue-100 rounded">
+                          <ClipboardList className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-xs font-medium text-slate-700">Actividades de Aprendizaje</span>
+                        </div>
+                      </div>
+                      {/* Planificación Tutorías */}
+                      <div 
+                        className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          toast({
+                            title: "Planificación de Tutorías",
+                            description: "PDFs con planificación de actividades para tutorías presenciales.",
+                          });
+                        }}
+                      >
+                        <div className="p-2 bg-purple-100 rounded">
+                          <Calendar className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-xs font-medium text-slate-700">Tutorías Presenciales</span>
+                        </div>
+                      </div>
+                      {/* Soluciones Tests */}
+                      <div 
+                        className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          toast({
+                            title: "Soluciones de Tests",
+                            description: "Disponibles debajo de cada CIM en 'Formación en Campus'.",
+                          });
+                        }}
+                      >
+                        <div className="p-2 bg-green-100 rounded">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-xs font-medium text-slate-700">Soluciones Tests</span>
+                        </div>
+                      </div>
+                      {/* Evaluación Presencial */}
+                      <div 
+                        className="flex items-center gap-3 p-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          toast({
+                            title: "Evaluación Presencial Final",
+                            description: "Información disponible en la región 'Evaluación'.",
+                          });
+                        }}
+                      >
+                        <div className="p-2 bg-red-100 rounded">
+                          <GraduationCap className="h-4 w-4 text-red-600" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-xs font-medium text-slate-700">Eval. Presencial Final</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             ) : (
               <Card>
                 <CardHeader className="pb-2">
