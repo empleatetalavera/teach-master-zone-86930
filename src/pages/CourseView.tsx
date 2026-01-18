@@ -34,6 +34,7 @@ import { SingleDocumentUploader } from "@/components/SingleDocumentUploader";
 import { PlatformHelpResources } from "@/components/PlatformHelpResources";
 import { CourseForum } from "@/components/CourseForum";
 import { TutorForum } from "@/components/TutorForum";
+import { UnitForum } from "@/components/UnitForum";
 import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ActivitySubmissionViewer } from "@/components/ActivitySubmissionViewer";
@@ -1975,24 +1976,14 @@ export default function CourseView() {
                                                   </div>
                                                 </div>
 
-                                                {/* Foros */}
-                                                <div className="flex items-start gap-3">
-                                                  <div className="p-2 bg-red-100 rounded">
-                                                    <MessageSquare className="h-5 w-5 text-red-500" />
-                                                  </div>
-                                                  <div className="flex-1">
-                                                    <h5 className="font-semibold text-slate-700 mb-2">Foros</h5>
-                                                    <button 
-                                                      className="text-[#2a7a9a] hover:text-[#1a5a7a] transition-colors text-sm"
-                                                      onClick={() => {
-                                                        const forumTab = document.querySelector('[value="foro"]');
-                                                        if (forumTab) (forumTab as HTMLElement).click();
-                                                      }}
-                                                    >
-                                                      Foro de dudas/consultas
-                                                    </button>
-                                                  </div>
-                                                </div>
+                                                {/* Foros de la Unidad */}
+                                                <UnitForum
+                                                  courseId={courseId!}
+                                                  formativeUnitId={unit.id}
+                                                  formativeUnitTitle={unit.title}
+                                                  isTeacher={userRole === 'teacher'}
+                                                  isAdmin={userRole === 'admin' || userRole === 'super_admin'}
+                                                />
 
                                                 {/* Tests / Evaluaciones */}
                                                 {unit.evaluations && unit.evaluations.length > 0 && (
