@@ -2080,6 +2080,66 @@ export default function CourseView() {
                 })}
               </div>
             )}
+
+            {/* EVALUACIÓN GLOBAL - Al final de los módulos formativos */}
+            <Accordion type="single" collapsible className="w-full mt-6">
+              <AccordionItem value="evaluacion-global" className="border-0">
+                <AccordionTrigger className="bg-[#8B1538] text-white px-4 py-3 rounded-t-lg hover:no-underline data-[state=open]:rounded-b-none">
+                  <span className="font-bold text-lg">EVALUACIÓN</span>
+                </AccordionTrigger>
+                <AccordionContent className="border border-t-0 rounded-b-lg p-0 bg-white">
+                  <div className="space-y-0">
+                    {/* Test Final Global de todos los módulos */}
+                    <div 
+                      className="flex items-center gap-3 p-4 border-b hover:bg-slate-50 cursor-pointer transition-colors"
+                      onClick={() => {
+                        toast({
+                          title: "Test Final Global",
+                          description: "Accediendo al test final de evaluación de todos los módulos...",
+                        });
+                      }}
+                    >
+                      <div className="p-2 bg-purple-100 rounded">
+                        <ClipboardList className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-slate-700">
+                          {course?.title || 'Curso'} - Test Final
+                        </span>
+                        <p className="text-xs text-muted-foreground">
+                          Evaluación final de todos los módulos formativos
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-xs">Obligatorio</Badge>
+                    </div>
+                    
+                    {/* Evaluación de la calidad de la formación */}
+                    <div 
+                      className="flex items-center gap-3 p-4 bg-amber-50/50 hover:bg-amber-100/50 cursor-pointer transition-colors"
+                      onClick={() => {
+                        toast({
+                          title: "Evaluación de Calidad",
+                          description: "Accediendo a la encuesta de evaluación de la calidad de la formación...",
+                        });
+                      }}
+                    >
+                      <div className="p-2 bg-amber-100 rounded">
+                        <Star className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-slate-700">
+                          Evaluación de la calidad de la formación
+                        </span>
+                        <p className="text-xs text-muted-foreground">
+                          Encuesta de satisfacción sobre el curso y los materiales
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">Recomendado</Badge>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </TabsContent>
 
           <TabsContent value="exams" className="space-y-4">
