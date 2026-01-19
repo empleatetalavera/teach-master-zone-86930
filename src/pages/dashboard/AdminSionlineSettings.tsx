@@ -91,8 +91,8 @@ export default function AdminSionlineSettings() {
   const [selectedCenter, setSelectedCenter] = useState<(SionlineSettings & { training_center: TrainingCenter }) | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Base URL for tracking - uses the LucusHost proxy to forward to Lovable Cloud
-  const baseTrackingUrl = "https://talentcloudsolution.es/sepe-tracking";
+  // Base URL for tracking - uses the center's custom domain with PHP proxy
+  const baseTrackingUrl = "https://aulaempleatetalavera.es/sepe-proxy/centro/cif";
 
   useEffect(() => {
     loadData();
@@ -208,7 +208,7 @@ export default function AdminSionlineSettings() {
     if (!center) return;
 
     try {
-      const urlSeguimiento = `${baseTrackingUrl}?cif=${center.cif || 'SIN_CIF'}`;
+      const urlSeguimiento = `${baseTrackingUrl}/${center.cif || 'SIN_CIF'}`;
       const apiKey = generateApiKey();
       const credentials = generateCredentials();
       const fechaRenovacion = new Date();
