@@ -22,33 +22,57 @@ const defaultBranding: CenterBrandingConfig = {
 };
 
 /**
- * Hook to load training center branding by slug
+ * Hook to load training center branding by slug or CIF
  * Used for public pages like login where the user is not authenticated yet
+ * Supports both slug (e.g., "grupoarma") and CIF (e.g., "B45878253")
  */
-export function useCenterBranding(centerSlug?: string | null) {
+export function useCenterBranding(centerIdentifier?: string | null) {
   const [branding, setBranding] = useState<CenterBrandingConfig>(defaultBranding);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadCenterBranding = async () => {
-      console.log('[useCenterBranding] Starting load with slug:', centerSlug);
+      console.log('[useCenterBranding] Starting load with identifier:', centerIdentifier);
       
-      if (!centerSlug) {
-        console.log('[useCenterBranding] No slug provided, using default branding');
+      if (!centerIdentifier) {
+        console.log('[useCenterBranding] No identifier provided, using default branding');
         setBranding(defaultBranding);
         setLoading(false);
         return;
       }
 
       try {
-        console.log('[useCenterBranding] Querying training_centers with slug:', centerSlug);
+        // Check if the identifier looks like a CIF (starts with letter + numbers)
+        const isCIF = /^[A-Z][0-9]{7,8}[A-Z0-9]?$/i.test(centerIdentifier);
         
-        const { data: center, error } = await supabase
-          .from('training_centers')
-          .select('*')
-          .eq('slug', centerSlug)
-          .eq('is_active', true)
-          .maybeSingle();
+        console.log('[useCenterBranding] Identifier type:', isCIF ? 'CIF' : 'slug', 'value:', centerIdentifier);
+        
+        let center = null;
+        let error = null;
+
+        if (isCIF) {
+          // Query by CIF
+          const result = await supabase
+            .from('training_centers')
+            .select('*')
+            .eq('cif', centerIdentifier.toUpperCase())
+            .eq('is_active', true)
+            .maybeSingle();
+          
+          center = result.data;
+          error = result.error;
+        } else {
+          // Query by slug
+          const result = await supabase
+            .from('training_centers')
+            .select('*')
+            .eq('slug', centerIdentifier)
+            .eq('is_active', true)
+            .maybeSingle();
+          
+          center = result.data;
+          error = result.error;
+        }
 
         console.log('[useCenterBranding] Query result:', { center, error });
 
@@ -60,7 +84,7 @@ export function useCenterBranding(centerSlug?: string | null) {
         }
 
         if (!center) {
-          console.warn(`[useCenterBranding] Center not found for slug: ${centerSlug}`);
+          console.warn(`[useCenterBranding] Center not found for identifier: ${centerIdentifier}`);
           setBranding(defaultBranding);
           setLoading(false);
           return;
@@ -87,7 +111,7 @@ export function useCenterBranding(centerSlug?: string | null) {
     };
 
     loadCenterBranding();
-  }, [centerSlug]);
+  }, [centerIdentifier]);
 
   return { branding, loading };
 }
