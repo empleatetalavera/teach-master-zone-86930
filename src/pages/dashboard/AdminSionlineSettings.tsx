@@ -91,8 +91,27 @@ export default function AdminSionlineSettings() {
   const [selectedCenter, setSelectedCenter] = useState<(SionlineSettings & { training_center: TrainingCenter }) | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Base URL for tracking - uses the center's custom domain with PHP proxy
-  const baseTrackingUrl = "https://aulaempleatetalavera.es/sepe-proxy/centro/cif";
+  // Helper function to build tracking URL using center's custom domain
+  const getTrackingUrl = (center: TrainingCenter) => {
+    // If center has custom domain, use it with sepe-proxy path
+    if (center.custom_domain) {
+      const domain = center.custom_domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      return `https://${domain}/sepe-proxy/centro/cif/${center.cif || 'SIN_CIF'}`;
+    }
+    // Fallback to talentcloudsolution.es
+    return `https://talentcloudsolution.es/sepe-proxy/centro/cif/${center.cif || 'SIN_CIF'}`;
+  };
+
+  // Helper function to build campus URL for each center
+  const getCampusUrl = (center: TrainingCenter) => {
+    // If center has custom domain, use it directly
+    if (center.custom_domain) {
+      const domain = center.custom_domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      return `https://${domain}`;
+    }
+    // Fallback to main platform with center identifier
+    return `https://talentcloudsolution.es/auth?center=${center.slug || center.cif || 'default'}`;
+  };
 
   useEffect(() => {
     loadData();
@@ -208,7 +227,7 @@ export default function AdminSionlineSettings() {
     if (!center) return;
 
     try {
-      const urlSeguimiento = `${baseTrackingUrl}/${center.cif || 'SIN_CIF'}`;
+      const urlSeguimiento = getTrackingUrl(center);
       const apiKey = generateApiKey();
       const credentials = generateCredentials();
       const fechaRenovacion = new Date();
@@ -553,14 +572,14 @@ export default function AdminSionlineSettings() {
                         </Label>
                         <div className="flex items-center gap-2">
                           <Input
-                            value={selectedCenter.training_center?.custom_domain || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.slug || selectedCenter.training_center?.cif || 'default'}`}
+                            value={getCampusUrl(selectedCenter.training_center)}
                             readOnly
                             className="font-mono text-sm bg-white border-2 border-blue-300"
                           />
                           <Button 
                             variant="default" 
                             size="sm"
-                            onClick={() => copyToClipboard(selectedCenter.training_center?.custom_domain || `https://teach-master-zone-86930.lovable.app/auth?center=${selectedCenter.training_center?.slug || selectedCenter.training_center?.cif || 'default'}`, "URL de valoración")}
+                            onClick={() => copyToClipboard(getCampusUrl(selectedCenter.training_center), "URL de valoración")}
                             className="shrink-0"
                           >
                             <Copy className="w-4 h-4 mr-2" />
@@ -1047,22 +1066,23 @@ export default function AdminSionlineSettings() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>URL Base de Seguimiento</Label>
+                <Label>Formato de URL de Seguimiento</Label>
                 <Input
-                  value={baseTrackingUrl}
+                  value="https://[dominio-centro]/sepe-proxy/centro/cif/[CIF]"
                   disabled
                   className="bg-muted font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Esta URL se combina con el CIF de cada centro para generar su URL personalizada
+                  Cada centro usa su propio dominio personalizado (custom_domain) para generar su URL de seguimiento SEPE
                 </p>
               </div>
 
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Las URLs de seguimiento se generan automáticamente siguiendo el formato:<br />
-                  <code className="bg-muted px-2 py-1 rounded text-sm">{baseTrackingUrl}/[CIF_CENTRO]</code>
+                  Las URLs de seguimiento se generan automáticamente usando el dominio personalizado de cada centro:<br />
+                  <code className="bg-muted px-2 py-1 rounded text-sm">https://[dominio-centro]/sepe-proxy/centro/cif/[CIF_CENTRO]</code><br />
+                  <span className="text-xs">Ejemplo: https://aulaempleatetalavera.es/sepe-proxy/centro/cif/B45878253</span>
                 </AlertDescription>
               </Alert>
             </CardContent>
