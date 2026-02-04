@@ -219,7 +219,16 @@ export default function CourseView() {
   const [activeTab, setActiveTab] = useState<string>("intro");
   const [centerSlug, setCenterSlug] = useState<string | null>(null);
   const [centerName, setCenterName] = useState<string>("");
-  const [centerContact, setCenterContact] = useState<{email: string; phone: string}>({
+  const [centerContact, setCenterContact] = useState<{
+    name: string;
+    email: string; 
+    phone: string;
+    address?: string;
+    city?: string;
+    province?: string;
+    postal_code?: string;
+  }>({
+    name: "",
     email: "", 
     phone: ""
   });
@@ -314,7 +323,7 @@ export default function CourseView() {
       if (courseData.training_center_id) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name, contact_email, contact_phone")
+          .select("slug, name, contact_email, contact_phone, address, city, province, postal_code")
           .eq("id", courseData.training_center_id)
           .single();
         
@@ -324,10 +333,15 @@ export default function CourseView() {
         if (centerData?.name) {
           setCenterName(centerData.name);
         }
-        // Set center contact info for CAU
+        // Set center contact info for CAU and WorkPlan
         setCenterContact({
+          name: centerData?.name || "",
           email: centerData?.contact_email || course?.support_email || "",
-          phone: centerData?.contact_phone || course?.support_phone || ""
+          phone: centerData?.contact_phone || course?.support_phone || "",
+          address: centerData?.address || "",
+          city: centerData?.city || "",
+          province: centerData?.province || "",
+          postal_code: centerData?.postal_code || ""
         });
       }
 
@@ -960,7 +974,7 @@ export default function CourseView() {
 
           <TabsContent value="intro" className="space-y-6">
             {/* Platform Help Resources */}
-            <PlatformHelpResources centerSlug={centerSlug} />
+            <PlatformHelpResources centerSlug={centerSlug} centerContact={centerContact} />
 
             <Card>
               <CardHeader>
@@ -1544,7 +1558,8 @@ export default function CourseView() {
             <CourseWorkPlan 
               course={course} 
               modules={modules}
-              centerSlug={centerSlug} 
+              centerSlug={centerSlug}
+              centerContact={centerContact}
             />
           </TabsContent>
 

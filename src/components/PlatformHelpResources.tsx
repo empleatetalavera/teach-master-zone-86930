@@ -16,8 +16,14 @@ import {
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+interface CenterContactInfo {
+  phone?: string;
+  email?: string;
+}
+
 interface PlatformHelpResourcesProps {
   centerSlug?: string;
+  centerContact?: CenterContactInfo | null;
 }
 
 const faqs = [
@@ -55,7 +61,9 @@ const faqs = [
   }
 ];
 
-export const PlatformHelpResources: React.FC<PlatformHelpResourcesProps> = ({ centerSlug }) => {
+export const PlatformHelpResources: React.FC<PlatformHelpResourcesProps> = ({ centerSlug, centerContact }) => {
+  const contactPhone = centerContact?.phone || "";
+  const contactEmail = centerContact?.email || "";
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -177,14 +185,28 @@ export const PlatformHelpResources: React.FC<PlatformHelpResourcesProps> = ({ ce
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">665 673 416</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>formacion.empleate@gmail.com</span>
-              </div>
+              {contactPhone ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{contactPhone}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  <span>Teléfono no especificado</span>
+                </div>
+              )}
+              {contactEmail ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>{contactEmail}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  <span>Email no especificado</span>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
