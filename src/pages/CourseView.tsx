@@ -1747,8 +1747,9 @@ export default function CourseView() {
                                   />
                                 )}
 
-                                {/* Fila 1: Mapa Conceptual y Objetivos */}
+                                {/* Fila 1: Mapa Conceptual y Objetivos - Vista Previa Inline */}
                                 <div className="grid lg:grid-cols-2 gap-4">
+                                  {/* Mapa Conceptual con Vista Previa Inline */}
                                   <div className="bg-background rounded-lg p-4 border">
                                     <h4 className="font-medium flex items-center gap-2 text-sm mb-3">
                                       <Layers className="h-4 w-4 text-primary" />
@@ -1758,36 +1759,57 @@ export default function CourseView() {
                                       // Check if there's an uploaded concept map first
                                       if (module.concept_map_url) {
                                         const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(module.concept_map_url);
+                                        const isPdf = /\.pdf$/i.test(module.concept_map_url);
+                                        
                                         if (isImage) {
                                           return (
                                             <div className="space-y-2">
                                               <img 
                                                 src={module.concept_map_url} 
                                                 alt={`Mapa conceptual - ${module.title}`}
-                                                className="w-full rounded-lg border"
+                                                className="w-full rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
+                                                onClick={() => window.open(module.concept_map_url!, '_blank')}
                                               />
-                                              <a 
-                                                href={module.concept_map_url} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
-                                                className="text-xs text-primary hover:underline flex items-center gap-1"
-                                              >
-                                                <FileText className="h-3 w-3" />
-                                                Ver en tamaño completo
-                                              </a>
+                                              <p className="text-xs text-muted-foreground text-center">
+                                                Haz clic en la imagen para ampliar
+                                              </p>
                                             </div>
                                           );
                                         }
+                                        
+                                        if (isPdf) {
+                                          return (
+                                            <div className="space-y-2">
+                                              <div className="w-full aspect-[4/3] rounded-lg border overflow-hidden bg-muted">
+                                                <iframe
+                                                  src={`${module.concept_map_url}#toolbar=0&navpanes=0&scrollbar=0`}
+                                                  className="w-full h-full"
+                                                  title={`Mapa conceptual - ${module.title}`}
+                                                />
+                                              </div>
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full"
+                                                onClick={() => window.open(module.concept_map_url!, '_blank')}
+                                              >
+                                                <FileText className="h-4 w-4 mr-2" />
+                                                Abrir PDF en pantalla completa
+                                              </Button>
+                                            </div>
+                                          );
+                                        }
+                                        
+                                        // Fallback for other file types
                                         return (
-                                          <a 
-                                            href={module.concept_map_url} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer" 
-                                            className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+                                          <Button
+                                            variant="outline"
+                                            className="w-full"
+                                            onClick={() => window.open(module.concept_map_url!, '_blank')}
                                           >
-                                            <FileText className="h-5 w-5 text-primary" />
-                                            <span className="text-sm font-medium text-primary">Ver mapa conceptual (PDF)</span>
-                                          </a>
+                                            <FileText className="h-4 w-4 mr-2" />
+                                            Ver mapa conceptual
+                                          </Button>
                                         );
                                       }
 
@@ -1810,7 +1832,15 @@ export default function CourseView() {
                                       }
                                       
                                       if (conceptNodes.length === 0) {
-                                        return <p className="text-xs text-muted-foreground">Sin mapa conceptual. Sube uno desde la gestión de contenidos.</p>;
+                                        return (
+                                          <div className="text-center py-6 text-muted-foreground">
+                                            <MapIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                            <p className="text-xs">Sin mapa conceptual</p>
+                                            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                              <p className="text-xs mt-1">Súbelo desde "Gestión de Contenidos"</p>
+                                            )}
+                                          </div>
+                                        );
                                       }
                                       
                                       return (
@@ -1842,12 +1872,25 @@ export default function CourseView() {
                                     })()}
                                   </div>
 
+                                  {/* Objetivos del Módulo - Vista Completa */}
                                   <div className="bg-background rounded-lg p-4 border">
                                     <h4 className="font-medium flex items-center gap-2 text-sm mb-3">
-                                      <BookOpen className="h-4 w-4 text-primary" />
-                                      Objetivos
+                                      <Target className="h-4 w-4 text-primary" />
+                                      Objetivos del Módulo
                                     </h4>
                                     {(() => {
+                                      // Priorizar objetivos desde la base de datos
+                                      if (module.objectives) {
+                                        return (
+                                          <div className="space-y-2">
+                                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                              {module.objectives}
+                                            </p>
+                                          </div>
+                                        );
+                                      }
+                                      
+                                      // Fallback: objetivos predefinidos por tipo de módulo
                                       const moduleTitle = module.title.toLowerCase();
                                       let objectives: string[] = [];
                                       
@@ -1861,19 +1904,20 @@ export default function CourseView() {
                                         ];
                                       }
                                       
-                                      if (objectives.length === 0 && module.objectives) {
-                                        return <p className="text-xs text-muted-foreground line-clamp-3">{module.objectives}</p>;
-                                      }
-                                      
                                       if (objectives.length === 0) {
-                                        return <p className="text-xs text-muted-foreground">Sin objetivos definidos</p>;
+                                        return (
+                                          <div className="text-center py-6 text-muted-foreground">
+                                            <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                            <p className="text-xs">Sin objetivos definidos</p>
+                                          </div>
+                                        );
                                       }
                                       
                                       return (
-                                        <ul className="space-y-1.5">
+                                        <ul className="space-y-2">
                                           {objectives.map((obj, i) => (
-                                            <li key={i} className="flex items-start gap-2 text-xs">
-                                              <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
+                                            <li key={i} className="flex items-start gap-2 text-sm">
+                                              <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                                               <span className="text-muted-foreground">{obj}</span>
                                             </li>
                                           ))}
@@ -1882,6 +1926,34 @@ export default function CourseView() {
                                     })()}
                                   </div>
                                 </div>
+                                
+                                {/* PDF de Contenido del Módulo - Vista Previa Inline */}
+                                {module.content && module.content.startsWith('http') && (
+                                  <div className="bg-background rounded-lg p-4 border">
+                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-3">
+                                      <FileText className="h-4 w-4 text-blue-600" />
+                                      Manual del Módulo
+                                    </h4>
+                                    <div className="space-y-2">
+                                      <div className="w-full aspect-[16/10] rounded-lg border overflow-hidden bg-muted">
+                                        <iframe
+                                          src={`${module.content}#toolbar=1&navpanes=0`}
+                                          className="w-full h-full"
+                                          title={`Manual - ${module.title}`}
+                                        />
+                                      </div>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full"
+                                        onClick={() => window.open(module.content!, '_blank')}
+                                      >
+                                        <FileDown className="h-4 w-4 mr-2" />
+                                        Descargar Manual PDF
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
 
                                 {/* Foro del Módulo */}
                                 <div className="grid lg:grid-cols-2 gap-4">
