@@ -46,6 +46,7 @@ import { TeacherActivityCorrectionPanel } from "@/components/TeacherActivityCorr
 import { TutorStudentProgress } from "@/components/TutorStudentProgress";
 import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import { CertificateDocumentsSection } from "@/components/CertificateDocumentsSection";
+import { ModuleContentUploader } from "@/components/ModuleContentUploader";
 
 interface Course {
   id: string;
@@ -1734,6 +1735,18 @@ export default function CourseView() {
                                   </AccordionItem>
                                 </Accordion>
 
+                                {/* Admin: Gestión de contenidos del módulo */}
+                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                  <ModuleContentUploader
+                                    moduleId={module.id}
+                                    moduleTitle={module.title}
+                                    conceptMapUrl={module.concept_map_url}
+                                    contentPdfUrl={module.content}
+                                    onUpdate={loadCourseData}
+                                    isAdmin={true}
+                                  />
+                                )}
+
                                 {/* Fila 1: Mapa Conceptual y Objetivos */}
                                 <div className="grid lg:grid-cols-2 gap-4">
                                   <div className="bg-background rounded-lg p-4 border">
@@ -1742,6 +1755,42 @@ export default function CourseView() {
                                       Mapa Conceptual
                                     </h4>
                                     {(() => {
+                                      // Check if there's an uploaded concept map first
+                                      if (module.concept_map_url) {
+                                        const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(module.concept_map_url);
+                                        if (isImage) {
+                                          return (
+                                            <div className="space-y-2">
+                                              <img 
+                                                src={module.concept_map_url} 
+                                                alt={`Mapa conceptual - ${module.title}`}
+                                                className="w-full rounded-lg border"
+                                              />
+                                              <a 
+                                                href={module.concept_map_url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="text-xs text-primary hover:underline flex items-center gap-1"
+                                              >
+                                                <FileText className="h-3 w-3" />
+                                                Ver en tamaño completo
+                                              </a>
+                                            </div>
+                                          );
+                                        }
+                                        return (
+                                          <a 
+                                            href={module.concept_map_url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+                                          >
+                                            <FileText className="h-5 w-5 text-primary" />
+                                            <span className="text-sm font-medium text-primary">Ver mapa conceptual (PDF)</span>
+                                          </a>
+                                        );
+                                      }
+
                                       // Generate concept map based on module title
                                       const moduleTitle = module.title.toLowerCase();
                                       let conceptNodes: { label: string; level: number }[] = [];
@@ -1760,30 +1809,22 @@ export default function CourseView() {
                                         ];
                                       }
                                       
-                                      if (conceptNodes.length === 0 && module.concept_map_url) {
-                                        return (
-                                          <a href={module.concept_map_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
-                                            Ver mapa conceptual
-                                          </a>
-                                        );
-                                      }
-                                      
                                       if (conceptNodes.length === 0) {
-                                        return <p className="text-xs text-muted-foreground">Sin mapa conceptual</p>;
+                                        return <p className="text-xs text-muted-foreground">Sin mapa conceptual. Sube uno desde la gestión de contenidos.</p>;
                                       }
                                       
                                       return (
                                         <div className="space-y-3">
                                           {/* Root node */}
                                           <div className="flex justify-center">
-                                            <span className="px-3 py-1.5 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground rounded-lg font-semibold text-xs shadow">
+                                            <span className="px-3 py-1.5 bg-gradient-to-r from-primary to-primary/70 text-primary-foreground rounded-lg font-semibold text-xs shadow">
                                               {conceptNodes.find(n => n.level === 0)?.label}
                                             </span>
                                           </div>
                                           {/* Level 1 */}
                                           <div className="flex flex-wrap justify-center gap-2">
                                             {conceptNodes.filter(n => n.level === 1).map((node, i) => (
-                                              <span key={i} className="px-2 py-1 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded text-xs font-medium border border-blue-200 dark:border-blue-800">
+                                              <span key={i} className="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs font-medium border">
                                                 {node.label}
                                               </span>
                                             ))}
