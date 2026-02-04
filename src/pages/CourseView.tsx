@@ -21,6 +21,7 @@ import { UnitContentViewer } from "@/components/UnitContentViewer";
 import { InteractiveMultimediaViewer } from "@/components/InteractiveMultimediaViewer";
 import { UnitActivityManager } from "@/components/UnitActivityManager";
 import { CourseSchedule } from "@/components/CourseSchedule";
+import CourseScheduleManager from "@/components/CourseScheduleManager";
 import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { SEPEGradesSection } from "@/components/SEPEGradesSection";
@@ -1215,14 +1216,22 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="schedule" className="space-y-4">
-            <CourseSchedule
-              courseTitle={course.title}
-              courseStartDate={course.start_date}
-              courseEndDate={course.end_date}
-              modules={modules}
-              events={[...events, ...tutorials]}
-              exams={exams}
-            />
+            {/* Editor de cronograma para admins */}
+            {(userRole === 'admin' || userRole === 'super_admin') && (
+              <CourseScheduleManager courseId={courseId || ''} />
+            )}
+            
+            {/* Vista de solo lectura para estudiantes y profesores */}
+            {userRole !== 'admin' && userRole !== 'super_admin' && (
+              <CourseSchedule
+                courseTitle={course.title}
+                courseStartDate={course.start_date}
+                courseEndDate={course.end_date}
+                modules={modules}
+                events={[...events, ...tutorials]}
+                exams={exams}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="student-guide" className="space-y-4">
