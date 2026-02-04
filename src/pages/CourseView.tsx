@@ -44,6 +44,7 @@ import { ModuleEvaluationTest } from "@/components/ModuleEvaluationTest";
 import { TeacherActivityCorrectionPanel } from "@/components/TeacherActivityCorrectionPanel";
 import { TutorStudentProgress } from "@/components/TutorStudentProgress";
 import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
+import { CertificateDocumentsSection } from "@/components/CertificateDocumentsSection";
 
 interface Course {
   id: string;
@@ -1102,86 +1103,14 @@ export default function CourseView() {
                 </CardContent>
               </Card>
 
-              {/* Documentos Oficiales del Certificado */}
-              {(course.ficha_certificado_url || course.boe_url) && (
-                <Card className="overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-amber-500 text-white rounded-xl shadow-lg">
-                        <FileText className="h-7 w-7" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">Documentos Oficiales del Certificado</CardTitle>
-                        <CardDescription>Ficha del certificado de profesionalidad y BOE oficial</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {course.ficha_certificado_url && (
-                        <div className="space-y-4">
-                          <h4 className="font-semibold flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                            <FileText className="h-5 w-5" />
-                            Ficha del Certificado
-                          </h4>
-                          <div className="aspect-[4/3] bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border-2 border-amber-200 dark:border-amber-800 flex flex-col items-center justify-center">
-                            <div className="p-4 bg-amber-100 dark:bg-amber-900/40 rounded-2xl mb-4">
-                              <FileText className="h-16 w-16 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <p className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-1">Ficha del Certificado</p>
-                            <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">Documento PDF oficial</p>
-                            <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Disponible
-                            </Badge>
-                          </div>
-                          <Button asChild variant="default" className="w-full bg-amber-600 hover:bg-amber-700">
-                            <a 
-                              href={course.ficha_certificado_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2"
-                            >
-                              <FileDown className="h-4 w-4" />
-                              Ver / Descargar Ficha
-                            </a>
-                          </Button>
-                        </div>
-                      )}
-                      {course.boe_url && (
-                        <div className="space-y-4">
-                          <h4 className="font-semibold flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                            <FileText className="h-5 w-5" />
-                            Boletín Oficial del Estado (BOE)
-                          </h4>
-                          <div className="aspect-[4/3] bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border-2 border-amber-200 dark:border-amber-800 flex flex-col items-center justify-center">
-                            <div className="p-4 bg-amber-100 dark:bg-amber-900/40 rounded-2xl mb-4">
-                              <BookOpen className="h-16 w-16 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <p className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-1">BOE Oficial</p>
-                            <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">Documento normativo</p>
-                            <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Disponible
-                            </Badge>
-                          </div>
-                          <Button asChild variant="default" className="w-full bg-amber-600 hover:bg-amber-700">
-                            <a 
-                              href={course.boe_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2"
-                            >
-                              <FileDown className="h-4 w-4" />
-                              Ver / Descargar BOE
-                            </a>
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Documentos Oficiales del Certificado - Always visible, editable for admin/teacher */}
+              <CertificateDocumentsSection
+                courseId={courseId!}
+                fichaCertificadoUrl={course.ficha_certificado_url}
+                boeUrl={course.boe_url}
+                isEditable={userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher'}
+                onUpdate={loadCourseData}
+              />
 
               {/* Guía del Campus */}
               <Card>
