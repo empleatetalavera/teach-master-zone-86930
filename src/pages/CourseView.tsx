@@ -624,17 +624,24 @@ export default function CourseView() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <img 
-                    src="/branding/sepe-logo.png" 
-                    alt="SEPE" 
-                    className="h-8 object-contain"
-                  />
+                  {course.qualification_level && (
+                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold">
+                      Certificado de Profesionalidad Nivel {course.qualification_level}
+                    </Badge>
+                  )}
+                  {course.professional_family && (
+                    <Badge variant="secondary" className="font-medium">
+                      {course.professional_family}
+                    </Badge>
+                  )}
+                  {course.course_code && (
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {course.course_code}
+                    </Badge>
+                  )}
                   <Badge className={getLevelColor(course.level)}>
                     {getLevelLabel(course.level)}
                   </Badge>
-                  {course.category && (
-                    <Badge variant="outline">{course.category}</Badge>
-                  )}
                 </div>
                 <CardTitle className="text-3xl mb-2">{course.title}</CardTitle>
                 <CardDescription className="text-base">
