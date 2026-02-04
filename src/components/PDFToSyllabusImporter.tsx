@@ -18,6 +18,7 @@ interface PDFToSyllabusImporterProps {
   onOpenChange: (open: boolean) => void;
   unitId: string;
   unitTitle: string;
+  moduleId?: string; // Optional - if provided and unitId is actually a moduleId, will create UF automatically
   onImportComplete: () => void;
 }
 
@@ -39,6 +40,7 @@ export function PDFToSyllabusImporter({
   onOpenChange, 
   unitId, 
   unitTitle,
+  moduleId,
   onImportComplete 
 }: PDFToSyllabusImporterProps) {
   const { toast } = useToast();
@@ -52,6 +54,7 @@ export function PDFToSyllabusImporter({
   const [generateExercises, setGenerateExercises] = useState(true);
   const [generatedSlides, setGeneratedSlides] = useState<SlideData[]>([]);
   const [error, setError] = useState<string>('');
+  const [actualUnitId, setActualUnitId] = useState<string>(unitId);
 
   const resetState = () => {
     setStep('upload');
@@ -60,6 +63,49 @@ export function PDFToSyllabusImporter({
     setPdfContent('');
     setGeneratedSlides([]);
     setError('');
+    setActualUnitId(unitId);
+  };
+
+  // Check if unitId is actually a module ID (no matching formative unit)
+  const ensureFormativeUnit = async (): Promise<string> => {
+    // First, check if unitId exists as a formative_unit
+    const { data: existingUnit } = await supabase
+      .from('formative_units')
+      .select('id')
+      .eq('id', unitId)
+      .maybeSingle();
+
+    if (existingUnit) {
+      return unitId; // It's a valid formative unit
+    }
+
+    // unitId is actually a module ID - check if moduleId prop was passed
+    const moduleIdToUse = moduleId || unitId;
+
+    // Create a new formative unit for this module
+    const { data: newUnit, error: createError } = await supabase
+      .from('formative_units')
+      .insert({
+        module_id: moduleIdToUse,
+        title: unitTitle || 'Contenido del Módulo',
+        description: 'Unidad formativa creada automáticamente al importar PDF',
+        order_index: 1,
+        is_active: true
+      })
+      .select('id')
+      .single();
+
+    if (createError) {
+      console.error('Error creating formative unit:', createError);
+      throw new Error('No se pudo crear la unidad formativa automáticamente');
+    }
+
+    toast({
+      title: "Unidad formativa creada",
+      description: "Se ha creado una unidad formativa para almacenar el contenido",
+    });
+
+    return newUnit.id;
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,9 +218,14 @@ export function PDFToSyllabusImporter({
     }
 
     setStep('generating');
-    setProgress(40);
+    setProgress(35);
 
     try {
+      // Ensure we have a valid formative unit
+      const validUnitId = await ensureFormativeUnit();
+      setActualUnitId(validUnitId);
+      setProgress(40);
+
       const { data, error } = await supabase.functions.invoke('generate-syllabus-from-pdf', {
         body: {
           pdfContent: pdfContent.substring(0, 30000), // Limit content to avoid token limits
@@ -193,8 +244,8 @@ export function PDFToSyllabusImporter({
       setGeneratedSlides(data.slides || []);
       setProgress(80);
       
-      // Auto-save to database
-      await saveSlides(data.slides || []);
+      // Auto-save to database with the valid unit ID
+      await saveSlides(data.slides || [], validUnitId);
       
     } catch (err) {
       console.error('Error generating slides:', err);
@@ -203,16 +254,18 @@ export function PDFToSyllabusImporter({
     }
   };
 
-  const saveSlides = async (slides: SlideData[]) => {
+  const saveSlides = async (slides: SlideData[], targetUnitId?: string) => {
     setStep('saving');
     setProgress(90);
+
+    const unitIdToUse = targetUnitId || actualUnitId;
 
     try {
       // Get current max order_index
       const { data: existingSlides } = await supabase
         .from('unit_syllabus_slides')
         .select('order_index')
-        .eq('formative_unit_id', unitId)
+        .eq('formative_unit_id', unitIdToUse)
         .order('order_index', { ascending: false })
         .limit(1);
 
@@ -220,7 +273,7 @@ export function PDFToSyllabusImporter({
 
       // Insert all slides
       const slidesToInsert = slides.map((slide, idx) => ({
-        formative_unit_id: unitId,
+        formative_unit_id: unitIdToUse,
         slide_type: slide.slide_type,
         title: slide.title,
         section_title: slide.section_title,
