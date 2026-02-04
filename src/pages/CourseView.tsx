@@ -219,6 +219,10 @@ export default function CourseView() {
   const [activeTab, setActiveTab] = useState<string>("intro");
   const [centerSlug, setCenterSlug] = useState<string | null>(null);
   const [centerName, setCenterName] = useState<string>("");
+  const [centerContact, setCenterContact] = useState<{email: string; phone: string}>({
+    email: "", 
+    phone: ""
+  });
   
   // Extract all formative unit IDs for progress tracking
   const allFormativeUnitIds = modules.flatMap(m => 
@@ -310,7 +314,7 @@ export default function CourseView() {
       if (courseData.training_center_id) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name")
+          .select("slug, name, contact_email, contact_phone")
           .eq("id", courseData.training_center_id)
           .single();
         
@@ -320,6 +324,11 @@ export default function CourseView() {
         if (centerData?.name) {
           setCenterName(centerData.name);
         }
+        // Set center contact info for CAU
+        setCenterContact({
+          email: centerData?.contact_email || course?.support_email || "",
+          phone: centerData?.contact_phone || course?.support_phone || ""
+        });
       }
 
       // Load modules
@@ -706,17 +715,24 @@ export default function CourseView() {
                       </p>
 
                       <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-primary" />
-                          <a href="mailto:formacion.empleate@gmail.com" className="text-primary hover:underline">
-                            formacion.empleate@gmail.com
-                          </a>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-primary" />
-                          <span>665 673 416</span>
-                          <span className="text-muted-foreground text-xs">(09:00 - 14:00)</span>
-                        </div>
+                        {centerContact.email && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-4 w-4 text-primary" />
+                            <a href={`mailto:${centerContact.email}`} className="text-primary hover:underline">
+                              {centerContact.email}
+                            </a>
+                          </div>
+                        )}
+                        {centerContact.phone && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-4 w-4 text-primary" />
+                            <span>{centerContact.phone}</span>
+                            <span className="text-muted-foreground text-xs">(09:00 - 14:00)</span>
+                          </div>
+                        )}
+                        {!centerContact.email && !centerContact.phone && (
+                          <p className="text-sm text-muted-foreground">Contacta con tu centro de formación</p>
+                        )}
                       </div>
 
                       <Button 
@@ -732,28 +748,30 @@ export default function CourseView() {
                   </PopoverContent>
                 </Popover>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                >
-                  <a 
-                    href={`https://web.whatsapp.com/send?phone=34665673416&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`}
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2"
-                    onClick={(e) => {
-                      // Try mobile WhatsApp first, fallback to web
-                      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                        e.preventDefault();
-                        window.open(`https://api.whatsapp.com/send?phone=34665673416&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`, '_blank');
-                      }
-                    }}
+                {centerContact.phone && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
                   >
-                    <MessageSquare className="h-4 w-4" />
-                    WhatsApp Dudas
-                  </a>
-                </Button>
+                    <a 
+                      href={`https://web.whatsapp.com/send?phone=34${centerContact.phone.replace(/\s/g, '')}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                      onClick={(e) => {
+                        // Try mobile WhatsApp first, fallback to web
+                        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                          e.preventDefault();
+                          window.open(`https://api.whatsapp.com/send?phone=34${centerContact.phone.replace(/\s/g, '')}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`, '_blank');
+                        }
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      WhatsApp Dudas
+                    </a>
+                  </Button>
+                )}
                 
                 <Popover>
                   <PopoverTrigger asChild>
