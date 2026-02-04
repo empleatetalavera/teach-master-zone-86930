@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1918,8 +1918,35 @@ export default function CourseView() {
                                   </div>
                                   
                                   {moduleUnits.length === 0 ? (
-                                    <div className="text-sm text-muted-foreground bg-background rounded-b-lg p-4 border border-t-0 border-dashed text-center">
-                                      Sin unidades formativas en este módulo
+                                    <div className="bg-background rounded-b-lg p-6 border border-t-0 border-dashed">
+                                      <div className="text-center space-y-4">
+                                        <p className="text-sm text-muted-foreground">
+                                          Sin unidades formativas en este módulo
+                                        </p>
+                                        
+                                        {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                          <div className="flex flex-wrap gap-2 justify-center pt-2">
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="gap-2"
+                                              onClick={() => openActivityManager(module.id, module.title)}
+                                            >
+                                              <ClipboardList className="h-4 w-4" />
+                                              Añadir Actividades
+                                            </Button>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="gap-2"
+                                              onClick={() => openSyllabusEditor(module.id, module.title)}
+                                            >
+                                              <Sparkles className="h-4 w-4" />
+                                              Generar Contenido IA
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                   ) : (
                                     <div className="space-y-0">
