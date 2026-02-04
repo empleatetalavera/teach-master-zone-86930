@@ -12,8 +12,9 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { 
   FileQuestion, CheckCircle2, XCircle, ChevronLeft, ChevronRight, 
-  Loader2, Trophy, AlertCircle, Clock, RotateCcw
+  Loader2, Trophy, AlertCircle, Clock, RotateCcw, Sparkles, Wand2
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ModuleEvaluationTestProps {
   open?: boolean;
@@ -752,6 +753,8 @@ export function ModuleEvaluationTest({
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
+  const [aiQuestionsGenerated, setAiQuestionsGenerated] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -760,6 +763,48 @@ export function ModuleEvaluationTest({
   const [result, setResult] = useState<TestResult | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(60 * 60); // 60 minutes in seconds
   const [showReview, setShowReview] = useState(false);
+
+  // Generate questions with AI based on module content
+  const handleGenerateAIQuestions = async () => {
+    setGeneratingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-module-questions', {
+        body: {
+          moduleId,
+          moduleTitle,
+          numberOfQuestions: 50
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.questions && data.questions.length > 0) {
+        setQuestions(data.questions);
+        setAiQuestionsGenerated(true);
+        toast({
+          title: "¡Preguntas generadas!",
+          description: `Se han creado ${data.questions.length} preguntas basadas en el contenido del módulo.`,
+        });
+      } else {
+        throw new Error("No se generaron preguntas");
+      }
+    } catch (err) {
+      console.error("Error generating AI questions:", err);
+      toast({
+        title: "Error al generar preguntas",
+        description: err instanceof Error ? err.message : "Error desconocido",
+        variant: "destructive"
+      });
+      // Fall back to default questions
+      setQuestions(generateModuleQuestions(moduleTitle));
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
 
   // Load questions when dialog opens or component mounts (inline mode)
   useEffect(() => {
@@ -861,6 +906,7 @@ export function ModuleEvaluationTest({
     setResult(null);
     setShowReview(false);
     setTimeRemaining(60 * 60);
+    setAiQuestionsGenerated(false);
   };
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -885,40 +931,86 @@ export function ModuleEvaluationTest({
             <h3 className="text-2xl font-bold">Evaluación Final del Módulo</h3>
             <p className="text-muted-foreground max-w-md mx-auto">
               Este test evalúa todos los conocimientos adquiridos en el módulo. 
-              Dispones de 60 minutos para completar las 50 preguntas.
+              Dispones de 60 minutos para completar las {questions.length || 50} preguntas.
             </p>
           </div>
 
-              <div className="grid gap-4 md:grid-cols-3 max-w-2xl mx-auto">
-                <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <FileQuestion className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <p className="font-semibold">50 Preguntas</p>
-                    <p className="text-xs text-muted-foreground">Tipo test múltiple</p>
-                  </CardContent>
-                </Card>
-                <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <Clock className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-                    <p className="font-semibold">60 Minutos</p>
-                    <p className="text-xs text-muted-foreground">Tiempo límite</p>
-                  </CardContent>
-                </Card>
-                <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <Trophy className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
-                    <p className="font-semibold">50% Mínimo</p>
-                    <p className="text-xs text-muted-foreground">Para aprobar</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="flex justify-center pt-4">
-                <Button size="lg" onClick={handleStartTest} className="px-8">
-                  Comenzar Test
-                </Button>
-              </div>
+          {/* AI Generation Option */}
+          {!aiQuestionsGenerated && (
+            <div className="max-w-lg mx-auto">
+              <Alert className="border-primary/30 bg-primary/5">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <AlertDescription className="ml-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <span className="text-sm">
+                      Genera preguntas personalizadas basadas en el contenido real del módulo usando IA.
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleGenerateAIQuestions}
+                      disabled={generatingAI}
+                      className="shrink-0"
+                    >
+                      {generatingAI ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Generando...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="h-4 w-4 mr-2" />
+                          Generar con IA
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
             </div>
+          )}
+
+          {aiQuestionsGenerated && (
+            <div className="max-w-lg mx-auto">
+              <Alert className="border-green-500/30 bg-green-50 dark:bg-green-950/20">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="ml-2 text-green-700 dark:text-green-400">
+                  ✓ Preguntas generadas con IA basadas en el contenido del módulo ({questions.length} preguntas)
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+
+          <div className="grid gap-4 md:grid-cols-3 max-w-2xl mx-auto">
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <FileQuestion className="h-8 w-8 mx-auto mb-2 text-primary" />
+                <p className="font-semibold">{questions.length || 50} Preguntas</p>
+                <p className="text-xs text-muted-foreground">Tipo test múltiple</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <Clock className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+                <p className="font-semibold">60 Minutos</p>
+                <p className="text-xs text-muted-foreground">Tiempo límite</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <Trophy className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
+                <p className="font-semibold">50% Mínimo</p>
+                <p className="text-xs text-muted-foreground">Para aprobar</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex justify-center pt-4">
+            <Button size="lg" onClick={handleStartTest} className="px-8" disabled={generatingAI}>
+              Comenzar Test
+            </Button>
+          </div>
+        </div>
           ) : testCompleted && result ? (
             /* Results Screen */
             <div className="space-y-6 py-8">
