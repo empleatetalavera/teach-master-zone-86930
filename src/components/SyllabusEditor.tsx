@@ -16,6 +16,7 @@ import { PDFToSyllabusImporter } from "@/components/PDFToSyllabusImporter";
 import { generateUF0517UD1Slides } from "@/components/scorm/UF0517UD1SlidesGenerator";
 import { generateUF0517UD2Slides } from "@/components/scorm/UF0517UD2SlidesGenerator";
 import { generateUF0519ComprehensiveSlides } from "@/components/scorm/UF0519SlidesGenerator";
+import { getSSCE0110SlidesByModule } from "@/components/scorm/SSCE0110SlidesGenerator";
 import {
   Plus, Trash2, Save, Loader2, GripVertical, Eye, Edit2, FileText,
   HelpCircle, CheckSquare, Table2, BookOpen, X, Copy, ArrowUp, ArrowDown, Upload,
@@ -174,6 +175,28 @@ export function SyllabusEditor({ open, onOpenChange, unitId, unitTitle }: Syllab
   // Determine which template to use based on unit title
   const getTemplateSlides = () => {
     const title = unitTitle.toLowerCase();
+    
+    // SSCE0110 - Docencia de la Formación Profesional para el Empleo
+    if (title.includes('mf1442') || title.includes('programación didáctica')) {
+      return getSSCE0110SlidesByModule('MF1442');
+    }
+    if (title.includes('mf1443') || title.includes('materiales') || title.includes('recursos didácticos')) {
+      return getSSCE0110SlidesByModule('MF1443');
+    }
+    if (title.includes('mf1444') || title.includes('impartición') || title.includes('tutorización')) {
+      return getSSCE0110SlidesByModule('MF1444');
+    }
+    if (title.includes('mf1445') || title.includes('evaluación del proceso')) {
+      return getSSCE0110SlidesByModule('MF1445');
+    }
+    if (title.includes('mf1446') || title.includes('orientación laboral') || title.includes('calidad')) {
+      return getSSCE0110SlidesByModule('MF1446');
+    }
+    
+    // UF1645 / UF1646 (Unidades dentro de MF1444)
+    if (title.includes('uf1645') || title.includes('uf1646')) {
+      return getSSCE0110SlidesByModule('MF1444');
+    }
     
     // UF0517 - UD1: Organización de entidades
     if (title.includes('uf0517') && (title.includes('organiza') || title.includes('empresa'))) {
