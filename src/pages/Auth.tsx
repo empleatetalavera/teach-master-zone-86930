@@ -66,8 +66,10 @@ export default function Auth() {
     fetchUserCenter();
   }, [user]);
   
-  // Use user's center slug if logged in, otherwise use URL parameter
-  const effectiveCenterSlug = user ? userCenterSlug : urlCenterSlug;
+  // IMPORTANT: URL parameter takes priority over user's center
+  // This allows admins to preview different center login pages
+  // Only fallback to user's center if no URL parameter is provided
+  const effectiveCenterSlug = urlCenterSlug || userCenterSlug;
   
   const { branding, loading: brandingLoading } = useCenterBranding(effectiveCenterSlug);
 
