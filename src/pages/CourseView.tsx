@@ -663,169 +663,6 @@ export default function CourseView() {
                 <BarChart3 className="h-4 w-4" />
                 <span>{enrollment?.progress_percentage || 0}% completado</span>
               </div>
-              <div className="ml-auto flex items-center gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <GraduationCap className="h-4 w-4 mr-2" />
-                      Mis Cursos
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[350px] p-0" align="end">
-                    <div className="p-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <GraduationCap className="h-5 w-5 text-primary" />
-                        Mis Formaciones Activas
-                      </h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Accede a tus cursos matriculados
-                      </p>
-                    </div>
-                    <MyCoursesList currentCourseId={courseId!} />
-                  </PopoverContent>
-                </Popover>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="relative">
-                      <Inbox className="h-4 w-4 mr-2" />
-                      Mensajes Pendientes
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[380px] p-0" align="end">
-                    <div className="p-4 border-b bg-gradient-to-r from-amber-500/10 to-amber-500/5">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <Inbox className="h-5 w-5 text-amber-600" />
-                        Mensajes Pendientes
-                      </h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Correo interno y foros sin leer
-                      </p>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-dashed">
-                        <Bell className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-muted-foreground">
-                          Aquí te aparecerán los temas que tienes pendientes directamente relacionados con el correo electrónico interno o temas del foro sin leer.
-                        </p>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <HelpCircle className="h-4 w-4 mr-2" />
-                      CAU
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[400px] p-0" align="end">
-                    <div className="p-4 border-b bg-gradient-to-r from-red-500/10 to-red-500/5">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <HelpCircle className="h-5 w-5 text-red-600" />
-                        Centro de Atención al Usuario (CAU)
-                      </h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Soporte técnico y ayuda del campus
-                      </p>
-                    </div>
-                    <div className="p-4 space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        Si tienes alguna duda o consulta técnica, puedes contactar con el <span className="font-semibold text-foreground">Centro de Atención al Usuario</span>.
-                      </p>
-                      
-                      <p className="text-sm text-muted-foreground">
-                        Dispones de un enlace para consultar la <span className="font-semibold text-foreground">Ayuda del Campus Virtual</span> con vídeos tutoriales y "paseos virtuales" por las distintas áreas del Campus.
-                      </p>
-
-                      <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                        {centerContact.email && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-4 w-4 text-primary" />
-                            <a href={`mailto:${centerContact.email}`} className="text-primary hover:underline">
-                              {centerContact.email}
-                            </a>
-                          </div>
-                        )}
-                        {centerContact.phone && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Phone className="h-4 w-4 text-primary" />
-                            <span>{centerContact.phone}</span>
-                            <span className="text-muted-foreground text-xs">(09:00 - 14:00)</span>
-                          </div>
-                        )}
-                        {!centerContact.email && !centerContact.phone && (
-                          <p className="text-sm text-muted-foreground">Contacta con tu centro de formación</p>
-                        )}
-                      </div>
-
-                      <Button 
-                        className="w-full" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => navigate('/campus-guide')}
-                      >
-                        <HelpCircle className="w-4 h-4 mr-2" />
-                        Ayuda del Campus Virtual
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                {centerContact.phone && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                  >
-                    <a 
-                      href={`https://web.whatsapp.com/send?phone=34${centerContact.phone.replace(/\s/g, '')}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                      onClick={(e) => {
-                        // Try mobile WhatsApp first, fallback to web
-                        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                          e.preventDefault();
-                          window.open(`https://api.whatsapp.com/send?phone=34${centerContact.phone.replace(/\s/g, '')}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`, '_blank');
-                        }
-                      }}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      WhatsApp Dudas
-                    </a>
-                  </Button>
-                )}
-                
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Mail className="h-4 w-4 mr-2" />
-                      Contacto
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[400px] max-h-[600px] overflow-auto" align="end">
-                    <TutorMessaging 
-                      courseId={courseId!}
-                      tutorId={course.tutor_id}
-                      supportEmail={course.support_email}
-                      supportPhone={course.support_phone}
-                    />
-                  </PopoverContent>
-                </Popover>
-
-                {(userRole === 'auditor' || userRole === 'admin') && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setActiveTab('audit')}
-                  >
-                    <ShieldCheck className="h-4 w-4 mr-2" />
-                    Gestor Calidad
-                  </Button>
-                )}
-              </div>
             </div>
             {enrollment && (
               <div className="mt-4">
@@ -833,6 +670,183 @@ export default function CourseView() {
               </div>
             )}
           </CardHeader>
+        </Card>
+
+        {/* Toolbar - Always visible */}
+        <Card className="mb-6 overflow-x-auto">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 flex-nowrap min-w-max">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <GraduationCap className="h-4 w-4 mr-2" />
+                    Mis Cursos
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[350px] p-0" align="start">
+                  <div className="p-4 border-b bg-gradient-to-r from-primary/10 to-primary/5">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5 text-primary" />
+                      Mis Formaciones Activas
+                    </h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Accede a tus cursos matriculados
+                    </p>
+                  </div>
+                  <MyCoursesList currentCourseId={courseId!} />
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="relative">
+                    <Inbox className="h-4 w-4 mr-2" />
+                    Mensajes Pendientes
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[380px] p-0" align="start">
+                  <div className="p-4 border-b bg-gradient-to-r from-amber-500/10 to-amber-500/5">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <Inbox className="h-5 w-5 text-amber-600" />
+                      Mensajes Pendientes
+                    </h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Correo interno y foros sin leer
+                    </p>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-dashed">
+                      <Bell className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-muted-foreground">
+                        Aquí te aparecerán los temas que tienes pendientes directamente relacionados con el correo electrónico interno o temas del foro sin leer.
+                      </p>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    CAU
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] p-0" align="start">
+                  <div className="p-4 border-b bg-gradient-to-r from-red-500/10 to-red-500/5">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <HelpCircle className="h-5 w-5 text-red-600" />
+                      Centro de Atención al Usuario (CAU)
+                    </h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Soporte técnico y ayuda del campus
+                    </p>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Si tienes alguna duda o consulta técnica, puedes contactar con el <span className="font-semibold text-foreground">Centro de Atención al Usuario</span>.
+                    </p>
+                    
+                    <p className="text-sm text-muted-foreground">
+                      Dispones de un enlace para consultar la <span className="font-semibold text-foreground">Ayuda del Campus Virtual</span> con vídeos tutoriales y "paseos virtuales" por las distintas áreas del Campus.
+                    </p>
+
+                    <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                      {centerContact.email ? (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-primary" />
+                          <a href={`mailto:${centerContact.email}`} className="text-primary hover:underline">
+                            {centerContact.email}
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Mail className="h-4 w-4" />
+                          <span>Email no configurado</span>
+                        </div>
+                      )}
+                      {centerContact.phone ? (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-4 w-4 text-primary" />
+                          <span>{centerContact.phone}</span>
+                          <span className="text-muted-foreground text-xs">(09:00 - 14:00)</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Phone className="h-4 w-4" />
+                          <span>Teléfono no configurado</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button 
+                      className="w-full" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate('/campus-guide')}
+                    >
+                      <HelpCircle className="w-4 h-4 mr-2" />
+                      Ayuda del Campus Virtual
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <a 
+                  href={centerContact.phone 
+                    ? `https://web.whatsapp.com/send?phone=34${centerContact.phone.replace(/\s/g, '')}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`
+                    : `https://web.whatsapp.com/send?phone=34665673416&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`
+                  }
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                  onClick={(e) => {
+                    const phoneNumber = centerContact.phone?.replace(/\s/g, '') || '665673416';
+                    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                      e.preventDefault();
+                      window.open(`https://api.whatsapp.com/send?phone=34${phoneNumber}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`, '_blank');
+                    }
+                  }}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  WhatsApp Dudas
+                </a>
+              </Button>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Contacto
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] max-h-[600px] overflow-auto" align="start">
+                  <TutorMessaging 
+                    courseId={courseId!}
+                    tutorId={course.tutor_id}
+                    supportEmail={centerContact.email || course.support_email}
+                    supportPhone={centerContact.phone || course.support_phone}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {(userRole === 'auditor' || userRole === 'admin' || userRole === 'super_admin') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveTab('audit')}
+                >
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  Gestor Calidad
+                </Button>
+              )}
+            </div>
+          </CardContent>
         </Card>
 
         {/* Course Content Tabs */}
