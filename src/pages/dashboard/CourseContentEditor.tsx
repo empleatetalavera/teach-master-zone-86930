@@ -1573,7 +1573,7 @@ export default function CourseContentEditor() {
                                     <div className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80">
                                       <AccordionTrigger className="hover:no-underline p-0 flex-1">
                                         <span className="text-left">
-                                          Unidad Didáctica {unitIndex + 1}. {unit.title}
+                                          {unit.title}
                                         </span>
                                       </AccordionTrigger>
                                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
