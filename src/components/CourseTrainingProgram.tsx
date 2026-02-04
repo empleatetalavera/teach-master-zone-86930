@@ -20,6 +20,8 @@ interface FormativeUnit {
   description?: string | null;
   duration_hours?: number | null;
   objectives?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 interface CourseTrainingProgramProps {
@@ -34,21 +36,41 @@ interface CourseTrainingProgramProps {
     category?: string;
     start_date?: string;
     end_date?: string;
+    // New dynamic fields
+    course_code?: string | null;
+    professional_family?: string | null;
+    qualification_level?: number | null;
+    modality?: string | null;
+    scope?: string | null;
+    max_students?: number | null;
+    presential_hours?: number | null;
+    internship_hours?: number | null;
+    training_program_pdf_url?: string | null;
   };
   modules: Module[];
   centerSlug?: string | null;
+  centerContact?: {
+    name: string;
+    email: string;
+    phone: string;
+    address?: string;
+    city?: string;
+    province?: string;
+    postal_code?: string;
+    cif?: string;
+  } | null;
   isEditable?: boolean;
 }
 
-// Datos del Centro según Anexo III del Proyecto Formativo
-const datosDelCentro = {
-  nombre: "EMPLEATE TALAVERA FORMACIÓN",
-  cif: "B45878253",
-  web: "WWW.EMPLEATETALAVERA.ES",
-  direccion: "C/ Marqués de Mirasol, 19",
-  codigoPostal: "45600",
-  localidad: "Talavera de la Reina",
-  provincia: "Toledo",
+// Default values - will be overridden by course/center data
+const defaultCenterData = {
+  nombre: "Centro de Formación",
+  cif: "",
+  web: "",
+  direccion: "",
+  codigoPostal: "",
+  localidad: "",
+  provincia: "",
   ambitoGeografico: "ESTATAL",
   maximoAlumnos: 15
 };
@@ -126,14 +148,68 @@ const perfilesRecursosHumanos = [
   { perfil: "Tutor de empresa", descripcion: "Supervisión y apoyo durante las prácticas profesionales no laborales" }
 ];
 
-export function CourseTrainingProgram({ course, modules, centerSlug, isEditable = false }: CourseTrainingProgramProps) {
+export function CourseTrainingProgram({ course, modules, centerSlug, centerContact, isEditable = false }: CourseTrainingProgramProps) {
   const { branding } = useCenterBranding(centerSlug);
 
   const totalModules = modules.length;
   const totalUnits = modules.reduce((acc, m) => acc + (m.formative_units?.length || 0), 0);
 
+  // Build center data from props or defaults
+  const datosDelCentro = {
+    nombre: centerContact?.name || branding.centerName || defaultCenterData.nombre,
+    cif: centerContact?.cif || defaultCenterData.cif,
+    web: defaultCenterData.web, // No web field in training_centers
+    direccion: centerContact?.address || defaultCenterData.direccion,
+    codigoPostal: centerContact?.postal_code || defaultCenterData.codigoPostal,
+    localidad: centerContact?.city || defaultCenterData.localidad,
+    provincia: centerContact?.province || defaultCenterData.provincia,
+    ambitoGeografico: course.scope || defaultCenterData.ambitoGeografico,
+    maximoAlumnos: course.max_students || defaultCenterData.maximoAlumnos
+  };
+
+  // Get course-specific data or show placeholders
+  const courseCode = course.course_code || "Sin código";
+  const professionalFamily = course.professional_family || course.category || "Sin especificar";
+  const qualificationLevel = course.qualification_level ?? null;
+  const modality = course.modality || "teleformacion";
+  const presentialHours = course.presential_hours ?? 10;
+  const internshipHours = course.internship_hours ?? 40;
+
+  // Get modality display text
+  const getModalityText = (m: string) => {
+    switch (m) {
+      case 'teleformacion': return 'Teleformación';
+      case 'presencial': return 'Presencial';
+      case 'mixta': return 'Mixta';
+      default: return 'Teleformación';
+    }
+  };
+
+  // Generate dynamic planning from actual modules
+  const planificacionDinamica = modules.map((mod, index) => {
+    const units = mod.formative_units || [];
+    return {
+      modulo: mod.title,
+      horasMF: mod.duration_minutes ? Math.round(mod.duration_minutes / 60) : 0,
+      tutores: 1,
+      unidades: units.map((uf, ufIndex) => ({
+        codigo: `UF${String(index + 1).padStart(2, '0')}${String(ufIndex + 1).padStart(2, '0')}`,
+        titulo: uf.title,
+        horas: uf.duration_hours || 0,
+        dias: uf.start_date && uf.end_date 
+          ? `Del ${new Date(uf.start_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} al ${new Date(uf.end_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}`
+          : "Por programar"
+      }))
+    };
+  });
+
   const handleDownloadPDF = () => {
-    window.open('/documents/proyecto_formativo_ADGG0408.pdf', '_blank');
+    if (course.training_program_pdf_url) {
+      window.open(course.training_program_pdf_url, '_blank');
+    } else {
+      // Fallback to default template
+      window.open('/documents/proyecto_formativo_ADGG0408.pdf', '_blank');
+    }
   };
 
   return (
@@ -230,52 +306,52 @@ export function CourseTrainingProgram({ course, modules, centerSlug, isEditable 
             <div className="flex items-center gap-2 text-sm">
               <FileText className="h-4 w-4 text-primary" />
               <span className="font-medium">Código:</span>
-              <span className="text-muted-foreground">ADGG0408</span>
+              <span className="text-muted-foreground">{courseCode}</span>
             </div>
-            {course.category && (
-              <div className="flex items-center gap-2 text-sm">
-                <Briefcase className="h-4 w-4 text-primary" />
-                <span className="font-medium">Familia Profesional:</span>
-                <span className="text-muted-foreground">Administración y Gestión</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 text-sm">
+              <Briefcase className="h-4 w-4 text-primary" />
+              <span className="font-medium">Familia Profesional:</span>
+              <span className="text-muted-foreground">{professionalFamily}</span>
+            </div>
           </div>
 
           <div className="border rounded-lg p-4 space-y-3">
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4 text-primary" />
               <span className="font-medium">Duración:</span>
-              <Badge variant="secondary">{course.duration_hours || 430} horas</Badge>
+              <Badge variant="secondary">{course.duration_hours || 'N/D'} horas</Badge>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <GraduationCap className="h-4 w-4 text-primary" />
-              <span className="font-medium">Nivel de Cualificación:</span>
-              <Badge>1</Badge>
-            </div>
+            {qualificationLevel !== null && (
+              <div className="flex items-center gap-2 text-sm">
+                <GraduationCap className="h-4 w-4 text-primary" />
+                <span className="font-medium">Nivel de Cualificación:</span>
+                <Badge>{qualificationLevel}</Badge>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-sm">
               <Building2 className="h-4 w-4 text-primary" />
               <span className="font-medium">Modalidad:</span>
-              <span className="text-muted-foreground">Teleformación</span>
+              <span className="text-muted-foreground">{getModalityText(modality)}</span>
             </div>
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Quick Stats - Dynamic */}
         <div className="grid grid-cols-4 gap-4 mt-4">
           <div className="text-center p-4 bg-primary/5 rounded-lg">
-            <div className="text-2xl font-bold text-primary">3</div>
+            <div className="text-2xl font-bold text-primary">{totalModules}</div>
             <div className="text-xs text-muted-foreground">Módulos Formativos</div>
           </div>
           <div className="text-center p-4 bg-primary/5 rounded-lg">
-            <div className="text-2xl font-bold text-primary">7</div>
+            <div className="text-2xl font-bold text-primary">{totalUnits}</div>
             <div className="text-xs text-muted-foreground">Unidades Formativas</div>
           </div>
           <div className="text-center p-4 bg-primary/5 rounded-lg">
-            <div className="text-2xl font-bold text-primary">{course.duration_hours || 430}h</div>
+            <div className="text-2xl font-bold text-primary">{course.duration_hours || 0}h</div>
             <div className="text-xs text-muted-foreground">Duración Total</div>
           </div>
           <div className="text-center p-4 bg-primary/5 rounded-lg">
-            <div className="text-2xl font-bold text-primary">40h</div>
+            <div className="text-2xl font-bold text-primary">{internshipHours}h</div>
             <div className="text-xs text-muted-foreground">Prácticas Empresa</div>
           </div>
         </div>
@@ -290,50 +366,68 @@ export function CourseTrainingProgram({ course, modules, centerSlug, isEditable 
           <h2 className="text-xl font-bold">3. Planificación Didáctica (Anexo III)</h2>
         </div>
 
-        <div className="overflow-x-auto border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Módulos de Certificado (MF)</TableHead>
-                <TableHead className="text-center w-20">Horas MF</TableHead>
-                <TableHead>Unidades Formativas (UF)</TableHead>
-                <TableHead className="text-center w-20">Horas UF</TableHead>
-                <TableHead className="w-44">Fechas de Impartición</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {planificacionDidactica.map((modulo, index) => (
-                modulo.unidades.map((uf, ufIndex) => (
-                  <TableRow key={`plan-${index}-${ufIndex}`}>
-                    {ufIndex === 0 && (
-                      <>
-                        <TableCell rowSpan={modulo.unidades.length} className="font-medium bg-muted/30 align-top">
-                          {modulo.modulo}
-                        </TableCell>
-                        <TableCell rowSpan={modulo.unidades.length} className="text-center font-semibold bg-muted/30 align-top">
-                          {modulo.horasMF}
-                        </TableCell>
-                      </>
-                    )}
-                    <TableCell className="text-sm">{uf.codigo}: {uf.titulo}</TableCell>
-                    <TableCell className="text-center">{uf.horas}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{uf.dias}</TableCell>
-                  </TableRow>
-                ))
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        {planificacionDinamica.length > 0 ? (
+          <div className="overflow-x-auto border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Módulos de Certificado (MF)</TableHead>
+                  <TableHead className="text-center w-20">Horas MF</TableHead>
+                  <TableHead>Unidades Formativas (UF)</TableHead>
+                  <TableHead className="text-center w-20">Horas UF</TableHead>
+                  <TableHead className="w-44">Fechas de Impartición</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {planificacionDinamica.map((modulo, index) => (
+                  modulo.unidades.length > 0 ? (
+                    modulo.unidades.map((uf, ufIndex) => (
+                      <TableRow key={`plan-${index}-${ufIndex}`}>
+                        {ufIndex === 0 && (
+                          <>
+                            <TableCell rowSpan={modulo.unidades.length} className="font-medium bg-muted/30 align-top">
+                              {modulo.modulo}
+                            </TableCell>
+                            <TableCell rowSpan={modulo.unidades.length} className="text-center font-semibold bg-muted/30 align-top">
+                              {modulo.horasMF}
+                            </TableCell>
+                          </>
+                        )}
+                        <TableCell className="text-sm">{uf.codigo}: {uf.titulo}</TableCell>
+                        <TableCell className="text-center">{uf.horas}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{uf.dias}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow key={`plan-${index}`}>
+                      <TableCell className="font-medium bg-muted/30">{modulo.modulo}</TableCell>
+                      <TableCell className="text-center font-semibold bg-muted/30">{modulo.horasMF}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground" colSpan={3}>Sin unidades formativas definidas</TableCell>
+                    </TableRow>
+                  )
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="border rounded-lg p-8 text-center text-muted-foreground">
+            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No hay módulos definidos para este curso</p>
+            <p className="text-sm mt-2">Configura los módulos y unidades formativas para ver la planificación didáctica</p>
+          </div>
+        )}
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Tutorías Presenciales
-          </h4>
-          <p className="text-sm text-amber-700">
-            En los días comprendidos entre el <strong>día 150 y el 153</strong>, los alumnos asistirán a tutorías presenciales durante <strong>10 horas</strong> en el centro de formación.
-          </p>
-        </div>
+        {presentialHours > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Tutorías Presenciales
+            </h4>
+            <p className="text-sm text-amber-700">
+              Los alumnos asistirán a tutorías presenciales durante <strong>{presentialHours} horas</strong> en el centro de formación.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Section 4: Objectives */}
@@ -740,7 +834,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, isEditable 
 
       {/* Footer */}
       <div className="text-center pt-6 border-t text-sm text-muted-foreground">
-        <p>Documento conforme a los Anexos III, IV y V de la especialidad formativa ADGG0408</p>
+        <p>Documento conforme a los Anexos III, IV y V {courseCode !== "Sin código" ? `de la especialidad formativa ${courseCode}` : "de la acción formativa"}</p>
         <p className="font-semibold">Servicio Público de Empleo Estatal (SEPE)</p>
         <p className="mt-2">Versión 1.0 - {new Date().getFullYear()}</p>
       </div>

@@ -612,6 +612,7 @@ export type Database = {
           campus_guide_url: string | null
           category: string | null
           concept_map_url: string | null
+          course_code: string | null
           course_type: string | null
           created_at: string | null
           description: string | null
@@ -620,9 +621,16 @@ export type Database = {
           end_date: string | null
           ficha_certificado_url: string | null
           id: string
+          internship_hours: number | null
           is_active: boolean | null
           level: string | null
+          max_students: number | null
+          modality: string | null
           objectives: string | null
+          presential_hours: number | null
+          professional_family: string | null
+          qualification_level: number | null
+          scope: string | null
           specific_objectives: Json | null
           start_date: string | null
           student_guide_pdf_url: string | null
@@ -643,6 +651,7 @@ export type Database = {
           campus_guide_url?: string | null
           category?: string | null
           concept_map_url?: string | null
+          course_code?: string | null
           course_type?: string | null
           created_at?: string | null
           description?: string | null
@@ -651,9 +660,16 @@ export type Database = {
           end_date?: string | null
           ficha_certificado_url?: string | null
           id?: string
+          internship_hours?: number | null
           is_active?: boolean | null
           level?: string | null
+          max_students?: number | null
+          modality?: string | null
           objectives?: string | null
+          presential_hours?: number | null
+          professional_family?: string | null
+          qualification_level?: number | null
+          scope?: string | null
           specific_objectives?: Json | null
           start_date?: string | null
           student_guide_pdf_url?: string | null
@@ -674,6 +690,7 @@ export type Database = {
           campus_guide_url?: string | null
           category?: string | null
           concept_map_url?: string | null
+          course_code?: string | null
           course_type?: string | null
           created_at?: string | null
           description?: string | null
@@ -682,9 +699,16 @@ export type Database = {
           end_date?: string | null
           ficha_certificado_url?: string | null
           id?: string
+          internship_hours?: number | null
           is_active?: boolean | null
           level?: string | null
+          max_students?: number | null
+          modality?: string | null
           objectives?: string | null
+          presential_hours?: number | null
+          professional_family?: string | null
+          qualification_level?: number | null
+          scope?: string | null
           specific_objectives?: Json | null
           start_date?: string | null
           student_guide_pdf_url?: string | null
