@@ -216,12 +216,6 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center pb-6 border-b">
-        <div className="flex justify-center gap-4 mb-4 items-center">
-          {branding.centerLogo && (
-            <img src={branding.centerLogo} alt={branding.centerName} className="h-12 object-contain" />
-          )}
-          <img src="/branding/sepe-logo.png" alt="SEPE" className="h-10 object-contain" />
-        </div>
         <h1 className="text-2xl font-bold text-primary mb-2">
           PROGRAMA FORMATIVO
         </h1>
@@ -835,7 +829,6 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
       {/* Footer */}
       <div className="text-center pt-6 border-t text-sm text-muted-foreground">
         <p>Documento conforme a los Anexos III, IV y V {courseCode !== "Sin código" ? `de la especialidad formativa ${courseCode}` : "de la acción formativa"}</p>
-        <p className="font-semibold">Servicio Público de Empleo Estatal (SEPE)</p>
         <p className="mt-2">Versión 1.0 - {new Date().getFullYear()}</p>
       </div>
     </div>

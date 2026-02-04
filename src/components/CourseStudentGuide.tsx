@@ -90,12 +90,6 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center pb-6 border-b bg-gradient-to-br from-primary/5 to-transparent p-6 rounded-xl">
-        <div className="flex justify-center gap-6 mb-4 items-center">
-          {branding.centerLogo && (
-            <img src={branding.centerLogo} alt={branding.centerName} className="h-14 object-contain" />
-          )}
-          <img src="/branding/sepe-logo.png" alt="SEPE" className="h-12 object-contain" />
-        </div>
         <h1 className="text-3xl font-bold text-primary mb-2">
           GUÍA DEL ALUMNO
         </h1>
