@@ -3,6 +3,16 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, MapPin, Phone, Mail, CheckCircle2, AlertCircle, Building2, Info } from "lucide-react";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
 
+interface CenterContactInfo {
+  name: string;
+  address?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  phone?: string;
+  email?: string;
+}
+
 interface CourseWorkPlanProps {
   course: {
     id: string;
@@ -26,20 +36,8 @@ interface CourseWorkPlanProps {
     }>;
   }>;
   centerSlug?: string | null;
+  centerContact?: CenterContactInfo | null;
 }
-
-// Datos del Centro según Anexo III del Proyecto Formativo
-const datosDelCentro = {
-  nombre: "EMPLEATE TALAVERA FORMACIÓN",
-  cif: "B45878253",
-  web: "WWW.EMPLEATETALAVERA.ES",
-  direccion: "C/ Marqués de Mirasol, 19",
-  codigoPostal: "45600",
-  localidad: "Talavera de la Reina",
-  provincia: "Toledo",
-  ambitoGeografico: "ESTATAL",
-  maximoAlumnos: 15
-};
 
 // Fechas de evaluación por convocatoria
 const evaluacionesData = [
@@ -47,8 +45,17 @@ const evaluacionesData = [
   { convocatoria: "2ª Convocatoria", descripcion: "Fecha alternativa si no superas la primera", color: "bg-amber-100 text-amber-800 border-amber-200" }
 ];
 
-export function CourseWorkPlan({ course, modules, centerSlug }: CourseWorkPlanProps) {
+export function CourseWorkPlan({ course, modules, centerSlug, centerContact }: CourseWorkPlanProps) {
   const { branding } = useCenterBranding(centerSlug || undefined);
+  
+  // Use center contact info or fallback to branding name
+  const centerName = centerContact?.name || branding?.centerName || "Centro de Formación";
+  const centerAddress = centerContact?.address || "";
+  const centerCity = centerContact?.city || "";
+  const centerProvince = centerContact?.province || "";
+  const centerPostalCode = centerContact?.postal_code || "";
+  const centerPhone = centerContact?.phone || "";
+  const centerEmail = centerContact?.email || "";
 
   return (
     <div className="space-y-6">
@@ -139,29 +146,52 @@ export function CourseWorkPlan({ course, modules, centerSlug }: CourseWorkPlanPr
             <div className="space-y-3">
               <h4 className="font-semibold">Dirección del Centro de Formación</h4>
               <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
-                <p><strong>{datosDelCentro.nombre}</strong></p>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{datosDelCentro.direccion}</span>
-                </div>
-                <p className="ml-6">{datosDelCentro.codigoPostal} {datosDelCentro.localidad} ({datosDelCentro.provincia})</p>
+                <p><strong>{centerName}</strong></p>
+                {centerAddress && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{centerAddress}</span>
+                  </div>
+                )}
+                {(centerPostalCode || centerCity || centerProvince) && (
+                  <p className="ml-6">
+                    {centerPostalCode} {centerCity}{centerProvince ? ` (${centerProvince})` : ''}
+                  </p>
+                )}
+                {!centerAddress && !centerCity && (
+                  <p className="text-muted-foreground italic">Dirección no especificada</p>
+                )}
               </div>
             </div>
             <div className="space-y-3">
               <h4 className="font-semibold">Centro de Atención al Usuario (CAU)</h4>
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-primary" />
-                  <span><strong>Teléfono:</strong> 665 673 416</span>
-                </div>
+                {centerPhone ? (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-primary" />
+                    <span><strong>Teléfono:</strong> {centerPhone}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    <span>Teléfono no especificado</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />
                   <span><strong>Horario:</strong> L-V de 09:00 a 15:00</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-primary" />
-                  <span><strong>Email:</strong> formacion.empleate@gmail.com</span>
-                </div>
+                {centerEmail ? (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <span><strong>Email:</strong> {centerEmail}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <span>Email no especificado</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
