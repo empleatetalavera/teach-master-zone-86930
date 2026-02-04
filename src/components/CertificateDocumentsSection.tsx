@@ -117,8 +117,7 @@ export const CertificateDocumentsSection: React.FC<CertificateDocumentsSectionPr
     type: 'ficha' | 'boe',
     url: string | null | undefined,
     title: string,
-    subtitle: string,
-    Icon: typeof FileText
+    subtitle: string
   ) => {
     const hasDocument = !!url;
     const isUploading = type === 'ficha' ? uploadingFicha : uploadingBoe;
@@ -126,12 +125,12 @@ export const CertificateDocumentsSection: React.FC<CertificateDocumentsSectionPr
 
     return (
       <div className="space-y-4">
-        <h4 className="font-semibold flex items-center gap-2 text-amber-700 dark:text-amber-400">
-          <Icon className="h-5 w-5" />
+        <h4 className="font-semibold flex items-center gap-2 text-foreground">
+          <FileText className="h-5 w-5 text-primary" />
           {type === 'ficha' ? 'Ficha del Certificado' : 'Boletín Oficial del Estado (BOE)'}
         </h4>
         
-        <div className="aspect-[4/3] bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border-2 border-amber-200 dark:border-amber-800 flex flex-col items-center justify-center relative">
+        <div className="aspect-[4/3] bg-muted/50 rounded-xl border-2 border-border flex flex-col items-center justify-center relative p-4">
           {isEditable && hasDocument && (
             <Button
               variant="ghost"
@@ -143,19 +142,19 @@ export const CertificateDocumentsSection: React.FC<CertificateDocumentsSectionPr
             </Button>
           )}
           
-          <div className="p-4 bg-amber-100 dark:bg-amber-900/40 rounded-2xl mb-4">
-            <Icon className="h-16 w-16 text-amber-600 dark:text-amber-400" />
+          <div className="p-4 bg-primary/10 rounded-2xl mb-4">
+            <FileText className="h-12 w-12 text-primary" />
           </div>
-          <p className="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-1">{title}</p>
-          <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">{subtitle}</p>
+          <p className="text-lg font-semibold text-foreground mb-1">{title}</p>
+          <p className="text-sm text-muted-foreground mb-4">{subtitle}</p>
           
           {hasDocument ? (
-            <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300">
+            <Badge variant="secondary">
               <CheckCircle2 className="h-3 w-3 mr-1" />
               Disponible
             </Badge>
           ) : (
-            <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">
+            <Badge variant="outline" className="text-muted-foreground">
               <AlertCircle className="h-3 w-3 mr-1" />
               No disponible
             </Badge>
@@ -164,7 +163,7 @@ export const CertificateDocumentsSection: React.FC<CertificateDocumentsSectionPr
 
         {/* Action buttons */}
         {hasDocument ? (
-          <Button asChild variant="default" className="w-full bg-amber-600 hover:bg-amber-700">
+          <Button asChild variant="default" className="w-full">
             <a 
               href={url!} 
               target="_blank" 
@@ -186,7 +185,7 @@ export const CertificateDocumentsSection: React.FC<CertificateDocumentsSectionPr
             />
             <Button
               variant="outline"
-              className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
+              className="w-full"
               onClick={() => inputRef.current?.click()}
               disabled={isUploading}
             >
@@ -210,10 +209,10 @@ export const CertificateDocumentsSection: React.FC<CertificateDocumentsSectionPr
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
+      <CardHeader className="bg-muted/30">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-amber-500 text-white rounded-xl shadow-lg">
-            <FileText className="h-7 w-7" />
+          <div className="p-3 bg-primary/10 rounded-xl">
+            <FileText className="h-7 w-7 text-primary" />
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -232,15 +231,13 @@ export const CertificateDocumentsSection: React.FC<CertificateDocumentsSectionPr
             'ficha',
             fichaCertificadoUrl,
             'Ficha del Certificado',
-            'Documento PDF oficial',
-            FileText
+            'Documento PDF oficial'
           )}
           {renderDocumentCard(
             'boe',
             boeUrl,
             'BOE Oficial',
-            'Documento normativo',
-            BookOpen
+            'Documento normativo'
           )}
         </div>
       </CardContent>
