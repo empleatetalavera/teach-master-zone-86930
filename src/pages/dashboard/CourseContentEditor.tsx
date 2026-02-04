@@ -886,6 +886,10 @@ export default function CourseContentEditor() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate(`/dashboard/admin/course-settings/${courseId}`)}>
+            <Settings className="h-4 w-4 mr-2" />
+            Configuración del Curso
+          </Button>
           <Button variant="outline" onClick={() => navigate(`/course/${courseId}`)}>
             <Eye className="h-4 w-4 mr-2" />
             Vista Previa
