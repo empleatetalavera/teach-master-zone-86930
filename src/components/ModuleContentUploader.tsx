@@ -107,8 +107,8 @@ export const ModuleContentUploader: React.FC<ModuleContentUploaderProps> = ({
           : 'Solo se permiten archivos PDF');
         return;
       }
-      if (file.size > 20 * 1024 * 1024) {
-        toast.error('El archivo no puede superar los 20MB');
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error('El archivo no puede superar los 100MB');
         return;
       }
       handleUpload(file, type);
