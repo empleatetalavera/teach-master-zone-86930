@@ -333,7 +333,7 @@ export default function CourseView() {
       if (courseData.training_center_id) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name, contact_email, contact_phone, address, city, province, postal_code, cif")
+          .select("slug, name, email, phone, address, city, province, postal_code, cif")
           .eq("id", courseData.training_center_id)
           .single();
         
@@ -343,11 +343,11 @@ export default function CourseView() {
         if (centerData?.name) {
           setCenterName(centerData.name);
         }
-        // Set center contact info for CAU and WorkPlan
+        // Set center contact info for CAU and WorkPlan - use center's email/phone fields
         setCenterContact({
           name: centerData?.name || "",
-          email: centerData?.contact_email || course?.support_email || "",
-          phone: centerData?.contact_phone || course?.support_phone || "",
+          email: centerData?.email || course?.support_email || "",
+          phone: centerData?.phone || course?.support_phone || "",
           address: centerData?.address || "",
           city: centerData?.city || "",
           province: centerData?.province || "",
