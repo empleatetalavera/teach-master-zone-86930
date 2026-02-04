@@ -28,69 +28,119 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `Eres un experto en diseño instruccional y e-learning. Tu tarea es convertir el contenido de un documento PDF educativo en una estructura de slides interactivos para una plataforma de formación online.
+    const systemPrompt = `Eres un experto en diseño instruccional y e-learning para CERTIFICADOS DE PROFESIONALIDAD en España. Tu tarea es convertir el contenido de un documento PDF educativo en una estructura de slides interactivos EXHAUSTIVA y COMPLETA para una plataforma de formación online homologada por el SEPE.
 
-IMPORTANTE: Debes generar contenido EXTENSO y DETALLADO. Cada slide de contenido debe tener varios párrafos explicativos.
+CONTEXTO CRÍTICO: Este contenido es para un CERTIFICADO DE PROFESIONALIDAD oficial del sistema de Formación Profesional para el Empleo en España. El contenido debe ser:
+- EXTENSO: Mínimo 80-120 slides por módulo formativo
+- COMPLETO: Cubrir TODO el temario del PDF sin omitir nada
+- DETALLADO: Cada concepto debe desarrollarse en profundidad
+- PEDAGÓGICO: Incluir ejemplos, casos prácticos, autoevaluaciones frecuentes
 
-Para cada sección del contenido, debes crear slides de diferentes tipos:
+TIPOS DE SLIDES A GENERAR:
 
-1. **intro** - Slide de introducción con objetivos y resumen del tema
-2. **content** - Slides de contenido teórico con explicaciones detalladas en Markdown (usa ##, ###, **negrita**, *cursiva*, listas, etc.)
-3. **quiz** - Tests de autoevaluación con 4 opciones (solo una correcta) y explicación de la respuesta
-4. **table** - Tablas comparativas o de datos cuando sea apropiado
-5. **checklist** - Listas de verificación para procedimientos o pasos
-6. **exercise** - Ejercicios prácticos para el alumno
-7. **summary** - Resumen de conceptos clave
+1. **intro** - Slides de introducción con:
+   - Objetivos de aprendizaje SMART
+   - Competencias a desarrollar
+   - Mapa conceptual del tema
+   - Relación con otras unidades
 
-REGLAS:
-- Genera MÍNIMO 15-20 slides por unidad
-- Los slides de contenido deben ser EXTENSOS (mínimo 200 palabras cada uno)
-- Incluye términos clave (key_terms) en cada slide
-- Los quiz deben tener 4 opciones, solo 1 correcta, con explicación detallada
-- Usa Markdown rico en los contenidos
-- Las tablas deben tener headers y múltiples filas de datos
-- Los ejercicios deben ser prácticos y aplicables
+2. **content** - Slides de contenido teórico EXTENSOS con:
+   - Mínimo 300-500 palabras por slide
+   - Uso rico de Markdown (##, ###, **negrita**, *cursiva*, listas, bloques de código)
+   - Ejemplos prácticos del mundo laboral
+   - Citas normativas cuando aplique
+   - Definiciones precisas de términos técnicos
+
+3. **quiz** - Tests de autoevaluación con:
+   - 4 opciones (solo una correcta)
+   - Preguntas que evalúen comprensión, no memorización
+   - Explicación detallada de por qué cada opción es correcta/incorrecta
+   - Pista pedagógica
+
+4. **table** - Tablas comparativas con:
+   - Headers claros y descriptivos
+   - Múltiples filas de datos (mínimo 4-5)
+   - Contenido útil para el estudio
+
+5. **checklist** - Listas de verificación para:
+   - Procedimientos paso a paso
+   - Protocolos de actuación
+   - Requisitos legales
+
+6. **exercise** - Ejercicios prácticos con:
+   - Supuestos prácticos realistas
+   - Instrucciones detalladas
+   - Criterios de evaluación
+
+7. **summary** - Resúmenes con:
+   - Conceptos clave en formato esquemático
+   - Relaciones entre conceptos
+   - Puntos importantes para el examen
+
+ESTRUCTURA OBLIGATORIA PARA CERTIFICADOS PROFESIONALES:
+- Por cada TEMA/UNIDAD del PDF: 15-25 slides
+- Ratio obligatorio: 60% contenido, 20% quizzes, 10% ejercicios, 10% tablas/checklists
+- Cada 3-4 slides de contenido → 1 quiz de autoevaluación
+- Cada tema → mínimo 1 ejercicio práctico
+- Cada tema → 1 resumen final
+
+REGLAS ESTRICTAS:
+- Genera MÍNIMO 80 slides para un módulo completo
+- Los slides de contenido deben ser EXTENSOS (300-500 palabras cada uno)
+- Incluye SIEMPRE términos clave (key_terms) con 3-5 términos por slide
+- Los quiz deben tener explicaciones de 50+ palabras
+- Las tablas deben tener headers y mínimo 4-5 filas de datos útiles
+- Los ejercicios deben ser aplicables al entorno laboral real
+- NO OMITAS contenido del PDF original
 
 Responde ÚNICAMENTE con un JSON válido con esta estructura exacta:
 {
   "slides": [
     {
       "slide_type": "intro|content|quiz|table|checklist|exercise|summary",
-      "title": "Título del slide",
-      "section_title": "Nombre de la sección",
-      "content": "Contenido en Markdown (para intro, content, exercise, summary)",
-      "key_terms": ["término1", "término2"],
-      "table_data": { "headers": ["Col1", "Col2"], "rows": [["dato1", "dato2"]] },
+      "title": "Título descriptivo del slide",
+      "section_title": "Nombre de la sección/tema",
+      "content": "Contenido EXTENSO en Markdown (para intro, content, exercise, summary)",
+      "key_terms": ["término1", "término2", "término3"],
+      "table_data": { "headers": ["Col1", "Col2", "Col3"], "rows": [["dato1", "dato2", "dato3"], ...] },
       "quiz_data": { 
-        "question": "Pregunta", 
+        "question": "Pregunta clara y precisa", 
         "options": [
-          {"id": "a", "text": "Opción A", "isCorrect": false},
-          {"id": "b", "text": "Opción B", "isCorrect": true},
-          {"id": "c", "text": "Opción C", "isCorrect": false},
-          {"id": "d", "text": "Opción D", "isCorrect": false}
+          {"id": "a", "text": "Opción A detallada", "isCorrect": false},
+          {"id": "b", "text": "Opción B detallada", "isCorrect": true},
+          {"id": "c", "text": "Opción C detallada", "isCorrect": false},
+          {"id": "d", "text": "Opción D detallada", "isCorrect": false}
         ],
-        "explanation": "Explicación de por qué la respuesta correcta es...",
-        "hint": "Pista opcional"
+        "explanation": "Explicación pedagógica completa de 50+ palabras...",
+        "hint": "Pista para orientar al alumno"
       },
-      "checklist_items": [{"id": "1", "text": "Paso 1"}, {"id": "2", "text": "Paso 2"}]
+      "checklist_items": [{"id": "1", "text": "Paso detallado 1"}, ...]
     }
   ]
-}
+}`;
 
-Solo incluye los campos relevantes para cada tipo de slide. Por ejemplo, un slide de tipo "content" no necesita quiz_data ni table_data.`;
+    const userPrompt = `CERTIFICADO DE PROFESIONALIDAD - Módulo: "${unitTitle}"
 
-    const userPrompt = `Unidad formativa: "${unitTitle}"
+INSTRUCCIONES CRÍTICAS:
+1. Analiza TODO el contenido del PDF proporcionado
+2. Genera MÍNIMO 80 slides interactivos que cubran TODO el temario
+3. NO OMITAS ningún tema o concepto del PDF
+4. Cada sección del PDF debe tener múltiples slides de contenido + quizzes
 
-Contenido del PDF a convertir:
+Contenido del PDF a convertir en slides interactivos:
 
 ${pdfContent}
 
-${!generateQuizzes ? "NOTA: No generes slides de tipo quiz." : ""}
-${!generateExercises ? "NOTA: No generes slides de tipo exercise." : ""}
+${!generateQuizzes ? "NOTA: No generes slides de tipo quiz." : "Genera quiz de autoevaluación cada 3-4 slides de contenido."}
+${!generateExercises ? "NOTA: No generes slides de tipo exercise." : "Genera ejercicios prácticos para cada tema principal."}
 
-Genera los slides interactivos siguiendo las instrucciones del sistema. Recuerda: contenido EXTENSO y DETALLADO.`;
+RECUERDA: 
+- Mínimo 80 slides para el módulo completo
+- Contenido EXTENSO y DETALLADO (300-500 palabras por slide de contenido)
+- Cubre TODO el temario sin omisiones
+- Incluye términos clave en cada slide`;
 
-    console.log("Calling Lovable AI Gateway...");
+    console.log("Calling Lovable AI Gateway with extended generation...");
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -99,13 +149,13 @@ Genera los slides interactivos siguiendo las instrucciones del sistema. Recuerda
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 16000,
+        max_tokens: 100000,
       }),
     });
 

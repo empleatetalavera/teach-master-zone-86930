@@ -47,9 +47,11 @@ import {
   Image,
   Code,
   Gamepad2,
-  Layers
+  Layers,
+  Download
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { ModuleManualUploader } from "@/components/ModuleManualUploader";
 
 interface Course {
   id: string;
@@ -1718,6 +1720,19 @@ export default function CourseContentEditor() {
                                                 ))}
                                               </div>
                                             )}
+                                          </div>
+                                        </div>
+
+                                        {/* Manuales PDF para Descargas */}
+                                        <div className="flex items-start gap-3">
+                                          <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded">
+                                            <Download className="h-5 w-5 text-red-600" />
+                                          </div>
+                                          <div className="flex-1">
+                                            <ModuleManualUploader 
+                                              moduleId={module.id} 
+                                              moduleTitle={module.title} 
+                                            />
                                           </div>
                                         </div>
 
