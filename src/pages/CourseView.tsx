@@ -71,6 +71,15 @@ interface Course {
   student_guide_pdf_url?: string | null;
   training_program_pdf_url?: string | null;
   tutor_guide_pdf_url?: string | null;
+  // New dynamic fields
+  course_code?: string | null;
+  professional_family?: string | null;
+  qualification_level?: number | null;
+  modality?: string | null;
+  scope?: string | null;
+  max_students?: number | null;
+  presential_hours?: number | null;
+  internship_hours?: number | null;
 }
 
 interface Module {
@@ -227,6 +236,7 @@ export default function CourseView() {
     city?: string;
     province?: string;
     postal_code?: string;
+    cif?: string;
   }>({
     name: "",
     email: "", 
@@ -323,7 +333,7 @@ export default function CourseView() {
       if (courseData.training_center_id) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name, contact_email, contact_phone, address, city, province, postal_code")
+          .select("slug, name, contact_email, contact_phone, address, city, province, postal_code, cif")
           .eq("id", courseData.training_center_id)
           .single();
         
@@ -341,7 +351,8 @@ export default function CourseView() {
           address: centerData?.address || "",
           city: centerData?.city || "",
           province: centerData?.province || "",
-          postal_code: centerData?.postal_code || ""
+          postal_code: centerData?.postal_code || "",
+          cif: centerData?.cif || ""
         });
       }
 
@@ -1538,6 +1549,7 @@ export default function CourseView() {
                     course={course} 
                     modules={modules}
                     centerSlug={centerSlug}
+                    centerContact={centerContact}
                     isEditable={userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin'}
                   />
                 </CardContent>

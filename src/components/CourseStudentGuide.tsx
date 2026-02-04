@@ -21,6 +21,11 @@ interface CourseStudentGuideProps {
     training_center_id?: string;
     support_email?: string;
     support_phone?: string;
+    // New dynamic fields
+    course_code?: string | null;
+    professional_family?: string | null;
+    qualification_level?: number | null;
+    student_guide_pdf_url?: string | null;
   };
   centerSlug?: string | null;
 }
@@ -63,12 +68,22 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
     </CollapsibleTrigger>
   );
 
+  // Get dynamic course data
+  const courseCode = course.course_code || "Sin código";
+  const professionalFamily = course.professional_family || "Sin especificar";
+  const qualificationLevel = course.qualification_level ?? null;
+
   const handleDownloadPDF = async () => {
-    await generateStudentGuidePDF(course.title, {
-      centerName: branding.centerName,
-      centerLogo: branding.centerLogo,
-      primaryColor: branding.primaryColor
-    });
+    if (course.student_guide_pdf_url) {
+      window.open(course.student_guide_pdf_url, '_blank');
+    } else {
+      // Generate dynamic PDF if no uploaded file
+      await generateStudentGuidePDF(course.title, {
+        centerName: branding.centerName,
+        centerLogo: branding.centerLogo,
+        primaryColor: branding.primaryColor
+      });
+    }
   };
 
   return (
@@ -207,23 +222,25 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                 <table className="w-full border-collapse border text-sm">
                   <tbody>
                     <tr className="border-b">
-                      <td className="p-3 font-semibold bg-gray-50 w-1/3">DENOMINACIÓN:</td>
+                      <td className="p-3 font-semibold bg-muted w-1/3">DENOMINACIÓN:</td>
                       <td className="p-3">{course.title}</td>
                     </tr>
                     <tr className="border-b">
-                      <td className="p-3 font-semibold bg-gray-50">CÓDIGO:</td>
-                      <td className="p-3">ADGG0408</td>
+                      <td className="p-3 font-semibold bg-muted">CÓDIGO:</td>
+                      <td className="p-3">{courseCode}</td>
                     </tr>
                     <tr className="border-b">
-                      <td className="p-3 font-semibold bg-gray-50">FAMILIA PROFESIONAL:</td>
-                      <td className="p-3">Administración y Gestión</td>
+                      <td className="p-3 font-semibold bg-muted">FAMILIA PROFESIONAL:</td>
+                      <td className="p-3">{professionalFamily}</td>
                     </tr>
-                    <tr className="border-b">
-                      <td className="p-3 font-semibold bg-gray-50">NIVEL DE CUALIFICACIÓN:</td>
-                      <td className="p-3">1</td>
-                    </tr>
+                    {qualificationLevel !== null && (
+                      <tr className="border-b">
+                        <td className="p-3 font-semibold bg-muted">NIVEL DE CUALIFICACIÓN:</td>
+                        <td className="p-3">{qualificationLevel}</td>
+                      </tr>
+                    )}
                     <tr>
-                      <td className="p-3 font-semibold bg-gray-50">DURACIÓN:</td>
+                      <td className="p-3 font-semibold bg-muted">DURACIÓN:</td>
                       <td className="p-3">{course.duration_hours || 'N/D'} horas</td>
                     </tr>
                   </tbody>
@@ -297,36 +314,36 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                 <span className="text-primary">2.5</span> Requisitos de Acceso
               </h3>
               <div className="border rounded-lg p-4">
-                <p className="text-sm mb-3">Al tratarse de un certificado de <strong>Nivel 1</strong>, no existen requisitos formativos de acceso. Podrás acceder a este curso independientemente de tu nivel de estudios previo.</p>
-                <div className="grid md:grid-cols-2 gap-3 text-sm hidden">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Título de Bachiller o equivalente</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Título de Técnico/Técnico Superior</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Certificado de profesionalidad del mismo nivel</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Prueba de acceso a ciclos de grado medio/superior</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Competencias clave del nivel correspondiente</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>Prueba de acceso a universidad mayores 25 años</span>
-                  </div>
-                </div>
+                {qualificationLevel === 1 ? (
+                  <p className="text-sm mb-3">Al tratarse de un certificado de <strong>Nivel 1</strong>, no existen requisitos formativos de acceso. Podrás acceder a este curso independientemente de tu nivel de estudios previo.</p>
+                ) : qualificationLevel && qualificationLevel >= 2 ? (
+                  <>
+                    <p className="text-sm mb-3">Al tratarse de un certificado de <strong>Nivel {qualificationLevel}</strong>, deberás cumplir alguno de los siguientes requisitos:</p>
+                    <div className="grid md:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Título de ESO/Bachiller o equivalente</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Título de Técnico/Técnico Superior</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Certificado de profesionalidad del mismo nivel</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>Competencias clave del nivel correspondiente</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm mb-3">Consulta los requisitos específicos de acceso a este curso.</p>
+                )}
               </div>
-              <div className="mt-3 bg-blue-50 border-l-4 border-blue-500 p-3 rounded-r-lg">
-                <p className="text-xs text-blue-900">
+              <div className="mt-3 bg-primary/5 border-l-4 border-primary p-3 rounded-r-lg">
+                <p className="text-xs">
                   <strong>Modalidad teleformación:</strong> Para el desarrollo del curso en modalidad teleformación 
                   debes haber superado la prueba de competencia tecnológica.
                 </p>
