@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Loader2, Upload, Palette, Eye } from "lucide-react";
+import { Loader2, Upload, Palette, Eye, Building2, MapPin, Phone, Mail } from "lucide-react";
 import { useBranding } from "@/hooks/useBranding";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function CenterSettings() {
   const { user } = useAuth();
@@ -25,6 +27,17 @@ export default function CenterSettings() {
   const [footerText, setFooterText] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
+  
+  // Contact info fields
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [province, setProvince] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [cif, setCif] = useState("");
+  const [sepeRegistryNumber, setSepeRegistryNumber] = useState("");
+  const [censusCode, setCensusCode] = useState("");
 
   useEffect(() => {
     loadCenterData();
@@ -76,6 +89,17 @@ export default function CenterSettings() {
       setOfficialBadge(center.official_badge || "");
       setFooterText(center.footer_text || "");
       setLogoPreview(center.logo_url || "");
+      
+      // Load contact info
+      setContactEmail(center.email || "");
+      setContactPhone(center.phone || "");
+      setAddress(center.address || "");
+      setCity(center.city || "");
+      setProvince(center.province || "");
+      setPostalCode(center.postal_code || "");
+      setCif(center.cif || "");
+      setSepeRegistryNumber(center.sepe_registry_number || "");
+      setCensusCode(center.census_code || "");
     } catch (error) {
       console.error("Error loading center data:", error);
       toast.error("Error al cargar los datos del centro");
@@ -172,7 +196,7 @@ export default function CenterSettings() {
         }
       }
 
-      // Update center
+      // Update center with all data including contact info
       const { error } = await supabase
         .from("training_centers")
         .update({
@@ -182,6 +206,15 @@ export default function CenterSettings() {
           secondary_color: secondaryColor,
           official_badge: officialBadge || null,
           footer_text: footerText || null,
+          email: contactEmail || null,
+          phone: contactPhone || null,
+          address: address || null,
+          city: city || null,
+          province: province || null,
+          postal_code: postalCode || null,
+          cif: cif || null,
+          sepe_registry_number: sepeRegistryNumber || null,
+          census_code: censusCode || null,
         })
         .eq("id", centerId);
 
@@ -234,20 +267,33 @@ export default function CenterSettings() {
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Configuration Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
-              Identidad Visual
-            </CardTitle>
-            <CardDescription>
-              Los cambios se aplicarán a todos los usuarios de tu centro
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
+      <Tabs defaultValue="branding" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="branding">
+            <Palette className="h-4 w-4 mr-2" />
+            Identidad Visual
+          </TabsTrigger>
+          <TabsTrigger value="contact">
+            <Building2 className="h-4 w-4 mr-2" />
+            Datos de Contacto
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="branding">
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Configuration Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Identidad Visual
+                </CardTitle>
+                <CardDescription>
+                  Los cambios se aplicarán a todos los usuarios de tu centro
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
             <div>
               <Label htmlFor="centerName">Nombre del Centro</Label>
               <Input
@@ -558,6 +604,172 @@ export default function CenterSettings() {
           </Card>
         </div>
       </div>
+      </TabsContent>
+
+      {/* Contact Tab */}
+      <TabsContent value="contact">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Información del Centro
+              </CardTitle>
+              <CardDescription>
+                Datos de contacto que se mostrarán a los alumnos en el campus
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="cif">CIF del Centro</Label>
+                  <Input
+                    id="cif"
+                    value={cif}
+                    onChange={(e) => setCif(e.target.value)}
+                    placeholder="B12345678"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="sepeRegistryNumber">Número Registro SEPE</Label>
+                  <Input
+                    id="sepeRegistryNumber"
+                    value={sepeRegistryNumber}
+                    onChange={(e) => setSepeRegistryNumber(e.target.value)}
+                    placeholder="45/0000000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="censusCode">Código Censo</Label>
+                <Input
+                  id="censusCode"
+                  value={censusCode}
+                  onChange={(e) => setCensusCode(e.target.value)}
+                  placeholder="00000000000000"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Dirección
+              </CardTitle>
+              <CardDescription>
+                Ubicación física del centro de formación
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="address">Dirección</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Calle Ejemplo, 123"
+                />
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="postalCode">Código Postal</Label>
+                  <Input
+                    id="postalCode"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder="28001"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="city">Ciudad</Label>
+                  <Input
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Madrid"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="province">Provincia</Label>
+                  <Input
+                    id="province"
+                    value={province}
+                    onChange={(e) => setProvince(e.target.value)}
+                    placeholder="Madrid"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Phone className="h-5 w-5" />
+                Datos de Contacto (CAU)
+              </CardTitle>
+              <CardDescription>
+                Teléfono y email que verán los alumnos en el Centro de Atención al Usuario
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="contactEmail" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email de Contacto
+                  </Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="contacto@tucentro.com"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Este email se mostrará en el CAU y guías del alumno
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="contactPhone" className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Teléfono de Contacto
+                  </Label>
+                  <Input
+                    id="contactPhone"
+                    type="tel"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder="912345678"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Este teléfono se mostrará en el CAU y guías del alumno
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={loadCenterData}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Guardar Cambios
+            </Button>
+          </div>
+        </form>
+      </TabsContent>
+      </Tabs>
     </div>
   );
 }
