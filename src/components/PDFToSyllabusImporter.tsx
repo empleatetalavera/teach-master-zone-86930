@@ -75,10 +75,10 @@ export function PDFToSyllabusImporter({
       return;
     }
 
-    if (file.size > 100 * 1024 * 1024) { // 100MB limit
+    if (file.size > 500 * 1024 * 1024) { // 500MB limit
       toast({ 
         title: "Archivo muy grande", 
-        description: "El archivo no debe superar los 100MB", 
+        description: "El archivo no debe superar los 500MB", 
         variant: "destructive" 
       });
       return;
@@ -341,7 +341,7 @@ export function PDFToSyllabusImporter({
                   <>
                     <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
                     <p className="font-medium">Arrastra un PDF o haz clic para seleccionar</p>
-                    <p className="text-sm text-muted-foreground mt-1">Máximo 100MB</p>
+                    <p className="text-sm text-muted-foreground mt-1">Máximo 500MB</p>
                   </>
                 )}
               </div>
