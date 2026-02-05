@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScormAuthorTool, ScormProject, Slide, generateScormPackage } from "@/components/scorm-author";
 import { useToast } from "@/hooks/use-toast";
@@ -248,7 +248,10 @@ export function ScormAuthorModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] h-[90vh] p-0">
+      <DialogContent className="max-w-[95vw] h-[90vh] p-0" aria-describedby={undefined}>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Editor SCORM Avanzado</DialogTitle>
+        </DialogHeader>
         <ScormAuthorTool
           moduleId={moduleId}
           formativeUnitId={formativeUnitId}
