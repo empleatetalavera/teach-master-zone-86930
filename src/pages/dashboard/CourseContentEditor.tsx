@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ModuleManualUploader } from "@/components/ModuleManualUploader";
+import { ScormAuthorModal } from "@/components/scorm-author";
 
 interface Course {
   id: string;
