@@ -1625,247 +1625,203 @@ export default function CourseView() {
                   const totalActivities = (module.activities?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.activities?.length || 0), 0);
 
                   return (
-                    <Accordion key={module.id} type="single" collapsible>
-                      <AccordionItem value={module.id} className="border rounded-lg overflow-hidden">
-                        <Card className="border-0 shadow-none">
-                          <AccordionTrigger className="hover:no-underline px-0">
-                            <CardHeader className="pb-3 hover:bg-muted/50 transition-colors w-full">
-                              <div className="flex items-start gap-4 w-full">
-                                <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                                  <span className="font-mono text-sm font-bold bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center">{index + 1}</span>
-                                </div>
-                                <div className="flex-1 text-left">
-                                  <CardTitle className="text-lg">{module.title}</CardTitle>
-                                  <CardDescription className="mt-1">
-                                    {module.description || "Sin descripción"}
-                                  </CardDescription>
-                                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="h-3 w-3" />
-                                      {module.duration_minutes ? (module.duration_minutes / 60).toFixed(1) : 0}h
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <CheckCircle2 className="h-3 w-3" />
-                                      {totalEvaluations} tests
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <FileText className="h-3 w-3" />
-                                      {totalActivities} actividades
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <ListChecks className="h-3 w-3" />
-                                      {moduleUnits.length} UFs
-                                    </span>
-                                    <div className="flex items-center gap-2 ml-auto">
-                                      <Progress value={module.progress || 0} className="w-20 h-2" />
-                                      <span className="font-medium">{module.progress || 0}%</span>
-                                    </div>
-                                  </div>
+                    <div key={module.id} className="border rounded-lg overflow-hidden">
+                      <Card className="border-0 shadow-none">
+                        <CardHeader className="pb-3 bg-muted/30">
+                          <div className="flex items-start gap-4 w-full">
+                            <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                              <span className="font-mono text-sm font-bold bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center">{index + 1}</span>
+                            </div>
+                            <div className="flex-1 text-left">
+                              <CardTitle className="text-lg">{module.title}</CardTitle>
+                              <CardDescription className="mt-1">
+                                {module.description || "Sin descripción"}
+                              </CardDescription>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {module.duration_minutes ? (module.duration_minutes / 60).toFixed(1) : 0}h
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  {totalEvaluations} tests
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <FileText className="h-3 w-3" />
+                                  {totalActivities} actividades
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <ListChecks className="h-3 w-3" />
+                                  {moduleUnits.length} UFs
+                                </span>
+                                <div className="flex items-center gap-2 ml-auto">
+                                  <Progress value={module.progress || 0} className="w-20 h-2" />
+                                  <span className="font-medium">{module.progress || 0}%</span>
                                 </div>
                               </div>
-                            </CardHeader>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <CardContent className="pt-0 border-t bg-muted/20">
-                              <div className="space-y-4 pt-4">
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0 border-t bg-muted/20">
+                          <div className="space-y-4 pt-4">
 
-                                {/* Chat Inicial - Acceso a la sesión de bienvenida */}
-                                <Accordion type="single" collapsible className="w-full">
-                                  <AccordionItem value="chat-inicial" className="border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
-                                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                                      <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white">
-                                          <MessageSquare className="h-5 w-5" />
-                                        </div>
-                                        <div className="text-left">
-                                          <h4 className="font-semibold text-blue-900 dark:text-blue-100">Chat de Sesión Inicial</h4>
-                                          <p className="text-xs text-blue-600 dark:text-blue-300">Acceso al chat de bienvenida con tu tutor/a-formador/a</p>
-                                        </div>
-                                      </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="px-4 pb-4">
-                                      <div className="space-y-3 bg-white dark:bg-background rounded-lg p-4 border">
-                                        <p className="text-sm text-muted-foreground">
-                                          El día de comienzo del curso, a través de la herramienta de chat habilitada, el tutor/a-formador/a del módulo formativo informará de:
-                                        </p>
-                                        <ul className="text-sm space-y-2 text-muted-foreground">
-                                          <li className="flex items-start gap-2">
-                                            <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                            <span>Cuestiones generales relativas a la organización de la formación</span>
-                                          </li>
-                                          <li className="flex items-start gap-2">
-                                            <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                            <span>Presentación de tutores-formadores</span>
-                                          </li>
-                                          <li className="flex items-start gap-2">
-                                            <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                            <span>Exposición de objetivos que se persiguen alcanzar</span>
-                                          </li>
-                                          <li className="flex items-start gap-2">
-                                            <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                            <span>Actividades de aprendizaje y pruebas de evaluación a realizar</span>
-                                          </li>
-                                        </ul>
-                                      </div>
-                                    </AccordionContent>
-                                  </AccordionItem>
-                                </Accordion>
-
-                                {/* Test de Conocimientos Previos */}
-                                <Accordion type="single" collapsible className="w-full">
-                                  <AccordionItem value="pre-assessment" className="border rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
-                                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                                      <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white">
-                                          <FileQuestion className="h-5 w-5" />
-                                        </div>
-                                        <div className="text-left">
-                                          <h4 className="font-semibold text-amber-900 dark:text-amber-100">Test de Conocimientos Previos</h4>
-                                          <p className="text-xs text-amber-600 dark:text-amber-300">Evaluación diagnóstica de competencias</p>
-                                        </div>
-                                      </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="px-4 pb-4">
-                                      <div className="bg-white dark:bg-background rounded-lg p-4 border text-center">
-                                        <p className="text-sm text-muted-foreground">
-                                          Test de 20 preguntas para evaluar el nivel inicial del alumno
-                                        </p>
-                                      </div>
-                                    </AccordionContent>
-                                  </AccordionItem>
-                                </Accordion>
-
-                                {/* FORMACIÓN EN CAMPUS */}
-                                <div className="border-t pt-4">
-                                  <div className="bg-primary text-primary-foreground px-4 py-2 font-semibold text-sm uppercase tracking-wide rounded-t-md">
-                                    FORMACIÓN EN CAMPUS
-                                  </div>
-                                  
-                                  {moduleUnits.length === 0 ? (
-                                    <div className="text-sm text-muted-foreground bg-background rounded-b-lg p-4 border border-t-0 border-dashed text-center">
-                                      Sin unidades formativas en este módulo
+                            {/* Chat Inicial - Acceso a la sesión de bienvenida */}
+                            <Accordion type="single" collapsible className="w-full">
+                              <AccordionItem value="chat-inicial" className="border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+                                <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white">
+                                      <MessageSquare className="h-5 w-5" />
                                     </div>
-                                  ) : (
-                                    <div className="space-y-0">
-                                      {moduleUnits.map((unit: any) => (
-                                        <Accordion key={unit.id} type="single" collapsible>
-                                          <AccordionItem value={unit.id} className="border-0">
-                                            <AccordionTrigger className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80 hover:no-underline">
-                                              <span className="text-left">{unit.title}</span>
-                                            </AccordionTrigger>
-                                            <AccordionContent className="p-0">
-                                              <div className="bg-white dark:bg-background border border-t-0 p-4 space-y-4">
-                                                
-                                                {/* Objetivos de la Unidad Formativa */}
-                                                {unit.objectives && (
-                                                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
-                                                    <div className="flex items-start gap-2">
-                                                      <Target className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                                                      <div>
-                                                        <span className="text-xs font-semibold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Objetivo de la UF</span>
-                                                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 leading-relaxed">{unit.objectives}</p>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                )}
+                                    <div className="text-left">
+                                      <h4 className="font-semibold text-blue-900 dark:text-blue-100">Chat de Sesión Inicial</h4>
+                                      <p className="text-xs text-blue-600 dark:text-blue-300">Acceso al chat de bienvenida con tu tutor/a-formador/a</p>
+                                    </div>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-4 pb-4">
+                                  <div className="space-y-3 bg-white dark:bg-background rounded-lg p-4 border">
+                                    <p className="text-sm text-muted-foreground">
+                                      El día de comienzo del curso, a través de la herramienta de chat habilitada, el tutor/a-formador/a del módulo formativo informará de:
+                                    </p>
+                                    <ul className="text-sm space-y-2 text-muted-foreground">
+                                      <li className="flex items-start gap-2">
+                                        <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                        <span>Cuestiones generales relativas a la organización de la formación</span>
+                                      </li>
+                                      <li className="flex items-start gap-2">
+                                        <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                        <span>Presentación de tutores-formadores</span>
+                                      </li>
+                                      <li className="flex items-start gap-2">
+                                        <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                        <span>Exposición de objetivos que se persiguen alcanzar</span>
+                                      </li>
+                                      <li className="flex items-start gap-2">
+                                        <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                        <span>Actividades de aprendizaje y pruebas de evaluación a realizar</span>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Accordion>
 
-                                                {/* Admin: Gestión de módulos y unidades formativas */}
-                                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                  <div className="bg-gradient-to-r from-slate-50 to-zinc-50 dark:from-slate-950/30 dark:to-zinc-950/30 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
-                                                    <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                                                      <Settings className="h-4 w-4 text-slate-600" />
-                                                      Gestión del Módulo y Unidades Formativas
-                                                    </h4>
-                                                    <ModuleFormativeUnitManager
-                                                      moduleId={module.id}
-                                                      moduleTitle={module.title}
-                                                      formativeUnits={moduleUnits}
-                                                      onUpdate={loadCourseData}
-                                                    />
-                                                  </div>
-                                                )}
+                            {/* Test de Conocimientos Previos */}
+                            <Accordion type="single" collapsible className="w-full">
+                              <AccordionItem value="pre-assessment" className="border rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
+                                <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white">
+                                      <FileQuestion className="h-5 w-5" />
+                                    </div>
+                                    <div className="text-left">
+                                      <h4 className="font-semibold text-amber-900 dark:text-amber-100">Test de Conocimientos Previos</h4>
+                                      <p className="text-xs text-amber-600 dark:text-amber-300">Evaluación diagnóstica de competencias</p>
+                                    </div>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="px-4 pb-4">
+                                  <div className="bg-white dark:bg-background rounded-lg p-4 border text-center">
+                                    <p className="text-sm text-muted-foreground">
+                                      Test de 20 preguntas para evaluar el nivel inicial del alumno
+                                    </p>
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Accordion>
 
-                                                {/* Contenido Interactivo */}
-                                                <div className="flex items-start gap-3">
-                                                  <div className="p-2 bg-primary/10 rounded">
-                                                    <Layers className="h-5 w-5 text-primary" />
-                                                  </div>
-                                                  <div className="flex-1">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                      <span className="text-sm font-medium">Contenido Interactivo</span>
-                                                      {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                        <Button
-                                                          variant="outline"
-                                                          size="sm"
-                                                          className="gap-2 border-purple-300 hover:bg-purple-50"
-                                                          onClick={() => openScormAuthor(module.id, unit.id, unit.title)}
-                                                        >
-                                                          <Presentation className="h-4 w-4 text-purple-600" />
-                                                          Editor SCORM Avanzado
-                                                        </Button>
-                                                      )}
-                                                    </div>
-                                                    <p className="text-xs text-muted-foreground">
-                                                      Material interactivo con presentaciones multimedia
-                                                    </p>
+                            {/* FORMACIÓN EN CAMPUS */}
+                            <div className="border-t pt-4">
+                              <div className="bg-primary text-primary-foreground px-4 py-2 font-semibold text-sm uppercase tracking-wide rounded-t-md">
+                                FORMACIÓN EN CAMPUS
+                              </div>
+                              
+                              {moduleUnits.length === 0 ? (
+                                <div className="text-sm text-muted-foreground bg-background rounded-b-lg p-4 border border-t-0 border-dashed text-center">
+                                  Sin unidades formativas en este módulo
+                                </div>
+                              ) : (
+                                <div className="space-y-0">
+                                  {moduleUnits.map((unit: any) => (
+                                    <Accordion key={unit.id} type="single" collapsible>
+                                      <AccordionItem value={unit.id} className="border-0">
+                                        <AccordionTrigger className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80 hover:no-underline">
+                                          <span className="text-left">{unit.title}</span>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="p-0">
+                                          <div className="bg-white dark:bg-background border border-t-0 p-4 space-y-4">
+                                            
+                                            {/* Objetivos de la Unidad Formativa */}
+                                            {unit.objectives && (
+                                              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
+                                                <div className="flex items-start gap-2">
+                                                  <Target className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                                                  <div>
+                                                    <span className="text-xs font-semibold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Objetivo de la UF</span>
+                                                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 leading-relaxed">{unit.objectives}</p>
                                                   </div>
                                                 </div>
-
-                                                {/* Manual PDF */}
-                                                <div className="flex items-start gap-3">
-                                                  <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
-                                                    <FileText className="h-5 w-5 text-blue-600" />
-                                                  </div>
-                                                  <div className="flex-1">
-                                                    <span className="text-sm font-medium">Manual PDF</span>
-                                                    <p className="text-xs text-muted-foreground">
-                                                      Documentación descargable del módulo formativo
-                                                    </p>
-                                                  </div>
-                                                </div>
-
-                                                {/* Actividad */}
-                                                <div className="flex items-start gap-3">
-                                                  <div className="p-2 bg-green-50 dark:bg-green-950 rounded">
-                                                    <PenTool className="h-5 w-5 text-green-600" />
-                                                  </div>
-                                                  <div className="flex-1">
-                                                    <span className="text-sm font-medium">Actividad de Desarrollo</span>
-                                                    <p className="text-xs text-muted-foreground">
-                                                      Ejercicio práctico para aplicar los conocimientos adquiridos
-                                                    </p>
-                                                  </div>
-                                                </div>
-
-                                                {/* Test Final */}
-                                                <div className="flex items-start gap-3">
-                                                  <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
-                                                    <ClipboardList className="h-5 w-5 text-purple-600" />
-                                                  </div>
-                                                  <div className="flex-1">
-                                                    <span className="text-sm font-medium">Test Final de la Unidad</span>
-                                                    <p className="text-xs text-muted-foreground">
-                                                      Evaluación de 50 preguntas para verificar el aprendizaje
-                                                    </p>
-                                                  </div>
-                                                </div>
-
                                               </div>
-                                            </AccordionContent>
-                                          </AccordionItem>
-                                        </Accordion>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
+                                            )}
 
-                              </div>
-                            </CardContent>
-                          </AccordionContent>
-                        </Card>
-                      </AccordionItem>
-                    </Accordion>
+                                            {/* Admin: Gestión de módulos y unidades formativas */}
+                                            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                              <div className="bg-gradient-to-r from-slate-50 to-zinc-50 dark:from-slate-950/30 dark:to-zinc-950/30 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
+                                                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                                                  <Settings className="h-4 w-4 text-slate-600" />
+                                                  Gestión del Módulo y Unidades Formativas
+                                                </h4>
+                                                <ModuleFormativeUnitManager
+                                                  moduleId={module.id}
+                                                  moduleTitle={module.title}
+                                                  formativeUnits={moduleUnits}
+                                                  onUpdate={loadCourseData}
+                                                />
+                                              </div>
+                                            )}
+
+                                            {/* Contenido Interactivo */}
+                                            <div className="flex items-start gap-3">
+                                              <div className="p-2 bg-primary/10 rounded">
+                                                <Layers className="h-5 w-5 text-primary" />
+                                              </div>
+                                              <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-2">
+                                                  <span className="text-sm font-medium">Contenido Interactivo</span>
+                                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                    <Button
+                                                      variant="outline"
+                                                      size="sm"
+                                                      className="gap-2 border-purple-300 hover:bg-purple-50"
+                                                      onClick={() => openScormAuthor(module.id, unit.id, unit.title)}
+                                                    >
+                                                      <Presentation className="h-4 w-4 text-purple-600" />
+                                                      Editor SCORM Avanzado
+                                                    </Button>
+                                                  )}
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                  Material interactivo con presentaciones multimedia
+                                                </p>
+                                              </div>
+                                            </div>
+
+                                          </div>
+                                        </AccordionContent>
+                                      </AccordionItem>
+                                    </Accordion>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
                   );
+
                 })}
               </div>
             )}
