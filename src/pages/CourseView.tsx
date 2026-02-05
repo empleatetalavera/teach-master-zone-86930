@@ -1775,156 +1775,7 @@ export default function CourseView() {
                                   </AccordionItem>
                                 </Accordion>
 
-                                {/* Admin: Gestión de módulos y unidades formativas */}
-                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                  <div className="bg-gradient-to-r from-slate-50 to-zinc-50 dark:from-slate-950/30 dark:to-zinc-950/30 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
-                                    <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                                      <Settings className="h-4 w-4 text-slate-600" />
-                                      Gestión del Módulo y Unidades Formativas
-                                    </h4>
-                                    <ModuleFormativeUnitManager
-                                      moduleId={module.id}
-                                      moduleTitle={module.title}
-                                      formativeUnits={moduleUnits}
-                                      onUpdate={loadCourseData}
-                                    />
-                                  </div>
-                                )}
-
                                 {/* Admin: Gestión de contenidos del módulo */}
-                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                  <ModuleContentUploader
-                                    moduleId={module.id}
-                                    moduleTitle={module.title}
-                                    conceptMapUrl={module.concept_map_url}
-                                    contentPdfUrl={module.content}
-                                    onUpdate={loadCourseData}
-                                    isAdmin={true}
-                                  />
-                                )}
-
-                                {/* Mapa Conceptual - Vista Previa Inline */}
-                                <div className="bg-background rounded-lg p-4 border">
-                                  <h4 className="font-medium flex items-center gap-2 text-sm mb-3">
-                                    <Layers className="h-4 w-4 text-primary" />
-                                    Mapa Conceptual
-                                  </h4>
-                                  {(() => {
-                                    // Check if there's an uploaded concept map first
-                                    if (module.concept_map_url) {
-                                      const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(module.concept_map_url);
-                                      const isPdf = /\.pdf$/i.test(module.concept_map_url);
-                                      
-                                      if (isImage) {
-                                        return (
-                                          <div className="space-y-2">
-                                            <img 
-                                              src={module.concept_map_url} 
-                                              alt={`Mapa conceptual - ${module.title}`}
-                                              className="w-full rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
-                                              onClick={() => window.open(module.concept_map_url!, '_blank')}
-                                            />
-                                            <p className="text-xs text-muted-foreground text-center">
-                                              Haz clic en la imagen para ampliar
-                                            </p>
-                                          </div>
-                                        );
-                                      }
-                                      
-                                      if (isPdf) {
-                                        return (
-                                          <div className="space-y-2">
-                                            <div className="w-full aspect-[4/3] rounded-lg border overflow-hidden bg-muted">
-                                              <iframe
-                                                src={`${module.concept_map_url}#toolbar=0&navpanes=0&scrollbar=0`}
-                                                className="w-full h-full"
-                                                title={`Mapa conceptual - ${module.title}`}
-                                              />
-                                            </div>
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="w-full"
-                                              onClick={() => window.open(module.concept_map_url!, '_blank')}
-                                            >
-                                              <FileText className="h-4 w-4 mr-2" />
-                                              Abrir PDF en pantalla completa
-                                            </Button>
-                                          </div>
-                                        );
-                                      }
-                                      
-                                      // Fallback for other file types
-                                      return (
-                                        <Button
-                                          variant="outline"
-                                          className="w-full"
-                                          onClick={() => window.open(module.concept_map_url!, '_blank')}
-                                        >
-                                          <FileText className="h-4 w-4 mr-2" />
-                                          Ver mapa conceptual
-                                        </Button>
-                                      );
-                                    }
-
-                                    // Generate concept map based on module title
-                                    const moduleTitle = module.title.toLowerCase();
-                                    let conceptNodes: { label: string; level: number }[] = [];
-                                    
-                                    if (moduleTitle.includes('técnicas administrativas') || moduleTitle.includes('mf0969')) {
-                                      conceptNodes = [
-                                        { label: 'TÉCNICAS ADMINISTRATIVAS', level: 0 },
-                                        { label: 'Organización', level: 1 },
-                                        { label: 'Documentación', level: 1 },
-                                        { label: 'Tesorería', level: 1 },
-                                        { label: 'Empresas', level: 2 },
-                                        { label: 'RRHH', level: 2 },
-                                        { label: 'Correspondencia', level: 2 },
-                                        { label: 'Mercantiles', level: 2 },
-                                        { label: 'Existencias', level: 2 },
-                                      ];
-                                    }
-                                    
-                                    if (conceptNodes.length === 0) {
-                                      return (
-                                        <div className="text-center py-6 text-muted-foreground">
-                                          <MapIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                          <p className="text-xs">Sin mapa conceptual</p>
-                                          {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                            <p className="text-xs mt-1">Súbelo desde "Gestión de Contenidos"</p>
-                                          )}
-                                        </div>
-                                      );
-                                    }
-                                    
-                                    return (
-                                      <div className="space-y-3">
-                                        {/* Root node */}
-                                        <div className="flex justify-center">
-                                          <span className="px-3 py-1.5 bg-gradient-to-r from-primary to-primary/70 text-primary-foreground rounded-lg font-semibold text-xs shadow">
-                                            {conceptNodes.find(n => n.level === 0)?.label}
-                                          </span>
-                                        </div>
-                                        {/* Level 1 */}
-                                        <div className="flex flex-wrap justify-center gap-2">
-                                          {conceptNodes.filter(n => n.level === 1).map((node, i) => (
-                                            <span key={i} className="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs font-medium border">
-                                              {node.label}
-                                            </span>
-                                          ))}
-                                        </div>
-                                        {/* Level 2 */}
-                                        <div className="flex flex-wrap justify-center gap-1">
-                                          {conceptNodes.filter(n => n.level === 2).map((node, i) => (
-                                            <span key={i} className="px-2 py-0.5 bg-muted rounded text-xs">
-                                              {node.label}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    );
-                                  })()}
-                                </div>
                                 
                                 {/* PDF de Contenido del Módulo - Vista Previa Inline */}
                                 {module.content && module.content.startsWith('http') && (
@@ -2027,6 +1878,22 @@ export default function CourseView() {
                                             <AccordionContent className="p-0">
                                               <div className="bg-white dark:bg-background border border-t-0 p-4 space-y-4">
                                                 
+                                                {/* Admin: Gestión de módulos y unidades formativas */}
+                                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                  <div className="bg-gradient-to-r from-slate-50 to-zinc-50 dark:from-slate-950/30 dark:to-zinc-950/30 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
+                                                    <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                                                      <Settings className="h-4 w-4 text-slate-600" />
+                                                      Gestión del Módulo y Unidades Formativas
+                                                    </h4>
+                                                    <ModuleFormativeUnitManager
+                                                      moduleId={module.id}
+                                                      moduleTitle={module.title}
+                                                      formativeUnits={moduleUnits}
+                                                      onUpdate={loadCourseData}
+                                                    />
+                                                  </div>
+                                                )}
+
                                                 {/* Objetivos de la Unidad Formativa */}
                                                 {unit.objectives && (
                                                   <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
@@ -2040,7 +1907,6 @@ export default function CourseView() {
                                                   </div>
                                                 )}
 
-                                                {/* Contenido Interactivo - Estilo SEPE */}
                                                 <div className="flex items-start gap-3">
                                                   <div className="p-2 bg-primary/10 rounded">
                                                     <Layers className="h-5 w-5 text-primary" />
