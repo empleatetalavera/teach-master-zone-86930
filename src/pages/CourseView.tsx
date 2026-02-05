@@ -1807,6 +1807,45 @@ export default function CourseView() {
                                               </div>
                                             </div>
 
+                                            {/* Manual PDF */}
+                                            <div className="flex items-start gap-3">
+                                              <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
+                                                <FileText className="h-5 w-5 text-blue-600" />
+                                              </div>
+                                              <div className="flex-1">
+                                                <span className="text-sm font-medium">Manual PDF</span>
+                                                <p className="text-xs text-muted-foreground">
+                                                  Documentación descargable del módulo formativo
+                                                </p>
+                                              </div>
+                                            </div>
+
+                                            {/* Actividad */}
+                                            <div className="flex items-start gap-3">
+                                              <div className="p-2 bg-green-50 dark:bg-green-950 rounded">
+                                                <PenTool className="h-5 w-5 text-green-600" />
+                                              </div>
+                                              <div className="flex-1">
+                                                <span className="text-sm font-medium">Actividad de Desarrollo</span>
+                                                <p className="text-xs text-muted-foreground">
+                                                  Ejercicio práctico para aplicar los conocimientos adquiridos
+                                                </p>
+                                              </div>
+                                            </div>
+
+                                            {/* Test Final */}
+                                            <div className="flex items-start gap-3">
+                                              <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
+                                                <ClipboardList className="h-5 w-5 text-purple-600" />
+                                              </div>
+                                              <div className="flex-1">
+                                                <span className="text-sm font-medium">Test Final de la Unidad</span>
+                                                <p className="text-xs text-muted-foreground">
+                                                  Evaluación de 50 preguntas para verificar el aprendizaje
+                                                </p>
+                                              </div>
+                                            </div>
+
                                           </div>
                                         </AccordionContent>
                                       </AccordionItem>
