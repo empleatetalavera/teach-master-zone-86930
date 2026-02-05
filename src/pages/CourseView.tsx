@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload, CheckSquare, PenTool } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1668,38 +1668,6 @@ export default function CourseView() {
                           <AccordionContent>
                             <CardContent className="pt-0 border-t bg-muted/20">
                               <div className="space-y-4 pt-4">
-                                {/* Objetivos del Módulo y Mapa Conceptual */}
-                                {module.objectives && (
-                                  <div className="border rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 p-4">
-                                    <div className="flex items-start gap-3">
-                                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white shrink-0">
-                                        <Target className="h-5 w-5" />
-                                      </div>
-                                      <div className="flex-1">
-                                        <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-2">🎯 Objetivo del Módulo</h4>
-                                        <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-relaxed">
-                                          {module.objectives}
-                                        </p>
-                                        {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="mt-3 gap-2 border-purple-300 hover:bg-purple-50"
-                                            onClick={() => {
-                                              const firstUnit = module.formative_units?.[0];
-                                              if (firstUnit) {
-                                                openScormAuthor(module.id, firstUnit.id, firstUnit.title);
-                                              }
-                                            }}
-                                          >
-                                            <Presentation className="h-4 w-4 text-purple-600" />
-                                            Editor SCORM Avanzado
-                                          </Button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
 
                                 {/* Chat Inicial - Acceso a la sesión de bienvenida */}
                                 <Accordion type="single" collapsible className="w-full">
@@ -1718,166 +1686,89 @@ export default function CourseView() {
                                     <AccordionContent className="px-4 pb-4">
                                       <div className="space-y-3 bg-white dark:bg-background rounded-lg p-4 border">
                                         <p className="text-sm text-muted-foreground">
-                                          El día de comienzo del curso, a través de la herramienta de chat habilitada, el tutor/a-formador/a del módulo formativo te informará de:
+                                          El día de comienzo del curso, a través de la herramienta de chat habilitada, el tutor/a-formador/a del módulo formativo informará de:
                                         </p>
                                         <ul className="text-sm space-y-2 text-muted-foreground">
                                           <li className="flex items-start gap-2">
-                                            <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                            <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                                             <span>Cuestiones generales relativas a la organización de la formación</span>
                                           </li>
                                           <li className="flex items-start gap-2">
-                                            <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                            <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                                             <span>Presentación de tutores-formadores</span>
                                           </li>
                                           <li className="flex items-start gap-2">
-                                            <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                            <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                                             <span>Exposición de objetivos que se persiguen alcanzar</span>
                                           </li>
                                           <li className="flex items-start gap-2">
-                                            <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                            <CheckSquare className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                                             <span>Actividades de aprendizaje y pruebas de evaluación a realizar</span>
                                           </li>
                                         </ul>
-                                        <div className="flex items-center gap-2 pt-2 text-xs text-blue-600 dark:text-blue-400">
-                                          <Calendar className="h-4 w-4" />
-                                          <span>La hora de esta sesión inicial puedes consultarla en el <strong>PLAN DE TRABAJO</strong> o en <strong>MI AGENDA</strong></span>
-                                        </div>
-                                        <Button className="w-full mt-2" variant="default">
-                                          <MessageSquare className="h-4 w-4 mr-2" />
-                                          Acceder al Chat de Sesión Inicial
-                                        </Button>
                                       </div>
                                     </AccordionContent>
                                   </AccordionItem>
                                 </Accordion>
 
-                                {/* Test de Conocimientos Previos - Desplegable */}
+                                {/* Test de Conocimientos Previos */}
                                 <Accordion type="single" collapsible className="w-full">
                                   <AccordionItem value="pre-assessment" className="border rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
                                     <AccordionTrigger className="px-4 py-3 hover:no-underline">
                                       <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white">
-                                          <ClipboardList className="h-5 w-5" />
+                                          <FileQuestion className="h-5 w-5" />
                                         </div>
                                         <div className="text-left">
                                           <h4 className="font-semibold text-amber-900 dark:text-amber-100">Test de Conocimientos Previos</h4>
-                                          <p className="text-xs text-amber-600 dark:text-amber-300">Evaluación diagnóstica de competencias digitales y conocimientos del módulo</p>
+                                          <p className="text-xs text-amber-600 dark:text-amber-300">Evaluación diagnóstica de competencias</p>
                                         </div>
                                       </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="px-4 pb-4">
-                                      <PreAssessmentTest 
-                                        moduleId={module.id}
-                                        moduleTitle={module.title}
-                                        onComplete={(results) => console.log('Assessment results:', results)}
-                                      />
+                                      <div className="bg-white dark:bg-background rounded-lg p-4 border text-center">
+                                        <p className="text-sm text-muted-foreground">
+                                          Test de 20 preguntas para evaluar el nivel inicial del alumno
+                                        </p>
+                                      </div>
                                     </AccordionContent>
                                   </AccordionItem>
                                 </Accordion>
 
-                                {/* Admin: Gestión de contenidos del módulo */}
-                                
-                                {/* PDF de Contenido del Módulo - Vista Previa Inline */}
-                                {module.content && module.content.startsWith('http') && (
-                                  <div className="bg-background rounded-lg p-4 border">
-                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-3">
-                                      <FileText className="h-4 w-4 text-blue-600" />
-                                      Manual del Módulo
-                                    </h4>
-                                    <div className="space-y-2">
-                                      <div className="w-full aspect-[16/10] rounded-lg border overflow-hidden bg-muted">
-                                        <iframe
-                                          src={`${module.content}#toolbar=1&navpanes=0`}
-                                          className="w-full h-full"
-                                          title={`Manual - ${module.title}`}
-                                        />
-                                      </div>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full"
-                                        onClick={() => window.open(module.content!, '_blank')}
-                                      >
-                                        <FileDown className="h-4 w-4 mr-2" />
-                                        Descargar Manual PDF
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Foro del Módulo */}
-                                <div className="grid lg:grid-cols-2 gap-4">
-                                  <div className="bg-background rounded-lg p-4 border">
-                                    <h4 className="font-medium flex items-center gap-2 text-sm mb-2">
-                                      <MessageSquare className="h-4 w-4 text-primary" />
-                                      Foro del Módulo
-                                    </h4>
-                                    <Badge variant={module.forum_enabled ? "default" : "secondary"} className="text-xs">
-                                      {module.forum_enabled ? "Activo" : "Desactivado"}
-                                    </Badge>
-                                  </div>
-                                </div>
-
-                                {/* FORMACIÓN EN CAMPUS - Estilo SEPE Homologado */}
+                                {/* FORMACIÓN EN CAMPUS */}
                                 <div className="border-t pt-4">
                                   <div className="bg-primary text-primary-foreground px-4 py-2 font-semibold text-sm uppercase tracking-wide rounded-t-md">
                                     FORMACIÓN EN CAMPUS
                                   </div>
                                   
                                   {moduleUnits.length === 0 ? (
-                                    <div className="bg-background rounded-b-lg p-6 border border-t-0 border-dashed">
-                                      <div className="text-center space-y-4">
-                                        <p className="text-sm text-muted-foreground">
-                                          Sin unidades formativas en este módulo
-                                        </p>
-                                        
-                                        {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                          <div className="flex flex-wrap gap-2 justify-center pt-2">
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="gap-2"
-                                              onClick={() => openActivityManager(module.id, module.title)}
-                                            >
-                                              <ClipboardList className="h-4 w-4" />
-                                              Añadir Actividades
-                                            </Button>
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="gap-2"
-                                              onClick={() => openSyllabusEditor(module.id, module.title)}
-                                            >
-                                              <Sparkles className="h-4 w-4" />
-                                              Generar Contenido IA
-                                            </Button>
-                                          </div>
-                                        )}
-                                      </div>
+                                    <div className="text-sm text-muted-foreground bg-background rounded-b-lg p-4 border border-t-0 border-dashed text-center">
+                                      Sin unidades formativas en este módulo
                                     </div>
                                   ) : (
                                     <div className="space-y-0">
-                                      {moduleUnits.map((unit, unitIndex) => {
-                                        const unitProgress = getUnitProgress(unit.id);
-                                        return (
+                                      {moduleUnits.map((unit: any) => (
                                         <Accordion key={unit.id} type="single" collapsible>
                                           <AccordionItem value={unit.id} className="border-0">
-                                            <AccordionTrigger className="hover:no-underline p-0">
-                                              <div className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80">
-                                                <div className="flex items-center gap-3 flex-1">
-                                                  <span className="text-left">
-                                                    Unidad Didáctica {unitIndex + 1}. {unit.title}
-                                                  </span>
-                                                  <Badge variant="secondary" className="bg-white/20 text-white text-xs">
-                                                    {unitProgress.overall_progress}% completado
-                                                  </Badge>
-                                                </div>
-                                                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                                              </div>
+                                            <AccordionTrigger className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80 hover:no-underline">
+                                              <span className="text-left">{unit.title}</span>
                                             </AccordionTrigger>
                                             <AccordionContent className="p-0">
                                               <div className="bg-white dark:bg-background border border-t-0 p-4 space-y-4">
                                                 
+                                                {/* Objetivos de la Unidad Formativa */}
+                                                {unit.objectives && (
+                                                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
+                                                    <div className="flex items-start gap-2">
+                                                      <Target className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                                                      <div>
+                                                        <span className="text-xs font-semibold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Objetivo de la UF</span>
+                                                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 leading-relaxed">{unit.objectives}</p>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                )}
+
                                                 {/* Admin: Gestión de módulos y unidades formativas */}
                                                 {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
                                                   <div className="bg-gradient-to-r from-slate-50 to-zinc-50 dark:from-slate-950/30 dark:to-zinc-950/30 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
@@ -1894,325 +1785,80 @@ export default function CourseView() {
                                                   </div>
                                                 )}
 
-                                                {/* Objetivos de la Unidad Formativa */}
-                                                {unit.objectives && (
-                                                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
-                                                    <div className="flex items-start gap-2">
-                                                      <Target className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                                                      <div>
-                                                        <span className="text-xs font-semibold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Objetivo de la UF</span>
-                                                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 leading-relaxed">{unit.objectives}</p>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                )}
-
+                                                {/* Contenido Interactivo */}
                                                 <div className="flex items-start gap-3">
                                                   <div className="p-2 bg-primary/10 rounded">
                                                     <Layers className="h-5 w-5 text-primary" />
                                                   </div>
                                                   <div className="flex-1">
                                                     <div className="flex items-center justify-between mb-2">
-                                                      <div className="flex items-center gap-2">
-                                                        <h5 className="font-semibold text-foreground">Contenido interactivo</h5>
-                                                        <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-0.5 rounded-full">
-                                                          {unitProgress.content_progress}%
-                                                        </span>
-                                                      </div>
+                                                      <span className="text-sm font-medium">Contenido Interactivo</span>
                                                       {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                        <div className="flex items-center gap-1">
-                                                          <Button 
-                                                            size="sm" 
-                                                            variant="ghost" 
-                                                            className="h-7 text-xs gap-1"
-                                                            onClick={() => openSyllabusEditor(unit.id, unit.title)}
-                                                          >
-                                                            <Edit2 className="h-3 w-3" />
-                                                            Editar Temario
-                                                          </Button>
-                                                          <Button 
-                                                            size="sm" 
-                                                            variant="ghost" 
-                                                            className="h-7 text-xs gap-1"
-                                                            onClick={() => openContentViewer(unit.id, unit.title, 'scorm')}
-                                                          >
-                                                            <Plus className="h-3 w-3" />
-                                                            Añadir
-                                                          </Button>
-                                                        </div>
-                                                      )}
-                                                    </div>
-                                                    <button
-                                                      onClick={() => openScormViewer(unit.id, unit.title)}
-                                                      className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors group"
-                                                    >
-                                                      <span className="text-sm">
-                                                        {unitIndex + 1}. {unit.title}
-                                                      </span>
-                                                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                                    </button>
-                                                    
-                                                    {/* Barra de progreso del contenido */}
-                                                    <div className="flex items-center gap-2 mt-2 mb-3">
-                                                      <Progress value={unitProgress.content_progress} className="h-2 flex-1" />
-                                                      <span className="text-xs font-medium text-muted-foreground min-w-[40px]">
-                                                        {unitProgress.content_progress}%
-                                                      </span>
-                                                    </div>
-
-                                                    {/* Botones de acceso al contenido */}
-                                                    <div className="flex flex-wrap items-center gap-2 mt-3">
-                                                      <Button
-                                                        variant="outline"
-                                                        className="flex items-center gap-2 rounded-full border-2 hover:bg-primary hover:text-primary-foreground transition-all"
-                                                        onClick={() => openScormViewer(unit.id, unit.title)}
-                                                      >
-                                                        <Play className="h-4 w-4 text-primary" />
-                                                        <span>Temario Interactivo</span>
-                                                      </Button>
-                                                      {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                        <>
-                                                          <Button
-                                                            variant="outline"
-                                                            className="flex items-center gap-2 rounded-full border-2"
-                                                            onClick={() => openSyllabusEditor(unit.id, unit.title)}
-                                                          >
-                                                            <Edit2 className="h-4 w-4 text-blue-500" />
-                                                            <span>Editar Contenido</span>
-                                                          </Button>
-                                                          <Button
-                                                            variant="outline"
-                                                            className="flex items-center gap-2 rounded-full border-2 border-purple-300 hover:bg-purple-50"
-                                                            onClick={() => openScormAuthor(module.id, unit.id, unit.title)}
-                                                          >
-                                                            <Presentation className="h-4 w-4 text-purple-600" />
-                                                            <span>Editor SCORM Avanzado</span>
-                                                          </Button>
-                                                        </>
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                </div>
-
-                                                {/* Material Didáctico Complementario - Opción activable por admin/profesor */}
-                                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                  <div className="flex items-center gap-2 border-t pt-4 mt-4">
-                                                    <Checkbox
-                                                      id={`show-supplementary-${unit.id}`}
-                                                      checked={showSupplementaryMaterial[unit.id] || false}
-                                                      onCheckedChange={() => toggleSupplementaryMaterial(unit.id)}
-                                                    />
-                                                    <label 
-                                                      htmlFor={`show-supplementary-${unit.id}`}
-                                                      className="text-sm font-medium cursor-pointer flex items-center gap-2"
-                                                    >
-                                                      <FileText className="h-4 w-4 text-purple-600" />
-                                                      Mostrar Material Didáctico Complementario
-                                                    </label>
-                                                  </div>
-                                                )}
-                                                
-                                                {showSupplementaryMaterial[unit.id] && (
-                                                  <div className="flex items-start gap-3 border-t pt-4 mt-4">
-                                                    <div className="p-2 bg-purple-100 rounded">
-                                                      <FileText className="h-5 w-5 text-purple-600" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                      <h5 className="font-semibold text-foreground mb-2">Material Didáctico Complementario</h5>
-                                                      <p className="text-sm text-muted-foreground mb-3">
-                                                        En este apartado se incluye material didáctico complementario que sirva de refuerzo y ampliación de conocimientos para el alumno en cada unidad didáctica.
-                                                      </p>
-                                                      <SupplementaryMaterialManager 
-                                                        unitId={unit.id}
-                                                        unitTitle={unit.title}
-                                                        canEdit={userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin'}
-                                                      />
-                                                    </div>
-                                                  </div>
-                                                )}
-
-                                                {/* Actividades de aprendizaje evaluables */}
-                                                <div className="flex items-start gap-3">
-                                                  <div className="p-2 bg-orange-100 rounded">
-                                                    <ClipboardList className="h-5 w-5 text-orange-600" />
-                                                  </div>
-                                                  <div className="flex-1">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                      <div className="flex items-center gap-2">
-                                                        <h5 className="font-semibold text-foreground">Actividades de aprendizaje evaluables</h5>
-                                                        <span className="text-xs text-muted-foreground bg-orange-100 px-2 py-0.5 rounded-full">
-                                                          {unitProgress.activities_progress}%
-                                                        </span>
-                                                      </div>
-                                                      {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                        <Button 
-                                                          size="sm" 
-                                                          variant="ghost" 
-                                                          className="h-7 text-xs gap-1"
-                                                          onClick={() => openActivityManager(unit.id, unit.title)}
+                                                        <Button
+                                                          variant="outline"
+                                                          size="sm"
+                                                          className="gap-2 border-purple-300 hover:bg-purple-50"
+                                                          onClick={() => openScormAuthor(module.id, unit.id, unit.title)}
                                                         >
-                                                          <Plus className="h-3 w-3" />
-                                                          Añadir
+                                                          <Presentation className="h-4 w-4 text-purple-600" />
+                                                          Editor SCORM Avanzado
                                                         </Button>
                                                       )}
                                                     </div>
-                                                    
-                                                    {/* Barra de progreso de actividades */}
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                      <Progress value={unitProgress.activities_progress} className="h-2 flex-1" />
-                                                      <span className="text-xs font-medium text-muted-foreground min-w-[40px]">
-                                                        {unitProgress.activities_progress}%
-                                                      </span>
-                                                    </div>
-
-                                                    <div className="space-y-2">
-                                                      {unit.activities && unit.activities.length > 0 ? (
-                                                        unit.activities.map((activity: any, actIdx: number) => (
-                                                          <div key={activity.id} className="border rounded-lg p-3 bg-orange-50/50 hover:bg-orange-100/50 transition-colors cursor-pointer"
-                                                            onClick={() => openActivitySubmission(activity.id)}
-                                                          >
-                                                            <div className="flex items-center gap-2">
-                                                              <Checkbox checked={activity.completed} className="h-4 w-4" />
-                                                              <span className="flex-1 text-left text-primary hover:text-primary/80 transition-colors text-sm font-medium">
-                                                                Actividad {actIdx + 1}: {activity.title}
-                                                              </span>
-                                                              {activity.max_score && (
-                                                                <Badge variant="outline" className="text-xs">
-                                                                  Punt: {activity.max_score}
-                                                                </Badge>
-                                                              )}
-                                                              {activity.completed && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-                                                            </div>
-                                                            {activity.due_date && (
-                                                              <div className="flex items-center gap-2 mt-2 ml-6 text-xs">
-                                                                <Calendar className="h-3 w-3 text-orange-600" />
-                                                                <span className="text-orange-700 font-medium">
-                                                                  Fecha límite: {new Date(activity.due_date).toLocaleDateString('es-ES', { 
-                                                                    weekday: 'long', 
-                                                                    day: 'numeric', 
-                                                                    month: 'long', 
-                                                                    year: 'numeric' 
-                                                                  })}
-                                                                </span>
-                                                              </div>
-                                                            )}
-                                                          </div>
-                                                        ))
-                                                      ) : (
-                                                        <>
-                                                          <div className="border rounded-lg p-3 bg-orange-50/50">
-                                                            <div className="flex items-center gap-2">
-                                                              <Checkbox checked={true} className="h-4 w-4" />
-                                                              <button
-                                                                onClick={() => openActivityManager(unit.id, unit.title)}
-                                                                className="flex-1 text-left text-primary hover:text-primary/80 transition-colors text-sm font-medium"
-                                                              >
-                                                                Actividad 1: Caso práctico
-                                                              </button>
-                                                              <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                                            </div>
-                                                            <div className="flex items-center gap-2 mt-2 ml-6 text-xs">
-                                                              <Calendar className="h-3 w-3 text-orange-600" />
-                                                              <span className="text-orange-700 font-medium">
-                                                                Fecha límite: Por definir
-                                                              </span>
-                                                            </div>
-                                                          </div>
-                                                          <div className="border rounded-lg p-3 bg-orange-50/50">
-                                                            <div className="flex items-center gap-2">
-                                                              <Checkbox checked={false} className="h-4 w-4" />
-                                                              <button
-                                                                onClick={() => openActivityManager(unit.id, unit.title)}
-                                                                className="flex-1 text-left text-primary hover:text-primary/80 transition-colors text-sm font-medium"
-                                                              >
-                                                                Actividad 2: Ejercicio teórico práctico
-                                                              </button>
-                                                            </div>
-                                                            <div className="flex items-center gap-2 mt-2 ml-6 text-xs">
-                                                              <Calendar className="h-3 w-3 text-orange-600" />
-                                                              <span className="text-orange-700 font-medium">
-                                                                Fecha límite: Por definir
-                                                              </span>
-                                                            </div>
-                                                          </div>
-                                                        </>
-                                                      )}
-                                                    </div>
+                                                    <p className="text-xs text-muted-foreground">
+                                                      Material interactivo con presentaciones multimedia
+                                                    </p>
                                                   </div>
                                                 </div>
 
-                                                {/* Foros de la Unidad */}
-                                                <UnitForum
-                                                  courseId={courseId!}
-                                                  formativeUnitId={unit.id}
-                                                  formativeUnitTitle={unit.title}
-                                                  isTeacher={userRole === 'teacher'}
-                                                  isAdmin={userRole === 'admin' || userRole === 'super_admin'}
-                                                />
-
-                                                {/* Tests / Evaluaciones */}
-                                                {unit.evaluations && unit.evaluations.length > 0 && (
-                                                  <div className="flex items-start gap-3 pt-2 border-t">
-                                                    <div className="p-2 bg-green-100 rounded">
-                                                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                      <h5 className="font-semibold text-slate-700 mb-2">Test de autoevaluación</h5>
-                                                      <div className="space-y-1">
-                                                        {unit.evaluations.map((evaluation: any) => (
-                                                          <button
-                                                            key={evaluation.id}
-                                                            onClick={() => navigate(`/course/${courseId}/evaluation/${evaluation.id}`)}
-                                                            className="flex items-center gap-2 text-[#2a7a9a] hover:text-[#1a5a7a] transition-colors text-sm"
-                                                          >
-                                                            <span>{evaluation.title}</span>
-                                                          </button>
-                                                        ))}
-                                                      </div>
-                                                    </div>
+                                                {/* Manual PDF */}
+                                                <div className="flex items-start gap-3">
+                                                  <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
+                                                    <FileText className="h-5 w-5 text-blue-600" />
                                                   </div>
-                                                )}
+                                                  <div className="flex-1">
+                                                    <span className="text-sm font-medium">Manual PDF</span>
+                                                    <p className="text-xs text-muted-foreground">
+                                                      Documentación descargable del módulo formativo
+                                                    </p>
+                                                  </div>
+                                                </div>
+
+                                                {/* Actividad */}
+                                                <div className="flex items-start gap-3">
+                                                  <div className="p-2 bg-green-50 dark:bg-green-950 rounded">
+                                                    <PenTool className="h-5 w-5 text-green-600" />
+                                                  </div>
+                                                  <div className="flex-1">
+                                                    <span className="text-sm font-medium">Actividad de Desarrollo</span>
+                                                    <p className="text-xs text-muted-foreground">
+                                                      Ejercicio práctico para aplicar los conocimientos adquiridos
+                                                    </p>
+                                                  </div>
+                                                </div>
+
+                                                {/* Test Final */}
+                                                <div className="flex items-start gap-3">
+                                                  <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
+                                                    <ClipboardList className="h-5 w-5 text-purple-600" />
+                                                  </div>
+                                                  <div className="flex-1">
+                                                    <span className="text-sm font-medium">Test Final de la Unidad</span>
+                                                    <p className="text-xs text-muted-foreground">
+                                                      Evaluación de 50 preguntas para verificar el aprendizaje
+                                                    </p>
+                                                  </div>
+                                                </div>
+
                                               </div>
                                             </AccordionContent>
                                           </AccordionItem>
                                         </Accordion>
-                                        );
-                                      })}
+                                      ))}
                                     </div>
                                   )}
-
-                                  {/* TEST DE EVALUACIÓN DEL MÓDULO - 50 preguntas */}
-                                  <Accordion type="single" collapsible className="w-full border-t pt-4">
-                                    <AccordionItem value="module-test" className="border rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30">
-                                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                                        <div className="flex items-center gap-3">
-                                          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white">
-                                            <ClipboardList className="h-5 w-5" />
-                                          </div>
-                                          <div className="text-left">
-                                            <h4 className="font-semibold text-green-900 dark:text-green-100">Test de Evaluación del Módulo</h4>
-                                            <p className="text-xs text-green-600 dark:text-green-300">50 preguntas tipo test sobre todo el contenido del módulo</p>
-                                          </div>
-                                        </div>
-                                      </AccordionTrigger>
-                                      <AccordionContent className="px-4 pb-4">
-                                        <ModuleEvaluationTest 
-                                          moduleId={module.id}
-                                          moduleTitle={module.title}
-                                          enrollmentId={enrollment?.id}
-                                          inline={true}
-                                          onComplete={(results) => {
-                                            toast({
-                                              title: "Test completado",
-                                              description: `Has obtenido ${results.score}% en el test del módulo`,
-                                            });
-                                          }}
-                                        />
-                                      </AccordionContent>
-                                    </AccordionItem>
-                                  </Accordion>
-
                                 </div>
+
                               </div>
                             </CardContent>
                           </AccordionContent>
@@ -2224,9 +1870,9 @@ export default function CourseView() {
               </div>
             )}
 
-
-            {/* EVALUACIÓN GLOBAL - Al final de los módulos formativos */}
             <Accordion type="single" collapsible className="w-full mt-6">
+
+
               <AccordionItem value="evaluacion-global" className="border-0">
                 <AccordionTrigger className="bg-[#8B1538] text-white px-4 py-3 rounded-t-lg hover:no-underline data-[state=open]:rounded-b-none">
                   <span className="font-bold text-lg">EVALUACIÓN</span>
@@ -2311,6 +1957,7 @@ export default function CourseView() {
               </AccordionItem>
             </Accordion>
           </TabsContent>
+
 
           <TabsContent value="exams" className="space-y-4">
             {/* EVALUACIÓN Section - SEPE Style */}
