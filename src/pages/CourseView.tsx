@@ -1683,11 +1683,16 @@ export default function CourseView() {
                                           <Button
                                             variant="outline"
                                             size="sm"
-                                            className="mt-3 gap-2"
-                                            onClick={() => openSyllabusEditor(module.id, module.title)}
+                                            className="mt-3 gap-2 border-purple-300 hover:bg-purple-50"
+                                            onClick={() => {
+                                              const firstUnit = module.formative_units?.[0];
+                                              if (firstUnit) {
+                                                openScormAuthor(module.id, firstUnit.id, firstUnit.title);
+                                              }
+                                            }}
                                           >
-                                            <Sparkles className="h-4 w-4" />
-                                            Generar Contenido Interactivo
+                                            <Presentation className="h-4 w-4 text-purple-600" />
+                                            Editor SCORM Avanzado
                                           </Button>
                                         )}
                                       </div>
