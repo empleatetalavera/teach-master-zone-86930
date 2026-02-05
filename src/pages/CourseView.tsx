@@ -47,6 +47,7 @@ import { TutorStudentProgress } from "@/components/TutorStudentProgress";
 import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import { CertificateDocumentsSection } from "@/components/CertificateDocumentsSection";
 import { ModuleContentUploader } from "@/components/ModuleContentUploader";
+import { ScormAuthorModal } from "@/components/scorm-author/ScormAuthorModal";
 
 interface Course {
   id: string;
@@ -276,6 +277,15 @@ export default function CourseView() {
   // Syllabus editor state
   const [syllabusEditorOpen, setSyllabusEditorOpen] = useState(false);
   
+  // SCORM Author Modal state
+  const [scormAuthorOpen, setScormAuthorOpen] = useState(false);
+  const [scormAuthorModuleId, setScormAuthorModuleId] = useState<string>("");
+  const [scormAuthorUnitId, setScormAuthorUnitId] = useState<string>("");
+  const [scormAuthorUnitTitle, setScormAuthorUnitTitle] = useState<string>("");
+  
+  // Supplementary material visibility (per unit, stored in state - could be in DB)
+  const [showSupplementaryMaterial, setShowSupplementaryMaterial] = useState<Record<string, boolean>>({});
+  
   const openActivitySubmission = (activityId: string) => {
     setSelectedActivityId(activityId);
     setActivitySubmissionOpen(true);
@@ -304,6 +314,20 @@ export default function CourseView() {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
     setSyllabusEditorOpen(true);
+  };
+
+  const openScormAuthor = (moduleId: string, unitId: string, unitTitle: string) => {
+    setScormAuthorModuleId(moduleId);
+    setScormAuthorUnitId(unitId);
+    setScormAuthorUnitTitle(unitTitle);
+    setScormAuthorOpen(true);
+  };
+
+  const toggleSupplementaryMaterial = (unitId: string) => {
+    setShowSupplementaryMaterial(prev => ({
+      ...prev,
+      [unitId]: !prev[unitId]
+    }));
   };
 
   useEffect(() => {
@@ -2049,7 +2073,7 @@ export default function CourseView() {
                                                     </div>
 
                                                     {/* Botones de acceso al contenido */}
-                                                    <div className="flex items-center gap-3 mt-3">
+                                                    <div className="flex flex-wrap items-center gap-2 mt-3">
                                                       <Button
                                                         variant="outline"
                                                         className="flex items-center gap-2 rounded-full border-2 hover:bg-primary hover:text-primary-foreground transition-all"
@@ -2059,39 +2083,65 @@ export default function CourseView() {
                                                         <span>Temario Interactivo</span>
                                                       </Button>
                                                       {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                        <Button
-                                                          variant="outline"
-                                                          className="flex items-center gap-2 rounded-full border-2"
-                                                          onClick={() => openSyllabusEditor(unit.id, unit.title)}
-                                                        >
-                                                          <Edit2 className="h-4 w-4 text-blue-500" />
-                                                          <span>Editar Contenido</span>
-                                                        </Button>
+                                                        <>
+                                                          <Button
+                                                            variant="outline"
+                                                            className="flex items-center gap-2 rounded-full border-2"
+                                                            onClick={() => openSyllabusEditor(unit.id, unit.title)}
+                                                          >
+                                                            <Edit2 className="h-4 w-4 text-blue-500" />
+                                                            <span>Editar Contenido</span>
+                                                          </Button>
+                                                          <Button
+                                                            variant="outline"
+                                                            className="flex items-center gap-2 rounded-full border-2 border-purple-300 hover:bg-purple-50"
+                                                            onClick={() => openScormAuthor(module.id, unit.id, unit.title)}
+                                                          >
+                                                            <Presentation className="h-4 w-4 text-purple-600" />
+                                                            <span>Editor SCORM Avanzado</span>
+                                                          </Button>
+                                                        </>
                                                       )}
                                                     </div>
                                                   </div>
                                                 </div>
 
-                                                {/* Material Didáctico Complementario */}
-                                                <div className="flex items-start gap-3 border-t pt-4 mt-4">
-                                                  <div className="p-2 bg-purple-100 rounded">
-                                                    <FileText className="h-5 w-5 text-purple-600" />
-                                                  </div>
-                                                  <div className="flex-1">
-                                                    <h5 className="font-semibold text-foreground mb-2">Material Didáctico Complementario</h5>
-                                                    <p className="text-sm text-muted-foreground mb-3">
-                                                      En este apartado se incluye material didáctico complementario que sirva de refuerzo y ampliación de conocimientos para el alumno en cada unidad didáctica. En concreto, este material puede adoptar los siguientes formatos:
-                                                    </p>
-                                                    <p className="text-sm text-muted-foreground mb-4 italic">
-                                                      Encontrarás archivos de documentos de texto o enlaces webs a documentos que servirán al alumno de ampliación y refuerzo del temario.
-                                                    </p>
-                                                    <SupplementaryMaterialManager 
-                                                      unitId={unit.id}
-                                                      unitTitle={unit.title}
-                                                      canEdit={userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin'}
+                                                {/* Material Didáctico Complementario - Opción activable por admin/profesor */}
+                                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                  <div className="flex items-center gap-2 border-t pt-4 mt-4">
+                                                    <Checkbox
+                                                      id={`show-supplementary-${unit.id}`}
+                                                      checked={showSupplementaryMaterial[unit.id] || false}
+                                                      onCheckedChange={() => toggleSupplementaryMaterial(unit.id)}
                                                     />
+                                                    <label 
+                                                      htmlFor={`show-supplementary-${unit.id}`}
+                                                      className="text-sm font-medium cursor-pointer flex items-center gap-2"
+                                                    >
+                                                      <FileText className="h-4 w-4 text-purple-600" />
+                                                      Mostrar Material Didáctico Complementario
+                                                    </label>
                                                   </div>
-                                                </div>
+                                                )}
+                                                
+                                                {showSupplementaryMaterial[unit.id] && (
+                                                  <div className="flex items-start gap-3 border-t pt-4 mt-4">
+                                                    <div className="p-2 bg-purple-100 rounded">
+                                                      <FileText className="h-5 w-5 text-purple-600" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                      <h5 className="font-semibold text-foreground mb-2">Material Didáctico Complementario</h5>
+                                                      <p className="text-sm text-muted-foreground mb-3">
+                                                        En este apartado se incluye material didáctico complementario que sirva de refuerzo y ampliación de conocimientos para el alumno en cada unidad didáctica.
+                                                      </p>
+                                                      <SupplementaryMaterialManager 
+                                                        unitId={unit.id}
+                                                        unitTitle={unit.title}
+                                                        canEdit={userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin'}
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                )}
 
                                                 {/* Actividades de aprendizaje evaluables */}
                                                 <div className="flex items-start gap-3">
@@ -3106,6 +3156,19 @@ export default function CourseView() {
         onOpenChange={setActivitySubmissionOpen}
         activityId={selectedActivityId}
         enrollmentId={enrollment?.id || ""}
+      />
+
+      {/* SCORM Author Modal - Editor avanzado tipo Captivate */}
+      <ScormAuthorModal
+        open={scormAuthorOpen}
+        onOpenChange={setScormAuthorOpen}
+        moduleId={scormAuthorModuleId}
+        formativeUnitId={scormAuthorUnitId}
+        unitTitle={scormAuthorUnitTitle}
+        onSaveComplete={() => {
+          loadCourseData();
+          setScormAuthorOpen(false);
+        }}
       />
     </div>
   );
