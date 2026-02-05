@@ -48,6 +48,7 @@ import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import { CertificateDocumentsSection } from "@/components/CertificateDocumentsSection";
 import { ModuleContentUploader } from "@/components/ModuleContentUploader";
 import { ScormAuthorModal } from "@/components/scorm-author/ScormAuthorModal";
+import { ModuleFormativeUnitManager } from "@/components/ModuleFormativeUnitManager";
 
 interface Course {
   id: string;
@@ -1773,6 +1774,22 @@ export default function CourseView() {
                                     </AccordionContent>
                                   </AccordionItem>
                                 </Accordion>
+
+                                {/* Admin: Gestión de módulos y unidades formativas */}
+                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                  <div className="bg-gradient-to-r from-slate-50 to-zinc-50 dark:from-slate-950/30 dark:to-zinc-950/30 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
+                                    <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                                      <Settings className="h-4 w-4 text-slate-600" />
+                                      Gestión del Módulo y Unidades Formativas
+                                    </h4>
+                                    <ModuleFormativeUnitManager
+                                      moduleId={module.id}
+                                      moduleTitle={module.title}
+                                      formativeUnits={moduleUnits}
+                                      onUpdate={loadCourseData}
+                                    />
+                                  </div>
+                                )}
 
                                 {/* Admin: Gestión de contenidos del módulo */}
                                 {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
