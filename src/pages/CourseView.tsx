@@ -332,12 +332,22 @@ export default function CourseView() {
       };
       setCourse(parsedCourse as Course);
 
-      // Load center slug and name if course has a training center
-      if (courseData.training_center_id) {
+      // Load center info - PRIORITY: user's center > course's center
+      // This ensures proper multi-tenant isolation
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("training_center_id")
+        .eq("id", user!.id)
+        .single();
+
+      // Use user's center if available, otherwise fallback to course's center
+      const centerIdToUse = userProfile?.training_center_id || courseData.training_center_id;
+      
+      if (centerIdToUse) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name, email, phone, address, city, province, postal_code, cif")
-          .eq("id", courseData.training_center_id)
+          .select("slug, name, email, phone, address, city, province, postal_code, cif, logo_url")
+          .eq("id", centerIdToUse)
           .single();
         
         if (centerData?.slug) {
@@ -346,11 +356,11 @@ export default function CourseView() {
         if (centerData?.name) {
           setCenterName(centerData.name);
         }
-        // Set center contact info for CAU and WorkPlan - use center's email/phone fields
+        // Set center contact info for CAU and WorkPlan - use USER's center data
         setCenterContact({
           name: centerData?.name || "",
-          email: centerData?.email || course?.support_email || "",
-          phone: centerData?.phone || course?.support_phone || "",
+          email: centerData?.email || "",
+          phone: centerData?.phone || "",
           address: centerData?.address || "",
           city: centerData?.city || "",
           province: centerData?.province || "",
