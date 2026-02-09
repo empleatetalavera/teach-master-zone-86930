@@ -1182,10 +1182,10 @@ export default function CourseView() {
                       <h3 className="text-lg font-semibold mb-2">Objetivos Específicos</h3>
                       <ul className="space-y-2">
                         {course.specific_objectives && course.specific_objectives.length > 0 ? (
-                          course.specific_objectives.map((obj: string, idx: number) => (
+                          course.specific_objectives.map((obj: any, idx: number) => (
                             <li key={idx} className="flex items-start gap-2">
                               <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                              <span>{obj}</span>
+                              <span>{typeof obj === 'object' ? (obj.description || JSON.stringify(obj)) : String(obj)}</span>
                             </li>
                           ))
                         ) : (
