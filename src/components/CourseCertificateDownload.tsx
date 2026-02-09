@@ -58,6 +58,8 @@ interface IssuedCertificate {
   course_hours: number;
   issue_date: string;
   course_id: string;
+  _enrolledAt?: string | null;
+  _completedAt?: string | null;
 }
 
 function RequirementItem({ icon, label, met }: { icon: React.ReactNode; label: string; met: boolean }) {
@@ -220,11 +222,12 @@ export function CourseCertificateDownload({
       let cert = issuedCert;
       if (!cert) {
         const { data: profile } = await supabase.from("profiles").select("full_name, dni_nie").eq("id", user!.id).single();
+        const { data: enrollment } = await supabase.from("enrollments").select("id, enrolled_at, completed_at").eq("user_id", user!.id).eq("course_id", courseId).single();
         const verificationCode = generateVerificationCode();
         const { data: newCert, error } = await supabase.from("certificates").insert({
           user_id: user!.id,
           course_id: courseId,
-          enrollment_id: (await supabase.from("enrollments").select("id").eq("user_id", user!.id).eq("course_id", courseId).single()).data!.id,
+          enrollment_id: enrollment!.id,
           verification_code: verificationCode,
           student_name: profile?.full_name || "Estudiante",
           student_dni: profile?.dni_nie || null,
@@ -234,12 +237,16 @@ export function CourseCertificateDownload({
         if (error) {
           if (error.code === "23505") {
             const { data: existing } = await supabase.from("certificates").select("*").eq("user_id", user!.id).eq("course_id", courseId).single();
-            cert = existing as IssuedCertificate;
+            cert = { ...(existing as IssuedCertificate), _enrolledAt: enrollment?.enrolled_at, _completedAt: enrollment?.completed_at };
           } else throw error;
         } else {
-          cert = newCert as IssuedCertificate;
+          cert = { ...(newCert as IssuedCertificate), _enrolledAt: enrollment?.enrolled_at, _completedAt: enrollment?.completed_at };
         }
         setIssuedCert(cert);
+      } else {
+        // Fetch enrollment dates for existing cert
+        const { data: enrollment } = await supabase.from("enrollments").select("enrolled_at, completed_at").eq("user_id", user!.id).eq("course_id", courseId).maybeSingle();
+        cert = { ...cert, _enrolledAt: enrollment?.enrolled_at, _completedAt: enrollment?.completed_at };
       }
 
       await generatePDF(cert!);
@@ -346,9 +353,9 @@ export function CourseCertificateDownload({
     y += 14;
     pdf.setFontSize(10);
     pdf.setTextColor(40, 40, 40);
-    const mod = modality || "Lugar de realización o a distancia en su caso";
-    const sd = startDate ? format(new Date(startDate), "dd/MM/yyyy") : "fecha de inicio";
-    const ed = endDate ? format(new Date(endDate), "dd/MM/yyyy") : "fecha de finalización";
+    const mod = "Mixta";
+    const sd = cert._enrolledAt ? format(new Date(cert._enrolledAt), "dd/MM/yyyy") : (startDate ? format(new Date(startDate), "dd/MM/yyyy") : "fecha de inicio");
+    const ed = cert._completedAt ? format(new Date(cert._completedAt), "dd/MM/yyyy") : (endDate ? format(new Date(endDate), "dd/MM/yyyy") : "fecha de finalización");
 
     const c1 = `Celebrado en \u201C`;
     const c2 = mod;
@@ -409,11 +416,33 @@ export function CourseCertificateDownload({
     // ===== BOTTOM SECTION =====
     const bottomY = H - 50;
 
-    // Bottom-left: Stamp image (sello con datos de empresa)
-    const stampData = await loadImageAsDataUrl("/branding/grupo-arma-stamp.jpg");
-    if (stampData) pdf.addImage(stampData, "JPEG", 18, bottomY - 8, 58, 30);
-
-    // Bottom-right: CFC-SNS badge (Comisión de Formación Continuada + Sistema Nacional de Salud)
+    // Bottom-left: Digital signature (replaces stamp image)
+    const sigBaseY = bottomY - 8;
+    const sigCenterX = 56;
+    
+    // Stylized signature curves
+    pdf.setDrawColor(0, 60, 120);
+    pdf.setLineWidth(0.6);
+    // Signature stroke 1
+    pdf.lines([[8, -3], [12, 2], [6, -4], [10, 1], [5, -2], [8, 3]], 22, sigBaseY + 14, [1, 1], "S");
+    // Signature stroke 2
+    pdf.lines([[6, 2], [10, -3], [8, 1], [12, -2]], 25, sigBaseY + 16, [1, 1], "S");
+    
+    // "FIRMADO DIGITALMENTE" badge
+    pdf.setFillColor(0, 100, 180);
+    pdf.roundedRect(18, sigBaseY + 20, 76, 8, 1, 1, "F");
+    pdf.setFontSize(7);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(255, 255, 255);
+    pdf.text("FIRMADO DIGITALMENTE", sigCenterX, sigBaseY + 25, { align: "center" });
+    
+    // Timestamp and hash
+    pdf.setFontSize(5);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(80, 80, 80);
+    const sigTimestamp = format(new Date(), "dd/MM/yyyy HH:mm:ss 'UTC'");
+    pdf.text(`Fecha: ${sigTimestamp}`, sigCenterX, sigBaseY + 31, { align: "center" });
+    pdf.text(`Hash: ${cert.verification_code}`, sigCenterX, sigBaseY + 34, { align: "center" });
     const cfcBadge = await loadImageAsDataUrl("/branding/cfc-sns-badge.png");
     if (cfcBadge) pdf.addImage(cfcBadge, "PNG", W - 48, bottomY - 8, 32, 38);
 
@@ -452,7 +481,92 @@ export function CourseCertificateDownload({
     pdf.setTextColor(120, 120, 120);
     pdf.text(`CSV: ${cert.verification_code}`, centerSigX + 53, bottomY + 28, { align: "center" });
 
-    // PAGE 2: MODULES
+    // PAGE 2: REVERSO - Secretaría Técnica
+    pdf.addPage();
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(0, 0, W, H, "F");
+
+    // Watermark on reverso
+    if (watermarkData) {
+      pdf.saveGraphicsState();
+      pdf.setGState(new (pdf as any).GState({ opacity: 0.08 }));
+      pdf.addImage(watermarkData, "JPEG", W * 0.22, H * 0.18, W * 0.65, H * 0.68);
+      pdf.restoreGraphicsState();
+    }
+
+    // CFC-CLM logo top center
+    const cfcClmLogo = await loadImageAsDataUrl("/branding/cfc-clm-logo.png");
+    if (cfcClmLogo) pdf.addImage(cfcClmLogo, "PNG", W / 2 - 20, 12, 40, 20);
+
+    // Title block
+    let ry = 42;
+    pdf.setFontSize(13);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(0, 80, 150);
+    pdf.text("SECRETARÍA TÉCNICA DE FORMACIÓN CONTINUADA", W / 2, ry, { align: "center" });
+    ry += 7;
+    pdf.text("DE LAS PROFESIONES SANITARIAS", W / 2, ry, { align: "center" });
+    ry += 7;
+    pdf.text("DE CASTILLA-LA MANCHA", W / 2, ry, { align: "center" });
+
+    // Separator line
+    ry += 10;
+    pdf.setDrawColor(0, 100, 180);
+    pdf.setLineWidth(0.5);
+    pdf.line(40, ry, W - 40, ry);
+
+    // Course details
+    ry += 12;
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(40, 40, 40);
+
+    const reversoSd = cert._enrolledAt ? format(new Date(cert._enrolledAt), "dd/MM/yyyy") : (startDate ? format(new Date(startDate), "dd/MM/yyyy") : "—");
+    const reversoEd = cert._completedAt ? format(new Date(cert._completedAt), "dd/MM/yyyy") : (endDate ? format(new Date(endDate), "dd/MM/yyyy") : "—");
+
+    const reversoFields = [
+      { label: "Nº Expediente / Registro:", value: courseCode || "—" },
+      { label: "Denominación:", value: courseTitle },
+      { label: "Duración:", value: `${durationHours} horas` },
+      { label: "Modalidad:", value: "Mixta" },
+      { label: "Fecha de inicio:", value: reversoSd },
+      { label: "Fecha de finalización:", value: reversoEd },
+      { label: "Alumno/a:", value: cert.student_name },
+      { label: "DNI/NIE:", value: cert.student_dni || "—" },
+    ];
+
+    reversoFields.forEach(({ label, value }) => {
+      pdf.setFont("helvetica", "bold");
+      pdf.text(label, 50, ry);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(value, 50 + pdf.getTextWidth(label) + 3, ry);
+      ry += 8;
+    });
+
+    // Legal text
+    ry += 10;
+    pdf.setFontSize(8);
+    pdf.setFont("helvetica", "italic");
+    pdf.setTextColor(80, 80, 80);
+    const legalText = "Este documento acredita la realización y superación de la actividad formativa indicada, acreditada por la Comisión de Formación Continuada de las Profesiones Sanitarias de Castilla-La Mancha, conforme al Sistema de Acreditación de la Formación Continuada en el Sistema Nacional de Salud.";
+    const legalLines = pdf.splitTextToSize(legalText, W - 100);
+    pdf.text(legalLines, W / 2, ry, { align: "center" });
+
+    // Logos footer
+    if (logoData) pdf.addImage(logoData, "PNG", 18, H - 25, 35, 16);
+    const cfcSnsBadge2 = await loadImageAsDataUrl("/branding/cfc-sns-badge.png");
+    if (cfcSnsBadge2) pdf.addImage(cfcSnsBadge2, "PNG", W - 45, H - 28, 28, 22);
+
+    // Footer
+    pdf.setFontSize(6);
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFont("helvetica", "italic");
+    pdf.text(
+      "Inscrita en el Registro Mercantil de Toledo, al Tomo 334, Folio 196, Sección General del Libro de Sociedades, Hoja número TO-2073, inscripción 1ª.",
+      W / 2, H - 5, { align: "center" }
+    );
+
+    // PAGE 3: MODULES
     pdf.addPage();
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
