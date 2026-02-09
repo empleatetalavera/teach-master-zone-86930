@@ -404,6 +404,8 @@ export function CourseCertificateDownload({
     pdf.save(`Diploma_${courseTitle.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
   };
 
+  console.log("[CourseCertificateDownload] loading:", loading, "status:", !!status, "isAdmin:", isAdmin, "userRole:", userRole);
+
   if (loading) {
     return (
       <Card>
