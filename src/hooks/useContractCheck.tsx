@@ -14,6 +14,14 @@ export function useContractCheck(trainingCenterId: string | null, userRole: stri
         return;
       }
 
+      // Check sessionStorage cache first to avoid repeated queries/modals
+      const cacheKey = `contract_signed_${trainingCenterId}`;
+      if (sessionStorage.getItem(cacheKey) === 'true') {
+        setHasSignedContract(true);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from("center_contracts")
@@ -24,9 +32,13 @@ export function useContractCheck(trainingCenterId: string | null, userRole: stri
 
         if (error) {
           console.error("Error checking contract:", error);
-          setHasSignedContract(true); // Don't block on error
+          setHasSignedContract(true);
         } else {
-          setHasSignedContract(!!data);
+          const signed = !!data;
+          setHasSignedContract(signed);
+          if (signed) {
+            sessionStorage.setItem(cacheKey, 'true');
+          }
         }
       } catch (error) {
         console.error("Error checking contract:", error);
@@ -51,7 +63,11 @@ export function useContractCheck(trainingCenterId: string | null, userRole: stri
         .eq("contract_type", "general")
         .maybeSingle();
       
-      setHasSignedContract(!!data);
+      const signed = !!data;
+      setHasSignedContract(signed);
+      if (signed && trainingCenterId) {
+        sessionStorage.setItem(`contract_signed_${trainingCenterId}`, 'true');
+      }
     } finally {
       setIsLoading(false);
     }

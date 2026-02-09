@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Loader2, Upload, Palette, Eye, Building2, MapPin, Phone, Mail } from "lucide-react";
+import { Loader2, Upload, Palette, Eye, Building2, MapPin, Phone, Mail, Link2 } from "lucide-react";
 import { useBranding } from "@/hooks/useBranding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,6 +38,7 @@ export default function CenterSettings() {
   const [cif, setCif] = useState("");
   const [sepeRegistryNumber, setSepeRegistryNumber] = useState("");
   const [censusCode, setCensusCode] = useState("");
+  const [campusUrl, setCampusUrl] = useState("");
 
   useEffect(() => {
     loadCenterData();
@@ -100,6 +101,7 @@ export default function CenterSettings() {
       setCif(center.cif || "");
       setSepeRegistryNumber(center.sepe_registry_number || "");
       setCensusCode(center.census_code || "");
+      setCampusUrl((center as any).campus_url || "");
     } catch (error) {
       console.error("Error loading center data:", error);
       toast.error("Error al cargar los datos del centro");
@@ -215,6 +217,7 @@ export default function CenterSettings() {
           cif: cif || null,
           sepe_registry_number: sepeRegistryNumber || null,
           census_code: censusCode || null,
+          campus_url: campusUrl || null,
         })
         .eq("id", centerId);
 
@@ -749,6 +752,29 @@ export default function CenterSettings() {
                     Este teléfono se mostrará en el CAU y guías del alumno
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Link2 className="h-5 w-5" />
+                Dominio del Campus Virtual
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="campusUrl">URL del Campus Virtual</Label>
+                <Input
+                  id="campusUrl"
+                  value={campusUrl}
+                  onChange={(e) => setCampusUrl(e.target.value)}
+                  placeholder="https://campusarmaformacion.es"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  URL completa de tu campus virtual con dominio propio (ej: https://campusarmaformacion.es)
+                </p>
               </div>
             </CardContent>
           </Card>
