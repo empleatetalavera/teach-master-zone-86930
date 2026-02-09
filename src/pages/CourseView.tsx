@@ -49,6 +49,12 @@ import { CertificateDocumentsSection } from "@/components/CertificateDocumentsSe
 import { ModuleContentUploader } from "@/components/ModuleContentUploader";
 import { ScormAuthorModal } from "@/components/scorm-author/ScormAuthorModal";
 import { ModuleFormativeUnitManager } from "@/components/ModuleFormativeUnitManager";
+import { CourseGlossary } from "@/components/CourseGlossary";
+import { CourseFAQs } from "@/components/CourseFAQs";
+import { CourseAnnouncements } from "@/components/CourseAnnouncements";
+import { VirtualCafeteria } from "@/components/VirtualCafeteria";
+import { CFCForumTabs } from "@/components/CFCForumTabs";
+import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
 
 interface Course {
   id: string;
@@ -1008,6 +1014,33 @@ export default function CourseView() {
                   >
                     Foro
                   </button>
+                  <button
+                    onClick={() => setActiveTab("glossary")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "glossary" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Glosario
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("faqs")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "faqs" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <FileQuestion className="h-4 w-4" />
+                    FAQs
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("announcements")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "announcements" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <Bell className="h-4 w-4" />
+                    Tablón
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("cafeteria")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "cafeteria" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    Cafetería
+                  </button>
                   {userRole === 'teacher' && (
                     <button
                       onClick={() => setActiveTab("tutor-forum")}
@@ -1061,6 +1094,10 @@ export default function CourseView() {
                   {showSEPEFeatures && <TabsTrigger value="tutorials" className="text-xs px-2 py-1.5">Tutorías</TabsTrigger>}
                   <TabsTrigger value="calendar" className="text-xs px-2 py-1.5">Calendario</TabsTrigger>
                   <TabsTrigger value="forum" className="text-xs px-2 py-1.5">Foro</TabsTrigger>
+                  <TabsTrigger value="glossary" className="text-xs px-2 py-1.5">Glosario</TabsTrigger>
+                  <TabsTrigger value="faqs" className="text-xs px-2 py-1.5">FAQs</TabsTrigger>
+                  <TabsTrigger value="announcements" className="text-xs px-2 py-1.5">Tablón</TabsTrigger>
+                  <TabsTrigger value="cafeteria" className="text-xs px-2 py-1.5">Cafetería</TabsTrigger>
                   {userRole === 'teacher' && (
                     <TabsTrigger value="tutor-forum" className="text-xs px-2 py-1.5">Foro Tutores</TabsTrigger>
                   )}
@@ -1948,6 +1985,13 @@ export default function CourseView() {
                                               </div>
                                             </div>
 
+                                            {/* Autoevaluación (no computable) */}
+                                            <SelfAssessmentQuiz
+                                              courseId={courseId!}
+                                              formativeUnitId={unit.id}
+                                              formativeUnitTitle={unit.title}
+                                            />
+
                                           </div>
                                         </AccordionContent>
                                       </AccordionItem>
@@ -2387,11 +2431,39 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="forum" className="space-y-4">
-            <CourseForum 
+            <CFCForumTabs
               courseId={courseId!}
               isAdmin={userRole === 'admin' || userRole === 'super_admin'}
-              isEditable={userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher'}
+              isTeacher={userRole === 'teacher'}
             />
+          </TabsContent>
+
+          <TabsContent value="glossary" className="space-y-4">
+            <CourseGlossary
+              courseId={courseId!}
+              isTeacher={userRole === 'teacher'}
+              isAdmin={userRole === 'admin' || userRole === 'super_admin'}
+            />
+          </TabsContent>
+
+          <TabsContent value="faqs" className="space-y-4">
+            <CourseFAQs
+              courseId={courseId!}
+              isTeacher={userRole === 'teacher'}
+              isAdmin={userRole === 'admin' || userRole === 'super_admin'}
+            />
+          </TabsContent>
+
+          <TabsContent value="announcements" className="space-y-4">
+            <CourseAnnouncements
+              courseId={courseId!}
+              isTeacher={userRole === 'teacher'}
+              isAdmin={userRole === 'admin' || userRole === 'super_admin'}
+            />
+          </TabsContent>
+
+          <TabsContent value="cafeteria" className="space-y-4">
+            <VirtualCafeteria courseId={courseId!} />
           </TabsContent>
 
           {userRole === 'teacher' && (
