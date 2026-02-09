@@ -79,6 +79,7 @@ import AuditorDashboard from "./pages/dashboard/AuditorDashboard";
 import AuditorCourses from "./pages/dashboard/AuditorCourses";
 import AuditorReports from "./pages/dashboard/AuditorReports";
 import AdminContracts from "./pages/dashboard/AdminContracts";
+import VerifyCertificate from "./pages/VerifyCertificate";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -111,6 +112,8 @@ function AppRoutes() {
         <Route path="/course/:courseId/activity/:activityId" element={<ProtectedRoute><ActivityView /></ProtectedRoute>} />
         <Route path="/campus-guide" element={<CampusGuide />} />
         <Route path="/seguimiento-sepe" element={<SeguimientoSEPE />} />
+        <Route path="/verificar-diploma/:code" element={<VerifyCertificate />} />
+        <Route path="/verificar-diploma" element={<VerifyCertificate />} />
         
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="admin" element={<AdminDashboard />} />
