@@ -26,6 +26,8 @@ import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { SEPEGradesSection } from "@/components/SEPEGradesSection";
 import ScormProfessionalViewer from "@/components/ScormProfessionalViewer";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
@@ -92,6 +94,7 @@ interface Course {
   max_students?: number | null;
   presential_hours?: number | null;
   internship_hours?: number | null;
+  tutorial_plan?: string | null;
 }
 
 interface Module {
@@ -1710,6 +1713,18 @@ export default function CourseView() {
                         </ul>
                       );
                     })()}
+                  </div>
+                )}
+
+                {course.tutorial_plan && (
+                  <div className="bg-muted/20 rounded-lg p-4 border">
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      Plan de Acción Tutorial
+                    </h3>
+                    <div className="prose prose-sm max-w-none text-muted-foreground [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:space-y-1 [&_li]:text-sm [&_strong]:text-foreground/80">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{course.tutorial_plan}</ReactMarkdown>
+                    </div>
                   </div>
                 )}
 
