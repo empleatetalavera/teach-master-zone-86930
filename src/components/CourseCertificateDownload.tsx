@@ -416,45 +416,52 @@ export function CourseCertificateDownload({
     // ===== BOTTOM SECTION =====
     const bottomY = H - 50;
 
-    // Bottom-left: Digital signature (replaces stamp image)
-    const sigBaseY = bottomY - 8;
-    const sigCenterX = 56;
+    // Bottom-left: Digital signature badge (official seal style)
+    const sigX = 18;
+    const sigY = bottomY - 6;
+    const sigW = 72;
+    const sigH = 32;
     
-    // Stylized signature curves
-    pdf.setDrawColor(0, 60, 120);
-    pdf.setLineWidth(0.6);
-    // Signature stroke 1
-    pdf.lines([[8, -3], [12, 2], [6, -4], [10, 1], [5, -2], [8, 3]], 22, sigBaseY + 14, [1, 1], "S");
-    // Signature stroke 2
-    pdf.lines([[6, 2], [10, -3], [8, 1], [12, -2]], 25, sigBaseY + 16, [1, 1], "S");
+    // Outer border - double line effect
+    pdf.setDrawColor(0, 70, 140);
+    pdf.setLineWidth(0.8);
+    pdf.roundedRect(sigX, sigY, sigW, sigH, 2, 2, "S");
+    pdf.setLineWidth(0.3);
+    pdf.roundedRect(sigX + 1.5, sigY + 1.5, sigW - 3, sigH - 3, 1.5, 1.5, "S");
     
-    // "FIRMADO DIGITALMENTE" badge
-    pdf.setFillColor(0, 100, 180);
-    pdf.roundedRect(18, sigBaseY + 20, 76, 8, 1, 1, "F");
-    pdf.setFontSize(7);
+    // Header bar
+    pdf.setFillColor(0, 80, 160);
+    pdf.rect(sigX + 1.5, sigY + 1.5, sigW - 3, 7, "F");
+    pdf.setFontSize(6.5);
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(255, 255, 255);
-    pdf.text("FIRMADO DIGITALMENTE", sigCenterX, sigBaseY + 25, { align: "center" });
+    pdf.text("FIRMADO DIGITALMENTE", sigX + sigW / 2, sigY + 6, { align: "center" });
     
-    // Timestamp and hash
-    pdf.setFontSize(5);
+    // Signer info
+    pdf.setFontSize(6);
+    pdf.setTextColor(30, 30, 30);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Fdo: M.ª del Coral Gómez Corrochano", sigX + sigW / 2, sigY + 13, { align: "center" });
     pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(5.5);
+    pdf.text("Directora - Grupo Arma Formación S.L.", sigX + sigW / 2, sigY + 17, { align: "center" });
+    
+    // Timestamp
+    pdf.setFontSize(5);
     pdf.setTextColor(80, 80, 80);
-    const sigTimestamp = format(new Date(), "dd/MM/yyyy HH:mm:ss 'UTC'");
-    pdf.text(`Fecha: ${sigTimestamp}`, sigCenterX, sigBaseY + 31, { align: "center" });
-    pdf.text(`Hash: ${cert.verification_code}`, sigCenterX, sigBaseY + 34, { align: "center" });
+    const sigTimestamp = format(new Date(), "dd/MM/yyyy HH:mm:ss");
+    pdf.text(`Fecha: ${sigTimestamp} UTC`, sigX + sigW / 2, sigY + 21.5, { align: "center" });
+    pdf.text(`CSV: ${cert.verification_code}`, sigX + sigW / 2, sigY + 25, { align: "center" });
+    
+    // Small lock icon indicator
+    pdf.setFillColor(0, 150, 80);
+    pdf.circle(sigX + 5, sigY + 28.5, 1.5, "F");
+    pdf.setFontSize(4.5);
+    pdf.setTextColor(0, 120, 60);
+    pdf.text("Documento válido", sigX + 8, sigY + 29.5);
+
     const cfcBadge = await loadImageAsDataUrl("/branding/cfc-sns-badge.png");
     if (cfcBadge) pdf.addImage(cfcBadge, "PNG", W - 48, bottomY - 8, 32, 38);
-
-    // Left signature line + text
-    pdf.setDrawColor(100, 100, 100);
-    pdf.line(18, bottomY + 26, 95, bottomY + 26);
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(40, 40, 40);
-    pdf.text("Fdo. M.ª del Coral Gómez Corrochano", 56, bottomY + 31, { align: "center" });
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Directora Grupo Arma Formación", 56, bottomY + 36, { align: "center" });
 
     // Center: "Alumno" signature line
     const centerSigX = W / 2 + 10;
@@ -462,6 +469,7 @@ export function CourseCertificateDownload({
     pdf.line(centerSigX - 35, bottomY + 26, centerSigX + 35, bottomY + 26);
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
+    pdf.setTextColor(40, 40, 40);
     pdf.text("Alumno", centerSigX, bottomY + 31, { align: "center" });
 
     // Footer: Registro Mercantil
@@ -473,7 +481,7 @@ export function CourseCertificateDownload({
       W / 2, H - 5, { align: "center" }
     );
 
-    // QR Code + CSV verification (small, between stamp and CFC badge)
+    // QR Code + CSV verification
     const verifyUrl = `${window.location.origin}/verificar-diploma/${cert.verification_code}`;
     const qrDataUrl = await QRCode.toDataURL(verifyUrl, { width: 80, margin: 1 });
     pdf.addImage(qrDataUrl, "PNG", centerSigX + 45, bottomY + 10, 16, 16);
@@ -481,7 +489,7 @@ export function CourseCertificateDownload({
     pdf.setTextColor(120, 120, 120);
     pdf.text(`CSV: ${cert.verification_code}`, centerSigX + 53, bottomY + 28, { align: "center" });
 
-    // PAGE 2: REVERSO - Secretaría Técnica
+    // PAGE 2: REVERSO - Secretaría Técnica + Contenidos
     pdf.addPage();
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
@@ -494,136 +502,123 @@ export function CourseCertificateDownload({
       pdf.restoreGraphicsState();
     }
 
-    // CFC-CLM logo top center
+    // CFC-CLM logo top-left
     const cfcClmLogo = await loadImageAsDataUrl("/branding/cfc-clm-logo.png");
-    if (cfcClmLogo) pdf.addImage(cfcClmLogo, "PNG", W / 2 - 20, 12, 40, 20);
+    if (cfcClmLogo) pdf.addImage(cfcClmLogo, "PNG", 12, 8, 35, 16);
 
     // Title block
-    let ry = 42;
-    pdf.setFontSize(13);
+    let ry = 32;
+    pdf.setFontSize(11);
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(0, 80, 150);
     pdf.text("SECRETARÍA TÉCNICA DE FORMACIÓN CONTINUADA", W / 2, ry, { align: "center" });
-    ry += 7;
-    pdf.text("DE LAS PROFESIONES SANITARIAS", W / 2, ry, { align: "center" });
-    ry += 7;
-    pdf.text("DE CASTILLA-LA MANCHA", W / 2, ry, { align: "center" });
+    ry += 5.5;
+    pdf.text("DE LAS PROFESIONES SANITARIAS DE CASTILLA-LA MANCHA", W / 2, ry, { align: "center" });
 
-    // Separator line
-    ry += 10;
+    // Separator
+    ry += 6;
     pdf.setDrawColor(0, 100, 180);
-    pdf.setLineWidth(0.5);
-    pdf.line(40, ry, W - 40, ry);
+    pdf.setLineWidth(0.4);
+    pdf.line(30, ry, W - 30, ry);
 
-    // Course details
-    ry += 12;
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
+    // Course details - compact two-column layout
+    ry += 7;
+    pdf.setFontSize(8);
     pdf.setTextColor(40, 40, 40);
 
     const reversoSd = cert._enrolledAt ? format(new Date(cert._enrolledAt), "dd/MM/yyyy") : (startDate ? format(new Date(startDate), "dd/MM/yyyy") : "—");
     const reversoEd = cert._completedAt ? format(new Date(cert._completedAt), "dd/MM/yyyy") : (endDate ? format(new Date(endDate), "dd/MM/yyyy") : "—");
 
-    const reversoFields = [
-      { label: "Nº Expediente / Registro:", value: courseCode || "—" },
+    const leftFields = [
+      { label: "Expediente:", value: courseCode || "—" },
       { label: "Denominación:", value: courseTitle },
       { label: "Duración:", value: `${durationHours} horas` },
       { label: "Modalidad:", value: "Mixta" },
-      { label: "Fecha de inicio:", value: reversoSd },
-      { label: "Fecha de finalización:", value: reversoEd },
+    ];
+    const rightFields = [
+      { label: "Fecha inicio:", value: reversoSd },
+      { label: "Fecha fin:", value: reversoEd },
       { label: "Alumno/a:", value: cert.student_name },
       { label: "DNI/NIE:", value: cert.student_dni || "—" },
     ];
 
-    reversoFields.forEach(({ label, value }) => {
+    let fieldY = ry;
+    leftFields.forEach(({ label, value }) => {
       pdf.setFont("helvetica", "bold");
-      pdf.text(label, 50, ry);
+      pdf.text(label, 30, fieldY);
       pdf.setFont("helvetica", "normal");
-      pdf.text(value, 50 + pdf.getTextWidth(label) + 3, ry);
-      ry += 8;
+      const valText = pdf.splitTextToSize(value, 95);
+      pdf.text(valText[0], 30 + pdf.getTextWidth(label) + 2, fieldY);
+      fieldY += 5.5;
     });
 
-    // Legal text
-    ry += 10;
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "italic");
-    pdf.setTextColor(80, 80, 80);
-    const legalText = "Este documento acredita la realización y superación de la actividad formativa indicada, acreditada por la Comisión de Formación Continuada de las Profesiones Sanitarias de Castilla-La Mancha, conforme al Sistema de Acreditación de la Formación Continuada en el Sistema Nacional de Salud.";
-    const legalLines = pdf.splitTextToSize(legalText, W - 100);
-    pdf.text(legalLines, W / 2, ry, { align: "center" });
+    fieldY = ry;
+    rightFields.forEach(({ label, value }) => {
+      pdf.setFont("helvetica", "bold");
+      pdf.text(label, W / 2 + 10, fieldY);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(value, W / 2 + 10 + pdf.getTextWidth(label) + 2, fieldY);
+      fieldY += 5.5;
+    });
 
-    // Logos footer
-    if (logoData) pdf.addImage(logoData, "PNG", 18, H - 25, 35, 16);
-    const cfcSnsBadge2 = await loadImageAsDataUrl("/branding/cfc-sns-badge.png");
-    if (cfcSnsBadge2) pdf.addImage(cfcSnsBadge2, "PNG", W - 45, H - 28, 28, 22);
-
-    // Footer
-    pdf.setFontSize(6);
-    pdf.setTextColor(100, 100, 100);
-    pdf.setFont("helvetica", "italic");
-    pdf.text(
-      "Inscrita en el Registro Mercantil de Toledo, al Tomo 334, Folio 196, Sección General del Libro de Sociedades, Hoja número TO-2073, inscripción 1ª.",
-      W / 2, H - 5, { align: "center" }
-    );
-
-    // PAGE 3: MODULES
-    pdf.addPage();
-    pdf.setFillColor(255, 255, 255);
-    pdf.rect(0, 0, W, H, "F");
-
-    if (logoData) pdf.addImage(logoData, "PNG", 18, 10, 40, 20);
-
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(0, 100, 180);
-    pdf.text("Contenido del Curso", W / 2, 25, { align: "center" });
-
-    pdf.setFontSize(11);
-    pdf.setTextColor(60, 60, 60);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(`"${courseTitle}"`, W / 2, 33, { align: "center" });
-
-    // Fetch modules
+    // Modules table
+    ry = fieldY + 6;
     const { data: courseModules } = await supabase.from("modules").select("title, duration_minutes").eq("course_id", courseId).eq("is_active", true).order("order_index");
 
-    let my = 45;
-    pdf.setFontSize(9);
+    // Table header
+    pdf.setFontSize(8);
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(255, 255, 255);
-    pdf.setFillColor(0, 100, 180);
-    pdf.rect(20, my, W - 40, 8, "F");
-    pdf.text("Módulo / Unidad Formativa", 25, my + 5.5);
-    pdf.text("Horas", W - 35, my + 5.5, { align: "center" });
+    pdf.setFillColor(0, 80, 150);
+    pdf.rect(25, ry, W - 50, 6, "F");
+    pdf.text("Módulo / Unidad Formativa", 28, ry + 4.2);
+    pdf.text("Horas", W - 38, ry + 4.2, { align: "center" });
 
-    my += 10;
+    ry += 7;
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(40, 40, 40);
 
-    (courseModules || []).forEach((mod, i) => {
-      if (my > H - 30) {
+    (courseModules || []).forEach((m, i) => {
+      if (ry > H - 25) {
         pdf.addPage();
-        my = 20;
+        ry = 15;
       }
       const bgColor = i % 2 === 0 ? 245 : 255;
       pdf.setFillColor(bgColor, bgColor, bgColor);
-      pdf.rect(20, my, W - 40, 7, "F");
-      pdf.setFontSize(8);
-      const title = pdf.splitTextToSize(mod.title, W - 80);
-      pdf.text(title[0], 25, my + 5);
-      const hours = mod.duration_minutes ? (mod.duration_minutes / 60).toFixed(1) : "—";
-      pdf.text(hours, W - 35, my + 5, { align: "center" });
-      my += 7;
+      pdf.rect(25, ry, W - 50, 5.5, "F");
+      pdf.setFontSize(7);
+      const title = pdf.splitTextToSize(m.title, W - 90);
+      pdf.text(title[0], 28, ry + 4);
+      const hours = m.duration_minutes ? (m.duration_minutes / 60).toFixed(1) : "—";
+      pdf.text(hours, W - 38, ry + 4, { align: "center" });
+      ry += 5.5;
     });
 
-    my += 10;
-    pdf.setFontSize(9);
+    ry += 4;
+    pdf.setFontSize(8);
     pdf.setFont("helvetica", "bold");
-    pdf.text(`Duración total: ${durationHours} horas`, W / 2, my, { align: "center" });
+    pdf.setTextColor(40, 40, 40);
+    pdf.text(`Duración total: ${durationHours} horas`, W / 2, ry, { align: "center" });
+
+    // Legal text
+    ry += 8;
+    pdf.setFontSize(6);
+    pdf.setFont("helvetica", "italic");
+    pdf.setTextColor(100, 100, 100);
+    const legalText = "Este documento acredita la realización y superación de la actividad formativa indicada, acreditada por la Comisión de Formación Continuada de las Profesiones Sanitarias de Castilla-La Mancha.";
+    const legalLines = pdf.splitTextToSize(legalText, W - 60);
+    pdf.text(legalLines, W / 2, ry, { align: "center" });
+
+    // Logos footer
+    if (logoData) pdf.addImage(logoData, "PNG", 18, H - 20, 30, 14);
+    const cfcSnsBadge2 = await loadImageAsDataUrl("/branding/cfc-sns-badge.png");
+    if (cfcSnsBadge2) pdf.addImage(cfcSnsBadge2, "PNG", W - 42, H - 22, 24, 18);
 
     // Footer
-    pdf.setFontSize(6);
-    pdf.setTextColor(150, 150, 150);
-    pdf.text(`Verificación: ${verifyUrl}`, W / 2, H - 8, { align: "center" });
+    pdf.setFontSize(5);
+    pdf.setTextColor(130, 130, 130);
+    pdf.setFont("helvetica", "italic");
+    pdf.text(`Verificación: ${verifyUrl}`, W / 2, H - 4, { align: "center" });
 
     pdf.save(`Diploma_${courseTitle.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
   };
