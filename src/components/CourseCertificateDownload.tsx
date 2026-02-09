@@ -257,90 +257,186 @@ export function CourseCertificateDownload({
     const W = pdf.internal.pageSize.getWidth();
     const H = pdf.internal.pageSize.getHeight();
 
-    // PAGE 1: DIPLOMA
+    // PAGE 1: DIPLOMA (matching uploaded template exactly)
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
+    // Watermark - large faded logo in center-right
+    const watermarkData = await loadImageAsDataUrl("/branding/grupo-arma-watermark.jpg");
+    if (watermarkData) {
+      pdf.saveGraphicsState();
+      pdf.setGState(new (pdf as any).GState({ opacity: 0.08 }));
+      pdf.addImage(watermarkData, "JPEG", W * 0.25, H * 0.15, W * 0.55, H * 0.7);
+      pdf.restoreGraphicsState();
+    }
+
+    // Top-left: Center logo (Grupo Arma)
     const logoData = await loadImageAsDataUrl(branding.centerLogo);
-    if (logoData) pdf.addImage(logoData, "PNG", 18, 15, 50, 25);
+    if (logoData) pdf.addImage(logoData, "PNG", 15, 10, 55, 28);
 
-    const cfcLogo = await loadImageAsDataUrl("/branding/cfc-sns-logo.png");
-    if (cfcLogo) pdf.addImage(cfcLogo, "PNG", W - 55, 15, 35, 25);
+    // Top-right: CFC SNS logo
+    const cfcBadge = await loadImageAsDataUrl("/branding/cfc-clm-badge.png");
+    if (cfcBadge) pdf.addImage(cfcBadge, "PNG", W - 45, 10, 30, 35);
 
+    // Student name
     let y = 55;
     pdf.setFontSize(13);
     pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(60, 60, 60);
-    pdf.text("D./Dña.", W / 2 - 40, y);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(0, 100, 180);
-    pdf.text(cert.student_name.toUpperCase(), W / 2 + 5, y);
+    pdf.setTextColor(40, 40, 40);
+    const nameText = `D./Dña. "${cert.student_name.toUpperCase()}"`;
+    pdf.text(nameText, W / 2, y, { align: "center" });
 
-    y += 14;
+    // "Ha asistido al Curso"
+    y += 12;
     pdf.setFontSize(12);
     pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(60, 60, 60);
+    pdf.setTextColor(40, 40, 40);
     pdf.text("Ha asistido al Curso", W / 2, y, { align: "center" });
 
+    // Course title - large, bold, blue
     y += 14;
     pdf.setFontSize(18);
     pdf.setFont("helvetica", "bolditalic");
     pdf.setTextColor(0, 100, 180);
-    const titleLines = pdf.splitTextToSize(`"${courseTitle}"`, W - 60);
+    const titleLines = pdf.splitTextToSize(`"${courseTitle}"`, W - 80);
     pdf.text(titleLines, W / 2, y, { align: "center" });
 
-    y += titleLines.length * 8 + 8;
+    // Expediente
+    y += titleLines.length * 8 + 10;
     pdf.setFontSize(11);
     pdf.setFont("helvetica", "bolditalic");
-    pdf.setTextColor(60, 60, 60);
+    pdf.setTextColor(40, 40, 40);
     const expediente = courseCode || "(Número de expediente/ Registro de Acreditación)";
     pdf.text(expediente, W / 2, y, { align: "center" });
 
+    // Accreditation text
     y += 12;
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(40, 40, 40);
-    const accrText = "Actividad Acreditada por la Comisión de Formación Continuada de Castilla-La Mancha del Sistema de Acreditación de la Formación Continuada de las profesiones sanitarias en el Sistema Nacional de Salud con XX,X créditos";
-    const accrLines = pdf.splitTextToSize(accrText, W - 50);
-    pdf.text(accrLines, W / 2, y, { align: "center" });
-    y += accrLines.length * 5;
+    const part1 = "Actividad ";
+    const part1b = "Acreditada por la Comisión de Formación Continuada de Castilla- La Mancha del Sistema de Acreditación de la Formación";
+    const part2 = "Continuada de las profesiones sanitarias";
+    const part2b = " en el Sistema Nacional de Salud con ";
+    const credits = "XX,X";
+    const part2c = " créditos";
+    
+    // Line 1
+    pdf.setFont("helvetica", "normal");
+    pdf.text(part1, W / 2 - pdf.getTextWidth(part1 + part1b) / 2, y);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(part1b, W / 2 - pdf.getTextWidth(part1 + part1b) / 2 + pdf.getTextWidth(part1), y);
+    
+    // Line 2
+    y += 6;
+    const line2Full = part2 + part2b + credits + part2c;
+    const line2X = W / 2 - pdf.getTextWidth(line2Full) / 2;
+    pdf.setFont("helvetica", "bold");
+    pdf.text(part2, line2X, y);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(part2b, line2X + pdf.getTextWidth(part2), y);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(0, 100, 180);
+    pdf.text(credits, line2X + pdf.getTextWidth(part2 + part2b), y);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(40, 40, 40);
+    pdf.text(part2c, line2X + pdf.getTextWidth(part2 + part2b + credits), y);
 
-    y += 8;
-    const mod = modality || "a distancia";
-    const sd = startDate ? format(new Date(startDate), "dd/MM/yyyy") : "fecha de inicio";
-    const ed = endDate ? format(new Date(endDate), "dd/MM/yyyy") : "fecha de finalización";
+    // Celebration line
+    y += 14;
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "italic");
-    pdf.setTextColor(60, 60, 60);
-    pdf.text(`Celebrado en "${mod}", del "${sd}" a "${ed}"`, W / 2, y, { align: "center" });
-
-    y += 10;
-    const issueDate = format(new Date(cert.issue_date), "dd 'de' MMMM 'de' yyyy", { locale: es });
-    pdf.text(`Talavera de la Reina, ${issueDate}`, W / 2, y, { align: "center" });
-
-    // Watermark
-    pdf.setFontSize(80);
-    pdf.setTextColor(240, 240, 240);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("GRUPO ARMA", W / 2, H / 2 + 10, { align: "center", angle: 30 });
-
-    // Signatures
-    const sigY = H - 40;
-    pdf.setFontSize(9);
-    pdf.setTextColor(80, 80, 80);
+    pdf.setTextColor(40, 40, 40);
+    const mod = modality || "a distancia en su caso";
+    const sd = startDate ? format(new Date(startDate), "dd/MM/yyyy") : "fecha de inicio";
+    const ed = endDate ? format(new Date(endDate), "dd/MM/yyyy") : "fecha de finalización";
+    
+    const celebText = `Celebrado en "`;
+    const celebMod = mod;
+    const celebMid = `", del "`;
+    const celebEnd = `"`;
+    
     pdf.setFont("helvetica", "normal");
-    pdf.line(40, sigY, 100, sigY);
-    pdf.text("Director/a del Centro", 70, sigY + 5, { align: "center" });
-    pdf.line(W - 100, sigY, W - 40, sigY);
-    pdf.text("Coordinador/a del Curso", W - 70, sigY + 5, { align: "center" });
+    const fullCeleb = celebText + celebMod + celebMid + sd + `" a "` + ed + celebEnd;
+    const celebX = W / 2 - pdf.getTextWidth(fullCeleb) / 2;
+    pdf.text(celebText, celebX, y);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(celebMod, celebX + pdf.getTextWidth(celebText), y);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(celebMid, celebX + pdf.getTextWidth(celebText + celebMod), y);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(sd, celebX + pdf.getTextWidth(celebText + celebMod + celebMid), y);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`" a "`, celebX + pdf.getTextWidth(celebText + celebMod + celebMid + sd), y);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(ed, celebX + pdf.getTextWidth(celebText + celebMod + celebMid + sd + `" a "`), y);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(celebEnd, celebX + pdf.getTextWidth(celebText + celebMod + celebMid + sd + `" a "` + ed), y);
 
-    // QR Code + verification
-    const verifyUrl = `${window.location.origin}/verificar-diploma/${cert.verification_code}`;
-    const qrDataUrl = await QRCode.toDataURL(verifyUrl, { width: 100, margin: 1 });
-    pdf.addImage(qrDataUrl, "PNG", W - 40, H - 35, 25, 25);
+    // Place and date of issue
+    y += 12;
+    pdf.setFont("helvetica", "italic");
+    pdf.setTextColor(40, 40, 40);
+    const issueDate = format(new Date(cert.issue_date), "dd 'de' MMMM 'de' yyyy", { locale: es });
+    const placeDate = `"Talavera de la Reina", "${issueDate}"`;
+    const placeDateX = W / 2 - pdf.getTextWidth(placeDate) / 2;
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`"`, placeDateX, y);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Talavera de la Reina", placeDateX + pdf.getTextWidth(`"`), y);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`", "`, placeDateX + pdf.getTextWidth(`"Talavera de la Reina`), y);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(issueDate, placeDateX + pdf.getTextWidth(`"Talavera de la Reina", "`), y);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`"`, placeDateX + pdf.getTextWidth(`"Talavera de la Reina", "` + issueDate), y);
+
+    // "Responsable de la entidad proveedora"
+    y += 12;
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(0, 100, 180);
+    pdf.text("Responsable de la entidad proveedora o en quien delegue", W / 2, y, { align: "center" });
+
+    // Bottom section: stamp + signatures
+    const bottomY = H - 45;
+
+    // Stamp image (bottom-left)
+    const stampData = await loadImageAsDataUrl("/branding/grupo-arma-stamp.jpg");
+    if (stampData) pdf.addImage(stampData, "JPEG", 20, bottomY - 5, 55, 28);
+
+    // Left signature line
+    pdf.setDrawColor(100, 100, 100);
+    pdf.line(20, bottomY + 25, 90, bottomY + 25);
+    pdf.setFontSize(8);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(40, 40, 40);
+    pdf.text("Fdo. M.ª del Coral Gómez Corrochano", 55, bottomY + 30, { align: "center" });
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Directora Grupo Arma Formación", 55, bottomY + 35, { align: "center" });
+
+    // Center: "Alumno" signature line
+    const centerSigX = W / 2;
+    pdf.line(centerSigX - 35, bottomY + 25, centerSigX + 35, bottomY + 25);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Alumno", centerSigX, bottomY + 30, { align: "center" });
+
+    // Footer: Registro Mercantil text
     pdf.setFontSize(6);
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFont("helvetica", "italic");
+    pdf.text(
+      "Inscrita en el Registro Mercantil de Toledo, al Tomo 334, Folio 196, Sección General del Libro de Sociedades, Hoja número TO-2073, inscripción 1ª.",
+      W / 2, H - 5, { align: "center" }
+    );
+
+    // QR Code + verification (bottom-left corner, small)
+    const verifyUrl = `${window.location.origin}/verificar-diploma/${cert.verification_code}`;
+    const qrDataUrl = await QRCode.toDataURL(verifyUrl, { width: 80, margin: 1 });
+    pdf.addImage(qrDataUrl, "PNG", W - 45, bottomY + 10, 18, 18);
+    pdf.setFontSize(5);
     pdf.setTextColor(120, 120, 120);
-    pdf.text(`CSV: ${cert.verification_code}`, W - 28, H - 8, { align: "center" });
+    pdf.text(`CSV: ${cert.verification_code}`, W - 36, bottomY + 30, { align: "center" });
 
     // PAGE 2: MODULES
     pdf.addPage();
@@ -404,7 +500,6 @@ export function CourseCertificateDownload({
     pdf.save(`Diploma_${courseTitle.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
   };
 
-  console.log("[CourseCertificateDownload] loading:", loading, "status:", !!status, "isAdmin:", isAdmin, "userRole:", userRole);
 
   if (loading) {
     return (
