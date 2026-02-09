@@ -27,14 +27,13 @@ export function useContractCheck(trainingCenterId: string | null, userRole: stri
           .from("center_contracts")
           .select("id")
           .eq("training_center_id", trainingCenterId)
-          .eq("contract_type", "general")
-          .maybeSingle();
+          .limit(1);
 
         if (error) {
           console.error("Error checking contract:", error);
           setHasSignedContract(true);
         } else {
-          const signed = !!data;
+          const signed = !!(data && data.length > 0);
           setHasSignedContract(signed);
           if (signed) {
             sessionStorage.setItem(cacheKey, 'true');
@@ -60,10 +59,9 @@ export function useContractCheck(trainingCenterId: string | null, userRole: stri
         .from("center_contracts")
         .select("id")
         .eq("training_center_id", trainingCenterId)
-        .eq("contract_type", "general")
-        .maybeSingle();
+        .limit(1);
       
-      const signed = !!data;
+      const signed = !!(data && data.length > 0);
       setHasSignedContract(signed);
       if (signed && trainingCenterId) {
         sessionStorage.setItem(`contract_signed_${trainingCenterId}`, 'true');

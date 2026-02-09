@@ -2790,6 +2790,7 @@ export type Database = {
         Row: {
           address: string | null
           address_line: string | null
+          campus_url: string | null
           census_code: string | null
           cif: string | null
           city: string | null
@@ -2817,6 +2818,7 @@ export type Database = {
         Insert: {
           address?: string | null
           address_line?: string | null
+          campus_url?: string | null
           census_code?: string | null
           cif?: string | null
           city?: string | null
@@ -2844,6 +2846,7 @@ export type Database = {
         Update: {
           address?: string | null
           address_line?: string | null
+          campus_url?: string | null
           census_code?: string | null
           cif?: string | null
           city?: string | null
