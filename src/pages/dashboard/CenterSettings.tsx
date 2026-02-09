@@ -101,7 +101,7 @@ export default function CenterSettings() {
       setCif(center.cif || "");
       setSepeRegistryNumber(center.sepe_registry_number || "");
       setCensusCode(center.census_code || "");
-      setCampusUrl((center as any).campus_url || "");
+      setCampusUrl(center.campus_url || "");
     } catch (error) {
       console.error("Error loading center data:", error);
       toast.error("Error al cargar los datos del centro");
