@@ -282,6 +282,69 @@ export type Database = {
           },
         ]
       }
+      certificates: {
+        Row: {
+          course_hours: number | null
+          course_id: string
+          course_title: string
+          created_at: string
+          enrollment_id: string
+          id: string
+          issue_date: string
+          metadata: Json | null
+          pdf_url: string | null
+          student_dni: string | null
+          student_name: string
+          user_id: string
+          verification_code: string
+        }
+        Insert: {
+          course_hours?: number | null
+          course_id: string
+          course_title: string
+          created_at?: string
+          enrollment_id: string
+          id?: string
+          issue_date?: string
+          metadata?: Json | null
+          pdf_url?: string | null
+          student_dni?: string | null
+          student_name: string
+          user_id: string
+          verification_code: string
+        }
+        Update: {
+          course_hours?: number | null
+          course_id?: string
+          course_title?: string
+          created_at?: string
+          enrollment_id?: string
+          id?: string
+          issue_date?: string
+          metadata?: Json | null
+          pdf_url?: string | null
+          student_dni?: string | null
+          student_name?: string
+          user_id?: string
+          verification_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communications: {
         Row: {
           communication_type: Database["public"]["Enums"]["communication_type"]
@@ -3280,6 +3343,16 @@ export type Database = {
         }[]
       }
       no_roles_exist: { Args: never; Returns: boolean }
+      verify_certificate: {
+        Args: { p_code: string }
+        Returns: {
+          course_hours: number
+          course_title: string
+          issue_date: string
+          student_name: string
+          verification_code: string
+        }[]
+      }
     }
     Enums: {
       app_role:
