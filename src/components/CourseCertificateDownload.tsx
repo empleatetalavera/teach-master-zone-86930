@@ -525,6 +525,20 @@ export function CourseCertificateDownload({
             </div>
           )}
 
+          {/* Admin demo download */}
+          {isAdmin && !status.allRequirementsMet && (
+            <Button
+              className="w-full"
+              size="lg"
+              variant="outline"
+              onClick={handleDemoDownload}
+              disabled={generating}
+            >
+              {generating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Download className="h-5 w-5 mr-2" />}
+              Descargar Diploma de Muestra (Admin)
+            </Button>
+          )}
+
           {/* Already issued info */}
           {issuedCert && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
