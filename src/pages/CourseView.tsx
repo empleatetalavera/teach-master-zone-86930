@@ -2664,7 +2664,7 @@ export default function CourseView() {
               <CourseCertificateDownload
                 courseId={courseId!}
                 courseTitle={course.title}
-                durationHours={course.duration_hours}
+                durationHours={course.duration_hours || 0}
                 courseCode={course.course_code}
                 startDate={course.start_date}
                 endDate={course.end_date}
