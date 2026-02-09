@@ -1675,14 +1675,41 @@ export default function CourseView() {
                   <p className="text-muted-foreground">{course.objectives || "Objetivos no definidos."}</p>
                 </div>
 
-                {course.specific_objectives && course.specific_objectives.length > 0 && (
+{course.specific_objectives && course.specific_objectives.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Objetivos Específicos</h3>
-                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                      {course.specific_objectives.map((obj, i) => (
-                        <li key={i}>{String(obj)}</li>
-                      ))}
-                    </ul>
+                    {(() => {
+                      const objectives = course.specific_objectives as any[];
+                      const hasCategories = objectives.some(o => typeof o === 'object' && o.category);
+                      if (hasCategories) {
+                        const grouped = objectives.reduce((acc: Record<string, any[]>, obj: any) => {
+                          const cat = obj.category || 'General';
+                          if (!acc[cat]) acc[cat] = [];
+                          acc[cat].push(obj);
+                          return acc;
+                        }, {} as Record<string, any[]>);
+                        return Object.entries(grouped).map(([category, objs]) => (
+                          <div key={category} className="mb-4">
+                            <h4 className="font-medium text-sm text-primary mb-2">{category}</h4>
+                            <ul className="space-y-2 text-muted-foreground">
+                              {(objs as any[]).map((obj: any, i: number) => (
+                                <li key={i} className="flex items-start gap-2 text-sm">
+                                  <span className="font-semibold text-foreground/70 flex-shrink-0">{obj.code}:</span>
+                                  <span>{obj.description}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ));
+                      }
+                      return (
+                        <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                          {objectives.map((obj, i) => (
+                            <li key={i}>{typeof obj === 'object' ? (obj as any).description || String(obj) : String(obj)}</li>
+                          ))}
+                        </ul>
+                      );
+                    })()}
                   </div>
                 )}
 
