@@ -695,16 +695,25 @@ export default function CourseView() {
                   {course.description}
                 </CardDescription>
               </div>
-              {(userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin') && (
-                <Button 
-                  onClick={() => navigate(`/dashboard/admin/courses/${courseId}/content`)}
-                  variant="default"
-                  className="flex items-center gap-2 bg-primary hover:bg-primary/90"
-                >
-                  <Settings className="h-4 w-4" />
-                  Modo Edición
-                </Button>
-              )}
+              <div className="flex flex-col items-end gap-3">
+                {isCFCCourse && (
+                  <img 
+                    src="/branding/cfc-clm-logo.png"
+                    alt="Comisión de Formación Continuada - Sistema Nacional de Salud"
+                    className="h-20 object-contain"
+                  />
+                )}
+                {(userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin') && (
+                  <Button 
+                    onClick={() => navigate(`/dashboard/admin/courses/${courseId}/content`)}
+                    variant="default"
+                    className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Modo Edición
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-6 mt-4 text-sm text-muted-foreground flex-wrap">
               <div className="flex items-center gap-2">
