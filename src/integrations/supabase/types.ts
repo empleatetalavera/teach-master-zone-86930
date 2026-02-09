@@ -643,6 +643,7 @@ export type Database = {
           tutor_cv_url: string | null
           tutor_guide_pdf_url: string | null
           tutor_id: string | null
+          tutorial_plan: string | null
           updated_at: string | null
           video_url: string | null
         }
@@ -682,6 +683,7 @@ export type Database = {
           tutor_cv_url?: string | null
           tutor_guide_pdf_url?: string | null
           tutor_id?: string | null
+          tutorial_plan?: string | null
           updated_at?: string | null
           video_url?: string | null
         }
@@ -721,6 +723,7 @@ export type Database = {
           tutor_cv_url?: string | null
           tutor_guide_pdf_url?: string | null
           tutor_id?: string | null
+          tutorial_plan?: string | null
           updated_at?: string | null
           video_url?: string | null
         }
