@@ -1299,7 +1299,7 @@ export default function CourseView() {
                   ) : (
                     <div className="space-y-4">
                       <p className="text-muted-foreground text-center">
-                        Consulta la guía completa del campus virtual con instrucciones detalladas para SEPE.
+                        Consulta la guía completa del campus virtual con instrucciones detalladas.
                       </p>
                       <Button asChild className="w-full">
                         <a 
