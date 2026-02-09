@@ -1,0 +1,1 @@
+ALTER TABLE public.training_centers ADD COLUMN IF NOT EXISTS campus_url TEXT;
