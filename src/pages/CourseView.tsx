@@ -76,6 +76,7 @@ interface Course {
   student_guide_pdf_url?: string | null;
   training_program_pdf_url?: string | null;
   tutor_guide_pdf_url?: string | null;
+  course_type?: string | null;
   // New dynamic fields
   course_code?: string | null;
   professional_family?: string | null;
@@ -286,6 +287,10 @@ export default function CourseView() {
   
   // Supplementary material visibility (per unit, stored in state - could be in DB)
   const [showSupplementaryMaterial, setShowSupplementaryMaterial] = useState<Record<string, boolean>>({});
+  
+  // Determine if this is a CFC course (simplified template) vs certificate/SEPE courses
+  const isCFCCourse = course?.course_type === 'cfc';
+  const showSEPEFeatures = !isCFCCourse; // Show SEPE features for all course types except CFC
   
   const openActivitySubmission = (activityId: string) => {
     setSelectedActivityId(activityId);
@@ -907,49 +912,66 @@ export default function CourseView() {
                   >
                     Inicio
                   </button>
-                  {userRole === 'teacher' ? (
+                  {showSEPEFeatures && (
+                    userRole === 'teacher' ? (
+                      <button
+                        onClick={() => setActiveTab("tutor-guide")}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutor-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                      >
+                        <BookMarked className="h-4 w-4" />
+                        Guía del Tutor
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setActiveTab("student-guide")}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "student-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                      >
+                        <BookMarked className="h-4 w-4" />
+                        Guía del Alumno
+                      </button>
+                    )
+                  )}
+                  {showSEPEFeatures && (
                     <button
-                      onClick={() => setActiveTab("tutor-guide")}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutor-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                      onClick={() => setActiveTab("training-program")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "training-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                     >
-                      <BookMarked className="h-4 w-4" />
-                      Guía del Tutor
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setActiveTab("student-guide")}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "student-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                    >
-                      <BookMarked className="h-4 w-4" />
-                      Guía del Alumno
+                      <ClipboardList className="h-4 w-4" />
+                      Programa Formativo
                     </button>
                   )}
-                  <button
-                    onClick={() => setActiveTab("training-program")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "training-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                  >
-                    <ClipboardList className="h-4 w-4" />
-                    Programa Formativo
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("work-plan")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "work-plan" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                  >
-                    <Calendar className="h-4 w-4" />
-                    Plan de Trabajo
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("schedule")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "schedule" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                  >
-                    Cronograma
-                  </button>
+                  {!showSEPEFeatures && (
+                    <button
+                      onClick={() => setActiveTab("course-program")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "course-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      Programa del Curso
+                    </button>
+                  )}
+                  {showSEPEFeatures && (
+                    <button
+                      onClick={() => setActiveTab("work-plan")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "work-plan" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Plan de Trabajo
+                    </button>
+                  )}
+                  {showSEPEFeatures && (
+                    <button
+                      onClick={() => setActiveTab("schedule")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "schedule" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      Cronograma
+                    </button>
+                  )}
                   <button
                     onClick={() => setActiveTab("modules")}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "modules" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                   >
                     <BookOpen className="h-4 w-4" />
-                    Formación en Campus
+                    {isCFCCourse ? 'Contenido del Curso' : 'Formación en Campus'}
                   </button>
                   <button
                     onClick={() => setActiveTab("grades")}
@@ -958,18 +980,22 @@ export default function CourseView() {
                     <BarChart3 className="h-4 w-4" />
                     {userRole === 'teacher' ? 'Corrección de Actividades' : 'Calificaciones'}
                   </button>
-                  <button
-                    onClick={() => setActiveTab("exams")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "exams" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                  >
-                    Exámenes
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("tutorials")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "tutorials" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                  >
-                    Tutorías
-                  </button>
+                  {showSEPEFeatures && (
+                    <button
+                      onClick={() => setActiveTab("exams")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "exams" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      Exámenes
+                    </button>
+                  )}
+                  {showSEPEFeatures && (
+                    <button
+                      onClick={() => setActiveTab("tutorials")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "tutorials" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      Tutorías
+                    </button>
+                  )}
                   <button
                     onClick={() => setActiveTab("calendar")}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "calendar" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
@@ -1018,18 +1044,21 @@ export default function CourseView() {
               <div className="lg:hidden overflow-x-auto pb-2">
                 <TabsList className="w-max min-w-full flex h-auto p-1 gap-1">
                   <TabsTrigger value="intro" className="text-xs px-2 py-1.5">Inicio</TabsTrigger>
-                  {userRole === 'teacher' ? (
-                    <TabsTrigger value="tutor-guide" className="text-xs px-2 py-1.5">Guía Tutor</TabsTrigger>
-                  ) : (
-                    <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
+                  {showSEPEFeatures && (
+                    userRole === 'teacher' ? (
+                      <TabsTrigger value="tutor-guide" className="text-xs px-2 py-1.5">Guía Tutor</TabsTrigger>
+                    ) : (
+                      <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
+                    )
                   )}
-                  <TabsTrigger value="training-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>
-                  <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>
-                  <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>
-                  <TabsTrigger value="modules" className="text-xs px-2 py-1.5">Formación</TabsTrigger>
+                  {showSEPEFeatures && <TabsTrigger value="training-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>}
+                  {!showSEPEFeatures && <TabsTrigger value="course-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>}
+                  {showSEPEFeatures && <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>}
+                  {showSEPEFeatures && <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>}
+                  <TabsTrigger value="modules" className="text-xs px-2 py-1.5">{isCFCCourse ? 'Contenido' : 'Formación'}</TabsTrigger>
                   <TabsTrigger value="grades" className="text-xs px-2 py-1.5">{userRole === 'teacher' ? 'Actividades' : 'Calificaciones'}</TabsTrigger>
-                  <TabsTrigger value="exams" className="text-xs px-2 py-1.5">Exámenes</TabsTrigger>
-                  <TabsTrigger value="tutorials" className="text-xs px-2 py-1.5">Tutorías</TabsTrigger>
+                  {showSEPEFeatures && <TabsTrigger value="exams" className="text-xs px-2 py-1.5">Exámenes</TabsTrigger>}
+                  {showSEPEFeatures && <TabsTrigger value="tutorials" className="text-xs px-2 py-1.5">Tutorías</TabsTrigger>}
                   <TabsTrigger value="calendar" className="text-xs px-2 py-1.5">Calendario</TabsTrigger>
                   <TabsTrigger value="forum" className="text-xs px-2 py-1.5">Foro</TabsTrigger>
                   {userRole === 'teacher' && (
@@ -1552,6 +1581,77 @@ export default function CourseView() {
             )}
           </TabsContent>
 
+          {/* CFC Course Program - simplified version */}
+          <TabsContent value="course-program" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-primary" />
+                  Programa del Curso
+                </CardTitle>
+                <CardDescription>Información general, objetivos y contenidos del curso</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Descripción</h3>
+                  <p className="text-muted-foreground">{course.description || "Sin descripción disponible."}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Objetivo General</h3>
+                  <p className="text-muted-foreground">{course.objectives || "Objetivos no definidos."}</p>
+                </div>
+
+                {course.specific_objectives && course.specific_objectives.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Objetivos Específicos</h3>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                      {course.specific_objectives.map((obj, i) => (
+                        <li key={i}>{String(obj)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Contenido del Curso</h3>
+                  <div className="space-y-2">
+                    {modules.map((module, idx) => (
+                      <div key={module.id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-bold text-primary">{idx + 1}</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">{module.title}</p>
+                          {module.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{module.description}</p>
+                          )}
+                          {module.duration_minutes && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              <Clock className="h-3 w-3 inline mr-1" />
+                              {Math.round(module.duration_minutes / 60)} horas
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-muted/30 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-primary">{course.duration_hours}</p>
+                    <p className="text-sm text-muted-foreground">Horas totales</p>
+                  </div>
+                  <div className="p-4 bg-muted/30 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-primary">{modules.length}</p>
+                    <p className="text-sm text-muted-foreground">Módulos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="work-plan" className="space-y-4">
             {/* Calendario interactivo con fechas de entregas, tutorías y exámenes */}
             <WorkPlanCalendar 
@@ -1584,24 +1684,26 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
-            {/* SEPE Info Banner */}
-            <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-              <CardContent className="py-4">
-                <div className="flex items-start gap-3">
-                  <BookOpen className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-blue-900 dark:text-blue-100">Estructura SEPE</p>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Este curso cumple con los requisitos de la normativa SEPE: módulos formativos, 
-                      evaluaciones con nota mínima del 50%, actividades de desarrollo y control de tiempos.
-                    </p>
+            {/* SEPE Info Banner - only for certificate courses */}
+            {showSEPEFeatures && (
+              <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                <CardContent className="py-4">
+                  <div className="flex items-start gap-3">
+                    <BookOpen className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-blue-900 dark:text-blue-100">Estructura SEPE</p>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Este curso cumple con los requisitos de la normativa SEPE: módulos formativos, 
+                        evaluaciones con nota mínima del 50%, actividades de desarrollo y control de tiempos.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             <div>
-              <h2 className="text-lg font-semibold">Formación en Campus - Módulos Formativos</h2>
+              <h2 className="text-lg font-semibold">{isCFCCourse ? 'Contenido del Curso' : 'Formación en Campus - Módulos Formativos'}</h2>
               <p className="text-sm text-muted-foreground">
                 Haz clic en cada módulo para expandir y ver su contenido
               </p>
