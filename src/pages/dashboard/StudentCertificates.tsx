@@ -38,6 +38,11 @@ interface CourseForCert {
     category: string;
     level: string;
     duration_hours: number;
+    course_code: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    modality: string | null;
+    training_center_id: string | null;
   };
 }
 
@@ -90,7 +95,7 @@ const StudentCertificates = () => {
         .from("enrollments")
         .select(`
           id, course_id, completed_at, progress_percentage,
-          courses (title, description, category, level, duration_hours)
+          courses (title, description, category, level, duration_hours, course_code, start_date, end_date, modality, training_center_id)
         `)
         .eq("user_id", user!.id)
         .order("enrolled_at", { ascending: false });
@@ -288,143 +293,250 @@ const StudentCertificates = () => {
     }
   };
 
+  const loadImageAsDataUrl = async (src: string): Promise<string | null> => {
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = src;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        setTimeout(reject, 3000);
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext("2d")?.drawImage(img, 0, 0);
+      return canvas.toDataURL("image/png");
+    } catch {
+      return null;
+    }
+  };
+
   const generatePDF = async (enrollment: CourseForCert, cert: IssuedCertificate) => {
     const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const W = pdf.internal.pageSize.getWidth();
     const H = pdf.internal.pageSize.getHeight();
 
-    // Background
+    // ===== PAGE 1: DIPLOMA (matching template) =====
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
-    // Decorative border
-    pdf.setDrawColor(26, 54, 93);
-    pdf.setLineWidth(3);
-    pdf.rect(8, 8, W - 16, H - 16);
-    pdf.setDrawColor(180, 160, 100);
-    pdf.setLineWidth(1);
-    pdf.rect(11, 11, W - 22, H - 22);
-    pdf.setDrawColor(26, 54, 93);
-    pdf.setLineWidth(0.5);
-    pdf.rect(13, 13, W - 26, H - 26);
+    // Top-left logo (Grupo Arma / center logo)
+    const logoData = await loadImageAsDataUrl(branding.centerLogo);
+    if (logoData) pdf.addImage(logoData, "PNG", 18, 15, 50, 25);
 
-    // Logo
-    try {
-      const logoImg = new Image();
-      logoImg.crossOrigin = "anonymous";
-      logoImg.src = branding.centerLogo;
-      await new Promise((resolve, reject) => {
-        logoImg.onload = resolve;
-        logoImg.onerror = reject;
-        setTimeout(reject, 3000);
-      });
-      const canvas = document.createElement("canvas");
-      canvas.width = logoImg.width;
-      canvas.height = logoImg.height;
-      canvas.getContext("2d")?.drawImage(logoImg, 0, 0);
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 20, 18, 45, 22);
-    } catch {
-      // Skip logo on error
-    }
-
-    // Title
-    pdf.setFontSize(28);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(26, 54, 93);
-    pdf.text("DIPLOMA ACREDITATIVO", W / 2, 55, { align: "center" });
-
-    // Decorative line
-    pdf.setDrawColor(180, 160, 100);
-    pdf.setLineWidth(1);
-    pdf.line(W / 2 - 60, 60, W / 2 + 60, 60);
-
-    // Center name
-    pdf.setFontSize(11);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(100, 100, 100);
-    pdf.text(branding.centerName, W / 2, 68, { align: "center" });
-
-    // Certifica que
-    pdf.setFontSize(12);
-    pdf.setTextColor(60, 60, 60);
-    pdf.text("Certifica que", W / 2, 80, { align: "center" });
+    // Top-right CFC/SNS logo
+    const cfcLogo = await loadImageAsDataUrl("/branding/cfc-sns-logo.png");
+    if (cfcLogo) pdf.addImage(cfcLogo, "PNG", W - 55, 15, 35, 25);
 
     // Student name
-    pdf.setFontSize(24);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(26, 54, 93);
-    pdf.text(cert.student_name, W / 2, 93, { align: "center" });
-
-    // DNI
-    if (cert.student_dni) {
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`DNI/NIE: ${cert.student_dni}`, W / 2, 100, { align: "center" });
-    }
-
-    // Completion text
-    pdf.setFontSize(11);
+    let y = 55;
+    pdf.setFontSize(13);
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(60, 60, 60);
-    pdf.text("ha superado satisfactoriamente la acción formativa", W / 2, 110, { align: "center" });
+    pdf.text("D./Dña.", W / 2 - 40, y);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(0, 100, 180);
+    pdf.text(cert.student_name.toUpperCase(), W / 2 + 5, y);
+
+    // "Ha asistido al Curso"
+    y += 14;
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(60, 60, 60);
+    pdf.text("Ha asistido al Curso", W / 2, y, { align: "center" });
 
     // Course title
-    pdf.setFontSize(16);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(26, 54, 93);
-    const titleLines = pdf.splitTextToSize(enrollment.courses.title, W - 80);
-    pdf.text(titleLines, W / 2, 122, { align: "center" });
+    y += 14;
+    pdf.setFontSize(18);
+    pdf.setFont("helvetica", "bolditalic");
+    pdf.setTextColor(0, 100, 180);
+    const titleLines = pdf.splitTextToSize(`"${enrollment.courses.title}"`, W - 60);
+    pdf.text(titleLines, W / 2, y, { align: "center" });
 
-    // Duration
-    const yAfterTitle = 122 + titleLines.length * 7;
+    // Expedition number
+    y += titleLines.length * 8 + 8;
     pdf.setFontSize(11);
+    pdf.setFont("helvetica", "bolditalic");
+    pdf.setTextColor(60, 60, 60);
+    const expediente = enrollment.courses.course_code || "(Número de expediente/ Registro de Acreditación)";
+    pdf.text(expediente, W / 2, y, { align: "center" });
+
+    // Accreditation text
+    y += 12;
+    pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(80, 80, 80);
-    pdf.text(
-      `con una duración de ${enrollment.courses.duration_hours} horas`,
-      W / 2,
-      yAfterTitle + 5,
-      { align: "center" }
-    );
+    pdf.setTextColor(40, 40, 40);
+    const accrText = "Actividad Acreditada por la Comisión de Formación Continuada de Castilla-La Mancha del Sistema de Acreditación de la Formación Continuada de las profesiones sanitarias en el Sistema Nacional de Salud con XX,X créditos";
+    const accrLines = pdf.splitTextToSize(accrText, W - 50);
+    pdf.text(accrLines, W / 2, y, { align: "center" });
+    // Bold key parts
+    y += accrLines.length * 5;
 
-    // Date
-    const dateText = format(new Date(cert.issue_date), "dd 'de' MMMM 'de' yyyy", { locale: es });
-    pdf.text(`Fecha de emisión: ${dateText}`, W / 2, yAfterTitle + 15, { align: "center" });
+    // Location and dates
+    y += 8;
+    const modality = enrollment.courses.modality || "a distancia";
+    const startDate = enrollment.courses.start_date
+      ? format(new Date(enrollment.courses.start_date), "dd/MM/yyyy")
+      : "fecha de inicio";
+    const endDate = enrollment.courses.end_date
+      ? format(new Date(enrollment.courses.end_date), "dd/MM/yyyy")
+      : "fecha de finalización";
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "italic");
+    pdf.setTextColor(60, 60, 60);
+    const locationText = `Celebrado en "${modality}", del "${startDate}" a "${endDate}"`;
+    pdf.text(locationText, W / 2, y, { align: "center" });
 
-    // QR Code
+    // Issue date and place
+    y += 10;
+    const issueDate = format(new Date(cert.issue_date), "dd 'de' MMMM 'de' yyyy", { locale: es });
+    pdf.text(`Talavera de la Reina, ${issueDate}`, W / 2, y, { align: "center" });
+
+    // Watermark (center background text - light)
+    pdf.setFontSize(80);
+    pdf.setTextColor(240, 240, 240);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("GRUPO ARMA", W / 2, H / 2 + 10, { align: "center" });
+    pdf.setFontSize(30);
+    pdf.text("F O R M A C I Ó N", W / 2, H / 2 + 30, { align: "center" });
+
+    // Signature area - left (director)
+    const sigY = H - 45;
+    pdf.setDrawColor(60, 60, 60);
+    pdf.setLineWidth(0.3);
+    pdf.line(30, sigY, 110, sigY);
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(40, 40, 40);
+    pdf.text("Fdo. M.ª del Coral Gómez Corrochano", 70, sigY + 5, { align: "center" });
+    pdf.text("Directora Grupo Arma Formación", 70, sigY + 10, { align: "center" });
+
+    // Signature area - right (student)
+    pdf.line(W - 110, sigY, W - 30, sigY);
+    pdf.text("Alumno", W - 70, sigY + 5, { align: "center" });
+
+    // Company stamp area (bottom left)
+    pdf.setFontSize(7);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text("GRUPO ARMA", 30, H - 25);
+    pdf.text("CIF: B45270139", 30, H - 21);
+    pdf.text("C/ Medellín 4, 45600 Talavera de la Reina", 30, H - 17);
+    pdf.text("925 812 889 | grupoarmaformacion@gmail.com", 30, H - 13);
+
+    // Footer registry
+    pdf.setFontSize(7);
+    pdf.setTextColor(120, 120, 120);
+    const regText = "Inscrita en el Registro Mercantil de Toledo, al Tomo 334, Folio 196, Sección General del Libro de Sociedades, Hoja número TO-2073, inscripción 1ª.";
+    pdf.text(regText, W / 2, H - 6, { align: "center" });
+
+    // QR Code (bottom right, discrete)
     try {
       const verifyUrl = `${window.location.origin}/verificar-diploma/${cert.verification_code}`;
       const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
-        width: 200,
-        margin: 1,
+        width: 150, margin: 1,
         color: { dark: "#1a365d", light: "#ffffff" },
       });
-      pdf.addImage(qrDataUrl, "PNG", W - 55, H - 60, 30, 30);
-      pdf.setFontSize(7);
+      pdf.addImage(qrDataUrl, "PNG", W - 48, H - 40, 20, 20);
+      pdf.setFontSize(6);
       pdf.setTextColor(120, 120, 120);
-      pdf.text("Verificar diploma", W - 40, H - 26, { align: "center" });
-    } catch {
-      // Skip QR on error
-    }
+      pdf.text("Verificar diploma", W - 38, H - 18, { align: "center" });
+    } catch { /* skip */ }
 
-    // Verification code
-    pdf.setFontSize(8);
+    // CSV code
+    pdf.setFontSize(7);
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(26, 54, 93);
-    pdf.text(`CSV: ${cert.verification_code}`, 20, H - 20);
-    pdf.setFontSize(7);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(120, 120, 120);
-    pdf.text("Código Seguro de Verificación", 20, H - 16);
+    pdf.text(`CSV: ${cert.verification_code}`, W - 48, H - 12);
 
-    // Signature line
-    pdf.setDrawColor(60, 60, 60);
-    pdf.setLineWidth(0.3);
-    pdf.line(W / 2 - 30, H - 35, W / 2 + 30, H - 35);
-    pdf.setFontSize(9);
-    pdf.setTextColor(80, 80, 80);
-    pdf.text("Director/a del Centro", W / 2, H - 30, { align: "center" });
+    // ===== PAGE 2: MODULES / CONTENIDO =====
+    // Fetch modules for this course
+    const { data: modules } = await supabase
+      .from("modules")
+      .select("title, description, duration_minutes, order_index")
+      .eq("course_id", enrollment.course_id)
+      .eq("is_active", true)
+      .order("order_index");
+
+    if (modules && modules.length > 0) {
+      pdf.addPage("a4", "landscape");
+
+      // Header
+      if (logoData) pdf.addImage(logoData, "PNG", 18, 12, 40, 20);
+
+      pdf.setFontSize(18);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(26, 54, 93);
+      pdf.text("CONTENIDO DE LA ACCIÓN FORMATIVA", W / 2, 25, { align: "center" });
+
+      pdf.setDrawColor(180, 160, 100);
+      pdf.setLineWidth(0.8);
+      pdf.line(40, 30, W - 40, 30);
+
+      // Course info
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(40, 40, 40);
+      pdf.text(enrollment.courses.title, W / 2, 40, { align: "center" });
+
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(80, 80, 80);
+      pdf.text(`Duración total: ${enrollment.courses.duration_hours} horas`, W / 2, 48, { align: "center" });
+
+      // Modules table
+      let tableY = 58;
+      // Header row
+      pdf.setFillColor(26, 54, 93);
+      pdf.rect(25, tableY, W - 50, 8, "F");
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(255, 255, 255);
+      pdf.text("Nº", 30, tableY + 6);
+      pdf.text("Módulo / Unidad Formativa", 45, tableY + 6);
+      pdf.text("Horas", W - 45, tableY + 6);
+      tableY += 8;
+
+      pdf.setFont("helvetica", "normal");
+      modules.forEach((mod, idx) => {
+        const isEven = idx % 2 === 0;
+        if (isEven) {
+          pdf.setFillColor(245, 245, 250);
+          pdf.rect(25, tableY, W - 50, 10, "F");
+        }
+
+        pdf.setTextColor(40, 40, 40);
+        pdf.setFontSize(9);
+        pdf.text(`${idx + 1}`, 32, tableY + 7);
+
+        const modTitle = pdf.splitTextToSize(mod.title, W - 120);
+        pdf.text(modTitle[0], 45, tableY + 7);
+
+        const hours = mod.duration_minutes ? Math.round(mod.duration_minutes / 60) : "-";
+        pdf.text(`${hours}`, W - 42, tableY + 7);
+
+        tableY += 10;
+
+        // Add page if needed
+        if (tableY > H - 30) {
+          pdf.addPage("a4", "landscape");
+          tableY = 20;
+        }
+      });
+
+      // Student info footer on page 2
+      tableY += 10;
+      pdf.setDrawColor(180, 160, 100);
+      pdf.setLineWidth(0.5);
+      pdf.line(25, tableY, W - 25, tableY);
+      tableY += 8;
+      pdf.setFontSize(9);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text(`Alumno/a: ${cert.student_name}`, 30, tableY);
+      if (cert.student_dni) pdf.text(`DNI/NIE: ${cert.student_dni}`, W / 2, tableY);
+      pdf.text(`CSV: ${cert.verification_code}`, W - 80, tableY);
+    }
 
     pdf.save(`diploma_${enrollment.courses.title.replace(/\s+/g, "_").substring(0, 40)}.pdf`);
   };
