@@ -1069,15 +1069,13 @@ export default function CourseView() {
                   >
                     Tiempos Invertidos
                   </button>
-                  {userRole === 'student' && (
-                    <button
-                      onClick={() => setActiveTab("certificate")}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "certificate" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                    >
-                      <Award className="h-4 w-4" />
-                      Certificado
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setActiveTab("certificate")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "certificate" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <Award className="h-4 w-4" />
+                    Certificado
+                  </button>
                   {(userRole === 'auditor' || userRole === 'admin') && (
                     <button
                       onClick={() => setActiveTab("audit")}
@@ -1124,9 +1122,7 @@ export default function CourseView() {
                     <TabsTrigger value="tutor-forum" className="text-xs px-2 py-1.5">Foro Tutores</TabsTrigger>
                   )}
                   <TabsTrigger value="time-tracking" className="text-xs px-2 py-1.5">Tiempos</TabsTrigger>
-                  {userRole === 'student' && (
-                    <TabsTrigger value="certificate" className="text-xs px-2 py-1.5">Certificado</TabsTrigger>
-                  )}
+                  <TabsTrigger value="certificate" className="text-xs px-2 py-1.5">Certificado</TabsTrigger>
                   {(userRole === 'auditor' || userRole === 'admin') && (
                     <TabsTrigger value="audit" className="text-xs px-2 py-1.5">Auditoría</TabsTrigger>
                   )}
