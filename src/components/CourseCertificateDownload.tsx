@@ -80,16 +80,41 @@ export function CourseCertificateDownload({
   modality,
   trainingCenterId,
 }: CourseCertificateDownloadProps) {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<CompletionStatus | null>(null);
   const [issuedCert, setIssuedCert] = useState<IssuedCertificate | null>(null);
   const [generating, setGenerating] = useState(false);
   const branding = getCurrentBranding();
+  const isAdmin = userRole === 'super_admin' || userRole === 'admin';
 
   useEffect(() => {
     if (user && courseId) loadStatus();
   }, [user, courseId]);
+
+  const handleDemoDownload = async () => {
+    try {
+      setGenerating(true);
+      toast.info("Generando diploma de muestra...");
+      const demoCert: IssuedCertificate = {
+        id: "demo",
+        verification_code: "DEMO-PREVIEW",
+        student_name: "NOMBRE DEL ALUMNO (MUESTRA)",
+        student_dni: "00000000X",
+        course_title: courseTitle,
+        course_hours: durationHours,
+        issue_date: new Date().toISOString(),
+        course_id: courseId,
+      };
+      await generatePDF(demoCert);
+      toast.success("Diploma de muestra generado");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Error al generar el diploma de muestra");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const loadStatus = async () => {
     try {
@@ -390,6 +415,29 @@ export function CourseCertificateDownload({
   }
 
   if (!status) {
+    if (isAdmin) {
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Award className="h-8 w-8 text-primary" />
+              <div>
+                <CardTitle className="text-xl">Diploma del Curso (Vista previa)</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Como administrador, puedes descargar una muestra del diploma para revisar el formato.
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full" size="lg" onClick={handleDemoDownload} disabled={generating}>
+              {generating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Download className="h-5 w-5 mr-2" />}
+              Descargar Diploma de Muestra
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
     return (
       <Card>
         <CardContent className="p-8 text-center">
