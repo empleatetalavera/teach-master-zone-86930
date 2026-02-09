@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload, CheckSquare, PenTool, ExternalLink } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload, CheckSquare, PenTool, ExternalLink, Award } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -57,6 +57,7 @@ import { CourseAnnouncements } from "@/components/CourseAnnouncements";
 import { VirtualCafeteria } from "@/components/VirtualCafeteria";
 import { CFCForumTabs } from "@/components/CFCForumTabs";
 import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
+import { CourseCertificateDownload } from "@/components/CourseCertificateDownload";
 
 interface Course {
   id: string;
@@ -1068,6 +1069,15 @@ export default function CourseView() {
                   >
                     Tiempos Invertidos
                   </button>
+                  {userRole === 'student' && (
+                    <button
+                      onClick={() => setActiveTab("certificate")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "certificate" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      <Award className="h-4 w-4" />
+                      Certificado
+                    </button>
+                  )}
                   {(userRole === 'auditor' || userRole === 'admin') && (
                     <button
                       onClick={() => setActiveTab("audit")}
@@ -1114,6 +1124,9 @@ export default function CourseView() {
                     <TabsTrigger value="tutor-forum" className="text-xs px-2 py-1.5">Foro Tutores</TabsTrigger>
                   )}
                   <TabsTrigger value="time-tracking" className="text-xs px-2 py-1.5">Tiempos</TabsTrigger>
+                  {userRole === 'student' && (
+                    <TabsTrigger value="certificate" className="text-xs px-2 py-1.5">Certificado</TabsTrigger>
+                  )}
                   {(userRole === 'auditor' || userRole === 'admin') && (
                     <TabsTrigger value="audit" className="text-xs px-2 py-1.5">Auditoría</TabsTrigger>
                   )}
@@ -2647,6 +2660,21 @@ export default function CourseView() {
           {(userRole === 'auditor' || userRole === 'admin') && (
             <TabsContent value="audit" className="space-y-4">
               <QualityAuditView courseId={courseId!} />
+            </TabsContent>
+          )}
+
+          {userRole === 'student' && course && (
+            <TabsContent value="certificate" className="space-y-4">
+              <CourseCertificateDownload
+                courseId={courseId!}
+                courseTitle={course.title}
+                durationHours={course.duration_hours}
+                courseCode={course.course_code}
+                startDate={course.start_date}
+                endDate={course.end_date}
+                modality={course.modality}
+                trainingCenterId={course.training_center_id}
+              />
             </TabsContent>
           )}
           </Tabs>
