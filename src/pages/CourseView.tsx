@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload, CheckSquare, PenTool } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload, CheckSquare, PenTool, ExternalLink } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1222,14 +1222,41 @@ export default function CourseView() {
                 </CardContent>
               </Card>
 
-              {/* Documentos Oficiales del Certificado - Always visible, editable for admin/teacher */}
-              <CertificateDocumentsSection
-                courseId={courseId!}
-                fichaCertificadoUrl={course.ficha_certificado_url}
-                boeUrl={course.boe_url}
-                isEditable={userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher'}
-                onUpdate={loadCourseData}
-              />
+              {/* Documentos Oficiales del Certificado - Only for non-CFC courses */}
+              {showSEPEFeatures && (
+                <CertificateDocumentsSection
+                  courseId={courseId!}
+                  fichaCertificadoUrl={course.ficha_certificado_url}
+                  boeUrl={course.boe_url}
+                  isEditable={userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher'}
+                  onUpdate={loadCourseData}
+                />
+              )}
+
+              {/* CFC Accreditation Link - Only for CFC courses */}
+              {isCFCCourse && (
+                <Card className="border-green-200 bg-green-50/30 dark:bg-green-950/10">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                      <ExternalLink className="h-5 w-5 text-green-700 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-sm">Acreditación de Formación Continuada</h4>
+                      <p className="text-xs text-muted-foreground">Comisión de Formación Continuada de Castilla-La Mancha</p>
+                    </div>
+                    <a
+                      href="http://ics.jccm.es/formacion/funciones/acreditacion-de-formacion-continuada/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="outline" size="sm" className="gap-2 border-green-300 text-green-700 hover:bg-green-100">
+                        <ExternalLink className="h-4 w-4" />
+                        Visitar web
+                      </Button>
+                    </a>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Guía del Campus */}
               <Card>
