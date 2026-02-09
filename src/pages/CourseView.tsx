@@ -2659,7 +2659,7 @@ export default function CourseView() {
             </TabsContent>
           )}
 
-          {userRole === 'student' && course && (
+          {course && (
             <TabsContent value="certificate" className="space-y-4">
               <CourseCertificateDownload
                 courseId={courseId!}
