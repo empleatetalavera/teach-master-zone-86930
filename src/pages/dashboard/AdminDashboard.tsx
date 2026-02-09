@@ -43,6 +43,7 @@ interface CenterInfo {
   region: string | null;
   phone: string | null;
   email: string | null;
+  campus_url: string | null;
 }
 
 const AdminDashboard = () => {
@@ -62,6 +63,8 @@ const AdminDashboard = () => {
   const [centerUsers, setCenterUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [customDomain, setCustomDomain] = useState("");
+  const [savingDomain, setSavingDomain] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
@@ -92,6 +95,7 @@ const AdminDashboard = () => {
 
         if (center) {
           setCenterInfo(center as unknown as CenterInfo);
+          setCustomDomain((center as any).campus_url || "");
 
           // Fetch courses for this center
           const { data: courses } = await supabase
@@ -282,6 +286,25 @@ const AdminDashboard = () => {
     });
     
     setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const saveCustomDomain = async () => {
+    if (!centerInfo) return;
+    setSavingDomain(true);
+    try {
+      const { error } = await supabase
+        .from("training_centers")
+        .update({ campus_url: customDomain || null })
+        .eq("id", centerInfo.id);
+      if (error) throw error;
+      setCenterInfo({ ...centerInfo, campus_url: customDomain || null });
+      toast({ title: "Dominio guardado", description: "El dominio personalizado se ha actualizado correctamente." });
+    } catch (error) {
+      console.error("Error saving domain:", error);
+      toast({ title: "Error", description: "No se pudo guardar el dominio.", variant: "destructive" });
+    } finally {
+      setSavingDomain(false);
+    }
   };
 
   if (loading) {
@@ -503,7 +526,7 @@ const AdminDashboard = () => {
                   Enlace de Acceso del Centro
                 </h3>
               </div>
-              <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+              <div className="bg-muted/50 p-4 rounded-lg space-y-4">
                 <p className="text-sm text-muted-foreground">
                   Este es el enlace único de acceso para su centro. Compártalo con sus alumnos y profesores para que accedan al campus con la imagen corporativa de su centro.
                 </p>
@@ -534,6 +557,46 @@ const AdminDashboard = () => {
                   >
                     Ver página de acceso
                   </Button>
+                </div>
+
+                {/* Custom Domain Section */}
+                <div className="pt-3 border-t border-border/30 space-y-2">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    🌐 Dominio personalizado del campus
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Si dispone de un dominio propio, introduzca la URL completa donde sus alumnos accederán al campus (ej: https://campus.sucentro.com).
+                  </p>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://campus.sucentro.com"
+                      value={customDomain}
+                      onChange={(e) => setCustomDomain(e.target.value)}
+                      className="font-mono text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={saveCustomDomain}
+                      disabled={savingDomain}
+                    >
+                      {savingDomain ? "Guardando..." : "Guardar"}
+                    </Button>
+                  </div>
+                  {centerInfo.campus_url && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span className="text-xs text-green-700">Dominio configurado: {centerInfo.campus_url}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 text-xs"
+                        onClick={() => window.open(centerInfo.campus_url!, '_blank')}
+                      >
+                        Visitar
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
