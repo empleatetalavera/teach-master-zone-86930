@@ -253,17 +253,26 @@ export const generateCampusGuidePDF = async (
   // PORTADA
   // ============================================
   
-  // Header con logos
+  // Header con logo del centro
+  if (branding.centerLogo) {
+    try {
+      const logoImg = new Image();
+      logoImg.crossOrigin = 'anonymous';
+      logoImg.src = branding.centerLogo;
+      await new Promise((resolve, reject) => { logoImg.onload = resolve; logoImg.onerror = reject; setTimeout(reject, 3000); });
+      const canvas = document.createElement('canvas');
+      canvas.width = logoImg.width;
+      canvas.height = logoImg.height;
+      canvas.getContext('2d')?.drawImage(logoImg, 0, 0);
+      const logoDataUrl = canvas.toDataURL('image/png');
+      doc.addImage(logoDataUrl, 'PNG', margin, 15, 50, 25);
+    } catch { /* skip logo if failed */ }
+  }
+  
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text('CAMPUS EMPLEATE', margin, 30);
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...GRAY);
-  doc.text('MINISTERIO DE TRABAJO Y ECONOMÍA SOCIAL', pageWidth - margin, 28, { align: 'right' });
-  doc.text('SEPE', pageWidth - margin, 35, { align: 'right' });
+  doc.text(branding.centerName || 'Campus Virtual', branding.centerLogo ? margin + 55 : margin, 30);
 
   // Línea separadora
   doc.setDrawColor(...TEAL_COLOR);
@@ -292,14 +301,14 @@ export const generateCampusGuidePDF = async (
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text(branding.centerName || 'Empléate Talavera Formación', pageWidth / 2, 160, { align: 'center' });
+  doc.text(branding.centerName || 'Centro de Formación', pageWidth / 2, 160, { align: 'center' });
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...BLACK);
-  doc.text('Formación Profesional para el Empleo', pageWidth / 2, 172, { align: 'center' });
+  doc.text('Formación Profesional', pageWidth / 2, 172, { align: 'center' });
 
-  // Badge SEPE
+  // Badge centro acreditado
   doc.setFillColor(...LIGHT_TEAL);
   doc.setDrawColor(...TEAL_COLOR);
   doc.setLineWidth(0.5);
@@ -307,18 +316,12 @@ export const generateCampusGuidePDF = async (
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text('Centro Acreditado SEPE', pageWidth / 2, 194, { align: 'center' });
+  doc.text('Centro Acreditado', pageWidth / 2, 194, { align: 'center' });
 
   // Pie de portada
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...GRAY);
-  doc.text('Documento conforme a los requisitos del', pageWidth / 2, 230, { align: 'center' });
-  doc.setFont('helvetica', 'bold');
-  doc.text('Servicio Público de Empleo Estatal (SEPE)', pageWidth / 2, 238, { align: 'center' });
-  
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...GRAY);
   doc.text('Versión 1.0 - 2026', pageWidth / 2, 260, { align: 'center' });
 
   // ============================================
@@ -383,7 +386,7 @@ export const generateCampusGuidePDF = async (
   addNewPage();
   addMainSectionTitle('1', 'INTRODUCCIÓN AL CAMPUS VIRTUAL');
   
-  addInfoBox('Campus Empleate es una plataforma de teleformación diseñada para la gestión e impartición de acciones formativas online, cumpliendo con los requisitos del SEPE.');
+  addInfoBox('El Campus Virtual es una plataforma de teleformación diseñada para la gestión e impartición de acciones formativas online.');
   
   addParagraph('El Campus Virtual está dividido en dos entornos claramente diferenciados:');
   
@@ -474,7 +477,6 @@ export const generateCampusGuidePDF = async (
   
   addBorderedBox('Paso 3: Completar perfil', [
     'En el primer acceso, deberá completar su perfil con los datos personales requeridos.',
-    'Esta información es obligatoria para cumplir con los requisitos del SEPE.',
     'Incluye: DNI/NIE, nombre completo, dirección, teléfono, etc.'
   ], 'C');
 
@@ -531,23 +533,23 @@ export const generateCampusGuidePDF = async (
   addNewPage();
   addMainSectionTitle('5', 'ESTRUCTURA DEL CURSO');
   
-  addParagraph('Los cursos de Certificados de Profesionalidad están organizados siguiendo una estructura jerárquica:');
+  addParagraph('Los cursos están organizados siguiendo una estructura jerárquica:');
   
   addSubsectionTitle('5.1', 'ORGANIZACIÓN MODULAR');
   
-  addBorderedBox('Certificado de Profesionalidad', [
+  addBorderedBox('Curso / Certificado', [
     'Nivel superior que agrupa todos los módulos formativos.',
-    'Define las competencias profesionales a adquirir.',
+    'Define las competencias a adquirir.',
     'Incluye duración total en horas y requisitos de acceso.'
   ]);
   
-  addBorderedBox('Módulos Formativos (MF)', [
-    'Bloques temáticos principales del certificado.',
+  addBorderedBox('Módulos Formativos', [
+    'Bloques temáticos principales del curso.',
     'Cada módulo tiene objetivos específicos.',
     'Se evalúan de forma independiente.'
   ]);
   
-  addBorderedBox('Unidades Formativas (UF)', [
+  addBorderedBox('Unidades Formativas', [
     'Divisiones internas de cada módulo.',
     'Contienen los contenidos teóricos y prácticos.',
     'Incluyen actividades y evaluaciones propias.'
@@ -755,7 +757,7 @@ export const generateCampusGuidePDF = async (
 
   addSubsectionTitle('10.2', 'REQUISITOS DE TIEMPO');
   
-  addParagraph('Para certificados de profesionalidad en modalidad teleformación, debe cumplir:');
+  addParagraph('Para cursos en modalidad teleformación, debe cumplir:');
   
   addBulletList([
     'Mínimo del 75% del tiempo estimado para cada módulo formativo',
@@ -847,8 +849,8 @@ export const generateCampusGuidePDF = async (
     ['TIPO', 'DESCRIPCIÓN'],
     [
       ['Diploma de Aprovechamiento', 'Certificado del centro de formación'],
-      ['Acreditación Parcial Acumulable', 'Por módulos formativos superados'],
-      ['Certificado de Profesionalidad', 'Emitido por el SEPE (tras prácticas)'],
+      ['Acreditación Parcial', 'Por módulos formativos superados'],
+      ['Certificado del Curso', 'Emitido tras completar todos los requisitos'],
     ],
     [60, 110]
   );
@@ -858,10 +860,9 @@ export const generateCampusGuidePDF = async (
   addParagraph('Una vez finalizado el curso y verificados los requisitos:');
   
   addBulletList([
-    'El centro de formación tramitará su expediente ante el SEPE',
+    'El centro de formación tramitará su expediente',
     'Recibirá un correo con el diploma de aprovechamiento',
-    'La acreditación oficial se gestiona a través del SEPE',
-    'Puede descargar su diploma desde la sección "Mis Certificados"'
+    'Puede descargar su diploma desde la sección "Certificado" del curso'
   ]);
 
   // ============================================
@@ -877,8 +878,8 @@ export const generateCampusGuidePDF = async (
   addTable(
     ['CANAL', 'CONTACTO', 'HORARIO'],
     [
-      ['Email', 'soporte@empleatetalavera.es', 'L-V 9:00-18:00'],
-      ['Teléfono', '665 673 416', 'L-V 9:00-14:00'],
+      ['Email', 'Consultar con su centro', 'L-V 9:00-18:00'],
+      ['Teléfono', 'Consultar con su centro', 'L-V 9:00-14:00'],
       ['Chat', 'Disponible en la plataforma', 'L-V 9:00-18:00'],
       ['Foro Técnico', 'Sección "Ayuda" del campus', '24/7'],
     ],
@@ -935,22 +936,13 @@ export const generateCampusGuidePDF = async (
   yPos = 60;
   
   addBorderedBox('Centro de Formación', [
-    branding.centerName || 'Empléate Talavera Formación',
-    'Dirección: [Consultar con el centro]',
-    'Teléfono: 665 673 416',
-    'Email: formacion@empleatetalavera.es'
+    branding.centerName || 'Centro de Formación',
+    'Consulte los datos de contacto en su campus virtual',
   ]);
 
   addBorderedBox('Soporte Técnico', [
-    'Email: soporte@empleatetalavera.es',
-    'Teléfono: 665 673 416',
+    'Consulte los datos de contacto en la sección CAU de su curso',
     'Horario: Lunes a Viernes de 9:00 a 18:00'
-  ]);
-
-  addBorderedBox('Servicio Público de Empleo Estatal (SEPE)', [
-    'Web: www.sepe.es',
-    'Teléfono: 901 010 210',
-    'Información sobre Certificados de Profesionalidad'
   ]);
 
   // Footer final
@@ -958,7 +950,7 @@ export const generateCampusGuidePDF = async (
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...GRAY);
-  doc.text('Documento generado por Campus Empleate', pageWidth / 2, yPos, { align: 'center' });
+  doc.text(`Documento generado por ${branding.centerName || 'Campus Virtual'}`, pageWidth / 2, yPos, { align: 'center' });
   doc.text('© 2026 - Todos los derechos reservados', pageWidth / 2, yPos + 8, { align: 'center' });
 
   // Guardar el PDF

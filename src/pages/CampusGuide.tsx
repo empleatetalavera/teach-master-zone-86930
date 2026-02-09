@@ -71,7 +71,7 @@ export default function CampusGuide() {
             Guía del Campus Virtual
           </h1>
           <p className="text-muted-foreground mb-6">
-            Manual de Usuario para el Alumno - Campus Empleate
+            Manual de Usuario para el Alumno - {branding.centerName || 'Campus Virtual'}
           </p>
           <p className="text-sm text-slate-600 mb-8">
             Este documento contiene toda la información necesaria para navegar y utilizar 
