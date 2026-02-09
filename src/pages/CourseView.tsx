@@ -1792,7 +1792,88 @@ export default function CourseView() {
                   </p>
                 </CardContent>
               </Card>
+            ) : isCFCCourse ? (
+              /* ===== CFC SIMPLIFIED MODULE VIEW ===== */
+              <Accordion type="multiple" className="space-y-3">
+                {modules.map((module, index) => {
+                  const moduleUnits = module.formative_units || [];
+                  return (
+                    <AccordionItem key={module.id} value={module.id} className="border rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-4 py-3 bg-muted/30 hover:no-underline">
+                        <div className="flex items-center gap-3 w-full">
+                          <span className="font-mono text-sm font-bold bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center shrink-0">{index + 1}</span>
+                          <div className="flex-1 text-left">
+                            <h3 className="font-semibold text-sm">{module.title}</h3>
+                            {module.description && <p className="text-xs text-muted-foreground mt-0.5">{module.description}</p>}
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{module.duration_minutes ? (module.duration_minutes / 60).toFixed(1) : 0}h</span>
+                              <span className="flex items-center gap-1"><ListChecks className="h-3 w-3" />{moduleUnits.length} UFs</span>
+                              <div className="flex items-center gap-2 ml-auto">
+                                <Progress value={module.progress || 0} className="w-16 h-1.5" />
+                                <span className="font-medium">{module.progress || 0}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4 pt-2 border-t">
+                        {moduleUnits.length === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-4">Sin unidades formativas</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {moduleUnits.map((unit: any) => (
+                              <div key={unit.id} className="border rounded-lg p-4 space-y-3">
+                                <h4 className="font-medium text-sm">{unit.title}</h4>
+                                {/* PDF */}
+                                <div className="flex items-center gap-3 p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50">
+                                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded"><FileText className="h-4 w-4 text-blue-600" /></div>
+                                  <div className="flex-1">
+                                    <span className="text-sm font-medium">Manual / Documentación PDF</span>
+                                    <p className="text-xs text-muted-foreground">Material de estudio de la unidad</p>
+                                  </div>
+                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                    <Button variant="outline" size="sm" className="gap-2" onClick={() => toast({ title: "Subir PDF", description: "Usa el editor de contenido del módulo para subir el PDF." })}><Upload className="h-3 w-3" />Subir PDF</Button>
+                                  )}
+                                </div>
+                                {/* Test */}
+                                <div className="flex items-center gap-3 p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200/50">
+                                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded"><ClipboardList className="h-4 w-4 text-purple-600" /></div>
+                                  <div className="flex-1">
+                                    <span className="text-sm font-medium">Test de Evaluación</span>
+                                    <p className="text-xs text-muted-foreground">Examen tipo test de la unidad</p>
+                                  </div>
+                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                    <Button variant="outline" size="sm" className="gap-2" onClick={() => toast({ title: "Crear Test", description: "Accede al editor para crear el test." })}><Plus className="h-3 w-3" />Crear Test</Button>
+                                  )}
+                                </div>
+                                {/* Actividad */}
+                                <div className="flex items-center gap-3 p-3 bg-green-50/50 dark:bg-green-950/20 rounded-lg border border-green-200/50">
+                                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded"><PenTool className="h-4 w-4 text-green-600" /></div>
+                                  <div className="flex-1">
+                                    <span className="text-sm font-medium">Actividad / Tarea</span>
+                                    <p className="text-xs text-muted-foreground">Ejercicio práctico de la unidad</p>
+                                  </div>
+                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                    <Button variant="outline" size="sm" className="gap-2" onClick={() => openActivityManager(unit.id, unit.title)}><Plus className="h-3 w-3" />Gestionar</Button>
+                                  )}
+                                </div>
+                                <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                          <div className="mt-4 pt-3 border-t">
+                            <ModuleFormativeUnitManager moduleId={module.id} moduleTitle={module.title} formativeUnits={moduleUnits} onUpdate={loadCourseData} />
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
             ) : (
+              /* ===== SEPE / STANDARD MODULE VIEW ===== */
               <div className="space-y-3">
                 {modules.map((module, index) => {
                   const moduleUnits = module.formative_units || [];
