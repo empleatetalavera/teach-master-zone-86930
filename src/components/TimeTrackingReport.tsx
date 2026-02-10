@@ -1,12 +1,14 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Line, Legend } from "recharts";
 import { Clock, Download, TrendingUp, Calendar, Award } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Module {
   id: string;
@@ -23,123 +25,166 @@ interface TimeTrackingReportProps {
   studentName?: string;
 }
 
+interface DailyData {
+  fecha: string;
+  minutos: number;
+}
+
+interface WeeklyData {
+  semana: string;
+  tiempoMinutos: number;
+  progreso: number;
+}
+
+interface ModuleTime {
+  moduleId: string;
+  totalSeconds: number;
+}
+
 export function TimeTrackingReport({ courseName, modules, enrollment, studentName }: TimeTrackingReportProps) {
   const { toast } = useToast();
+  const [dailyActivity, setDailyActivity] = useState<DailyData[]>([]);
+  const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
+  const [moduleTimeMap, setModuleTimeMap] = useState<Record<string, number>>({});
+  const [totalRealSeconds, setTotalRealSeconds] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  // Generar datos simulados de evolución semanal (en producción vendría de content_interactions)
-  const generateWeeklyProgress = () => {
-    const weeks = 8;
-    const data = [];
-    for (let i = 0; i < weeks; i++) {
-      data.push({
-        semana: `Sem ${i + 1}`,
-        progreso: Math.min(100, (enrollment?.progress_percentage || 0) * (i + 1) / weeks),
-        tiempoHoras: Math.floor(Math.random() * 10) + 5,
-        modulosCompletados: Math.floor((modules.filter(m => m.completed).length * (i + 1)) / weeks),
-      });
+  useEffect(() => {
+    if (enrollment?.id) {
+      loadRealTimeData();
+    } else {
+      setLoading(false);
     }
-    return data;
+  }, [enrollment?.id]);
+
+  const loadRealTimeData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch all content_interactions for this enrollment
+      const { data: interactions, error } = await supabase
+        .from("content_interactions")
+        .select("module_id, time_spent_seconds, created_at")
+        .eq("enrollment_id", enrollment.id)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      const records = interactions || [];
+
+      // Total time
+      const totalSecs = records.reduce((sum, r) => sum + (r.time_spent_seconds || 0), 0);
+      setTotalRealSeconds(totalSecs);
+
+      // Time per module
+      const modMap: Record<string, number> = {};
+      records.forEach(r => {
+        modMap[r.module_id] = (modMap[r.module_id] || 0) + (r.time_spent_seconds || 0);
+      });
+      setModuleTimeMap(modMap);
+
+      // Daily activity (last 14 days)
+      const today = new Date();
+      const dailyMap: Record<string, number> = {};
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        dailyMap[key] = 0;
+      }
+      records.forEach(r => {
+        const day = r.created_at?.slice(0, 10);
+        if (day && day in dailyMap) {
+          dailyMap[day] += Math.round((r.time_spent_seconds || 0) / 60);
+        }
+      });
+      setDailyActivity(
+        Object.entries(dailyMap).map(([date, minutos]) => ({
+          fecha: new Date(date).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }),
+          minutos,
+        }))
+      );
+
+      // Weekly aggregation (last 8 weeks)
+      const weeklyMap: Record<number, number> = {};
+      for (let w = 0; w < 8; w++) weeklyMap[w] = 0;
+      const eightWeeksAgo = new Date(today);
+      eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+
+      records.forEach(r => {
+        const d = new Date(r.created_at || "");
+        if (d >= eightWeeksAgo) {
+          const diffDays = Math.floor((today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+          const weekIdx = 7 - Math.floor(diffDays / 7);
+          if (weekIdx >= 0 && weekIdx < 8) {
+            weeklyMap[weekIdx] += Math.round((r.time_spent_seconds || 0) / 60);
+          }
+        }
+      });
+      setWeeklyData(
+        Array.from({ length: 8 }, (_, i) => ({
+          semana: `Sem ${i + 1}`,
+          tiempoMinutos: weeklyMap[i] || 0,
+          progreso: Math.min(100, ((enrollment?.progress_percentage || 0) * (i + 1)) / 8),
+        }))
+      );
+    } catch (err) {
+      console.error("Error loading time tracking data:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const generateDailyActivity = () => {
-    const days = 14;
-    const data = [];
-    const today = new Date();
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      data.push({
-        fecha: date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }),
-        minutos: Math.floor(Math.random() * 120) + 30,
-      });
-    }
-    return data;
-  };
-
-  const weeklyData = generateWeeklyProgress();
-  const dailyActivity = generateDailyActivity();
-
-  const totalMinutes = modules.reduce((acc, m) => acc + (m.duration_minutes || 0), 0);
+  const totalHours = Math.floor(totalRealSeconds / 3600);
+  const totalMins = Math.floor((totalRealSeconds % 3600) / 60);
   const completedModules = modules.filter(m => m.completed).length;
+  const avgDailyMinutes = dailyActivity.length > 0
+    ? Math.round(dailyActivity.reduce((s, d) => s + d.minutos, 0) / dailyActivity.filter(d => d.minutos > 0).length || 0)
+    : 0;
+
+  const formatModuleTime = (moduleId: string) => {
+    const secs = moduleTimeMap[moduleId] || 0;
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    return `${h}h ${m}m`;
+  };
 
   const exportToPDF = async () => {
-    toast({
-      title: "Generando PDF",
-      description: "Por favor espera mientras se genera el informe...",
-    });
-
+    toast({ title: "Generando PDF", description: "Por favor espera..." });
     try {
-      const element = document.getElementById('time-tracking-report');
+      const element = document.getElementById("time-tracking-report");
       if (!element) return;
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
       const imgWidth = 210;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
       let heightLeft = imgHeight;
       let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= 297;
-
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
         heightLeft -= 297;
       }
-
-      // Agregar información adicional en la última página
-      pdf.addPage();
-      pdf.setFontSize(16);
-      pdf.text('Informe de Tiempos Invertidos - SEPE', 20, 20);
-      pdf.setFontSize(12);
-      pdf.text(`Curso: ${courseName}`, 20, 35);
-      pdf.text(`Estudiante: ${studentName || 'Usuario'}`, 20, 45);
-      pdf.text(`Fecha de generación: ${new Date().toLocaleDateString('es-ES')}`, 20, 55);
-      pdf.text(`Progreso total: ${enrollment?.progress_percentage || 0}%`, 20, 65);
-      pdf.text(`Módulos completados: ${completedModules} de ${modules.length}`, 20, 75);
-      pdf.text(`Tiempo total invertido: ${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`, 20, 85);
-
-      // Agregar desglose de módulos
-      pdf.setFontSize(14);
-      pdf.text('Desglose por Módulo:', 20, 100);
-      pdf.setFontSize(10);
-      
-      let yPos = 110;
-      modules.forEach((module, index) => {
-        if (yPos > 270) {
-          pdf.addPage();
-          yPos = 20;
-        }
-        pdf.text(`${index + 1}. ${module.title}`, 25, yPos);
-        pdf.text(`   Tiempo: ${Math.floor(module.duration_minutes / 60)}h ${module.duration_minutes % 60}m`, 25, yPos + 5);
-        pdf.text(`   Estado: ${module.completed ? 'Completado' : 'En progreso'} (${module.progress || 0}%)`, 25, yPos + 10);
-        yPos += 20;
-      });
-
-      pdf.save(`informe_tiempos_${courseName.replace(/\s/g, '_')}_${new Date().getTime()}.pdf`);
-
-      toast({
-        title: "PDF Generado",
-        description: "El informe se ha descargado correctamente",
-      });
+      pdf.save(`informe_tiempos_${courseName.replace(/\s/g, "_")}_${Date.now()}.pdf`);
+      toast({ title: "PDF Generado", description: "El informe se ha descargado correctamente" });
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo generar el PDF",
-        variant: "destructive",
-      });
+      console.error("Error generating PDF:", error);
+      toast({ title: "Error", description: "No se pudo generar el PDF", variant: "destructive" });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Clock className="h-6 w-6 animate-spin text-muted-foreground mr-2" />
+        <span className="text-muted-foreground">Cargando datos de tiempo...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -157,14 +202,14 @@ export function TimeTrackingReport({ courseName, modules, enrollment, studentNam
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" />
-                <CardDescription>Tiempo Total</CardDescription>
+                <CardDescription>Tiempo Real Dedicado</CardDescription>
               </div>
               <CardTitle className="text-3xl text-primary">
-                {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m
+                {totalHours}h {totalMins}m
               </CardTitle>
             </CardHeader>
           </Card>
-          
+
           <Card className="bg-secondary/5 border-secondary/20">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
@@ -176,7 +221,7 @@ export function TimeTrackingReport({ courseName, modules, enrollment, studentNam
               </CardTitle>
             </CardHeader>
           </Card>
-          
+
           <Card className="bg-accent/5 border-accent/20">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
@@ -196,7 +241,7 @@ export function TimeTrackingReport({ courseName, modules, enrollment, studentNam
                 <CardDescription>Promedio Diario</CardDescription>
               </div>
               <CardTitle className="text-3xl">
-                {Math.floor(totalMinutes / 30)}min
+                {avgDailyMinutes}min
               </CardTitle>
             </CardHeader>
           </Card>
@@ -206,36 +251,32 @@ export function TimeTrackingReport({ courseName, modules, enrollment, studentNam
         <Card>
           <CardHeader>
             <CardTitle>Evolución del Progreso por Semana</CardTitle>
-            <CardDescription>Progreso acumulado y tiempo invertido semanalmente</CardDescription>
+            <CardDescription>Tiempo real invertido semanalmente (últimas 8 semanas)</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="semana" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Area 
-                  yAxisId="left"
-                  type="monotone" 
-                  dataKey="progreso" 
-                  stroke="hsl(var(--primary))" 
-                  fill="hsl(var(--primary))" 
-                  fillOpacity={0.6}
-                  name="Progreso (%)"
-                />
-                <Line 
-                  yAxisId="right"
-                  type="monotone" 
-                  dataKey="tiempoHoras" 
-                  stroke="hsl(var(--secondary))" 
-                  strokeWidth={2}
-                  name="Tiempo (horas)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {weeklyData.some(w => w.tiempoMinutos > 0) ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={weeklyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="semana" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => [`${value} min`, "Tiempo"]} />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="tiempoMinutos"
+                    stroke="hsl(var(--primary))"
+                    fill="hsl(var(--primary))"
+                    fillOpacity={0.6}
+                    name="Tiempo (min)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-48 text-muted-foreground">
+                <p>Aún no hay datos de actividad semanal. Comienza a estudiar para ver tu progreso aquí.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -243,23 +284,29 @@ export function TimeTrackingReport({ courseName, modules, enrollment, studentNam
         <Card>
           <CardHeader>
             <CardTitle>Actividad Diaria (Últimos 14 días)</CardTitle>
-            <CardDescription>Tiempo invertido cada día en minutos</CardDescription>
+            <CardDescription>Tiempo real invertido cada día en minutos</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={dailyActivity}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="fecha" />
-                <YAxis />
-                <Tooltip />
-                <Bar 
-                  dataKey="minutos" 
-                  fill="hsl(var(--primary))" 
-                  name="Minutos"
-                  radius={[8, 8, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {dailyActivity.some(d => d.minutos > 0) ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={dailyActivity}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="fecha" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => [`${value} min`, "Tiempo"]} />
+                  <Bar
+                    dataKey="minutos"
+                    fill="hsl(var(--primary))"
+                    name="Minutos"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-48 text-muted-foreground">
+                <p>No hay actividad registrada en los últimos 14 días.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -267,7 +314,7 @@ export function TimeTrackingReport({ courseName, modules, enrollment, studentNam
         <Card>
           <CardHeader>
             <CardTitle>Desglose por Módulo</CardTitle>
-            <CardDescription>Detalle del tiempo invertido en cada módulo del curso</CardDescription>
+            <CardDescription>Tiempo real dedicado en cada módulo del curso</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {modules.map((module) => (
@@ -283,7 +330,7 @@ export function TimeTrackingReport({ courseName, modules, enrollment, studentNam
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    <span>{Math.floor((module.duration_minutes || 0) / 60)}h {(module.duration_minutes || 0) % 60}m</span>
+                    <span>{formatModuleTime(module.id)}</span>
                   </div>
                   <div className="flex-1">
                     <Progress value={module.progress || 0} className="h-2" />
@@ -295,7 +342,7 @@ export function TimeTrackingReport({ courseName, modules, enrollment, studentNam
           </CardContent>
         </Card>
 
-        {/* Estadísticas Adicionales */}
+        {/* Estadísticas SEPE */}
         <Card>
           <CardHeader>
             <CardTitle>Estadísticas de Cumplimiento SEPE</CardTitle>
@@ -303,24 +350,26 @@ export function TimeTrackingReport({ courseName, modules, enrollment, studentNam
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Duración del Curso</p>
-                <p className="text-2xl font-bold">{Math.floor(totalMinutes / 60)} horas</p>
+                <p className="text-sm text-muted-foreground mb-1">Tiempo Real Dedicado</p>
+                <p className="text-2xl font-bold">{totalHours}h {totalMins}m</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Fecha de Matriculación</p>
                 <p className="text-2xl font-bold">
-                  {enrollment?.enrolled_at ? new Date(enrollment.enrolled_at).toLocaleDateString('es-ES') : 'N/A'}
+                  {enrollment?.enrolled_at ? new Date(enrollment.enrolled_at).toLocaleDateString("es-ES") : "N/A"}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Último Acceso</p>
                 <p className="text-2xl font-bold">
-                  {enrollment?.last_accessed_at ? new Date(enrollment.last_accessed_at).toLocaleDateString('es-ES') : 'Hoy'}
+                  {enrollment?.last_accessed_at ? new Date(enrollment.last_accessed_at).toLocaleDateString("es-ES") : "Sin acceso"}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Tasa de Finalización</p>
-                <p className="text-2xl font-bold">{Math.round((completedModules / modules.length) * 100)}%</p>
+                <p className="text-2xl font-bold">
+                  {modules.length > 0 ? Math.round((completedModules / modules.length) * 100) : 0}%
+                </p>
               </div>
             </div>
           </CardContent>
