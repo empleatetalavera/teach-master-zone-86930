@@ -2673,10 +2673,10 @@ export default function CourseView() {
           {course && (
             <TabsContent value="certificate" className="space-y-4">
               {/* For SEPE/Certificate courses: admin uploads, student downloads */}
-              {showSEPEFeatures && (userRole === 'admin' || userRole === 'super_admin') && (
+              {showSEPEFeatures && (userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
                 <SEPECertificateUploader courseId={courseId!} courseTitle={course.title} />
               )}
-              {showSEPEFeatures && userRole !== 'admin' && userRole !== 'super_admin' && enrollment && (
+              {showSEPEFeatures && userRole !== 'admin' && userRole !== 'super_admin' && userRole !== 'teacher' && enrollment && (
                 <SEPECertificateStudentView courseId={courseId!} enrollmentId={enrollment.id} />
               )}
               {/* CFC courses keep the auto-generated certificate */}
