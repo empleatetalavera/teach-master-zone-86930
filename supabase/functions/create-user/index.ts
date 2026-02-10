@@ -138,10 +138,13 @@ serve(async (req) => {
 
     if (createError) {
       console.error("Error creating user:", createError);
+      const errorMessage = createError.message?.includes("already been registered")
+        ? "Ya existe un usuario con este email. Usa otro email o busca el usuario existente."
+        : createError.message;
       return new Response(
-        JSON.stringify({ error: createError.message }),
+        JSON.stringify({ success: false, error: errorMessage }),
         {
-          status: 500,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
