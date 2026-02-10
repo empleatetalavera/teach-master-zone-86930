@@ -1934,44 +1934,50 @@ export default function CourseView() {
                   const totalActivities = (module.activities?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.activities?.length || 0), 0);
 
                   return (
-                    <div key={module.id} className="border rounded-lg overflow-hidden">
-                      <Card className="border-0 shadow-none">
-                        <CardHeader className="pb-3 bg-muted/30">
-                          <div className="flex items-start gap-4 w-full">
-                            <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                              <span className="font-mono text-sm font-bold bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center">{index + 1}</span>
-                            </div>
-                            <div className="flex-1 text-left">
-                              <CardTitle className="text-lg">{module.title}</CardTitle>
-                              <CardDescription className="mt-1">
-                                {module.description || "Sin descripción"}
-                              </CardDescription>
-                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {module.duration_minutes ? (module.duration_minutes / 60).toFixed(1) : 0}h
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  {totalEvaluations} tests
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <FileText className="h-3 w-3" />
-                                  {totalActivities} actividades
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <ListChecks className="h-3 w-3" />
-                                  {moduleUnits.length} UFs
-                                </span>
-                                <div className="flex items-center gap-2 ml-auto">
-                                  <Progress value={module.progress || 0} className="w-20 h-2" />
-                                  <span className="font-medium">{module.progress || 0}%</span>
+                    <Collapsible key={module.id}>
+                      <div className="border rounded-lg overflow-hidden">
+                        <CollapsibleTrigger className="w-full text-left">
+                          <div className="pb-3 bg-muted/30 p-4">
+                            <div className="flex items-start gap-4 w-full">
+                              <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                <span className="font-mono text-sm font-bold bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center">{index + 1}</span>
+                              </div>
+                              <div className="flex-1 text-left">
+                                <div className="flex items-center gap-2">
+                                  <h3 className="text-lg font-semibold">{module.title}</h3>
+                                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {module.description || "Sin descripción"}
+                                </p>
+                                <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {module.duration_minutes ? (module.duration_minutes / 60).toFixed(1) : 0}h
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    {totalEvaluations} tests
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <FileText className="h-3 w-3" />
+                                    {totalActivities} actividades
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <ListChecks className="h-3 w-3" />
+                                    {moduleUnits.length} UFs
+                                  </span>
+                                  <div className="flex items-center gap-2 ml-auto">
+                                    <Progress value={module.progress || 0} className="w-20 h-2" />
+                                    <span className="font-medium">{module.progress || 0}%</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </CardHeader>
-                        <CardContent className="pt-0 border-t bg-muted/20">
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="pt-0 border-t bg-muted/20 p-6">
                           <div className="space-y-4 pt-4">
 
                             {/* Chat Inicial - Acceso a la sesión de bienvenida */}
@@ -2172,9 +2178,10 @@ export default function CourseView() {
                             </div>
 
                           </div>
-                        </CardContent>
-                      </Card>
-                    </div>
+                          </div>
+                        </CollapsibleContent>
+                      </div>
+                    </Collapsible>
                   );
 
                 })}
