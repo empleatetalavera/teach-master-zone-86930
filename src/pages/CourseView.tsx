@@ -58,6 +58,8 @@ import { VirtualCafeteria } from "@/components/VirtualCafeteria";
 import { CFCForumTabs } from "@/components/CFCForumTabs";
 import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
 import { CourseCertificateDownload } from "@/components/CourseCertificateDownload";
+import { SEPECertificateUploader } from "@/components/SEPECertificateUploader";
+import { SEPECertificateStudentView } from "@/components/SEPECertificateStudentView";
 
 interface Course {
   id: string;
@@ -2670,16 +2672,26 @@ export default function CourseView() {
 
           {course && (
             <TabsContent value="certificate" className="space-y-4">
-              <CourseCertificateDownload
-                courseId={courseId!}
-                courseTitle={course.title}
-                durationHours={course.duration_hours || 0}
-                courseCode={course.course_code}
-                startDate={course.start_date}
-                endDate={course.end_date}
-                modality={course.modality}
-                trainingCenterId={course.training_center_id}
-              />
+              {/* For SEPE/Certificate courses: admin uploads, student downloads */}
+              {showSEPEFeatures && (userRole === 'admin' || userRole === 'super_admin') && (
+                <SEPECertificateUploader courseId={courseId!} courseTitle={course.title} />
+              )}
+              {showSEPEFeatures && userRole !== 'admin' && userRole !== 'super_admin' && enrollment && (
+                <SEPECertificateStudentView courseId={courseId!} enrollmentId={enrollment.id} />
+              )}
+              {/* CFC courses keep the auto-generated certificate */}
+              {isCFCCourse && (
+                <CourseCertificateDownload
+                  courseId={courseId!}
+                  courseTitle={course.title}
+                  durationHours={course.duration_hours || 0}
+                  courseCode={course.course_code}
+                  startDate={course.start_date}
+                  endDate={course.end_date}
+                  modality={course.modality}
+                  trainingCenterId={course.training_center_id}
+                />
+              )}
             </TabsContent>
           )}
           </Tabs>

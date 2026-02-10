@@ -2418,6 +2418,63 @@ export type Database = {
           },
         ]
       }
+      sepe_certificates: {
+        Row: {
+          certificate_type: string
+          course_id: string
+          enrollment_id: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          notes: string | null
+          uploaded_at: string
+          uploaded_by: string
+          user_id: string
+        }
+        Insert: {
+          certificate_type: string
+          course_id: string
+          enrollment_id: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          notes?: string | null
+          uploaded_at?: string
+          uploaded_by: string
+          user_id: string
+        }
+        Update: {
+          certificate_type?: string
+          course_id?: string
+          enrollment_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          notes?: string | null
+          uploaded_at?: string
+          uploaded_by?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sepe_certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sepe_certificates_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sionline_global_config: {
         Row: {
           created_at: string | null
