@@ -887,6 +887,7 @@ export type Database = {
           completed_at: string | null
           course_id: string
           enrolled_at: string | null
+          enrollment_role: string
           id: string
           last_accessed_at: string | null
           progress_percentage: number | null
@@ -896,6 +897,7 @@ export type Database = {
           completed_at?: string | null
           course_id: string
           enrolled_at?: string | null
+          enrollment_role?: string
           id?: string
           last_accessed_at?: string | null
           progress_percentage?: number | null
@@ -905,6 +907,7 @@ export type Database = {
           completed_at?: string | null
           course_id?: string
           enrolled_at?: string | null
+          enrollment_role?: string
           id?: string
           last_accessed_at?: string | null
           progress_percentage?: number | null

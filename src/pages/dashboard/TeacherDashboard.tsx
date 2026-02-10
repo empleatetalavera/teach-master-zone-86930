@@ -38,7 +38,8 @@ const TeacherDashboard = () => {
           const { count } = await supabase
             .from("enrollments")
             .select("*", { count: "exact", head: true })
-            .in("course_id", courseIds);
+            .in("course_id", courseIds)
+            .eq("enrollment_role", "student");
           studentsCount = count || 0;
         }
 

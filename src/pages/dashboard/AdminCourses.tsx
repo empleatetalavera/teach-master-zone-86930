@@ -213,7 +213,8 @@ export default function AdminCourses() {
             .from("enrollments")
             .select("course_id, user_id")
             .in("course_id", allCourseIds)
-            .in("user_id", centerStudentIds);
+            .in("user_id", centerStudentIds)
+            .eq("enrollment_role", "student");
 
           if (enrollError) throw enrollError;
 
@@ -585,7 +586,7 @@ export default function AdminCourses() {
       // Get enrollments for this course
       const { data: enrollments, error: enrollError } = await supabase
         .from("enrollments")
-        .select("id, user_id, enrolled_at, progress_percentage")
+        .select("id, user_id, enrolled_at, progress_percentage, enrollment_role")
         .eq("course_id", courseId);
 
       if (enrollError) throw enrollError;
@@ -725,11 +726,14 @@ export default function AdminCourses() {
       }
       
       // Enroll the user
+      // Check if this user is the course tutor
+      const isTutor = selectedCourseForView.tutor_id === userId;
       const { error: enrollError } = await supabase
         .from("enrollments")
         .insert({
           user_id: userId,
           course_id: selectedCourseForView.id,
+          enrollment_role: isTutor ? 'teacher' : 'student',
         });
       
       if (enrollError) throw enrollError;

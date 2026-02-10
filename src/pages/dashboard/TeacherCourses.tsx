@@ -60,7 +60,8 @@ export default function TeacherCourses() {
           const { count } = await supabase
             .from("enrollments")
             .select("*", { count: "exact", head: true })
-            .eq("course_id", course.id);
+            .eq("course_id", course.id)
+            .eq("enrollment_role", "student");
           
           return {
             ...course,

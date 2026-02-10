@@ -486,12 +486,14 @@ export default function CourseView() {
       if (enrollmentError && enrollmentError.code !== "PGRST116") throw enrollmentError;
 
       if (!enrollmentData) {
-        // Create enrollment
+        // Create enrollment - detect if user is the course tutor
+        const isTutor = courseData.tutor_id === user!.id;
         const { data: newEnrollment, error: createError } = await supabase
           .from("enrollments")
           .insert({
             user_id: user!.id,
             course_id: courseId,
+            enrollment_role: isTutor ? 'teacher' : 'student',
           })
           .select()
           .single();
