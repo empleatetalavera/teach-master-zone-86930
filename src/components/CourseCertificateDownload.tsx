@@ -502,9 +502,7 @@ export function CourseCertificateDownload({
       pdf.restoreGraphicsState();
     }
 
-    // CFC-CLM logo top-left
-    const cfcClmLogo = await loadImageAsDataUrl("/branding/cfc-clm-logo.png");
-    if (cfcClmLogo) pdf.addImage(cfcClmLogo, "PNG", 12, 8, 35, 16);
+    // CFC-CLM logo removed per request
 
     // Title block
     let ry = 32;
