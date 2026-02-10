@@ -2099,67 +2099,129 @@ export default function CourseView() {
                                             )}
 
                                             {/* Contenido Interactivo */}
-                                            <div className="flex items-start gap-3">
+                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
                                               <div className="p-2 bg-primary/10 rounded">
                                                 <Layers className="h-5 w-5 text-primary" />
                                               </div>
-                                              <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-2">
-                                                  <span className="text-sm font-medium">Contenido Interactivo</span>
-                                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                    <Button
-                                                      variant="outline"
-                                                      size="sm"
-                                                      className="gap-2 border-purple-300 hover:bg-purple-50"
-                                                      onClick={() => openScormAuthor(module.id, unit.id, unit.title)}
-                                                    >
-                                                      <Presentation className="h-4 w-4 text-purple-600" />
-                                                      Editor SCORM Avanzado
-                                                    </Button>
-                                                  )}
-                                                </div>
+                                              <div className="flex-1 min-w-0">
+                                                <span className="text-sm font-medium">Contenido Interactivo</span>
                                                 <p className="text-xs text-muted-foreground">
                                                   Material interactivo con presentaciones multimedia
                                                 </p>
                                               </div>
+                                              <div className="flex items-center gap-2">
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  className="gap-1.5"
+                                                  onClick={() => openScormViewer(unit.id, unit.title)}
+                                                >
+                                                  <Play className="h-3.5 w-3.5" />
+                                                  Ver
+                                                </Button>
+                                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                  <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-1.5 border-purple-300 hover:bg-purple-50"
+                                                    onClick={() => openScormAuthor(module.id, unit.id, unit.title)}
+                                                  >
+                                                    <Presentation className="h-3.5 w-3.5 text-purple-600" />
+                                                    Editor SCORM
+                                                  </Button>
+                                                )}
+                                              </div>
                                             </div>
 
                                             {/* Manual PDF */}
-                                            <div className="flex items-start gap-3">
+                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
                                               <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
                                                 <FileText className="h-5 w-5 text-blue-600" />
                                               </div>
-                                              <div className="flex-1">
-                                                <span className="text-sm font-medium">Manual PDF</span>
+                                              <div className="flex-1 min-w-0">
+                                                <span className="text-sm font-medium">Manual / Documentación PDF</span>
                                                 <p className="text-xs text-muted-foreground">
                                                   Documentación descargable del módulo formativo
                                                 </p>
                                               </div>
+                                              <div className="flex items-center gap-2">
+                                                {module.content && module.content.startsWith('http') && (
+                                                  <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-1.5"
+                                                    asChild
+                                                  >
+                                                    <a href={module.content} target="_blank" rel="noopener noreferrer">
+                                                      <ExternalLink className="h-3.5 w-3.5" />
+                                                      Ver PDF
+                                                    </a>
+                                                  </Button>
+                                                )}
+                                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                  <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-1.5 border-blue-300 hover:bg-blue-50"
+                                                    onClick={() => openContentViewer(unit.id, unit.title, 'document')}
+                                                  >
+                                                    <Upload className="h-3.5 w-3.5 text-blue-600" />
+                                                    Subir
+                                                  </Button>
+                                                )}
+                                              </div>
                                             </div>
 
                                             {/* Actividad */}
-                                            <div className="flex items-start gap-3">
+                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
                                               <div className="p-2 bg-green-50 dark:bg-green-950 rounded">
                                                 <PenTool className="h-5 w-5 text-green-600" />
                                               </div>
-                                              <div className="flex-1">
+                                              <div className="flex-1 min-w-0">
                                                 <span className="text-sm font-medium">Actividad de Desarrollo</span>
                                                 <p className="text-xs text-muted-foreground">
                                                   Ejercicio práctico para aplicar los conocimientos adquiridos
                                                 </p>
                                               </div>
+                                              <div className="flex items-center gap-2">
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  className="gap-1.5"
+                                                  onClick={() => openActivityManager(unit.id, unit.title)}
+                                                >
+                                                  <PenTool className="h-3.5 w-3.5 text-green-600" />
+                                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') ? 'Gestionar' : 'Entregar'}
+                                                </Button>
+                                              </div>
                                             </div>
 
                                             {/* Test Final */}
-                                            <div className="flex items-start gap-3">
+                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
                                               <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
                                                 <ClipboardList className="h-5 w-5 text-purple-600" />
                                               </div>
-                                              <div className="flex-1">
+                                              <div className="flex-1 min-w-0">
                                                 <span className="text-sm font-medium">Test Final de la Unidad</span>
                                                 <p className="text-xs text-muted-foreground">
                                                   Evaluación de 50 preguntas para verificar el aprendizaje
                                                 </p>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  className="gap-1.5"
+                                                  onClick={() => {
+                                                    toast({
+                                                      title: "Test de Evaluación",
+                                                      description: `Accediendo al test final de ${unit.title}...`,
+                                                    });
+                                                  }}
+                                                >
+                                                  <ClipboardList className="h-3.5 w-3.5 text-purple-600" />
+                                                  Realizar Test
+                                                </Button>
                                               </div>
                                             </div>
 
