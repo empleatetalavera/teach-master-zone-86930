@@ -1937,16 +1937,44 @@ export default function CourseView() {
                                   )}
                                 </div>
                                 {/* Test */}
-                                <div className="flex items-center gap-3 p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200/50">
-                                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded"><ClipboardList className="h-4 w-4 text-purple-600" /></div>
-                                  <div className="flex-1">
-                                    <span className="text-sm font-medium">Test de Evaluación</span>
-                                    <p className="text-xs text-muted-foreground">Examen tipo test de la unidad</p>
-                                  </div>
-                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                    <Button variant="outline" size="sm" className="gap-2" onClick={() => toast({ title: "Crear Test", description: "Accede al editor para crear el test." })}><Plus className="h-3 w-3" />Crear Test</Button>
-                                  )}
-                                </div>
+                                {(() => {
+                                  const unitEvals = (module.evaluations || []).filter((ev: any) => ev.formative_unit_id === unit.id);
+                                  const hasTest = unitEvals.length > 0;
+                                  return (
+                                    <div 
+                                      className={`flex items-center gap-3 p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200/50 ${hasTest && userRole === 'student' ? 'cursor-pointer hover:bg-purple-100/50 dark:hover:bg-purple-950/40 transition-colors' : ''}`}
+                                      onClick={() => {
+                                        if (hasTest && userRole === 'student') {
+                                          navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
+                                        }
+                                      }}
+                                    >
+                                      <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded"><ClipboardList className="h-4 w-4 text-purple-600" /></div>
+                                      <div className="flex-1">
+                                        <span className="text-sm font-medium">Test Final de la Unidad</span>
+                                        <p className="text-xs text-muted-foreground">
+                                          {hasTest ? `Evaluación de ${unitEvals[0].title || 'la unidad'}` : 'Examen tipo test de la unidad'}
+                                        </p>
+                                      </div>
+                                      {hasTest && userRole === 'student' && (
+                                        <Button variant="outline" size="sm" className="gap-2" onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
+                                        }}><PlayCircle className="h-3 w-3" />Realizar Test</Button>
+                                      )}
+                                      {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                        <Button variant="outline" size="sm" className="gap-2" onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (hasTest) {
+                                            navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
+                                          } else {
+                                            toast({ title: "Crear Test", description: "Accede al editor para crear el test." });
+                                          }
+                                        }}><Plus className="h-3 w-3" />{hasTest ? 'Ver Test' : 'Crear Test'}</Button>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                                 {/* Actividad */}
                                 <div className="flex items-center gap-3 p-3 bg-green-50/50 dark:bg-green-950/20 rounded-lg border border-green-200/50">
                                   <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded"><PenTool className="h-4 w-4 text-green-600" /></div>
@@ -1958,7 +1986,9 @@ export default function CourseView() {
                                     <Button variant="outline" size="sm" className="gap-2" onClick={() => openActivityManager(unit.id, unit.title)}><Plus className="h-3 w-3" />Gestionar</Button>
                                   )}
                                 </div>
-                                <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
+                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                  <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
+                                )}
                               </div>
                             ))}
                           </div>
