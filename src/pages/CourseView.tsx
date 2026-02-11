@@ -1911,7 +1911,7 @@ export default function CourseView() {
                                     
                                     if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
                                       const { data: urlData } = supabase.storage
-                                        .from('module-manuals')
+                                        .from('module-content')
                                         .getPublicUrl(pdfData[0].file_path);
                                       if (urlData?.publicUrl) {
                                         window.open(urlData.publicUrl, '_blank');
