@@ -1889,14 +1889,39 @@ export default function CourseView() {
                               <div key={unit.id} className="border rounded-lg p-4 space-y-3">
                                 <h4 className="font-medium text-sm">{unit.title}</h4>
                                 {/* PDF */}
-                                <div className="flex items-center gap-3 p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50">
+                                <div 
+                                  className="flex items-center gap-3 p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-950/40 transition-colors"
+                                  onClick={async () => {
+                                    // Fetch PDF for this unit
+                                    const { data: pdfData } = await supabase
+                                      .from('module_content')
+                                      .select('file_path, title')
+                                      .eq('module_id', module.id)
+                                      .eq('content_type', 'manual_pdf')
+                                      .or(`formative_unit_id.eq.${unit.id},formative_unit_id.is.null`)
+                                      .order('created_at', { ascending: false })
+                                      .limit(1);
+                                    
+                                    if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+                                      const { data: urlData } = supabase.storage
+                                        .from('module-manuals')
+                                        .getPublicUrl(pdfData[0].file_path);
+                                      if (urlData?.publicUrl) {
+                                        window.open(urlData.publicUrl, '_blank');
+                                      }
+                                    } else {
+                                      toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+                                    }
+                                  }}
+                                >
                                   <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded"><FileText className="h-4 w-4 text-blue-600" /></div>
                                   <div className="flex-1">
                                     <span className="text-sm font-medium">{unit.title}</span>
                                     <p className="text-xs text-muted-foreground">PDF del temario de esta unidad</p>
                                   </div>
                                   {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                    <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+                                    <Button variant="outline" size="sm" className="gap-2" onClick={(e) => {
+                                      e.stopPropagation();
                                       setManualUploaderModuleId(module.id);
                                       setManualUploaderModuleTitle(unit.title);
                                       setManualUploaderUnitId(unit.id);
