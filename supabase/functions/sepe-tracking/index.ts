@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
       switch (operation) {
         case 'obtenerDatosCentro':
-          responseXml = await handleObtenerDatosCentro(supabase, body, credentials)
+          responseXml = await handleObtenerDatosCentro(supabase, body, credentials, cif)
           break
         case 'crearCentro':
           responseXml = handleCrearCentro(credentials)
@@ -160,15 +160,26 @@ function detectSoapOperation(body: string): string {
   return 'unknown'
 }
 
-async function handleObtenerDatosCentro(supabase: any, body: string, credentials: { username: string; password: string } | null): Promise<string> {
-  // Extract CIF from request if present
+async function handleObtenerDatosCentro(supabase: any, body: string, credentials: { username: string; password: string } | null, cifFromUrl: string | null): Promise<string> {
+  // Extract CIF from request body if present
   const cifMatch = body.match(/<(?:CIF|cif)[^>]*>([^<]+)<\/(?:CIF|cif)>/i) ||
                    body.match(/<(?:ID_CENTRO|id_centro)[^>]*>([^<]+)<\/(?:ID_CENTRO|id_centro)>/i)
   
   let centerData = null
+
+  // Priority 1: Use CIF from URL path (most reliable from proxy)
+  if (cifFromUrl) {
+    const { data } = await supabase
+      .from('training_centers')
+      .select('*')
+      .eq('cif', cifFromUrl)
+      .single()
+    centerData = data
+    console.log('Found center by URL CIF:', cifFromUrl, !!data)
+  }
   
-  if (credentials?.username) {
-    // Try to find center by CIF (username might be the CIF)
+  // Priority 2: Try credentials username as CIF
+  if (!centerData && credentials?.username && credentials.username !== 'SEPE') {
     const { data } = await supabase
       .from('training_centers')
       .select('*')
@@ -177,6 +188,7 @@ async function handleObtenerDatosCentro(supabase: any, body: string, credentials
     centerData = data
   }
   
+  // Priority 3: Try CIF from SOAP body
   if (!centerData && cifMatch) {
     const { data } = await supabase
       .from('training_centers')
