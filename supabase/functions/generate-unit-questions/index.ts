@@ -155,24 +155,21 @@ Genera ${numberOfQuestions} preguntas de evaluación basadas en este contenido.`
     try {
       parsedQuestions = JSON.parse(jsonContent);
     } catch {
-      // Try to extract individual complete question objects via regex
-      try {
-        const questionRegex = /\{[^{}]*"id"\s*:\s*"q\d+"[^{}]*"question"\s*:[^{}]*"options"\s*:\s*\[[^\]]*\][^{}]*"correctOptionId"\s*:[^{}]*"explanation"\s*:[^{}]*\}/g;
-        const matches = jsonContent.match(questionRegex);
-        if (matches && matches.length > 0) {
-          const salvaged = matches.map(m => {
-            try { return JSON.parse(m); } catch { return null; }
-          }).filter(Boolean);
-          if (salvaged.length > 0) {
-            parsedQuestions = { questions: salvaged };
-            console.log(`Salvaged ${salvaged.length} questions from truncated response`);
-          } else {
-            throw new Error("No parseable questions");
-          }
-        } else {
-          throw new Error("No question patterns found");
-        }
-      } catch {
+      // Try to salvage truncated JSON by finding last complete question
+      let salvaged = false;
+      // Find positions of all "explanation" keys followed by a value and closing brace
+      const expMatches = [...jsonContent.matchAll(/"explanation"\s*:\s*"[^"]*"\s*\}/g)];
+      if (expMatches.length > 0) {
+        const lastMatch = expMatches[expMatches.length - 1];
+        const cutPos = lastMatch.index! + lastMatch[0].length;
+        const trimmed = jsonContent.substring(0, cutPos) + "]}";
+        try {
+          parsedQuestions = JSON.parse(trimmed);
+          salvaged = true;
+          console.log(`Salvaged truncated JSON with ${parsedQuestions.questions?.length || 0} questions`);
+        } catch { /* fall through */ }
+      }
+      if (!salvaged) {
         console.error("JSON parse error, content:", content.substring(0, 500));
         return new Response(
           JSON.stringify({ error: "Error al parsear la respuesta de la IA. Inténtalo de nuevo." }),
