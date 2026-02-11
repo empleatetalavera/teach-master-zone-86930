@@ -1891,11 +1891,15 @@ export default function CourseView() {
                                 <div className="flex items-center gap-3 p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50">
                                   <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded"><FileText className="h-4 w-4 text-blue-600" /></div>
                                   <div className="flex-1">
-                                    <span className="text-sm font-medium">Manual / Documentación PDF</span>
-                                    <p className="text-xs text-muted-foreground">Material de estudio de la unidad</p>
+                                    <span className="text-sm font-medium">{unit.title}</span>
+                                    <p className="text-xs text-muted-foreground">PDF del temario de esta unidad</p>
                                   </div>
                                   {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                    <Button variant="outline" size="sm" className="gap-2" onClick={() => toast({ title: "Subir PDF", description: "Usa el editor de contenido del módulo para subir el PDF." })}><Upload className="h-3 w-3" />Subir PDF</Button>
+                                    <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+                                      setManualUploaderModuleId(module.id);
+                                      setManualUploaderModuleTitle(unit.title);
+                                      setManualUploaderOpen(true);
+                                    }}><Upload className="h-3 w-3" />Subir PDF</Button>
                                   )}
                                 </div>
                                 {/* Test */}
@@ -2149,9 +2153,9 @@ export default function CourseView() {
                                                 <FileText className="h-5 w-5 text-blue-600" />
                                               </div>
                                               <div className="flex-1 min-w-0">
-                                                <span className="text-sm font-medium">Manual / Documentación PDF</span>
+                                                <span className="text-sm font-medium">{isPropio ? unit.title : 'Manual / Documentación PDF'}</span>
                                                 <p className="text-xs text-muted-foreground">
-                                                  Documentación descargable del módulo formativo
+                                                  {isPropio ? 'PDF del temario de esta unidad' : 'Documentación descargable del módulo formativo'}
                                                 </p>
                                               </div>
                                               <div className="flex items-center gap-2">
@@ -2175,7 +2179,7 @@ export default function CourseView() {
                                                     className="gap-1.5 border-blue-300 hover:bg-blue-50"
                                                     onClick={() => {
                                                       setManualUploaderModuleId(module.id);
-                                                      setManualUploaderModuleTitle(module.title);
+                                                      setManualUploaderModuleTitle(isPropio ? unit.title : module.title);
                                                       setManualUploaderOpen(true);
                                                     }}
                                                   >
