@@ -6,11 +6,6 @@
  * 
  * URL para SEPE: https://campusarmaformacion.es/sepe-proxy/centro/cif/B45270139
  * URL WSDL: https://campusarmaformacion.es/sepe-proxy/centro/cif/B45270139?wsdl
- * 
- * Datos del centro:
- * - CIF: B45270139
- * - Nombre: Grupo Arma Formación
- * - Dominio campus: https://campusarmaformacion.es
  */
 
 // Configuración
@@ -24,48 +19,43 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, SOAPAction, Authorization');
 
-// Manejar preflight CORS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// Obtener la URI solicitada
 $requestUri = $_SERVER['REQUEST_URI'];
 $queryString = $_SERVER['QUERY_STRING'] ?? '';
 
 // Construir URL destino
 $targetUrl = $SUPABASE_URL . $EDGE_FUNCTION;
 
-// Extraer CIF de la URL (formato: /sepe-proxy/centro/cif/XXXXXXXXX)
 if (preg_match('/\/centro\/cif\/([A-Z0-9]+)/i', $requestUri, $matches)) {
     $targetUrl .= '/centro/cif/' . $matches[1];
 } else {
-    // Si no viene CIF en la URL, usar el del centro
     $targetUrl .= '/centro/cif/' . $CENTER_CIF;
 }
 
-// Añadir query string si existe
 if (!empty($queryString)) {
     $targetUrl .= '?' . $queryString;
 }
 
-// Log para debugging
-error_log("SEPE Proxy GrupoArma - Target URL: " . $targetUrl);
-error_log("SEPE Proxy GrupoArma - Method: " . $_SERVER['REQUEST_METHOD']);
+error_log("SEPE Proxy - Target: " . $targetUrl . " Method: " . $_SERVER['REQUEST_METHOD']);
 
-// Obtener headers de la solicitud original
+// Construir headers - SOLO los necesarios, sin reenviar accept-encoding del cliente
 $headers = [];
-foreach (getallheaders() as $name => $value) {
-    $lowerName = strtolower($name);
-    if (!in_array($lowerName, ['host', 'connection', 'content-length'])) {
-        $headers[] = $name . ': ' . $value;
-    }
-}
-
-// Añadir header apikey de Supabase (requerido para edge functions)
+$headers[] = 'Content-Type: text/xml; charset=utf-8';
+$headers[] = 'Accept: application/soap+xml, text/xml, application/xml';
 $headers[] = 'apikey: ' . $SUPABASE_ANON_KEY;
 $headers[] = 'Authorization: Bearer ' . $SUPABASE_ANON_KEY;
+
+// Reenviar SOAPAction si existe
+foreach (getallheaders() as $name => $value) {
+    $lowerName = strtolower($name);
+    if ($lowerName === 'soapaction') {
+        $headers[] = 'SOAPAction: ' . $value;
+    }
+}
 
 // Configurar cURL
 $ch = curl_init();
@@ -75,25 +65,23 @@ curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+// IMPORTANTE: Manejar descompresión gzip automáticamente
+curl_setopt($ch, CURLOPT_ENCODING, '');
 
-// Configurar método y body
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rawBody = file_get_contents('php://input');
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $rawBody);
-    error_log("SEPE Proxy GrupoArma - Body length: " . strlen($rawBody));
+    error_log("SEPE Proxy - Body: " . substr($rawBody, 0, 500));
 }
 
-// Ejecutar solicitud
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 $error = curl_error($ch);
 curl_close($ch);
 
-// Manejar errores de cURL
 if ($error) {
-    error_log("SEPE Proxy GrupoArma - cURL Error: " . $error);
+    error_log("SEPE Proxy - cURL Error: " . $error);
     header('Content-Type: text/xml; charset=utf-8');
     http_response_code(500);
     echo '<?xml version="1.0" encoding="UTF-8"?>
@@ -101,41 +89,23 @@ if ($error) {
     <soap:Body>
         <soap:Fault>
             <faultcode>Server</faultcode>
-            <faultstring>Error de conexión con el servicio: ' . htmlspecialchars($error) . '</faultstring>
+            <faultstring>Error: ' . htmlspecialchars($error, ENT_XML1, 'UTF-8') . '</faultstring>
         </soap:Fault>
     </soap:Body>
 </soap:Envelope>';
     exit();
 }
 
-// Establecer código de respuesta y content-type
+// Forzar Content-Type XML UTF-8
 http_response_code($httpCode);
-if ($contentType) {
-    header('Content-Type: ' . $contentType);
-} else {
-    header('Content-Type: text/xml; charset=utf-8');
+header('Content-Type: text/xml; charset=utf-8');
+
+// Asegurar encoding UTF-8 correcto
+if (!mb_check_encoding($response, 'UTF-8')) {
+    $response = mb_convert_encoding($response, 'UTF-8', 'auto');
 }
 
-// Reemplazar URLs de Supabase por URLs del proxy en la respuesta WSDL
-if (strpos($queryString, 'wsdl') !== false || strpos($queryString, 'WSDL') !== false) {
-    $proxyBaseUrl = 'https://campusarmaformacion.es/sepe-proxy';
-    $response = str_replace(
-        $SUPABASE_URL . $EDGE_FUNCTION,
-        $proxyBaseUrl,
-        $response
-    );
-}
+error_log("SEPE Proxy - Response code: " . $httpCode . " Length: " . strlen($response));
+error_log("SEPE Proxy - Response (first 300): " . substr($response, 0, 300));
 
-// También reemplazar URL_PLATAFORMA en las respuestas SOAP
-$response = str_replace(
-    'https://talentcloudsolution.com',
-    'https://campusarmaformacion.es',
-    $response
-);
-
-// Log respuesta
-error_log("SEPE Proxy GrupoArma - Response code: " . $httpCode);
-error_log("SEPE Proxy GrupoArma - Response length: " . strlen($response));
-
-// Enviar respuesta
 echo $response;
