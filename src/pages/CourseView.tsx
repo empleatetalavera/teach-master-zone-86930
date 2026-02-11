@@ -2212,7 +2212,33 @@ export default function CourseView() {
                                             )}
 
                                             {/* Manual PDF */}
-                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                                            <div 
+                                              className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
+                                              onClick={async () => {
+                                                // First try module_content table
+                                                const { data: pdfData } = await supabase
+                                                  .from('module_content')
+                                                  .select('file_path, title')
+                                                  .eq('module_id', module.id)
+                                                  .eq('content_type', 'manual_pdf')
+                                                  .or(`formative_unit_id.eq.${unit.id},formative_unit_id.is.null`)
+                                                  .order('created_at', { ascending: false })
+                                                  .limit(1);
+                                                
+                                                if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+                                                  const { data: urlData } = supabase.storage
+                                                    .from('module-content')
+                                                    .getPublicUrl(pdfData[0].file_path);
+                                                  if (urlData?.publicUrl) {
+                                                    window.open(urlData.publicUrl, '_blank');
+                                                  }
+                                                } else if (module.content && module.content.startsWith('http')) {
+                                                  window.open(module.content, '_blank');
+                                                } else {
+                                                  toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+                                                }
+                                              }}
+                                            >
                                               <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
                                                 <FileText className="h-5 w-5 text-blue-600" />
                                               </div>
@@ -2223,25 +2249,17 @@ export default function CourseView() {
                                                 </p>
                                               </div>
                                               <div className="flex items-center gap-2">
-                                                {module.content && module.content.startsWith('http') && (
-                                                  <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="gap-1.5"
-                                                    asChild
-                                                  >
-                                                    <a href={module.content} target="_blank" rel="noopener noreferrer">
-                                                      <ExternalLink className="h-3.5 w-3.5" />
-                                                      Ver PDF
-                                                    </a>
-                                                  </Button>
-                                                )}
+                                                <Button variant="outline" size="sm" className="gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                                  <ExternalLink className="h-3.5 w-3.5" />
+                                                  Ver PDF
+                                                </Button>
                                                 {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
                                                   <Button
                                                     variant="outline"
                                                     size="sm"
                                                     className="gap-1.5 border-blue-300 hover:bg-blue-50"
-                                                    onClick={() => {
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
                                                       setManualUploaderModuleId(module.id);
                                                       setManualUploaderModuleTitle(isPropio ? unit.title : module.title);
                                                       setManualUploaderUnitId(isPropio ? unit.id : undefined);
@@ -2282,40 +2300,44 @@ export default function CourseView() {
                                             )}
 
                                             {/* Test Final */}
-                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
-                                              <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
-                                                <ClipboardList className="h-5 w-5 text-purple-600" />
-                                              </div>
-                                              <div className="flex-1 min-w-0">
-                                                <span className="text-sm font-medium">Test Final de la Unidad</span>
-                                                <p className="text-xs text-muted-foreground">
-                                                  Evaluación de 50 preguntas para verificar el aprendizaje
-                                                </p>
-                                              </div>
-                                              <div className="flex items-center gap-2">
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  className="gap-1.5"
-                                                  onClick={() => {
-                                                    toast({
-                                                      title: "Test de Evaluación",
-                                                      description: `Accediendo al test final de ${unit.title}...`,
-                                                    });
-                                                  }}
-                                                >
-                                                  <ClipboardList className="h-3.5 w-3.5 text-purple-600" />
-                                                  Realizar Test
-                                                </Button>
-                                              </div>
-                                            </div>
-
-                                            {/* Autoevaluación (no computable) */}
-                                            <SelfAssessmentQuiz
-                                              courseId={courseId!}
-                                              formativeUnitId={unit.id}
-                                              formativeUnitTitle={unit.title}
-                                            />
+                                            {(() => {
+                                              const unitEvals = (module.evaluations || []).filter((ev: any) => ev.formative_unit_id === unit.id);
+                                              const hasTest = unitEvals.length > 0;
+                                              return (
+                                                <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                                                  <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
+                                                    <ClipboardList className="h-5 w-5 text-purple-600" />
+                                                  </div>
+                                                  <div className="flex-1 min-w-0">
+                                                    <span className="text-sm font-medium">Test Final de la Unidad</span>
+                                                    <p className="text-xs text-muted-foreground">
+                                                      {hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de 50 preguntas para verificar el aprendizaje'}
+                                                    </p>
+                                                  </div>
+                                                  <div className="flex items-center gap-2">
+                                                    <Button
+                                                      variant="outline"
+                                                      size="sm"
+                                                      className="gap-1.5"
+                                                      onClick={() => {
+                                                        if (hasTest) {
+                                                          navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
+                                                        } else {
+                                                          toast({
+                                                            title: "Test no disponible",
+                                                            description: "El test de esta unidad aún no ha sido creado.",
+                                                            variant: "destructive",
+                                                          });
+                                                        }
+                                                      }}
+                                                    >
+                                                      <ClipboardList className="h-3.5 w-3.5 text-purple-600" />
+                                                      Realizar Test
+                                                    </Button>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })()}
 
                                           </div>
                                         </AccordionContent>
