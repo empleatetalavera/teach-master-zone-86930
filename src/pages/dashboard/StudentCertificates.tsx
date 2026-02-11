@@ -43,6 +43,7 @@ interface CourseForCert {
     end_date: string | null;
     modality: string | null;
     training_center_id: string | null;
+    course_type: string | null;
   };
 }
 
@@ -95,7 +96,7 @@ const StudentCertificates = () => {
         .from("enrollments")
         .select(`
           id, course_id, completed_at, progress_percentage,
-          courses (title, description, category, level, duration_hours, course_code, start_date, end_date, modality, training_center_id)
+          courses (title, description, category, level, duration_hours, course_code, start_date, end_date, modality, training_center_id, course_type)
         `)
         .eq("user_id", user!.id)
         .order("enrolled_at", { ascending: false });
@@ -326,9 +327,11 @@ const StudentCertificates = () => {
     const logoData = await loadImageAsDataUrl(branding.centerLogo);
     if (logoData) pdf.addImage(logoData, "PNG", 18, 15, 50, 25);
 
-    // Top-right CFC/SNS logo
-    const cfcLogo = await loadImageAsDataUrl("/branding/cfc-sns-logo.png");
-    if (cfcLogo) pdf.addImage(cfcLogo, "PNG", W - 55, 15, 35, 25);
+    // Top-right CFC/SNS logo (only for CFC courses)
+    if (enrollment.courses.course_type !== 'propio') {
+      const cfcLogo = await loadImageAsDataUrl("/branding/cfc-sns-logo.png");
+      if (cfcLogo) pdf.addImage(cfcLogo, "PNG", W - 55, 15, 35, 25);
+    }
 
     // Student name
     let y = 55;
@@ -363,16 +366,18 @@ const StudentCertificates = () => {
     const expediente = enrollment.courses.course_code || "(Número de expediente/ Registro de Acreditación)";
     pdf.text(expediente, W / 2, y, { align: "center" });
 
-    // Accreditation text
-    y += 12;
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(40, 40, 40);
-    const accrText = "Actividad Acreditada por la Comisión de Formación Continuada de Castilla-La Mancha del Sistema de Acreditación de la Formación Continuada de las profesiones sanitarias en el Sistema Nacional de Salud con XX,X créditos";
-    const accrLines = pdf.splitTextToSize(accrText, W - 50);
-    pdf.text(accrLines, W / 2, y, { align: "center" });
-    // Bold key parts
-    y += accrLines.length * 5;
+    // Accreditation text (only for CFC courses)
+    if (enrollment.courses.course_type !== 'propio') {
+      y += 12;
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(40, 40, 40);
+      const accrText = "Actividad Acreditada por la Comisión de Formación Continuada de Castilla-La Mancha del Sistema de Acreditación de la Formación Continuada de las profesiones sanitarias en el Sistema Nacional de Salud con XX,X créditos";
+      const accrLines = pdf.splitTextToSize(accrText, W - 50);
+      pdf.text(accrLines, W / 2, y, { align: "center" });
+      // Bold key parts
+      y += accrLines.length * 5;
+    }
 
     // Location and dates
     y += 8;
