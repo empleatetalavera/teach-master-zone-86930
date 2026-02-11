@@ -1926,15 +1926,38 @@ export default function CourseView() {
                                     <span className="text-sm font-medium">{unit.title}</span>
                                     <p className="text-xs text-muted-foreground">PDF del temario de esta unidad</p>
                                   </div>
-                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                    <Button variant="outline" size="sm" className="gap-2" onClick={(e) => {
+                                  <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm" className="gap-2" onClick={async (e) => {
                                       e.stopPropagation();
-                                      setManualUploaderModuleId(module.id);
-                                      setManualUploaderModuleTitle(unit.title);
-                                      setManualUploaderUnitId(unit.id);
-                                      setManualUploaderOpen(true);
-                                    }}><Upload className="h-3 w-3" />Subir PDF</Button>
-                                  )}
+                                      const { data: pdfData } = await (supabase as any)
+                                        .from('module_content')
+                                        .select('file_path, title')
+                                        .eq('module_id', module.id)
+                                        .eq('content_type', 'manual_pdf')
+                                        .or(`formative_unit_id.eq.${unit.id},formative_unit_id.is.null`)
+                                        .order('created_at', { ascending: false })
+                                        .limit(1);
+                                      if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+                                        const { data: urlData } = supabase.storage
+                                          .from('module-content')
+                                          .getPublicUrl(pdfData[0].file_path);
+                                        if (urlData?.publicUrl) {
+                                          window.open(urlData.publicUrl, '_blank');
+                                        }
+                                      } else {
+                                        toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+                                      }
+                                    }}><ExternalLink className="h-3 w-3" />Ver PDF</Button>
+                                    {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                      <Button variant="outline" size="sm" className="gap-2" onClick={(e) => {
+                                        e.stopPropagation();
+                                        setManualUploaderModuleId(module.id);
+                                        setManualUploaderModuleTitle(unit.title);
+                                        setManualUploaderUnitId(unit.id);
+                                        setManualUploaderOpen(true);
+                                      }}><Upload className="h-3 w-3" />Subir</Button>
+                                    )}
+                                  </div>
                                 </div>
                                 {/* Test */}
                                 {(() => {
@@ -2249,7 +2272,29 @@ export default function CourseView() {
                                                 </p>
                                               </div>
                                               <div className="flex items-center gap-2">
-                                                <Button variant="outline" size="sm" className="gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                                <Button variant="outline" size="sm" className="gap-1.5" onClick={async (e) => {
+                                                  e.stopPropagation();
+                                                  const { data: pdfData } = await (supabase as any)
+                                                    .from('module_content')
+                                                    .select('file_path, title')
+                                                    .eq('module_id', module.id)
+                                                    .eq('content_type', 'manual_pdf')
+                                                    .or(`formative_unit_id.eq.${unit.id},formative_unit_id.is.null`)
+                                                    .order('created_at', { ascending: false })
+                                                    .limit(1);
+                                                  if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+                                                    const { data: urlData } = supabase.storage
+                                                      .from('module-content')
+                                                      .getPublicUrl(pdfData[0].file_path);
+                                                    if (urlData?.publicUrl) {
+                                                      window.open(urlData.publicUrl, '_blank');
+                                                    }
+                                                  } else if (module.content && module.content.startsWith('http')) {
+                                                    window.open(module.content, '_blank');
+                                                  } else {
+                                                    toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+                                                  }
+                                                }}>
                                                   <ExternalLink className="h-3.5 w-3.5" />
                                                   Ver PDF
                                                 </Button>
