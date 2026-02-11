@@ -2428,6 +2428,66 @@ export type Database = {
           },
         ]
       }
+      self_assessment_questions: {
+        Row: {
+          case_study: string | null
+          correct_option_id: string
+          course_id: string
+          created_at: string
+          explanation: string | null
+          formative_unit_id: string
+          id: string
+          is_active: boolean
+          options: Json
+          order_index: number
+          question_text: string
+          updated_at: string
+        }
+        Insert: {
+          case_study?: string | null
+          correct_option_id: string
+          course_id: string
+          created_at?: string
+          explanation?: string | null
+          formative_unit_id: string
+          id?: string
+          is_active?: boolean
+          options?: Json
+          order_index?: number
+          question_text: string
+          updated_at?: string
+        }
+        Update: {
+          case_study?: string | null
+          correct_option_id?: string
+          course_id?: string
+          created_at?: string
+          explanation?: string | null
+          formative_unit_id?: string
+          id?: string
+          is_active?: boolean
+          options?: Json
+          order_index?: number
+          question_text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "self_assessment_questions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "self_assessment_questions_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sepe_certificates: {
         Row: {
           certificate_type: string
