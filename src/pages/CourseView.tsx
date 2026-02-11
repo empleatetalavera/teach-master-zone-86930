@@ -1922,11 +1922,17 @@ export default function CourseView() {
                                     }
                                     
                                     if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                      const { data: urlData } = supabase.storage
+                                      const { data: signedData } = await supabase.storage
                                         .from('module-content')
-                                        .getPublicUrl(pdfData[0].file_path);
-                                      if (urlData?.publicUrl) {
-                                        window.open(urlData.publicUrl, '_blank');
+                                        .createSignedUrl(pdfData[0].file_path, 3600);
+                                      if (signedData?.signedUrl) {
+                                        const link = document.createElement('a');
+                                        link.href = signedData.signedUrl;
+                                        link.target = '_blank';
+                                        link.rel = 'noopener noreferrer';
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
                                       }
                                     } else {
                                       toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
@@ -1962,11 +1968,17 @@ export default function CourseView() {
                                         pdfData = fallback;
                                       }
                                       if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                        const { data: urlData } = supabase.storage
+                                        const { data: signedData } = await supabase.storage
                                           .from('module-content')
-                                          .getPublicUrl(pdfData[0].file_path);
-                                        if (urlData?.publicUrl) {
-                                          window.open(urlData.publicUrl, '_blank');
+                                          .createSignedUrl(pdfData[0].file_path, 3600);
+                                        if (signedData?.signedUrl) {
+                                          const link = document.createElement('a');
+                                          link.href = signedData.signedUrl;
+                                          link.target = '_blank';
+                                          link.rel = 'noopener noreferrer';
+                                          document.body.appendChild(link);
+                                          link.click();
+                                          document.body.removeChild(link);
                                         }
                                       } else {
                                         toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
@@ -2467,7 +2479,47 @@ export default function CourseView() {
                                                 <span className="text-sm font-medium">📖 Manual: {unit.title}</span>
                                                 <p className="text-xs text-muted-foreground">Haz clic para abrir el PDF del manual</p>
                                               </div>
-                                              <Button variant="default" size="sm" className="gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                              <Button variant="default" size="sm" className="gap-1.5 shrink-0" onClick={async (e) => {
+                                                e.stopPropagation();
+                                                let pdfData: any[] | null = null;
+                                                const { data: exactMatch } = await (supabase as any)
+                                                  .from('module_content')
+                                                  .select('file_path, title')
+                                                  .eq('module_id', module.id)
+                                                  .eq('content_type', 'manual_pdf')
+                                                  .eq('formative_unit_id', unit.id)
+                                                  .limit(1);
+                                                pdfData = exactMatch;
+                                                if (!pdfData || pdfData.length === 0) {
+                                                  const { data: fallback } = await (supabase as any)
+                                                    .from('module_content')
+                                                    .select('file_path, title')
+                                                    .eq('module_id', module.id)
+                                                    .eq('content_type', 'manual_pdf')
+                                                    .is('formative_unit_id', null)
+                                                    .order('created_at', { ascending: false })
+                                                    .limit(1);
+                                                  pdfData = fallback;
+                                                }
+                                                if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+                                                  const { data: signedData } = await supabase.storage
+                                                    .from('module-content')
+                                                    .createSignedUrl(pdfData[0].file_path, 3600);
+                                                  if (signedData?.signedUrl) {
+                                                    const link = document.createElement('a');
+                                                    link.href = signedData.signedUrl;
+                                                    link.target = '_blank';
+                                                    link.rel = 'noopener noreferrer';
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                  } else {
+                                                    toast({ title: "Error", description: "No se pudo abrir el PDF", variant: "destructive" });
+                                                  }
+                                                } else {
+                                                  toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+                                                }
+                                              }}>
                                                 <ExternalLink className="h-3.5 w-3.5" />
                                                 Abrir PDF
                                               </Button>
