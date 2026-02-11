@@ -2331,11 +2331,19 @@ export default function CourseView() {
                                                     pdfData = fallback;
                                                   }
                                                   if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                                    const { data: urlData } = supabase.storage
+                                                    const { data: signedData, error: signedError } = await supabase.storage
                                                       .from('module-content')
-                                                      .getPublicUrl(pdfData[0].file_path);
-                                                    if (urlData?.publicUrl) {
-                                                      window.open(urlData.publicUrl, '_blank');
+                                                      .createSignedUrl(pdfData[0].file_path, 3600);
+                                                    if (signedData?.signedUrl) {
+                                                      const link = document.createElement('a');
+                                                      link.href = signedData.signedUrl;
+                                                      link.target = '_blank';
+                                                      link.rel = 'noopener noreferrer';
+                                                      document.body.appendChild(link);
+                                                      link.click();
+                                                      document.body.removeChild(link);
+                                                    } else {
+                                                      toast({ title: "Error", description: "No se pudo generar el enlace al PDF", variant: "destructive" });
                                                     }
                                                   } else if (module.content && module.content.startsWith('http')) {
                                                     window.open(module.content, '_blank');
