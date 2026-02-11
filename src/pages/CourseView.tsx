@@ -2305,11 +2305,49 @@ export default function CourseView() {
                                                 <div className="flex-1 min-w-0">
                                                   <span className="text-sm font-medium">{isPropio ? unit.title : 'Manual / Documentación PDF'}</span>
                                                   <p className="text-xs text-muted-foreground">
-                                                    {isPropio ? 'PDF del temario de esta unidad' : 'Documentación descargable del módulo formativo'}
+                                                    {isPropio ? 'Haz clic aquí o en el botón para abrir el PDF' : 'Documentación descargable del módulo formativo'}
                                                   </p>
                                                 </div>
+                                                <Button variant="default" size="sm" className="gap-1.5 shrink-0" onClick={async (e) => {
+                                                  e.stopPropagation();
+                                                  let pdfData: any[] | null = null;
+                                                  const { data: exactMatch } = await (supabase as any)
+                                                    .from('module_content')
+                                                    .select('file_path, title')
+                                                    .eq('module_id', module.id)
+                                                    .eq('content_type', 'manual_pdf')
+                                                    .eq('formative_unit_id', unit.id)
+                                                    .limit(1);
+                                                  pdfData = exactMatch;
+                                                  if (!pdfData || pdfData.length === 0) {
+                                                    const { data: fallback } = await (supabase as any)
+                                                      .from('module_content')
+                                                      .select('file_path, title')
+                                                      .eq('module_id', module.id)
+                                                      .eq('content_type', 'manual_pdf')
+                                                      .is('formative_unit_id', null)
+                                                      .order('created_at', { ascending: false })
+                                                      .limit(1);
+                                                    pdfData = fallback;
+                                                  }
+                                                  if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+                                                    const { data: urlData } = supabase.storage
+                                                      .from('module-content')
+                                                      .getPublicUrl(pdfData[0].file_path);
+                                                    if (urlData?.publicUrl) {
+                                                      window.open(urlData.publicUrl, '_blank');
+                                                    }
+                                                  } else if (module.content && module.content.startsWith('http')) {
+                                                    window.open(module.content, '_blank');
+                                                  } else {
+                                                    toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+                                                  }
+                                                }}>
+                                                  <ExternalLink className="h-3.5 w-3.5" />
+                                                  Abrir PDF
+                                                </Button>
                                               </div>
-                                              <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
+                                              <div className="flex flex-wrap items-center gap-2 px-3 pb-3 hidden">
                                                 <Button variant="default" size="sm" className="gap-1.5" onClick={async (e) => {
                                                   e.stopPropagation();
                                                   let pdfData: any[] | null = null;
