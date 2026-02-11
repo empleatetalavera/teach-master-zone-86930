@@ -49,6 +49,8 @@ import { TutorStudentProgress } from "@/components/TutorStudentProgress";
 import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import { CertificateDocumentsSection } from "@/components/CertificateDocumentsSection";
 import { ModuleContentUploader } from "@/components/ModuleContentUploader";
+import { ModuleManualUploader } from "@/components/ModuleManualUploader";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScormAuthorModal } from "@/components/scorm-author/ScormAuthorModal";
 import { ModuleFormativeUnitManager } from "@/components/ModuleFormativeUnitManager";
 import { CourseGlossary } from "@/components/CourseGlossary";
@@ -296,6 +298,11 @@ export default function CourseView() {
   const [scormAuthorModuleId, setScormAuthorModuleId] = useState<string>("");
   const [scormAuthorUnitId, setScormAuthorUnitId] = useState<string>("");
   const [scormAuthorUnitTitle, setScormAuthorUnitTitle] = useState<string>("");
+
+  // Manual uploader dialog state
+  const [manualUploaderOpen, setManualUploaderOpen] = useState(false);
+  const [manualUploaderModuleId, setManualUploaderModuleId] = useState<string>("");
+  const [manualUploaderModuleTitle, setManualUploaderModuleTitle] = useState<string>("");
   
   // Supplementary material visibility (per unit, stored in state - could be in DB)
   const [showSupplementaryMaterial, setShowSupplementaryMaterial] = useState<Record<string, boolean>>({});
@@ -2163,7 +2170,11 @@ export default function CourseView() {
                                                     variant="outline"
                                                     size="sm"
                                                     className="gap-1.5 border-blue-300 hover:bg-blue-50"
-                                                    onClick={() => openContentViewer(unit.id, unit.title, 'document')}
+                                                    onClick={() => {
+                                                      setManualUploaderModuleId(module.id);
+                                                      setManualUploaderModuleTitle(module.title);
+                                                      setManualUploaderOpen(true);
+                                                    }}
                                                   >
                                                     <Upload className="h-3.5 w-3.5 text-blue-600" />
                                                     Subir
@@ -3140,6 +3151,24 @@ export default function CourseView() {
           setScormAuthorOpen(false);
         }}
       />
+
+      {/* Manual PDF Uploader Dialog */}
+      <Dialog open={manualUploaderOpen} onOpenChange={setManualUploaderOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Gestión de Manuales PDF — {manualUploaderModuleTitle}
+            </DialogTitle>
+          </DialogHeader>
+          {manualUploaderOpen && manualUploaderModuleId && (
+            <ModuleManualUploader
+              moduleId={manualUploaderModuleId}
+              moduleTitle={manualUploaderModuleTitle}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
