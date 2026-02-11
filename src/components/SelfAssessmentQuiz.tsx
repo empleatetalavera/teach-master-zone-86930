@@ -103,12 +103,7 @@ export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTit
   }
 
   if (questions.length === 0) {
-    return (
-      <div className="border rounded-lg p-4 bg-muted/30 text-center">
-        <FileQuestion className="h-6 w-6 mx-auto mb-2 text-muted-foreground opacity-50" />
-        <p className="text-sm text-muted-foreground">No hay preguntas de autoevaluación para esta unidad</p>
-      </div>
-    );
+    return null;
   }
 
   if (!started) {
