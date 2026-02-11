@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ModuleManualUploader } from "@/components/ModuleManualUploader";
+import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ScormAuthorModal } from "@/components/scorm-author";
 
 interface Course {
@@ -147,6 +148,11 @@ export default function CourseContentEditor() {
   const [editingUnit, setEditingUnit] = useState<FormativeUnit | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  
+  // Syllabus editor state
+  const [syllabusEditorOpen, setSyllabusEditorOpen] = useState(false);
+  const [syllabusUnitId, setSyllabusUnitId] = useState("");
+  const [syllabusUnitTitle, setSyllabusUnitTitle] = useState("");
 
   // Form states
   const [moduleForm, setModuleForm] = useState({
@@ -1603,12 +1609,16 @@ export default function CourseContentEditor() {
                                                 <Button 
                                                   size="sm" 
                                                   variant="ghost" 
-                                                  className="h-7 text-xs gap-1"
-                                                  onClick={() => navigate(`/dashboard/admin/courses/${courseId}/units/${unit.id}/syllabus`)}
-                                                >
-                                                  <Edit2 className="h-3 w-3" />
-                                                  Editar Temario
-                                                </Button>
+                                                    className="h-7 text-xs gap-1"
+                                                    onClick={() => {
+                                                      setSyllabusUnitId(unit.id);
+                                                      setSyllabusUnitTitle(unit.title);
+                                                      setSyllabusEditorOpen(true);
+                                                    }}
+                                                  >
+                                                    <Edit2 className="h-3 w-3" />
+                                                    Editar Temario
+                                                  </Button>
                                                 <Button 
                                                   size="sm" 
                                                   variant="ghost" 
@@ -1632,7 +1642,8 @@ export default function CourseContentEditor() {
                                           </div>
                                         </div>
 
-                                        {/* Actividades de aprendizaje evaluables */}
+                                        {/* Actividades de aprendizaje evaluables - Only for non-propio courses */}
+                                        {course?.course_type !== 'propio' && (
                                         <div className="flex items-start gap-3">
                                           <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded">
                                             <FileText className="h-5 w-5 text-amber-600" />
@@ -1677,6 +1688,7 @@ export default function CourseContentEditor() {
                                             )}
                                           </div>
                                         </div>
+                                        )}
 
                                         {/* Tests de evaluación */}
                                         <div className="flex items-start gap-3">
@@ -2170,6 +2182,14 @@ export default function CourseContentEditor() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Syllabus Editor Dialog */}
+      <SyllabusEditor
+        open={syllabusEditorOpen}
+        onOpenChange={setSyllabusEditorOpen}
+        unitId={syllabusUnitId}
+        unitTitle={syllabusUnitTitle}
+      />
     </div>
   );
 }
