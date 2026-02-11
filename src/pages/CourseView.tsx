@@ -2283,11 +2283,19 @@ export default function CourseView() {
                                                 }
                                                 
                                                 if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                                  const { data: urlData } = supabase.storage
+                                                  const { data: signedData } = await supabase.storage
                                                     .from('module-content')
-                                                    .getPublicUrl(pdfData[0].file_path);
-                                                  if (urlData?.publicUrl) {
-                                                    window.open(urlData.publicUrl, '_blank');
+                                                    .createSignedUrl(pdfData[0].file_path, 3600);
+                                                  if (signedData?.signedUrl) {
+                                                    const link = document.createElement('a');
+                                                    link.href = signedData.signedUrl;
+                                                    link.target = '_blank';
+                                                    link.rel = 'noopener noreferrer';
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                  } else {
+                                                    toast({ title: "Error", description: "No se pudo abrir el PDF", variant: "destructive" });
                                                   }
                                                 } else if (module.content && module.content.startsWith('http')) {
                                                   window.open(module.content, '_blank');
@@ -2333,17 +2341,15 @@ export default function CourseView() {
                                                       .from('module-content')
                                                       .createSignedUrl(pdfData[0].file_path, 3600);
                                                     if (signedData?.signedUrl) {
-                                                      window.location.href = signedData.signedUrl;
+                                                      const link = document.createElement('a');
+                                                      link.href = signedData.signedUrl;
+                                                      link.target = '_blank';
+                                                      link.rel = 'noopener noreferrer';
+                                                      document.body.appendChild(link);
+                                                      link.click();
+                                                      document.body.removeChild(link);
                                                     } else {
-                                                      // Fallback: use public URL
-                                                      const { data: urlData } = supabase.storage
-                                                        .from('module-content')
-                                                        .getPublicUrl(pdfData[0].file_path);
-                                                      if (urlData?.publicUrl) {
-                                                        window.location.href = urlData.publicUrl;
-                                                      } else {
-                                                        toast({ title: "Error", description: "No se pudo generar el enlace al PDF", variant: "destructive" });
-                                                      }
+                                                      toast({ title: "Error", description: "No se pudo abrir el PDF", variant: "destructive" });
                                                     }
                                                   } else if (module.content && module.content.startsWith('http')) {
                                                     window.open(module.content, '_blank');
@@ -2355,46 +2361,8 @@ export default function CourseView() {
                                                   Abrir PDF
                                                 </Button>
                                               </div>
-                                              <div className="flex flex-wrap items-center gap-2 px-3 pb-3 hidden">
-                                                <Button variant="default" size="sm" className="gap-1.5" onClick={async (e) => {
-                                                  e.stopPropagation();
-                                                  let pdfData: any[] | null = null;
-                                                  const { data: exactMatch } = await (supabase as any)
-                                                    .from('module_content')
-                                                    .select('file_path, title')
-                                                    .eq('module_id', module.id)
-                                                    .eq('content_type', 'manual_pdf')
-                                                    .eq('formative_unit_id', unit.id)
-                                                    .limit(1);
-                                                  pdfData = exactMatch;
-                                                  if (!pdfData || pdfData.length === 0) {
-                                                    const { data: fallback } = await (supabase as any)
-                                                      .from('module_content')
-                                                      .select('file_path, title')
-                                                      .eq('module_id', module.id)
-                                                      .eq('content_type', 'manual_pdf')
-                                                      .is('formative_unit_id', null)
-                                                      .order('created_at', { ascending: false })
-                                                      .limit(1);
-                                                    pdfData = fallback;
-                                                  }
-                                                  if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                                    const { data: urlData } = supabase.storage
-                                                      .from('module-content')
-                                                      .getPublicUrl(pdfData[0].file_path);
-                                                    if (urlData?.publicUrl) {
-                                                      window.open(urlData.publicUrl, '_blank');
-                                                    }
-                                                  } else if (module.content && module.content.startsWith('http')) {
-                                                    window.open(module.content, '_blank');
-                                                  } else {
-                                                    toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
-                                                  }
-                                                }}>
-                                                  <ExternalLink className="h-3.5 w-3.5" />
-                                                  📄 Abrir PDF
-                                                </Button>
-                                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                              {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
                                                   <Button
                                                     variant="outline"
                                                     size="sm"
@@ -2402,16 +2370,16 @@ export default function CourseView() {
                                                     onClick={(e) => {
                                                       e.stopPropagation();
                                                       setManualUploaderModuleId(module.id);
-                                                      setManualUploaderModuleTitle(isPropio ? unit.title : module.title);
-                                                      setManualUploaderUnitId(isPropio ? unit.id : undefined);
+                                                      setManualUploaderModuleTitle(unit.title);
+                                                      setManualUploaderUnitId(unit.id);
                                                       setManualUploaderOpen(true);
                                                     }}
                                                   >
                                                     <Upload className="h-3.5 w-3.5 text-blue-600" />
-                                                    Subir
+                                                    Subir PDF
                                                   </Button>
-                                                )}
-                                              </div>
+                                                </div>
+                                              )}
                                             </div>
 
                                             {/* Actividad - Hidden for propio courses */}
