@@ -1568,6 +1568,7 @@ export type Database = {
           file_name: string | null
           file_path: string | null
           file_size: number | null
+          formative_unit_id: string | null
           id: string
           is_active: boolean | null
           module_id: string
@@ -1584,6 +1585,7 @@ export type Database = {
           file_name?: string | null
           file_path?: string | null
           file_size?: number | null
+          formative_unit_id?: string | null
           id?: string
           is_active?: boolean | null
           module_id: string
@@ -1600,6 +1602,7 @@ export type Database = {
           file_name?: string | null
           file_path?: string | null
           file_size?: number | null
+          formative_unit_id?: string | null
           id?: string
           is_active?: boolean | null
           module_id?: string
@@ -1608,6 +1611,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "module_content_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "module_content_module_id_fkey"
             columns: ["module_id"]

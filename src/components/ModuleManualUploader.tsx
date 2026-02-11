@@ -27,9 +27,10 @@ interface ModuleContent {
 interface ModuleManualUploaderProps {
   moduleId: string;
   moduleTitle: string;
+  formativeUnitId?: string;
 }
 
-export function ModuleManualUploader({ moduleId, moduleTitle }: ModuleManualUploaderProps) {
+export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }: ModuleManualUploaderProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -47,17 +48,24 @@ export function ModuleManualUploader({ moduleId, moduleTitle }: ModuleManualUplo
 
   useEffect(() => {
     loadManuals();
-  }, [moduleId]);
+  }, [moduleId, formativeUnitId]);
 
   const loadManuals = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("module_content")
         .select("*")
         .eq("module_id", moduleId)
         .eq("content_type", "manual_pdf")
         .order("order_index");
 
+      if (formativeUnitId) {
+        query = query.eq("formative_unit_id", formativeUnitId);
+      } else {
+        query = query.is("formative_unit_id", null);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       setManuals(data || []);
     } catch (error) {
@@ -129,10 +137,9 @@ export function ModuleManualUploader({ moduleId, moduleTitle }: ModuleManualUplo
           file_name: fileName,
           embed_url: formData.embed_url || null,
           external_url: formData.external_url || null,
-          order_index: maxOrder + 1
-        });
-
-      if (insertError) throw insertError;
+          order_index: maxOrder + 1,
+          formative_unit_id: formativeUnitId || null
+        } as any);
 
       toast({ title: "Éxito", description: "Manual añadido correctamente" });
       setDialogOpen(false);

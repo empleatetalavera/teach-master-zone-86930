@@ -303,6 +303,7 @@ export default function CourseView() {
   const [manualUploaderOpen, setManualUploaderOpen] = useState(false);
   const [manualUploaderModuleId, setManualUploaderModuleId] = useState<string>("");
   const [manualUploaderModuleTitle, setManualUploaderModuleTitle] = useState<string>("");
+  const [manualUploaderUnitId, setManualUploaderUnitId] = useState<string | undefined>(undefined);
   
   // Supplementary material visibility (per unit, stored in state - could be in DB)
   const [showSupplementaryMaterial, setShowSupplementaryMaterial] = useState<Record<string, boolean>>({});
@@ -1898,6 +1899,7 @@ export default function CourseView() {
                                     <Button variant="outline" size="sm" className="gap-2" onClick={() => {
                                       setManualUploaderModuleId(module.id);
                                       setManualUploaderModuleTitle(unit.title);
+                                      setManualUploaderUnitId(unit.id);
                                       setManualUploaderOpen(true);
                                     }}><Upload className="h-3 w-3" />Subir PDF</Button>
                                   )}
@@ -2180,6 +2182,7 @@ export default function CourseView() {
                                                     onClick={() => {
                                                       setManualUploaderModuleId(module.id);
                                                       setManualUploaderModuleTitle(isPropio ? unit.title : module.title);
+                                                      setManualUploaderUnitId(isPropio ? unit.id : undefined);
                                                       setManualUploaderOpen(true);
                                                     }}
                                                   >
@@ -3175,6 +3178,7 @@ export default function CourseView() {
             <ModuleManualUploader
               moduleId={manualUploaderModuleId}
               moduleTitle={manualUploaderModuleTitle}
+              formativeUnitId={manualUploaderUnitId}
             />
           )}
         </DialogContent>
