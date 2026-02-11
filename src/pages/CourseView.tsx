@@ -2033,9 +2033,7 @@ export default function CourseView() {
                                     <Button variant="outline" size="sm" className="gap-2" onClick={() => openActivityManager(unit.id, unit.title)}><Plus className="h-3 w-3" />Gestionar</Button>
                                   )}
                                 </div>
-                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                  <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
-                                )}
+                                <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
                               </div>
                             ))}
                           </div>
@@ -2335,15 +2333,17 @@ export default function CourseView() {
                                                       .from('module-content')
                                                       .createSignedUrl(pdfData[0].file_path, 3600);
                                                     if (signedData?.signedUrl) {
-                                                      const link = document.createElement('a');
-                                                      link.href = signedData.signedUrl;
-                                                      link.target = '_blank';
-                                                      link.rel = 'noopener noreferrer';
-                                                      document.body.appendChild(link);
-                                                      link.click();
-                                                      document.body.removeChild(link);
+                                                      window.location.href = signedData.signedUrl;
                                                     } else {
-                                                      toast({ title: "Error", description: "No se pudo generar el enlace al PDF", variant: "destructive" });
+                                                      // Fallback: use public URL
+                                                      const { data: urlData } = supabase.storage
+                                                        .from('module-content')
+                                                        .getPublicUrl(pdfData[0].file_path);
+                                                      if (urlData?.publicUrl) {
+                                                        window.location.href = urlData.publicUrl;
+                                                      } else {
+                                                        toast({ title: "Error", description: "No se pudo generar el enlace al PDF", variant: "destructive" });
+                                                      }
                                                     }
                                                   } else if (module.content && module.content.startsWith('http')) {
                                                     window.open(module.content, '_blank');
