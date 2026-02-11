@@ -32,6 +32,7 @@ interface CourseCertificateDownloadProps {
   endDate?: string | null;
   modality?: string | null;
   trainingCenterId?: string | null;
+  courseType?: string | null;
 }
 
 interface CompletionStatus {
@@ -81,7 +82,9 @@ export function CourseCertificateDownload({
   endDate,
   modality,
   trainingCenterId,
+  courseType,
 }: CourseCertificateDownloadProps) {
+  const isPropio = courseType === 'propio';
   const { user, userRole } = useAuth();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<CompletionStatus | null>(null);
@@ -315,39 +318,41 @@ export function CourseCertificateDownload({
     const expediente = courseCode || "(Número de expediente/ Registro de Acreditación)";
     pdf.text(expediente, W / 2, y, { align: "center" });
 
-    // Accreditation text - two lines with mixed bold
-    y += 14;
-    pdf.setFontSize(10);
-    // Line 1
-    const a1 = "Actividad ";
-    const a1b = "Acreditada por la Comisión de Formación Continuada de Castilla- La Mancha del Sistema de Acreditación de la Formación";
-    const line1W = pdf.getTextWidth(a1 + a1b);
-    const line1X = W / 2 - line1W / 2;
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(40, 40, 40);
-    pdf.text(a1, line1X, y);
-    pdf.setFont("helvetica", "bold");
-    pdf.text(a1b, line1X + pdf.getTextWidth(a1), y);
+    // Accreditation text - two lines with mixed bold (only for CFC courses)
+    if (!isPropio) {
+      y += 14;
+      pdf.setFontSize(10);
+      // Line 1
+      const a1 = "Actividad ";
+      const a1b = "Acreditada por la Comisión de Formación Continuada de Castilla- La Mancha del Sistema de Acreditación de la Formación";
+      const line1W = pdf.getTextWidth(a1 + a1b);
+      const line1X = W / 2 - line1W / 2;
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(40, 40, 40);
+      pdf.text(a1, line1X, y);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(a1b, line1X + pdf.getTextWidth(a1), y);
 
-    // Line 2
-    y += 6;
-    const a2 = "Continuada de las profesiones sanitarias";
-    const a2b = " en el Sistema Nacional de Salud con ";
-    const a2c = "XX,X";
-    const a2d = " créditos";
-    const line2Full = a2 + a2b + a2c + a2d;
-    const line2X = W / 2 - pdf.getTextWidth(line2Full) / 2;
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(40, 40, 40);
-    pdf.text(a2, line2X, y);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(a2b, line2X + pdf.getTextWidth(a2), y);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(0, 100, 180);
-    pdf.text(a2c, line2X + pdf.getTextWidth(a2 + a2b), y);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(40, 40, 40);
-    pdf.text(a2d, line2X + pdf.getTextWidth(a2 + a2b + a2c), y);
+      // Line 2
+      y += 6;
+      const a2 = "Continuada de las profesiones sanitarias";
+      const a2b = " en el Sistema Nacional de Salud con ";
+      const a2c = "XX,X";
+      const a2d = " créditos";
+      const line2Full = a2 + a2b + a2c + a2d;
+      const line2X = W / 2 - pdf.getTextWidth(line2Full) / 2;
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(40, 40, 40);
+      pdf.text(a2, line2X, y);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(a2b, line2X + pdf.getTextWidth(a2), y);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(0, 100, 180);
+      pdf.text(a2c, line2X + pdf.getTextWidth(a2 + a2b), y);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(40, 40, 40);
+      pdf.text(a2d, line2X + pdf.getTextWidth(a2 + a2b + a2c), y);
+    }
 
     // "Celebrado en..." line with bold dynamic parts
     y += 14;
@@ -460,8 +465,10 @@ export function CourseCertificateDownload({
     pdf.setTextColor(0, 120, 60);
     pdf.text("Documento válido", sigX + 8, sigY + 29.5);
 
-    const cfcBadge = await loadImageAsDataUrl("/branding/cfc-sns-badge.png");
-    if (cfcBadge) pdf.addImage(cfcBadge, "PNG", W - 48, bottomY - 8, 32, 38);
+    if (!isPropio) {
+      const cfcBadge = await loadImageAsDataUrl("/branding/cfc-sns-badge.png");
+      if (cfcBadge) pdf.addImage(cfcBadge, "PNG", W - 48, bottomY - 8, 32, 38);
+    }
 
     // Center: "Alumno" signature line
     const centerSigX = W / 2 + 10;
@@ -509,9 +516,14 @@ export function CourseCertificateDownload({
     pdf.setFontSize(11);
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(0, 80, 150);
-    pdf.text("SECRETARÍA TÉCNICA DE FORMACIÓN CONTINUADA", W / 2, ry, { align: "center" });
-    ry += 5.5;
-    pdf.text("DE LAS PROFESIONES SANITARIAS DE CASTILLA-LA MANCHA", W / 2, ry, { align: "center" });
+    if (isPropio) {
+      pdf.text("CONTENIDO DEL CURSO", W / 2, ry, { align: "center" });
+      ry += 5.5;
+    } else {
+      pdf.text("SECRETARÍA TÉCNICA DE FORMACIÓN CONTINUADA", W / 2, ry, { align: "center" });
+      ry += 5.5;
+      pdf.text("DE LAS PROFESIONES SANITARIAS DE CASTILLA-LA MANCHA", W / 2, ry, { align: "center" });
+    }
 
     // Separator
     ry += 6;
@@ -603,14 +615,18 @@ export function CourseCertificateDownload({
     pdf.setFontSize(6);
     pdf.setFont("helvetica", "italic");
     pdf.setTextColor(100, 100, 100);
-    const legalText = "Este documento acredita la realización y superación de la actividad formativa indicada, acreditada por la Comisión de Formación Continuada de las Profesiones Sanitarias de Castilla-La Mancha.";
+    const legalText = isPropio
+      ? "Este documento acredita la realización y superación de la actividad formativa indicada."
+      : "Este documento acredita la realización y superación de la actividad formativa indicada, acreditada por la Comisión de Formación Continuada de las Profesiones Sanitarias de Castilla-La Mancha.";
     const legalLines = pdf.splitTextToSize(legalText, W - 60);
     pdf.text(legalLines, W / 2, ry, { align: "center" });
 
     // Logos footer
     if (logoData) pdf.addImage(logoData, "PNG", 18, H - 20, 30, 14);
-    const cfcSnsBadge2 = await loadImageAsDataUrl("/branding/cfc-sns-badge.png");
-    if (cfcSnsBadge2) pdf.addImage(cfcSnsBadge2, "PNG", W - 42, H - 22, 24, 18);
+    if (!isPropio) {
+      const cfcSnsBadge2 = await loadImageAsDataUrl("/branding/cfc-sns-badge.png");
+      if (cfcSnsBadge2) pdf.addImage(cfcSnsBadge2, "PNG", W - 42, H - 22, 24, 18);
+    }
 
     // Footer
     pdf.setFontSize(5);

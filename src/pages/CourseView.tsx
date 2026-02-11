@@ -2753,7 +2753,7 @@ export default function CourseView() {
                 <SEPECertificateStudentView courseId={courseId!} enrollmentId={enrollment.id} />
               )}
               {/* CFC courses keep the auto-generated certificate */}
-              {isCFCCourse && (
+              {(isCFCCourse || course?.course_type === 'propio') && (
                 <CourseCertificateDownload
                   courseId={courseId!}
                   courseTitle={course.title}
@@ -2763,6 +2763,7 @@ export default function CourseView() {
                   endDate={course.end_date}
                   modality={course.modality}
                   trainingCenterId={course.training_center_id}
+                  courseType={course.course_type}
                 />
               )}
             </TabsContent>
