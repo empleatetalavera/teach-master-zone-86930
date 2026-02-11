@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from "@/hooks/use-toast";
 import { 
   Upload, FileText, Trash2, Eye, Link2, Plus, Loader2, 
-  ExternalLink, BookOpen, Download
+  ExternalLink, BookOpen, Download, Sparkles, X
 } from "lucide-react";
 
 interface ModuleContent {
@@ -28,9 +28,10 @@ interface ModuleManualUploaderProps {
   moduleId: string;
   moduleTitle: string;
   formativeUnitId?: string;
+  courseId?: string;
 }
 
-export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }: ModuleManualUploaderProps) {
+export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, courseId }: ModuleManualUploaderProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -39,6 +40,9 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
   const [uploading, setUploading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewManualId, setPreviewManualId] = useState<string | null>(null);
+  const [generatingQuestions, setGeneratingQuestions] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -84,7 +88,7 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
       return;
     }
 
-    if (file.size > 500 * 1024 * 1024) { // 500MB
+    if (file.size > 500 * 1024 * 1024) {
       toast({ title: "Error", description: "El archivo no debe superar 500MB", variant: "destructive" });
       return;
     }
@@ -107,7 +111,6 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
       let filePath = null;
       let fileName = null;
 
-      // Upload file if selected
       if (selectedFile) {
         const fileExt = selectedFile.name.split(".").pop();
         const uniqueFileName = `${moduleId}/${Date.now()}.${fileExt}`;
@@ -122,10 +125,8 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
         fileName = selectedFile.name;
       }
 
-      // Get next order index
       const maxOrder = manuals.length > 0 ? Math.max(...manuals.map(m => m.order_index)) : 0;
 
-      // Insert record
       const { error: insertError } = await supabase
         .from("module_content")
         .insert({
@@ -140,6 +141,8 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
           order_index: maxOrder + 1,
           formative_unit_id: formativeUnitId || null
         } as any);
+
+      if (insertError) throw insertError;
 
       toast({ title: "Éxito", description: "Manual añadido correctamente" });
       setDialogOpen(false);
@@ -157,18 +160,21 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
     if (!confirm("¿Estás seguro de eliminar este manual?")) return;
 
     try {
-      // Delete file from storage if exists
       if (manual.file_path) {
         await supabase.storage.from("module-content").remove([manual.file_path]);
       }
 
-      // Delete record
       const { error } = await supabase
         .from("module_content")
         .delete()
         .eq("id", manual.id);
 
       if (error) throw error;
+
+      if (previewManualId === manual.id) {
+        setPreviewUrl(null);
+        setPreviewManualId(null);
+      }
 
       toast({ title: "Éxito", description: "Manual eliminado" });
       loadManuals();
@@ -181,30 +187,35 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
     try {
       const { data } = await supabase.storage
         .from("module-content")
-        .createSignedUrl(filePath, 3600); // 1 hour expiry
-
+        .createSignedUrl(filePath, 3600);
       return data?.signedUrl || null;
     } catch {
       return null;
     }
   };
 
-  const handleViewPdf = async (manual: ModuleContent) => {
-    // Priority: embed_url > external_url > file
+  const handlePreviewPdf = async (manual: ModuleContent) => {
+    if (previewManualId === manual.id) {
+      setPreviewUrl(null);
+      setPreviewManualId(null);
+      return;
+    }
+
     if (manual.embed_url) {
-      window.open(manual.embed_url, "_blank");
+      setPreviewUrl(manual.embed_url);
+      setPreviewManualId(manual.id);
       return;
     }
-
     if (manual.external_url) {
-      window.open(manual.external_url, "_blank");
+      setPreviewUrl(manual.external_url);
+      setPreviewManualId(manual.id);
       return;
     }
-
     if (manual.file_path) {
       const url = await getFileUrl(manual.file_path);
       if (url) {
-        window.open(url, "_blank");
+        setPreviewUrl(url);
+        setPreviewManualId(manual.id);
       } else {
         toast({ title: "Error", description: "No se pudo obtener el archivo", variant: "destructive" });
       }
@@ -225,6 +236,42 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+  };
+
+  const handleGenerateQuestions = async () => {
+    if (!courseId || !formativeUnitId) {
+      toast({ title: "Error", description: "Faltan datos del curso o unidad", variant: "destructive" });
+      return;
+    }
+
+    setGeneratingQuestions(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-unit-questions", {
+        body: {
+          courseId,
+          formativeUnitId,
+          formativeUnitTitle: moduleTitle,
+          numberOfQuestions: 15,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({ title: "Error", description: data.error, variant: "destructive" });
+        return;
+      }
+
+      toast({
+        title: "¡Preguntas generadas!",
+        description: `Se han creado ${data.questionCount} preguntas de autoevaluación para esta unidad.`,
+      });
+    } catch (error: any) {
+      console.error("Error generating questions:", error);
+      toast({ title: "Error", description: "Error al generar preguntas", variant: "destructive" });
+    } finally {
+      setGeneratingQuestions(false);
     }
   };
 
@@ -269,7 +316,6 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
                   placeholder="Ej: Manual del Módulo MF1442_3"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label>Descripción</Label>
                 <Input
@@ -278,7 +324,6 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
                   placeholder="Descripción breve del contenido"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label>Archivo PDF (opcional si usas enlace externo)</Label>
                 <div
@@ -287,21 +332,13 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
                   }`}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf"
-                    className="hidden"
-                    onChange={handleFileSelect}
-                  />
+                  <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileSelect} />
                   {selectedFile ? (
                     <div className="flex items-center justify-center gap-2">
                       <FileText className="h-6 w-6 text-primary" />
                       <div className="text-left">
                         <p className="font-medium text-sm">{selectedFile.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                        <p className="text-xs text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                       </div>
                     </div>
                   ) : (
@@ -313,38 +350,17 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
                   )}
                 </div>
               </div>
-
               <div className="space-y-2">
-                <Label className="flex items-center gap-1">
-                  <Link2 className="h-3 w-3" />
-                  URL de Calameo/Issuu (visualizador externo)
-                </Label>
-                <Input
-                  value={formData.embed_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, embed_url: e.target.value }))}
-                  placeholder="https://www.calameo.com/read/..."
-                />
-                <p className="text-xs text-muted-foreground">
-                  Si usas Calameo o Issuu, pega aquí la URL para visualización interactiva
-                </p>
+                <Label className="flex items-center gap-1"><Link2 className="h-3 w-3" />URL de Calameo/Issuu</Label>
+                <Input value={formData.embed_url} onChange={(e) => setFormData(prev => ({ ...prev, embed_url: e.target.value }))} placeholder="https://www.calameo.com/read/..." />
               </div>
-
               <div className="space-y-2">
-                <Label className="flex items-center gap-1">
-                  <ExternalLink className="h-3 w-3" />
-                  URL externa del PDF
-                </Label>
-                <Input
-                  value={formData.external_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, external_url: e.target.value }))}
-                  placeholder="https://..."
-                />
+                <Label className="flex items-center gap-1"><ExternalLink className="h-3 w-3" />URL externa del PDF</Label>
+                <Input value={formData.external_url} onChange={(e) => setFormData(prev => ({ ...prev, external_url: e.target.value }))} placeholder="https://..." />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>
-                Cancelar
-              </Button>
+              <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancelar</Button>
               <Button onClick={handleUpload} disabled={uploading}>
                 {uploading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Guardar
@@ -361,64 +377,79 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId }:
       ) : (
         <div className="space-y-2">
           {manuals.map((manual) => (
-            <Card key={manual.id} className="p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded">
-                    <FileText className="h-5 w-5 text-red-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{manual.title}</p>
-                    {manual.description && (
-                      <p className="text-xs text-muted-foreground">{manual.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-1">
-                      {manual.file_path && (
-                        <span className="text-xs text-muted-foreground">📎 Archivo subido</span>
-                      )}
-                      {manual.embed_url && (
-                        <span className="text-xs text-blue-600">🔗 Calameo/Issuu</span>
-                      )}
-                      {manual.external_url && !manual.embed_url && (
-                        <span className="text-xs text-green-600">🌐 Enlace externo</span>
-                      )}
+            <div key={manual.id}>
+              <Card className="p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded">
+                      <FileText className="h-5 w-5 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{manual.title}</p>
+                      {manual.description && <p className="text-xs text-muted-foreground">{manual.description}</p>}
+                      <div className="flex items-center gap-2 mt-1">
+                        {manual.file_path && <span className="text-xs text-muted-foreground">📎 Archivo subido</span>}
+                        {manual.embed_url && <span className="text-xs text-blue-600">🔗 Calameo/Issuu</span>}
+                        {manual.external_url && !manual.embed_url && <span className="text-xs text-green-600">🌐 Enlace externo</span>}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleViewPdf(manual)}
-                    title="Ver PDF"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  {manual.file_path && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleDownload(manual)}
-                      title="Descargar"
-                    >
-                      <Download className="h-4 w-4" />
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handlePreviewPdf(manual)} title="Previsualizar">
+                      <Eye className="h-4 w-4" />
                     </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => handleDelete(manual)}
-                    title="Eliminar"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    {manual.file_path && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownload(manual)} title="Descargar">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(manual)} title="Eliminar">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+
+              {/* Inline PDF Preview */}
+              {previewManualId === manual.id && previewUrl && (
+                <div className="mt-2 border rounded-lg overflow-hidden relative">
+                  <div className="flex items-center justify-between p-2 bg-muted/50 border-b">
+                    <span className="text-xs font-medium">Previsualización: {manual.title}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setPreviewUrl(null); setPreviewManualId(null); }}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <iframe
+                    src={previewUrl}
+                    className="w-full h-[500px]"
+                    title={`Preview ${manual.title}`}
+                  />
+                </div>
+              )}
+            </div>
           ))}
+        </div>
+      )}
+
+      {/* Generate Questions Button */}
+      {manuals.length > 0 && formativeUnitId && courseId && (
+        <div className="pt-2 border-t">
+          <Button
+            onClick={handleGenerateQuestions}
+            disabled={generatingQuestions}
+            variant="outline"
+            className="w-full gap-2 border-amber-300 hover:bg-amber-50 text-amber-700"
+          >
+            {generatingQuestions ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            {generatingQuestions ? "Generando 15 preguntas con IA..." : "Generar 15 preguntas de autoevaluación con IA"}
+          </Button>
+          <p className="text-xs text-muted-foreground text-center mt-1">
+            Genera automáticamente un test de 15 preguntas basado en el contenido de esta unidad
+          </p>
         </div>
       )}
     </div>

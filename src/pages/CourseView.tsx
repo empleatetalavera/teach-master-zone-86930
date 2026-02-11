@@ -3179,6 +3179,7 @@ export default function CourseView() {
               moduleId={manualUploaderModuleId}
               moduleTitle={manualUploaderModuleTitle}
               formativeUnitId={manualUploaderUnitId}
+              courseId={courseId}
             />
           )}
         </DialogContent>

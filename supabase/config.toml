@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.check-sionline-renewals]
 verify_jwt = false
+
+[functions.generate-unit-questions]
+verify_jwt = true
