@@ -207,24 +207,25 @@ async function handleObtenerDatosCentro(supabase: any, body: string, credentials
   return `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
                   xmlns:impl="http://impl.ws.application.proveedorcentro.meyss.spee.es"
-                  xmlns:entsal="http://entsal.ws.application.proveedorcentro.meyss.spee.es">
+                  xmlns:salida="http://salida.bean.domain.common.proveedorcentro.meyss.spee.es"
+                  xmlns:entsal="http://entsal.bean.domain.common.proveedorcentro.meyss.spee.es">
   <soapenv:Body>
     <impl:obtenerDatosCentroResponse>
-      <entsal:RESPUESTA_DATOS_CENTRO>
-        <entsal:CODIGO_RETORNO>0</entsal:CODIGO_RETORNO>
+      <salida:RESPUESTA_DATOS_CENTRO>
+        <CODIGO_RETORNO>0</CODIGO_RETORNO>
+        <ETIQUETA_ERROR xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         <entsal:DATOS_IDENTIFICATIVOS>
-          <entsal:ID_CENTRO>
-            <entsal:ORIGEN>01</entsal:ORIGEN>
-            <entsal:CODIGO>${escapeXml(centerData?.cif || 'N/A')}</entsal:CODIGO>
-          </entsal:ID_CENTRO>
-          <entsal:NOMBRE_CENTRO>${escapeXml(centerData?.name || 'Centro de Formación')}</entsal:NOMBRE_CENTRO>
-          <entsal:URL_PLATAFORMA>${escapeXml(centerDomain)}</entsal:URL_PLATAFORMA>
-          <entsal:URL_SEGUIMIENTO>${escapeXml(proxyUrl)}</entsal:URL_SEGUIMIENTO>
-          <entsal:NUMERO_USUARIOS_PLATAFORMA>1000</entsal:NUMERO_USUARIOS_PLATAFORMA>
-          <entsal:TELEFONO>${escapeXml(centerData?.phone || centerData?.contact_phone || '665673416')}</entsal:TELEFONO>
-          <entsal:EMAIL>${escapeXml(centerData?.email || centerData?.contact_email || 'formacion.empleate@gmail.com')}</entsal:EMAIL>
+          <ID_CENTRO>
+            <ORIGEN_CENTRO>01</ORIGEN_CENTRO>
+            <CODIGO_CENTRO>${escapeXml((centerData?.cif || 'B45270139').padEnd(16, ' '))}</CODIGO_CENTRO>
+          </ID_CENTRO>
+          <NOMBRE_CENTRO>${escapeXml((centerData?.name || 'Centro de Formacion').substring(0, 40))}</NOMBRE_CENTRO>
+          <URL_PLATAFORMA>${escapeXml(centerDomain)}</URL_PLATAFORMA>
+          <URL_SEGUIMIENTO>${escapeXml(proxyUrl)}</URL_SEGUIMIENTO>
+          <TELEFONO>${escapeXml(centerData?.contact_phone || '925812889')}</TELEFONO>
+          <EMAIL>${escapeXml(centerData?.contact_email || 'grupoarmaformacion@gmail.com')}</EMAIL>
         </entsal:DATOS_IDENTIFICATIVOS>
-      </entsal:RESPUESTA_DATOS_CENTRO>
+      </salida:RESPUESTA_DATOS_CENTRO>
     </impl:obtenerDatosCentroResponse>
   </soapenv:Body>
 </soapenv:Envelope>`
