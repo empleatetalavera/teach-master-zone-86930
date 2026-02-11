@@ -202,7 +202,7 @@ async function handleObtenerDatosCentro(supabase: any, body: string, credentials
             <entsal:CODIGO>${escapeXml(centerData?.cif || 'N/A')}</entsal:CODIGO>
           </entsal:ID_CENTRO>
           <entsal:NOMBRE_CENTRO>${escapeXml(centerData?.name || 'Centro de Formación')}</entsal:NOMBRE_CENTRO>
-          <entsal:URL_PLATAFORMA>${escapeXml(centerData?.custom_domain || (centerData?.slug ? `https://talentcloudsolution.com/auth?center=${centerData.slug}` : 'https://talentcloudsolution.com'))}</entsal:URL_PLATAFORMA>
+          <entsal:URL_PLATAFORMA>${escapeXml(centerData?.custom_domain ? centerData.custom_domain.replace(/\/$/, '') : (centerData?.slug ? `https://talentcloudsolution.com/auth?center=${centerData.slug}` : 'https://talentcloudsolution.com'))}</entsal:URL_PLATAFORMA>
           <entsal:URL_SEGUIMIENTO>${supabaseUrl}/functions/v1/sepe-tracking</entsal:URL_SEGUIMIENTO>
           <entsal:NUMERO_USUARIOS_PLATAFORMA>1000</entsal:NUMERO_USUARIOS_PLATAFORMA>
           <entsal:TELEFONO>${escapeXml(centerData?.phone || centerData?.contact_phone || '665673416')}</entsal:TELEFONO>
