@@ -14,6 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TutorMessaging } from "@/components/TutorMessaging";
 import { GradesSection } from "@/components/GradesSection";
+import { SimpleGradesSection } from "@/components/SimpleGradesSection";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TimeTrackingReport } from "@/components/TimeTrackingReport";
 import { QualityAuditView } from "@/components/QualityAuditView";
@@ -1810,6 +1811,12 @@ export default function CourseView() {
           <TabsContent value="grades" className="space-y-4">
             {userRole === 'teacher' ? (
               <TeacherActivityCorrectionPanel courseId={courseId!} />
+            ) : (isCFCCourse || isPropio) ? (
+              <SimpleGradesSection 
+                courseId={courseId!} 
+                enrollmentId={enrollment?.id || ''} 
+                modules={modules}
+              />
             ) : (
               <SEPEGradesSection 
                 courseId={courseId!} 
