@@ -17,6 +17,7 @@
 $SUPABASE_URL = 'https://fkxbgifvwivlvpwxdzdb.supabase.co';
 $EDGE_FUNCTION = '/functions/v1/sepe-tracking';
 $CENTER_CIF = 'B45270139';
+$SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZreGJnaWZ2d2l2bHZwd3hkemRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzNzExNjMsImV4cCI6MjA3Nzk0NzE2M30.aWNvmRgijK9VQTQD6Qn1lg1a-LKynzfDMssK3qYhuQM';
 
 // Headers CORS
 header('Access-Control-Allow-Origin: *');
@@ -61,6 +62,10 @@ foreach (getallheaders() as $name => $value) {
         $headers[] = $name . ': ' . $value;
     }
 }
+
+// Añadir header apikey de Supabase (requerido para edge functions)
+$headers[] = 'apikey: ' . $SUPABASE_ANON_KEY;
+$headers[] = 'Authorization: Bearer ' . $SUPABASE_ANON_KEY;
 
 // Configurar cURL
 $ch = curl_init();
