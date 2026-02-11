@@ -760,9 +760,11 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
             <div>
               <Label>Objetivos Específicos</Label>
               <div className="space-y-2 mt-2">
-                {specificObjectives.map((obj, index) => (
+                {specificObjectives.map((obj, index) => {
+                  const displayText = typeof obj === 'string' ? obj : (obj as any)?.description || (obj as any)?.code || JSON.stringify(obj);
+                  return (
                   <div key={index} className="flex items-center gap-2">
-                    <p className="flex-1 text-sm p-2 bg-muted rounded">{obj}</p>
+                    <p className="flex-1 text-sm p-2 bg-muted rounded">{displayText}</p>
                     <Button
                       type="button"
                       variant="ghost"
@@ -772,7 +774,8 @@ export function CourseSettings({ courseId, initialData, onUpdate }: CourseSettin
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="flex gap-2 mt-2">
                 <Input
