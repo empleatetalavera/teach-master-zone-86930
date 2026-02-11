@@ -2488,6 +2488,30 @@ export type Database = {
           },
         ]
       }
+      sepe_acciones: {
+        Row: {
+          center_cif: string
+          codigo_accion: string
+          created_at: string
+          id: string
+          origen_accion: string
+        }
+        Insert: {
+          center_cif: string
+          codigo_accion: string
+          created_at?: string
+          id?: string
+          origen_accion: string
+        }
+        Update: {
+          center_cif?: string
+          codigo_accion?: string
+          created_at?: string
+          id?: string
+          origen_accion?: string
+        }
+        Relationships: []
+      }
       sepe_certificates: {
         Row: {
           certificate_type: string
