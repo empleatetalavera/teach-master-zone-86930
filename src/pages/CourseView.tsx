@@ -2182,140 +2182,47 @@ export default function CourseView() {
                               ) : (
                                 <div className="space-y-0">
                                   {moduleUnits.map((unit: any) => (
-                                    <Accordion key={unit.id} type="single" collapsible>
-                                      <AccordionItem value={unit.id} className="border-0">
-                                        <AccordionTrigger className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80 hover:no-underline">
-                                          <span className="text-left">{unit.title}</span>
-                                        </AccordionTrigger>
-                                        <AccordionContent className="p-0">
-                                          <div className="bg-white dark:bg-background border border-t-0 p-4 space-y-4">
+                                    <div key={unit.id}>
+                                      <Accordion type="single" collapsible>
+                                        <AccordionItem value={unit.id} className="border-0">
+                                          <AccordionTrigger className="w-full flex items-center justify-between px-4 py-3 text-white font-medium text-sm bg-gradient-to-r from-primary to-primary/80 hover:no-underline">
+                                            <span className="text-left">{unit.title}</span>
+                                          </AccordionTrigger>
+                                          <AccordionContent className="p-0">
+                                            <div className="bg-white dark:bg-background border border-t-0 p-4 space-y-4">
                                             
-                                            {/* Objetivos de la Unidad Formativa */}
-                                            {unit.objectives && (
-                                              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
-                                                <div className="flex items-start gap-2">
-                                                  <Target className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                                                  <div>
-                                                    <span className="text-xs font-semibold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Objetivo de la UF</span>
-                                                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 leading-relaxed">{unit.objectives}</p>
+                                              {/* Objetivos de la Unidad Formativa */}
+                                              {unit.objectives && (
+                                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
+                                                  <div className="flex items-start gap-2">
+                                                    <Target className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                                                    <div>
+                                                      <span className="text-xs font-semibold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Objetivo de la UF</span>
+                                                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 leading-relaxed">{unit.objectives}</p>
+                                                    </div>
                                                   </div>
                                                 </div>
-                                              </div>
-                                            )}
+                                              )}
 
-                                            {/* Admin: Gestión de módulos y unidades formativas */}
-                                            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                              <div className="bg-gradient-to-r from-slate-50 to-zinc-50 dark:from-slate-950/30 dark:to-zinc-950/30 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
-                                                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                                                  <Settings className="h-4 w-4 text-slate-600" />
-                                                  Gestión del Módulo y Unidades Formativas
-                                                </h4>
-                                                <ModuleFormativeUnitManager
-                                                  moduleId={module.id}
-                                                  moduleTitle={module.title}
-                                                  formativeUnits={moduleUnits}
-                                                  onUpdate={loadCourseData}
-                                                />
-                                              </div>
-                                            )}
-
-                                            {/* Contenido Interactivo - Hidden for propio courses */}
-                                            {!isPropio && (
-                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
-                                              <div className="p-2 bg-primary/10 rounded">
-                                                <Layers className="h-5 w-5 text-primary" />
-                                              </div>
-                                              <div className="flex-1 min-w-0">
-                                                <span className="text-sm font-medium">Contenido Interactivo</span>
-                                                <p className="text-xs text-muted-foreground">
-                                                  Material interactivo con presentaciones multimedia
-                                                </p>
-                                              </div>
-                                              <div className="flex items-center gap-2">
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  className="gap-1.5"
-                                                  onClick={() => openScormViewer(unit.id, unit.title)}
-                                                >
-                                                  <Play className="h-3.5 w-3.5" />
-                                                  Ver
-                                                </Button>
-                                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                  <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="gap-1.5 border-purple-300 hover:bg-purple-50"
-                                                    onClick={() => openScormAuthor(module.id, unit.id, unit.title)}
-                                                  >
-                                                    <Presentation className="h-3.5 w-3.5 text-purple-600" />
-                                                    Editor SCORM
-                                                  </Button>
-                                                )}
-                                              </div>
-                                            </div>
-                                            )}
-
-                                            {/* Manual PDF */}
-                                            <div 
-                                              className="border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
-                                              onClick={async () => {
-                                                // First try module_content table
-                                                let pdfData: any[] | null = null;
-                                                const { data: exactMatch } = await (supabase as any)
-                                                  .from('module_content')
-                                                  .select('file_path, title')
-                                                  .eq('module_id', module.id)
-                                                  .eq('content_type', 'manual_pdf')
-                                                  .eq('formative_unit_id', unit.id)
-                                                  .limit(1);
-                                                pdfData = exactMatch;
-                                                if (!pdfData || pdfData.length === 0) {
-                                                  const { data: fallback } = await (supabase as any)
-                                                    .from('module_content')
-                                                    .select('file_path, title')
-                                                    .eq('module_id', module.id)
-                                                    .eq('content_type', 'manual_pdf')
-                                                    .is('formative_unit_id', null)
-                                                    .order('created_at', { ascending: false })
-                                                    .limit(1);
-                                                  pdfData = fallback;
-                                                }
-                                                
-                                                if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                                  const { data: signedData } = await supabase.storage
-                                                    .from('module-content')
-                                                    .createSignedUrl(pdfData[0].file_path, 3600);
-                                                  if (signedData?.signedUrl) {
-                                                    const link = document.createElement('a');
-                                                    link.href = signedData.signedUrl;
-                                                    link.target = '_blank';
-                                                    link.rel = 'noopener noreferrer';
-                                                    document.body.appendChild(link);
-                                                    link.click();
-                                                    document.body.removeChild(link);
-                                                  } else {
-                                                    toast({ title: "Error", description: "No se pudo abrir el PDF", variant: "destructive" });
-                                                  }
-                                                } else if (module.content && module.content.startsWith('http')) {
-                                                  window.open(module.content, '_blank');
-                                                } else {
-                                                  toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
-                                                }
-                                              }}
-                                            >
-                                              <div className="flex items-center gap-3 p-3">
-                                                <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
-                                                  <FileText className="h-5 w-5 text-blue-600" />
+                                              {/* Contenido Interactivo - Hidden for propio courses */}
+                                              {!isPropio && (
+                                              <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                                                <div className="p-2 bg-primary/10 rounded">
+                                                  <Layers className="h-5 w-5 text-primary" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                  <span className="text-sm font-medium">{isPropio ? unit.title : 'Manual / Documentación PDF'}</span>
+                                                  <span className="text-sm font-medium">Contenido Interactivo</span>
                                                   <p className="text-xs text-muted-foreground">
-                                                    {isPropio ? 'Haz clic aquí o en el botón para abrir el PDF' : 'Documentación descargable del módulo formativo'}
+                                                    Material multimedia e interactivo de la unidad
                                                   </p>
                                                 </div>
-                                                <Button variant="default" size="sm" className="gap-1.5 shrink-0" onClick={async (e) => {
-                                                  e.stopPropagation();
+                                              </div>
+                                              )}
+
+                                              {/* Manual PDF */}
+                                              <div 
+                                                className="border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
+                                                onClick={async () => {
                                                   let pdfData: any[] | null = null;
                                                   const { data: exactMatch } = await (supabase as any)
                                                     .from('module_content')
@@ -2336,8 +2243,9 @@ export default function CourseView() {
                                                       .limit(1);
                                                     pdfData = fallback;
                                                   }
+                                                  
                                                   if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                                    const { data: signedData, error: signedError } = await supabase.storage
+                                                    const { data: signedData } = await supabase.storage
                                                       .from('module-content')
                                                       .createSignedUrl(pdfData[0].file_path, 3600);
                                                     if (signedData?.signedUrl) {
@@ -2351,114 +2259,166 @@ export default function CourseView() {
                                                     } else {
                                                       toast({ title: "Error", description: "No se pudo abrir el PDF", variant: "destructive" });
                                                     }
-                                                  } else if (module.content && module.content.startsWith('http')) {
-                                                    window.open(module.content, '_blank');
                                                   } else {
                                                     toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
                                                   }
-                                                }}>
-                                                  <ExternalLink className="h-3.5 w-3.5" />
-                                                  Abrir PDF
-                                                </Button>
+                                                }}
+                                              >
+                                                <div className="flex items-center gap-3 p-3">
+                                                  <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
+                                                    <FileText className="h-5 w-5 text-blue-600" />
+                                                  </div>
+                                                  <div className="flex-1 min-w-0">
+                                                    <span className="text-sm font-medium">{isPropio ? unit.title : 'Manual / Documentación PDF'}</span>
+                                                    <p className="text-xs text-muted-foreground">
+                                                      {isPropio ? 'Haz clic aquí o en el botón para abrir el PDF' : 'Documentación descargable del módulo formativo'}
+                                                    </p>
+                                                  </div>
+                                                  <Button variant="default" size="sm" className="gap-1.5 shrink-0" onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    let pdfData: any[] | null = null;
+                                                    const { data: exactMatch } = await (supabase as any)
+                                                      .from('module_content')
+                                                      .select('file_path, title')
+                                                      .eq('module_id', module.id)
+                                                      .eq('content_type', 'manual_pdf')
+                                                      .eq('formative_unit_id', unit.id)
+                                                      .limit(1);
+                                                    pdfData = exactMatch;
+                                                    if (!pdfData || pdfData.length === 0) {
+                                                      const { data: fallback } = await (supabase as any)
+                                                        .from('module_content')
+                                                        .select('file_path, title')
+                                                        .eq('module_id', module.id)
+                                                        .eq('content_type', 'manual_pdf')
+                                                        .is('formative_unit_id', null)
+                                                        .order('created_at', { ascending: false })
+                                                        .limit(1);
+                                                      pdfData = fallback;
+                                                    }
+                                                    if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+                                                      const { data: signedData } = await supabase.storage
+                                                        .from('module-content')
+                                                        .createSignedUrl(pdfData[0].file_path, 3600);
+                                                      if (signedData?.signedUrl) {
+                                                        const link = document.createElement('a');
+                                                        link.href = signedData.signedUrl;
+                                                        link.target = '_blank';
+                                                        link.rel = 'noopener noreferrer';
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        document.body.removeChild(link);
+                                                      } else {
+                                                        toast({ title: "Error", description: "No se pudo abrir el PDF", variant: "destructive" });
+                                                      }
+                                                    } else {
+                                                      toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+                                                    }
+                                                  }}>
+                                                    <ExternalLink className="h-3.5 w-3.5" />
+                                                    Abrir PDF
+                                                  </Button>
+                                                </div>
+                                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                                  <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
+                                                    <Button
+                                                      variant="outline"
+                                                      size="sm"
+                                                      className="gap-1.5 border-blue-300 hover:bg-blue-50"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setManualUploaderModuleId(module.id);
+                                                        setManualUploaderModuleTitle(unit.title);
+                                                        setManualUploaderUnitId(unit.id);
+                                                        setManualUploaderOpen(true);
+                                                      }}
+                                                    >
+                                                      <Upload className="h-3.5 w-3.5 text-blue-600" />
+                                                      Subir PDF
+                                                    </Button>
+                                                  </div>
+                                                )}
                                               </div>
-                                              {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                                <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
+
+                                              {/* Actividad - Hidden for propio courses */}
+                                              {!isPropio && (
+                                              <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                                                <div className="p-2 bg-green-50 dark:bg-green-950 rounded">
+                                                  <PenTool className="h-5 w-5 text-green-600" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                  <span className="text-sm font-medium">Actividad de Desarrollo</span>
+                                                  <p className="text-xs text-muted-foreground">
+                                                    Ejercicio práctico para aplicar los conocimientos adquiridos
+                                                  </p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
                                                   <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="gap-1.5 border-blue-300 hover:bg-blue-50"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setManualUploaderModuleId(module.id);
-                                                      setManualUploaderModuleTitle(unit.title);
-                                                      setManualUploaderUnitId(unit.id);
-                                                      setManualUploaderOpen(true);
-                                                    }}
+                                                    className="gap-1.5"
+                                                    onClick={() => openActivityManager(unit.id, unit.title)}
                                                   >
-                                                    <Upload className="h-3.5 w-3.5 text-blue-600" />
-                                                    Subir PDF
+                                                    <PenTool className="h-3.5 w-3.5 text-green-600" />
+                                                    {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') ? 'Gestionar' : 'Entregar'}
                                                   </Button>
                                                 </div>
+                                              </div>
                                               )}
-                                            </div>
 
-                                            {/* Actividad - Hidden for propio courses */}
-                                            {!isPropio && (
-                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
-                                              <div className="p-2 bg-green-50 dark:bg-green-950 rounded">
-                                                <PenTool className="h-5 w-5 text-green-600" />
-                                              </div>
-                                              <div className="flex-1 min-w-0">
-                                                <span className="text-sm font-medium">Actividad de Desarrollo</span>
-                                                <p className="text-xs text-muted-foreground">
-                                                  Ejercicio práctico para aplicar los conocimientos adquiridos
-                                                </p>
-                                              </div>
-                                              <div className="flex items-center gap-2">
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  className="gap-1.5"
-                                                  onClick={() => openActivityManager(unit.id, unit.title)}
-                                                >
-                                                  <PenTool className="h-3.5 w-3.5 text-green-600" />
-                                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') ? 'Gestionar' : 'Entregar'}
-                                                </Button>
-                                              </div>
-                                            </div>
-                                            )}
-
-                                            {/* Self Assessment Quiz for propio courses */}
-                                            {isPropio && (
-                                              <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
-                                            )}
-
-                                            {/* Test Final - Only for non-propio courses */}
-                                            {!isPropio && (() => {
-                                              const unitEvals = (module.evaluations || []).filter((ev: any) => ev.formative_unit_id === unit.id);
-                                              const hasTest = unitEvals.length > 0;
-                                              return (
-                                                <div className="border rounded-lg hover:bg-muted/30 transition-colors">
-                                                  <div className="flex items-center gap-3 p-3">
-                                                    <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
-                                                      <ClipboardList className="h-5 w-5 text-purple-600" />
+                                              {/* Test Final - Only for non-propio courses */}
+                                              {!isPropio && (() => {
+                                                const unitEvals = (module.evaluations || []).filter((ev: any) => ev.formative_unit_id === unit.id);
+                                                const hasTest = unitEvals.length > 0;
+                                                return (
+                                                  <div className="border rounded-lg hover:bg-muted/30 transition-colors">
+                                                    <div className="flex items-center gap-3 p-3">
+                                                      <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
+                                                        <ClipboardList className="h-5 w-5 text-purple-600" />
+                                                      </div>
+                                                      <div className="flex-1 min-w-0">
+                                                        <span className="text-sm font-medium">Test Final de la Unidad</span>
+                                                        <p className="text-xs text-muted-foreground">
+                                                          {hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de 50 preguntas para verificar el aprendizaje'}
+                                                        </p>
+                                                      </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                      <span className="text-sm font-medium">Test Final de la Unidad</span>
-                                                      <p className="text-xs text-muted-foreground">
-                                                        {hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de 50 preguntas para verificar el aprendizaje'}
-                                                      </p>
+                                                    <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
+                                                      <Button
+                                                        variant="default"
+                                                        size="sm"
+                                                        className="gap-1.5 bg-purple-600 hover:bg-purple-700"
+                                                        onClick={() => {
+                                                          if (hasTest) {
+                                                            navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
+                                                          } else {
+                                                            toast({
+                                                              title: "Test no disponible",
+                                                              description: "El test de esta unidad aún no ha sido creado.",
+                                                              variant: "destructive",
+                                                            });
+                                                          }
+                                                        }}
+                                                      >
+                                                        <ClipboardList className="h-3.5 w-3.5" />
+                                                        📝 Realizar Test
+                                                      </Button>
                                                     </div>
                                                   </div>
-                                                  <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
-                                                    <Button
-                                                      variant="default"
-                                                      size="sm"
-                                                      className="gap-1.5 bg-purple-600 hover:bg-purple-700"
-                                                      onClick={() => {
-                                                        if (hasTest) {
-                                                          navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
-                                                        } else {
-                                                          toast({
-                                                            title: "Test no disponible",
-                                                            description: "El test de esta unidad aún no ha sido creado.",
-                                                            variant: "destructive",
-                                                          });
-                                                        }
-                                                      }}
-                                                    >
-                                                      <ClipboardList className="h-3.5 w-3.5" />
-                                                      📝 Realizar Test
-                                                    </Button>
-                                                  </div>
-                                                </div>
-                                              );
-                                            })()}
+                                                );
+                                              })()}
 
-                                          </div>
-                                        </AccordionContent>
-                                      </AccordionItem>
-                                    </Accordion>
+                                            </div>
+                                          </AccordionContent>
+                                        </AccordionItem>
+                                      </Accordion>
+                                      {/* Self Assessment Quiz OUTSIDE accordion - always visible for propio */}
+                                      {isPropio && (
+                                        <div className="px-2 pb-2">
+                                          <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
+                                        </div>
+                                      )}
+                                    </div>
                                   ))}
                                 </div>
                               )}
