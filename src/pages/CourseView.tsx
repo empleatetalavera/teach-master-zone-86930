@@ -2260,7 +2260,7 @@ export default function CourseView() {
 
                                             {/* Manual PDF */}
                                             <div 
-                                              className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
+                                              className="border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
                                               onClick={async () => {
                                                 // First try module_content table
                                                 let pdfData: any[] | null = null;
@@ -2298,17 +2298,19 @@ export default function CourseView() {
                                                 }
                                               }}
                                             >
-                                              <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
-                                                <FileText className="h-5 w-5 text-blue-600" />
+                                              <div className="flex items-center gap-3 p-3">
+                                                <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
+                                                  <FileText className="h-5 w-5 text-blue-600" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                  <span className="text-sm font-medium">{isPropio ? unit.title : 'Manual / Documentación PDF'}</span>
+                                                  <p className="text-xs text-muted-foreground">
+                                                    {isPropio ? 'PDF del temario de esta unidad' : 'Documentación descargable del módulo formativo'}
+                                                  </p>
+                                                </div>
                                               </div>
-                                              <div className="flex-1 min-w-0">
-                                                <span className="text-sm font-medium">{isPropio ? unit.title : 'Manual / Documentación PDF'}</span>
-                                                <p className="text-xs text-muted-foreground">
-                                                  {isPropio ? 'PDF del temario de esta unidad' : 'Documentación descargable del módulo formativo'}
-                                                </p>
-                                              </div>
-                                              <div className="flex items-center gap-2">
-                                                <Button variant="outline" size="sm" className="gap-1.5" onClick={async (e) => {
+                                              <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
+                                                <Button variant="default" size="sm" className="gap-1.5" onClick={async (e) => {
                                                   e.stopPropagation();
                                                   let pdfData: any[] | null = null;
                                                   const { data: exactMatch } = await (supabase as any)
@@ -2344,7 +2346,7 @@ export default function CourseView() {
                                                   }
                                                 }}>
                                                   <ExternalLink className="h-3.5 w-3.5" />
-                                                  Ver PDF
+                                                  📄 Abrir PDF
                                                 </Button>
                                                 {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
                                                   <Button
@@ -2397,21 +2399,23 @@ export default function CourseView() {
                                               const unitEvals = (module.evaluations || []).filter((ev: any) => ev.formative_unit_id === unit.id);
                                               const hasTest = unitEvals.length > 0;
                                               return (
-                                                <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
-                                                  <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
-                                                    <ClipboardList className="h-5 w-5 text-purple-600" />
+                                                <div className="border rounded-lg hover:bg-muted/30 transition-colors">
+                                                  <div className="flex items-center gap-3 p-3">
+                                                    <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded">
+                                                      <ClipboardList className="h-5 w-5 text-purple-600" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                      <span className="text-sm font-medium">Test Final de la Unidad</span>
+                                                      <p className="text-xs text-muted-foreground">
+                                                        {hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de 50 preguntas para verificar el aprendizaje'}
+                                                      </p>
+                                                    </div>
                                                   </div>
-                                                  <div className="flex-1 min-w-0">
-                                                    <span className="text-sm font-medium">Test Final de la Unidad</span>
-                                                    <p className="text-xs text-muted-foreground">
-                                                      {hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de 50 preguntas para verificar el aprendizaje'}
-                                                    </p>
-                                                  </div>
-                                                  <div className="flex items-center gap-2">
+                                                  <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
                                                     <Button
-                                                      variant="outline"
+                                                      variant="default"
                                                       size="sm"
-                                                      className="gap-1.5"
+                                                      className="gap-1.5 bg-purple-600 hover:bg-purple-700"
                                                       onClick={() => {
                                                         if (hasTest) {
                                                           navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
@@ -2424,8 +2428,8 @@ export default function CourseView() {
                                                         }
                                                       }}
                                                     >
-                                                      <ClipboardList className="h-3.5 w-3.5 text-purple-600" />
-                                                      Realizar Test
+                                                      <ClipboardList className="h-3.5 w-3.5" />
+                                                      📝 Realizar Test
                                                     </Button>
                                                   </div>
                                                 </div>
