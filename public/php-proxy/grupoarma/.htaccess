@@ -1,0 +1,11 @@
+# .htaccess para SEPE Proxy - Grupo Arma Formación
+# Subir junto con sepe-proxy.php a campusarmaformacion.es/sepe-proxy/
+
+RewriteEngine On
+RewriteBase /sepe-proxy/
+
+# Redirigir todas las rutas virtuales al proxy PHP
+# Esto permite URLs como /sepe-proxy/centro/cif/B45270139
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ sepe-proxy.php [QSA,L]
