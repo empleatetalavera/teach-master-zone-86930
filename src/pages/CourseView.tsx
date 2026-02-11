@@ -1900,14 +1900,26 @@ export default function CourseView() {
                                   className="flex items-center gap-3 p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-950/40 transition-colors"
                                   onClick={async () => {
                                     // Fetch PDF for this unit
-                                    const { data: pdfData } = await supabase
+                                    let pdfData: any[] | null = null;
+                                    const { data: exactMatch } = await (supabase as any)
                                       .from('module_content')
                                       .select('file_path, title')
                                       .eq('module_id', module.id)
                                       .eq('content_type', 'manual_pdf')
-                                      .or(`formative_unit_id.eq.${unit.id},formative_unit_id.is.null`)
-                                      .order('created_at', { ascending: false })
+                                      .eq('formative_unit_id', unit.id)
                                       .limit(1);
+                                    pdfData = exactMatch;
+                                    if (!pdfData || pdfData.length === 0) {
+                                      const { data: fallback } = await (supabase as any)
+                                        .from('module_content')
+                                        .select('file_path, title')
+                                        .eq('module_id', module.id)
+                                        .eq('content_type', 'manual_pdf')
+                                        .is('formative_unit_id', null)
+                                        .order('created_at', { ascending: false })
+                                        .limit(1);
+                                      pdfData = fallback;
+                                    }
                                     
                                     if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
                                       const { data: urlData } = supabase.storage
@@ -1929,14 +1941,26 @@ export default function CourseView() {
                                   <div className="flex items-center gap-2">
                                     <Button variant="outline" size="sm" className="gap-2" onClick={async (e) => {
                                       e.stopPropagation();
-                                      const { data: pdfData } = await (supabase as any)
+                                      // First try exact match by formative_unit_id
+                                      let { data: pdfData } = await (supabase as any)
                                         .from('module_content')
                                         .select('file_path, title')
                                         .eq('module_id', module.id)
                                         .eq('content_type', 'manual_pdf')
-                                        .or(`formative_unit_id.eq.${unit.id},formative_unit_id.is.null`)
-                                        .order('created_at', { ascending: false })
+                                        .eq('formative_unit_id', unit.id)
                                         .limit(1);
+                                      // Fallback to NULL formative_unit_id
+                                      if (!pdfData || pdfData.length === 0) {
+                                        const { data: fallback } = await (supabase as any)
+                                          .from('module_content')
+                                          .select('file_path, title')
+                                          .eq('module_id', module.id)
+                                          .eq('content_type', 'manual_pdf')
+                                          .is('formative_unit_id', null)
+                                          .order('created_at', { ascending: false })
+                                          .limit(1);
+                                        pdfData = fallback;
+                                      }
                                       if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
                                         const { data: urlData } = supabase.storage
                                           .from('module-content')
@@ -2239,14 +2263,26 @@ export default function CourseView() {
                                               className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
                                               onClick={async () => {
                                                 // First try module_content table
-                                                const { data: pdfData } = await supabase
+                                                let pdfData: any[] | null = null;
+                                                const { data: exactMatch } = await (supabase as any)
                                                   .from('module_content')
                                                   .select('file_path, title')
                                                   .eq('module_id', module.id)
                                                   .eq('content_type', 'manual_pdf')
-                                                  .or(`formative_unit_id.eq.${unit.id},formative_unit_id.is.null`)
-                                                  .order('created_at', { ascending: false })
+                                                  .eq('formative_unit_id', unit.id)
                                                   .limit(1);
+                                                pdfData = exactMatch;
+                                                if (!pdfData || pdfData.length === 0) {
+                                                  const { data: fallback } = await (supabase as any)
+                                                    .from('module_content')
+                                                    .select('file_path, title')
+                                                    .eq('module_id', module.id)
+                                                    .eq('content_type', 'manual_pdf')
+                                                    .is('formative_unit_id', null)
+                                                    .order('created_at', { ascending: false })
+                                                    .limit(1);
+                                                  pdfData = fallback;
+                                                }
                                                 
                                                 if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
                                                   const { data: urlData } = supabase.storage
@@ -2274,14 +2310,26 @@ export default function CourseView() {
                                               <div className="flex items-center gap-2">
                                                 <Button variant="outline" size="sm" className="gap-1.5" onClick={async (e) => {
                                                   e.stopPropagation();
-                                                  const { data: pdfData } = await (supabase as any)
+                                                  let pdfData: any[] | null = null;
+                                                  const { data: exactMatch } = await (supabase as any)
                                                     .from('module_content')
                                                     .select('file_path, title')
                                                     .eq('module_id', module.id)
                                                     .eq('content_type', 'manual_pdf')
-                                                    .or(`formative_unit_id.eq.${unit.id},formative_unit_id.is.null`)
-                                                    .order('created_at', { ascending: false })
+                                                    .eq('formative_unit_id', unit.id)
                                                     .limit(1);
+                                                  pdfData = exactMatch;
+                                                  if (!pdfData || pdfData.length === 0) {
+                                                    const { data: fallback } = await (supabase as any)
+                                                      .from('module_content')
+                                                      .select('file_path, title')
+                                                      .eq('module_id', module.id)
+                                                      .eq('content_type', 'manual_pdf')
+                                                      .is('formative_unit_id', null)
+                                                      .order('created_at', { ascending: false })
+                                                      .limit(1);
+                                                    pdfData = fallback;
+                                                  }
                                                   if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
                                                     const { data: urlData } = supabase.storage
                                                       .from('module-content')
