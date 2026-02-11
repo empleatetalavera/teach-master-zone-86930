@@ -2432,8 +2432,8 @@ export default function CourseView() {
                                             </div>
                                             )}
 
-                                            {/* Test Final */}
-                                            {(() => {
+                                            {/* Test Final - Only for non-propio courses */}
+                                            {!isPropio && (() => {
                                               const unitEvals = (module.evaluations || []).filter((ev: any) => ev.formative_unit_id === unit.id);
                                               const hasTest = unitEvals.length > 0;
                                               return (
