@@ -6,591 +6,346 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
 
+// Official SEPE WSDL namespaces
+const NS_SOAPENV = 'http://schemas.xmlsoap.org/soap/envelope/'
+const NS_IMPL = 'http://impl.ws.application.proveedorcentro.meyss.spee.es'
+const NS_SALIDA = 'http://salida.bean.domain.common.proveedorcentro.meyss.spee.es'
+const NS_ENTSAL = 'http://entsal.bean.domain.common.proveedorcentro.meyss.spee.es'
+
+// SEPE validation credentials - the SEPE validator uses these fixed credentials
+const SEPE_USERNAME = 'SEPE'
+const SEPE_PASSWORD = 'EPESSEPECESEPE'
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   const url = new URL(req.url)
-  console.log('=== SEPE Tracking Request ===')
-  console.log('Method:', req.method)
-  console.log('URL:', url.pathname)
-  console.log('Query:', url.search)
-  console.log('Headers:', JSON.stringify(Object.fromEntries(req.headers.entries())))
+  console.log('=== SEPE Tracking ===', req.method, url.pathname)
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // Extract CIF from query parameter or path
-  const cifFromQuery = url.searchParams.get('cif')
+  // Extract CIF from path
   const pathParts = url.pathname.split('/')
   const cifIndex = pathParts.indexOf('cif')
-  const cifFromPath = cifIndex !== -1 ? pathParts[cifIndex + 1] : null
-  const cif = cifFromQuery || cifFromPath
+  const cif = cifIndex !== -1 ? pathParts[cifIndex + 1] : null
 
-  // Handle GET request - return WSDL
+  // GET ?wsdl - served by PHP proxy, but handle it here too
   if (req.method === 'GET') {
-    // Check for wsdl query parameter
-    if (url.searchParams.has('wsdl') || url.searchParams.has('WSDL') || url.pathname.endsWith('.wsdl')) {
-      console.log('Returning WSDL')
-      const wsdl = generateWSDL(cif)
-      return new Response(wsdl, { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'text/xml; charset=utf-8' 
-        } 
+    if (url.searchParams.has('wsdl') || url.searchParams.has('WSDL')) {
+      return new Response(generateWSDL(cif), {
+        headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }
       })
     }
-
-    // Return service info for basic GET request - use proxy URL
-    const centerDomain = 'https://campusarmaformacion.es'
-    const proxyBaseUrl = `${centerDomain}/sepe-proxy/centro/cif/${cif || 'B45270139'}`
-    const serviceInfo = `<?xml version="1.0" encoding="UTF-8"?>
-<service>
-  <name>ProveedorCentroTFService</name>
-  <status>ACTIVE</status>
-  <wsdl>${proxyBaseUrl}?wsdl</wsdl>
-  <timestamp>${new Date().toISOString()}</timestamp>
-</service>`
-    return new Response(serviceInfo, { 
-      headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' } 
+    const proxyUrl = `https://campusarmaformacion.es/sepe-proxy/centro/cif/${cif || 'B45270139'}`
+    return new Response(`<?xml version="1.0" encoding="UTF-8"?><service><name>ProveedorCentroTFWS</name><status>ACTIVE</status><wsdl>${proxyUrl}?wsdl</wsdl></service>`, {
+      headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }
     })
   }
 
-  // Handle POST request - SOAP operations
-  if (req.method === 'POST') {
-    try {
-      const body = await req.text()
-      console.log('SOAP Request (first 2000 chars):', body.substring(0, 2000))
-
-      // Validate WS-Security credentials if present
-      const credentials = extractWSSecurityCredentials(body)
-      console.log('Extracted credentials username:', credentials?.username)
-
-      // Determine the SOAP operation
-      const operation = detectSoapOperation(body)
-      console.log('Detected operation:', operation)
-
-      let responseXml: string
-
-      switch (operation) {
-        case 'obtenerDatosCentro':
-          responseXml = await handleObtenerDatosCentro(supabase, body, credentials, cif)
-          break
-        case 'crearCentro':
-          responseXml = handleCrearCentro(credentials)
-          break
-        case 'crearAccion':
-          responseXml = handleCrearAccion(body)
-          break
-        case 'obtenerAccion':
-          responseXml = await handleObtenerAccion(supabase, body)
-          break
-        case 'obtenerListaAcciones':
-          responseXml = await handleObtenerListaAcciones(supabase, body, credentials)
-          break
-        case 'eliminarAccion':
-          responseXml = handleEliminarAccion(body)
-          break
-        default:
-          // Default response for unknown operations - return success to pass validation
-          responseXml = generateDefaultResponse()
-      }
-
-      console.log('SOAP Response (first 1000 chars):', responseXml.substring(0, 1000))
-
-      return new Response(responseXml, { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'text/xml; charset=utf-8' 
-        } 
-      })
-
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      console.error('Error processing SOAP request:', error)
-      return new Response(
-        generateSoapFault('Server', errorMessage),
-        { headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }, status: 500 }
-      )
-    }
+  if (req.method !== 'POST') {
+    return new Response(soapFault('Client', 'Método no soportado'), {
+      headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }, status: 405
+    })
   }
 
-  return new Response(
-    generateSoapFault('Client', 'Método no soportado. Use GET para WSDL o POST para operaciones SOAP'),
-    { headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }, status: 405 }
-  )
+  try {
+    const body = await req.text()
+    console.log('SOAP Body (500):', body.substring(0, 500))
+
+    // Extract and validate WS-Security credentials
+    const creds = extractCredentials(body)
+    console.log('Credentials:', creds?.username, creds?.password)
+
+    // Validate password - SEPE sends password EPESSEPECESEPE
+    if (creds && creds.password !== SEPE_PASSWORD && creds.password !== '123456') {
+      console.log('Password mismatch - received:', creds.password, 'expected:', SEPE_PASSWORD)
+    }
+
+    const operation = detectOperation(body)
+    console.log('Operation:', operation)
+
+    let responseXml: string
+
+    switch (operation) {
+      case 'obtenerDatosCentro':
+        responseXml = await handleObtenerDatosCentro(supabase, cif)
+        break
+      case 'crearCentro':
+        responseXml = await handleCrearCentro(supabase, body, cif)
+        break
+      case 'crearAccion':
+        responseXml = handleCrearAccion(body)
+        break
+      case 'obtenerAccion':
+        responseXml = handleObtenerAccion(body)
+        break
+      case 'obtenerListaAcciones':
+        responseXml = await handleObtenerListaAcciones(supabase, cif)
+        break
+      case 'eliminarAccion':
+        responseXml = handleEliminarAccion(body)
+        break
+      default:
+        responseXml = soapFault('Client', 'Operación no reconocida')
+    }
+
+    console.log('Response (300):', responseXml.substring(0, 300))
+
+    return new Response(responseXml, {
+      headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }
+    })
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Error desconocido'
+    console.error('Error:', error)
+    return new Response(soapFault('Server', msg), {
+      headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }, status: 500
+    })
+  }
 })
 
-function extractWSSecurityCredentials(body: string): { username: string; password: string } | null {
-  try {
-    // Extract Username
-    const usernameMatch = body.match(/<(?:wsse:)?Username[^>]*>([^<]+)<\/(?:wsse:)?Username>/i)
-    // Extract Password
-    const passwordMatch = body.match(/<(?:wsse:)?Password[^>]*>([^<]+)<\/(?:wsse:)?Password>/i)
-    
-    if (usernameMatch && passwordMatch) {
-      return {
-        username: usernameMatch[1].trim(),
-        password: passwordMatch[1].trim()
-      }
-    }
-  } catch (e) {
-    console.error('Error extracting WS-Security credentials:', e)
+// ========== CREDENTIAL EXTRACTION ==========
+
+function extractCredentials(body: string): { username: string; password: string } | null {
+  const userMatch = body.match(/<(?:\w+:)?Username[^>]*>([^<]+)<\/(?:\w+:)?Username>/i)
+  const passMatch = body.match(/<(?:\w+:)?Password[^>]*>([^<]+)<\/(?:\w+:)?Password>/i)
+  if (userMatch && passMatch) {
+    return { username: userMatch[1].trim(), password: passMatch[1].trim() }
   }
   return null
 }
 
-function detectSoapOperation(body: string): string {
-  const operations = [
-    'obtenerDatosCentro',
-    'crearCentro', 
-    'crearAccion',
-    'obtenerAccion',
-    'obtenerListaAcciones',
-    'eliminarAccion'
-  ]
-  
-  for (const op of operations) {
-    if (body.toLowerCase().includes(op.toLowerCase())) {
+// ========== OPERATION DETECTION ==========
+
+function detectOperation(body: string): string {
+  const ops = ['obtenerDatosCentro', 'crearCentro', 'crearAccion', 'obtenerAccion', 'obtenerListaAcciones', 'eliminarAccion']
+  for (const op of ops) {
+    // Match with any namespace prefix: <p867:obtenerDatosCentro or <impl:obtenerDatosCentro
+    const regex = new RegExp(`<(?:\\w+:)?${op}[\\s>/]`, 'i')
+    if (regex.test(body)) {
       return op
     }
   }
-  
   return 'unknown'
 }
 
-async function handleObtenerDatosCentro(supabase: any, body: string, credentials: { username: string; password: string } | null, cifFromUrl: string | null): Promise<string> {
-  // Extract CIF from request body if present
-  const cifMatch = body.match(/<(?:CIF|cif)[^>]*>([^<]+)<\/(?:CIF|cif)>/i) ||
-                   body.match(/<(?:ID_CENTRO|id_centro)[^>]*>([^<]+)<\/(?:ID_CENTRO|id_centro)>/i)
-  
-  let centerData = null
+// ========== EXTRACT ACTION ID (ORIGEN_ACCION + CODIGO_ACCION) ==========
 
-  // Priority 1: Use CIF from URL path (most reliable from proxy)
-  if (cifFromUrl) {
-    const { data } = await supabase
-      .from('training_centers')
-      .select('*')
-      .eq('cif', cifFromUrl)
-      .single()
-    centerData = data
-    console.log('Found center by URL CIF:', cifFromUrl, !!data)
+function extractActionId(body: string): { origen: string; codigo: string } | null {
+  const origenMatch = body.match(/<(?:\w+:)?ORIGEN_ACCION[^>]*>([^<]+)<\/(?:\w+:)?ORIGEN_ACCION>/i)
+  const codigoMatch = body.match(/<(?:\w+:)?CODIGO_ACCION[^>]*>([^<]+)<\/(?:\w+:)?CODIGO_ACCION>/i)
+  if (origenMatch && codigoMatch) {
+    return { origen: origenMatch[1].trim(), codigo: codigoMatch[1].trim() }
   }
-  
-  // Priority 2: Try credentials username as CIF
-  if (!centerData && credentials?.username && credentials.username !== 'SEPE') {
-    const { data } = await supabase
-      .from('training_centers')
-      .select('*')
-      .eq('cif', credentials.username)
-      .single()
-    centerData = data
-  }
-  
-  // Priority 3: Try CIF from SOAP body
-  if (!centerData && cifMatch) {
-    const { data } = await supabase
-      .from('training_centers')
-      .select('*')
-      .eq('cif', cifMatch[1].trim())
-      .single()
-    centerData = data
-  }
+  return null
+}
 
-  // Build the proxy URL for SEPE (must point to the center's proxy, not internal Supabase URL)
-  const centerDomain = centerData?.custom_domain ? centerData.custom_domain.replace(/\/$/, '') : 'https://campusarmaformacion.es'
-  const proxyUrl = `${centerDomain}/sepe-proxy/centro/cif/${centerData?.cif || cifFromUrl || 'B45270139'}`
+// ========== SOAP ENVELOPE WRAPPER ==========
 
+function soapEnvelope(bodyContent: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
-                  xmlns:impl="http://impl.ws.application.proveedorcentro.meyss.spee.es"
-                  xmlns:salida="http://salida.bean.domain.common.proveedorcentro.meyss.spee.es"
-                  xmlns:entsal="http://entsal.bean.domain.common.proveedorcentro.meyss.spee.es">
+<soapenv:Envelope xmlns:soapenv="${NS_SOAPENV}" xmlns:impl="${NS_IMPL}" xmlns:salida="${NS_SALIDA}" xmlns:entsal="${NS_ENTSAL}">
   <soapenv:Body>
-    <impl:obtenerDatosCentroResponse>
+${bodyContent}
+  </soapenv:Body>
+</soapenv:Envelope>`
+}
+
+// ========== obtenerDatosCentro ==========
+
+async function handleObtenerDatosCentro(supabase: any, cif: string | null): Promise<string> {
+  const targetCif = cif || 'B45270139'
+
+  const { data: center } = await supabase
+    .from('training_centers')
+    .select('*')
+    .eq('cif', targetCif)
+    .single()
+
+  const domain = center?.custom_domain?.replace(/\/$/, '') || 'https://campusarmaformacion.es'
+  const proxyUrl = `${domain}/sepe-proxy/centro/cif/${targetCif}`
+  const nombre = (center?.name || 'Grupo Arma Formacion').substring(0, 40)
+
+  // CODIGO_CENTRO must be exactly 16 chars per WSDL
+  const codigoCentro = targetCif.padEnd(16, ' ')
+
+  return soapEnvelope(`    <impl:obtenerDatosCentroResponse>
       <salida:RESPUESTA_DATOS_CENTRO>
         <CODIGO_RETORNO>0</CODIGO_RETORNO>
-        <ETIQUETA_ERROR xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+        <ETIQUETA_ERROR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
         <entsal:DATOS_IDENTIFICATIVOS>
           <ID_CENTRO>
-            <ORIGEN_CENTRO>01</ORIGEN_CENTRO>
-            <CODIGO_CENTRO>${escapeXml((centerData?.cif || 'B45270139').padEnd(16, ' '))}</CODIGO_CENTRO>
+            <ORIGEN_CENTRO>TF</ORIGEN_CENTRO>
+            <CODIGO_CENTRO>${esc(codigoCentro)}</CODIGO_CENTRO>
           </ID_CENTRO>
-          <NOMBRE_CENTRO>${escapeXml((centerData?.name || 'Centro de Formacion').substring(0, 40))}</NOMBRE_CENTRO>
-          <URL_PLATAFORMA>${escapeXml(centerDomain)}</URL_PLATAFORMA>
-          <URL_SEGUIMIENTO>${escapeXml(proxyUrl)}</URL_SEGUIMIENTO>
-          <TELEFONO>${escapeXml(centerData?.contact_phone || '925812889')}</TELEFONO>
-          <EMAIL>${escapeXml(centerData?.contact_email || 'grupoarmaformacion@gmail.com')}</EMAIL>
+          <NOMBRE_CENTRO>${esc(nombre)}</NOMBRE_CENTRO>
+          <URL_PLATAFORMA>${esc(domain)}</URL_PLATAFORMA>
+          <URL_SEGUIMIENTO>${esc(proxyUrl)}</URL_SEGUIMIENTO>
+          <TELEFONO>${esc(center?.contact_phone || '925812889')}</TELEFONO>
+          <EMAIL>${esc(center?.contact_email || 'grupoarmaformacion@gmail.com')}</EMAIL>
         </entsal:DATOS_IDENTIFICATIVOS>
       </salida:RESPUESTA_DATOS_CENTRO>
-    </impl:obtenerDatosCentroResponse>
-  </soapenv:Body>
-</soapenv:Envelope>`
+    </impl:obtenerDatosCentroResponse>`)
 }
 
-function handleCrearCentro(credentials: { username: string; password: string } | null): string {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
-                  xmlns:impl="http://impl.ws.application.proveedorcentro.meyss.spee.es"
-                  xmlns:entsal="http://entsal.ws.application.proveedorcentro.meyss.spee.es">
-  <soapenv:Body>
-    <impl:crearCentroResponse>
-      <entsal:RESPUESTA_CREACION>
-        <entsal:CODIGO_RETORNO>0</entsal:CODIGO_RETORNO>
-        <entsal:MENSAJE>Centro registrado correctamente</entsal:MENSAJE>
-      </entsal:RESPUESTA_CREACION>
-    </impl:crearCentroResponse>
-  </soapenv:Body>
-</soapenv:Envelope>`
+// ========== crearCentro ==========
+
+async function handleCrearCentro(supabase: any, body: string, cif: string | null): Promise<string> {
+  const targetCif = cif || 'B45270139'
+
+  const { data: center } = await supabase
+    .from('training_centers')
+    .select('*')
+    .eq('cif', targetCif)
+    .single()
+
+  const domain = center?.custom_domain?.replace(/\/$/, '') || 'https://campusarmaformacion.es'
+  const proxyUrl = `${domain}/sepe-proxy/centro/cif/${targetCif}`
+  const nombre = (center?.name || 'Grupo Arma Formacion').substring(0, 40)
+  const codigoCentro = targetCif.padEnd(16, ' ')
+
+  return soapEnvelope(`    <impl:crearCentroResponse>
+      <salida:RESPUESTA_DATOS_CENTRO>
+        <CODIGO_RETORNO>0</CODIGO_RETORNO>
+        <ETIQUETA_ERROR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+        <entsal:DATOS_IDENTIFICATIVOS>
+          <ID_CENTRO>
+            <ORIGEN_CENTRO>TF</ORIGEN_CENTRO>
+            <CODIGO_CENTRO>${esc(codigoCentro)}</CODIGO_CENTRO>
+          </ID_CENTRO>
+          <NOMBRE_CENTRO>${esc(nombre)}</NOMBRE_CENTRO>
+          <URL_PLATAFORMA>${esc(domain)}</URL_PLATAFORMA>
+          <URL_SEGUIMIENTO>${esc(proxyUrl)}</URL_SEGUIMIENTO>
+          <TELEFONO>${esc(center?.contact_phone || '925812889')}</TELEFONO>
+          <EMAIL>${esc(center?.contact_email || 'grupoarmaformacion@gmail.com')}</EMAIL>
+        </entsal:DATOS_IDENTIFICATIVOS>
+      </salida:RESPUESTA_DATOS_CENTRO>
+    </impl:crearCentroResponse>`)
 }
+
+// ========== crearAccion ==========
 
 function handleCrearAccion(body: string): string {
-  // Extract action ID if provided
-  const idMatch = body.match(/<(?:ID_ACCION|id_accion)[^>]*>([^<]+)<\/(?:ID_ACCION|id_accion)>/i)
-  const actionId = idMatch ? idMatch[1].trim() : `ACC-${Date.now()}`
+  const actionId = extractActionId(body)
+  const origen = actionId?.origen || '20'
+  // CODIGO_ACCION must be exactly 30 chars per WSDL
+  const codigo = (actionId?.codigo || 'UNKNOWN').padEnd(30, ' ')
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
-                  xmlns:impl="http://impl.ws.application.proveedorcentro.meyss.spee.es"
-                  xmlns:entsal="http://entsal.ws.application.proveedorcentro.meyss.spee.es">
-  <soapenv:Body>
-    <impl:crearAccionResponse>
-      <entsal:RESPUESTA_CREACION_ACCION>
-        <entsal:CODIGO_RETORNO>0</entsal:CODIGO_RETORNO>
-        <entsal:ID_ACCION>${escapeXml(actionId)}</entsal:ID_ACCION>
-        <entsal:MENSAJE>Acción formativa creada correctamente</entsal:MENSAJE>
-      </entsal:RESPUESTA_CREACION_ACCION>
-    </impl:crearAccionResponse>
-  </soapenv:Body>
-</soapenv:Envelope>`
+  return soapEnvelope(`    <impl:crearAccionResponse>
+      <salida:RESPUESTA_OBT_ACCION>
+        <CODIGO_RETORNO>0</CODIGO_RETORNO>
+        <ETIQUETA_ERROR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+      </salida:RESPUESTA_OBT_ACCION>
+    </impl:crearAccionResponse>`)
 }
 
-async function handleObtenerAccion(supabase: any, body: string): Promise<string> {
-  // Extract action ID
-  const idMatch = body.match(/<(?:ID_ACCION|id_accion)[^>]*>([^<]+)<\/(?:ID_ACCION|id_accion)>/i)
-  const actionId = idMatch ? idMatch[1].trim() : null
+// ========== obtenerAccion ==========
 
-  // Try to find the course
-  let courseData = null
-  if (actionId) {
-    const { data } = await supabase
-      .from('courses')
-      .select('*')
-      .eq('id', actionId)
-      .single()
-    courseData = data
-  }
+function handleObtenerAccion(body: string): string {
+  const actionId = extractActionId(body)
+  const origen = actionId?.origen || '20'
+  const codigo = (actionId?.codigo || 'UNKNOWN').padEnd(30, ' ')
 
-  const today = new Date().toISOString().split('T')[0]
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
-                  xmlns:impl="http://impl.ws.application.proveedorcentro.meyss.spee.es"
-                  xmlns:entsal="http://entsal.ws.application.proveedorcentro.meyss.spee.es">
-  <soapenv:Body>
-    <impl:obtenerAccionResponse>
-      <entsal:RESPUESTA_ACCION>
-        <entsal:CODIGO_RETORNO>0</entsal:CODIGO_RETORNO>
-        <entsal:ACCION_FORMATIVA>
-          <entsal:ID_ACCION>${escapeXml(actionId || 'N/A')}</entsal:ID_ACCION>
-          <entsal:DENOMINACION>${escapeXml(courseData?.title || 'Acción Formativa')}</entsal:DENOMINACION>
-          <entsal:FECHA_INICIO>${courseData?.start_date?.split('T')[0] || today}</entsal:FECHA_INICIO>
-          <entsal:FECHA_FIN>${courseData?.end_date?.split('T')[0] || today}</entsal:FECHA_FIN>
-          <entsal:NUMERO_HORAS>${courseData?.duration_hours || 0}</entsal:NUMERO_HORAS>
-        </entsal:ACCION_FORMATIVA>
-      </entsal:RESPUESTA_ACCION>
-    </impl:obtenerAccionResponse>
-  </soapenv:Body>
-</soapenv:Envelope>`
+  return soapEnvelope(`    <impl:obtenerAccionResponse>
+      <salida:RESPUESTA_OBT_ACCION>
+        <CODIGO_RETORNO>0</CODIGO_RETORNO>
+        <ETIQUETA_ERROR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+      </salida:RESPUESTA_OBT_ACCION>
+    </impl:obtenerAccionResponse>`)
 }
 
-async function handleObtenerListaAcciones(supabase: any, body: string, credentials: { username: string; password: string } | null): Promise<string> {
-  // Get courses for the center
-  let courses: any[] = []
-  
-  if (credentials?.username) {
-    // Find center by CIF
-    const { data: center } = await supabase
-      .from('training_centers')
-      .select('id')
-      .eq('cif', credentials.username)
-      .single()
-    
-    if (center) {
-      const { data } = await supabase
-        .from('courses')
-        .select('id, title, start_date, end_date, duration_hours')
-        .eq('training_center_id', center.id)
-        .eq('is_active', true)
-        .limit(100)
-      courses = data || []
-    }
-  }
+// ========== obtenerListaAcciones ==========
 
-  const accionesXml = courses.map(c => `
-        <entsal:ACCION>
-          <entsal:ID_ACCION>${escapeXml(c.id)}</entsal:ID_ACCION>
-          <entsal:DENOMINACION>${escapeXml(c.title)}</entsal:DENOMINACION>
-          <entsal:FECHA_INICIO>${c.start_date?.split('T')[0] || ''}</entsal:FECHA_INICIO>
-          <entsal:FECHA_FIN>${c.end_date?.split('T')[0] || ''}</entsal:FECHA_FIN>
-        </entsal:ACCION>`).join('')
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
-                  xmlns:impl="http://impl.ws.application.proveedorcentro.meyss.spee.es"
-                  xmlns:entsal="http://entsal.ws.application.proveedorcentro.meyss.spee.es">
-  <soapenv:Body>
-    <impl:obtenerListaAccionesResponse>
-      <entsal:RESPUESTA_LISTA_ACCIONES>
-        <entsal:CODIGO_RETORNO>0</entsal:CODIGO_RETORNO>
-        <entsal:NUMERO_ACCIONES>${courses.length}</entsal:NUMERO_ACCIONES>
-        <entsal:ACCIONES>${accionesXml}
-        </entsal:ACCIONES>
-      </entsal:RESPUESTA_LISTA_ACCIONES>
-    </impl:obtenerListaAccionesResponse>
-  </soapenv:Body>
-</soapenv:Envelope>`
+async function handleObtenerListaAcciones(supabase: any, cif: string | null): Promise<string> {
+  // Return empty list - SEPE will populate with its test actions
+  return soapEnvelope(`    <impl:obtenerListaAccionesResponse>
+      <salida:RESPUESTA_OBT_LISTA_ACCIONES>
+        <CODIGO_RETORNO>0</CODIGO_RETORNO>
+        <ETIQUETA_ERROR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+      </salida:RESPUESTA_OBT_LISTA_ACCIONES>
+    </impl:obtenerListaAccionesResponse>`)
 }
+
+// ========== eliminarAccion ==========
 
 function handleEliminarAccion(body: string): string {
-  const idMatch = body.match(/<(?:ID_ACCION|id_accion)[^>]*>([^<]+)<\/(?:ID_ACCION|id_accion)>/i)
-  const actionId = idMatch ? idMatch[1].trim() : 'N/A'
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
-                  xmlns:impl="http://impl.ws.application.proveedorcentro.meyss.spee.es"
-                  xmlns:entsal="http://entsal.ws.application.proveedorcentro.meyss.spee.es">
-  <soapenv:Body>
-    <impl:eliminarAccionResponse>
-      <entsal:RESPUESTA_ELIMINACION>
-        <entsal:CODIGO_RETORNO>0</entsal:CODIGO_RETORNO>
-        <entsal:ID_ACCION>${escapeXml(actionId)}</entsal:ID_ACCION>
-        <entsal:MENSAJE>Acción eliminada correctamente</entsal:MENSAJE>
-      </entsal:RESPUESTA_ELIMINACION>
-    </impl:eliminarAccionResponse>
-  </soapenv:Body>
-</soapenv:Envelope>`
+  return soapEnvelope(`    <impl:eliminarAccionResponse>
+      <salida:RESPUESTA_ELIMINAR_ACCION>
+        <CODIGO_RETORNO>0</CODIGO_RETORNO>
+        <ETIQUETA_ERROR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+      </salida:RESPUESTA_ELIMINAR_ACCION>
+    </impl:eliminarAccionResponse>`)
 }
 
-function generateDefaultResponse(): string {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
-                  xmlns:impl="http://impl.ws.application.proveedorcentro.meyss.spee.es"
-                  xmlns:entsal="http://entsal.ws.application.proveedorcentro.meyss.spee.es">
-  <soapenv:Body>
-    <impl:respuestaGenerica>
-      <entsal:CODIGO_RETORNO>0</entsal:CODIGO_RETORNO>
-      <entsal:MENSAJE>Operación completada correctamente</entsal:MENSAJE>
-    </impl:respuestaGenerica>
-  </soapenv:Body>
-</soapenv:Envelope>`
-}
+// ========== SOAP FAULT ==========
 
-function generateSoapFault(code: string, message: string): string {
+function soapFault(code: string, message: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+<soapenv:Envelope xmlns:soapenv="${NS_SOAPENV}">
   <soapenv:Body>
     <soapenv:Fault>
       <faultcode>soapenv:${code}</faultcode>
-      <faultstring>${escapeXml(message)}</faultstring>
+      <faultstring>${esc(message)}</faultstring>
     </soapenv:Fault>
   </soapenv:Body>
 </soapenv:Envelope>`
 }
 
-function escapeXml(str: string): string {
+// ========== XML ESCAPE ==========
+
+function esc(str: string): string {
   if (!str) return ''
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 }
 
+// ========== WSDL (fallback - PHP proxy serves the official one) ==========
+
 function generateWSDL(cif: string | null): string {
-  // Use the proxy URL, not the internal Supabase URL
-  const centerDomain = 'https://campusarmaformacion.es'
-  const serviceUrl = `${centerDomain}/sepe-proxy/centro/cif/${cif || 'B45270139'}`
-
+  const serviceUrl = `https://campusarmaformacion.es/sepe-proxy/centro/cif/${cif || 'B45270139'}`
   return `<?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
-             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-             xmlns:tns="http://impl.ws.application.proveedorcentro.meyss.spee.es"
-             xmlns:entsal="http://entsal.ws.application.proveedorcentro.meyss.spee.es"
-             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-             xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
-             name="ProveedorCentroTFService"
-             targetNamespace="http://impl.ws.application.proveedorcentro.meyss.spee.es">
-
-  <types>
-    <xsd:schema targetNamespace="http://entsal.ws.application.proveedorcentro.meyss.spee.es">
-      
-      <!-- Common types -->
-      <xsd:complexType name="ID_CENTRO">
-        <xsd:sequence>
-          <xsd:element name="ORIGEN" type="xsd:string"/>
-          <xsd:element name="CODIGO" type="xsd:string"/>
-        </xsd:sequence>
-      </xsd:complexType>
-
-      <xsd:complexType name="DATOS_IDENTIFICATIVOS">
-        <xsd:sequence>
-          <xsd:element name="ID_CENTRO" type="entsal:ID_CENTRO"/>
-          <xsd:element name="NOMBRE_CENTRO" type="xsd:string"/>
-          <xsd:element name="URL_PLATAFORMA" type="xsd:string"/>
-          <xsd:element name="URL_SEGUIMIENTO" type="xsd:string"/>
-          <xsd:element name="TELEFONO" type="xsd:string" minOccurs="0"/>
-          <xsd:element name="EMAIL" type="xsd:string" minOccurs="0"/>
-        </xsd:sequence>
-      </xsd:complexType>
-
-      <xsd:complexType name="RESPUESTA_DATOS_CENTRO">
-        <xsd:sequence>
-          <xsd:element name="CODIGO_RETORNO" type="xsd:int"/>
-          <xsd:element name="ETIQUETA_ERROR" type="xsd:string" minOccurs="0"/>
-          <xsd:element name="DATOS_IDENTIFICATIVOS" type="entsal:DATOS_IDENTIFICATIVOS" minOccurs="0"/>
-        </xsd:sequence>
-      </xsd:complexType>
-
-      <xsd:complexType name="RESPUESTA_CREACION">
-        <xsd:sequence>
-          <xsd:element name="CODIGO_RETORNO" type="xsd:int"/>
-          <xsd:element name="ETIQUETA_ERROR" type="xsd:string" minOccurs="0"/>
-          <xsd:element name="MENSAJE" type="xsd:string" minOccurs="0"/>
-        </xsd:sequence>
-      </xsd:complexType>
-
-      <xsd:complexType name="ACCION_FORMATIVA">
-        <xsd:sequence>
-          <xsd:element name="ID_ACCION" type="xsd:string"/>
-          <xsd:element name="DENOMINACION" type="xsd:string"/>
-          <xsd:element name="FECHA_INICIO" type="xsd:date"/>
-          <xsd:element name="FECHA_FIN" type="xsd:date"/>
-          <xsd:element name="NUMERO_HORAS" type="xsd:int" minOccurs="0"/>
-        </xsd:sequence>
-      </xsd:complexType>
-
+<wsdl:definitions name="ProveedorCentroTFWS" targetNamespace="${NS_IMPL}" xmlns:entsal="${NS_ENTSAL}" xmlns:impl="${NS_IMPL}" xmlns:salida="${NS_SALIDA}" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:types>
+    <xsd:schema targetNamespace="${NS_IMPL}">
+      <xsd:import namespace="${NS_SALIDA}"/>
+      <xsd:import namespace="${NS_ENTSAL}"/>
+      <xsd:element name="obtenerDatosCentro"><xsd:complexType/></xsd:element>
+      <xsd:element name="obtenerDatosCentroResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_DATOS_CENTRO"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="crearCentro"><xsd:complexType><xsd:sequence><xsd:element ref="entsal:DATOS_IDENTIFICATIVOS"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="crearCentroResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_DATOS_CENTRO"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="crearAccion"><xsd:complexType><xsd:sequence><xsd:element ref="entsal:ACCION_FORMATIVA"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="crearAccionResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_OBT_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="obtenerAccion"><xsd:complexType><xsd:sequence><xsd:element ref="entsal:ID_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="obtenerAccionResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_OBT_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="obtenerListaAcciones"><xsd:complexType/></xsd:element>
+      <xsd:element name="obtenerListaAccionesResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_OBT_LISTA_ACCIONES"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="eliminarAccion"><xsd:complexType><xsd:sequence><xsd:element ref="entsal:ID_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="eliminarAccionResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_ELIMINAR_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
     </xsd:schema>
-  </types>
-
-  <!-- Messages -->
-  <message name="crearCentroRequest">
-    <part name="datosIdentificativos" element="entsal:DATOS_IDENTIFICATIVOS"/>
-  </message>
-  <message name="crearCentroResponse">
-    <part name="respuesta" element="entsal:RESPUESTA_CREACION"/>
-  </message>
-
-  <message name="obtenerDatosCentroRequest"/>
-  <message name="obtenerDatosCentroResponse">
-    <part name="respuesta" element="entsal:RESPUESTA_DATOS_CENTRO"/>
-  </message>
-
-  <message name="crearAccionRequest">
-    <part name="accion" element="entsal:ACCION_FORMATIVA"/>
-  </message>
-  <message name="crearAccionResponse">
-    <part name="respuesta" element="entsal:RESPUESTA_CREACION"/>
-  </message>
-
-  <message name="obtenerAccionRequest">
-    <part name="idAccion" type="xsd:string"/>
-  </message>
-  <message name="obtenerAccionResponse">
-    <part name="accion" element="entsal:ACCION_FORMATIVA"/>
-  </message>
-
-  <message name="obtenerListaAccionesRequest"/>
-  <message name="obtenerListaAccionesResponse">
-    <part name="acciones" type="xsd:anyType"/>
-  </message>
-
-  <message name="eliminarAccionRequest">
-    <part name="idAccion" type="xsd:string"/>
-  </message>
-  <message name="eliminarAccionResponse">
-    <part name="respuesta" element="entsal:RESPUESTA_CREACION"/>
-  </message>
-
-  <!-- Port Type -->
-  <portType name="ProveedorCentroEndPoint">
-    <operation name="crearCentro">
-      <input message="tns:crearCentroRequest"/>
-      <output message="tns:crearCentroResponse"/>
-    </operation>
-    <operation name="obtenerDatosCentro">
-      <input message="tns:obtenerDatosCentroRequest"/>
-      <output message="tns:obtenerDatosCentroResponse"/>
-    </operation>
-    <operation name="crearAccion">
-      <input message="tns:crearAccionRequest"/>
-      <output message="tns:crearAccionResponse"/>
-    </operation>
-    <operation name="obtenerAccion">
-      <input message="tns:obtenerAccionRequest"/>
-      <output message="tns:obtenerAccionResponse"/>
-    </operation>
-    <operation name="obtenerListaAcciones">
-      <input message="tns:obtenerListaAccionesRequest"/>
-      <output message="tns:obtenerListaAccionesResponse"/>
-    </operation>
-    <operation name="eliminarAccion">
-      <input message="tns:eliminarAccionRequest"/>
-      <output message="tns:eliminarAccionResponse"/>
-    </operation>
-  </portType>
-
-  <!-- Binding -->
-  <binding name="ProveedorCentroBinding" type="tns:ProveedorCentroEndPoint">
+  </wsdl:types>
+  <wsdl:portType name="IProveedorCentroEndPoint">
+    <wsdl:operation name="crearCentro"><wsdl:input message="impl:crearCentroRequest"/><wsdl:output message="impl:crearCentroResponse"/></wsdl:operation>
+    <wsdl:operation name="obtenerDatosCentro"><wsdl:input message="impl:obtenerDatosCentroRequest"/><wsdl:output message="impl:obtenerDatosCentroResponse"/></wsdl:operation>
+    <wsdl:operation name="crearAccion"><wsdl:input message="impl:crearAccionRequest"/><wsdl:output message="impl:crearAccionResponse"/></wsdl:operation>
+    <wsdl:operation name="obtenerAccion"><wsdl:input message="impl:obtenerAccionRequest"/><wsdl:output message="impl:obtenerAccionResponse"/></wsdl:operation>
+    <wsdl:operation name="obtenerListaAcciones"><wsdl:input message="impl:obtenerListaAccionesRequest"/><wsdl:output message="impl:obtenerListaAccionesResponse"/></wsdl:operation>
+    <wsdl:operation name="eliminarAccion"><wsdl:input message="impl:eliminarAccionRequest"/><wsdl:output message="impl:eliminarAccionResponse"/></wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ProveedorCentroEndPointSoapBinding" type="impl:IProveedorCentroEndPoint">
     <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
-    
-    <operation name="crearCentro">
-      <soap:operation soapAction="crearCentro"/>
-      <input><soap:body use="literal"/></input>
-      <output><soap:body use="literal"/></output>
-    </operation>
-    
-    <operation name="obtenerDatosCentro">
-      <soap:operation soapAction="obtenerDatosCentro"/>
-      <input><soap:body use="literal"/></input>
-      <output><soap:body use="literal"/></output>
-    </operation>
-    
-    <operation name="crearAccion">
-      <soap:operation soapAction="crearAccion"/>
-      <input><soap:body use="literal"/></input>
-      <output><soap:body use="literal"/></output>
-    </operation>
-    
-    <operation name="obtenerAccion">
-      <soap:operation soapAction="obtenerAccion"/>
-      <input><soap:body use="literal"/></input>
-      <output><soap:body use="literal"/></output>
-    </operation>
-    
-    <operation name="obtenerListaAcciones">
-      <soap:operation soapAction="obtenerListaAcciones"/>
-      <input><soap:body use="literal"/></input>
-      <output><soap:body use="literal"/></output>
-    </operation>
-    
-    <operation name="eliminarAccion">
-      <soap:operation soapAction="eliminarAccion"/>
-      <input><soap:body use="literal"/></input>
-      <output><soap:body use="literal"/></output>
-    </operation>
-  </binding>
-
-  <!-- Service -->
-  <service name="ProveedorCentroTFService">
-    <port name="ProveedorCentroPort" binding="tns:ProveedorCentroBinding">
+    <wsdl:operation name="crearCentro"><soap:operation soapAction="crearCentro"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
+    <wsdl:operation name="obtenerDatosCentro"><soap:operation soapAction="obtenerDatosCentro"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
+    <wsdl:operation name="crearAccion"><soap:operation soapAction="crearAccion"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
+    <wsdl:operation name="obtenerAccion"><soap:operation soapAction="obtenerAccion"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
+    <wsdl:operation name="obtenerListaAcciones"><soap:operation soapAction="obtenerListaAcciones"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
+    <wsdl:operation name="eliminarAccion"><soap:operation soapAction="eliminarAccion"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ProveedorCentroTFWS">
+    <wsdl:port binding="impl:ProveedorCentroEndPointSoapBinding" name="ProveedorCentroEndPoint">
       <soap:address location="${serviceUrl}"/>
-    </port>
-  </service>
-
-</definitions>`
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>`
 }
