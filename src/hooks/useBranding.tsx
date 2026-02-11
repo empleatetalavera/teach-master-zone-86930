@@ -30,7 +30,7 @@ const defaultBranding: BrandingConfig = {
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
 
 export function BrandingProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, userRole, loading: authLoading } = useAuth();
   // Initialize with null to avoid showing default branding during load
   const [branding, setBranding] = useState<BrandingConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,6 +38,15 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   const loadBranding = async () => {
     if (!user) {
+      setBranding(defaultBranding);
+      applyBrandingToDOM(defaultBranding);
+      setLoading(false);
+      setInitialized(true);
+      return;
+    }
+
+    // Super admins always see TalentCloudSolution branding
+    if (userRole === 'super_admin') {
       setBranding(defaultBranding);
       applyBrandingToDOM(defaultBranding);
       setLoading(false);
@@ -152,7 +161,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     if (!authLoading) {
       loadBranding();
     }
-  }, [user, authLoading]);
+  }, [user, userRole, authLoading]);
 
   // Don't render children until branding is initialized to prevent flash
   if (!initialized || branding === null) {
