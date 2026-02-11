@@ -2412,9 +2412,87 @@ export default function CourseView() {
                                           </AccordionContent>
                                         </AccordionItem>
                                       </Accordion>
-                                      {/* Self Assessment Quiz OUTSIDE accordion - always visible for propio */}
+                                      {/* For propio courses: show PDF button and quiz OUTSIDE accordion */}
                                       {isPropio && (
-                                        <div className="px-2 pb-2">
+                                        <div className="px-2 pb-2 space-y-3">
+                                          {/* PDF Button always visible */}
+                                          <div 
+                                            className="border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
+                                            onClick={async () => {
+                                              let pdfData: any[] | null = null;
+                                              const { data: exactMatch } = await (supabase as any)
+                                                .from('module_content')
+                                                .select('file_path, title')
+                                                .eq('module_id', module.id)
+                                                .eq('content_type', 'manual_pdf')
+                                                .eq('formative_unit_id', unit.id)
+                                                .limit(1);
+                                              pdfData = exactMatch;
+                                              if (!pdfData || pdfData.length === 0) {
+                                                const { data: fallback } = await (supabase as any)
+                                                  .from('module_content')
+                                                  .select('file_path, title')
+                                                  .eq('module_id', module.id)
+                                                  .eq('content_type', 'manual_pdf')
+                                                  .is('formative_unit_id', null)
+                                                  .order('created_at', { ascending: false })
+                                                  .limit(1);
+                                                pdfData = fallback;
+                                              }
+                                              if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+                                                const { data: signedData } = await supabase.storage
+                                                  .from('module-content')
+                                                  .createSignedUrl(pdfData[0].file_path, 3600);
+                                                if (signedData?.signedUrl) {
+                                                  const link = document.createElement('a');
+                                                  link.href = signedData.signedUrl;
+                                                  link.target = '_blank';
+                                                  link.rel = 'noopener noreferrer';
+                                                  document.body.appendChild(link);
+                                                  link.click();
+                                                  document.body.removeChild(link);
+                                                } else {
+                                                  toast({ title: "Error", description: "No se pudo abrir el PDF", variant: "destructive" });
+                                                }
+                                              } else {
+                                                toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+                                              }
+                                            }}
+                                          >
+                                            <div className="flex items-center gap-3 p-3">
+                                              <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded">
+                                                <FileText className="h-5 w-5 text-blue-600" />
+                                              </div>
+                                              <div className="flex-1 min-w-0">
+                                                <span className="text-sm font-medium">📖 Manual: {unit.title}</span>
+                                                <p className="text-xs text-muted-foreground">Haz clic para abrir el PDF del manual</p>
+                                              </div>
+                                              <Button variant="default" size="sm" className="gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                Abrir PDF
+                                              </Button>
+                                            </div>
+                                            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                              <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  className="gap-1.5 border-blue-300 hover:bg-blue-50"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setManualUploaderModuleId(module.id);
+                                                    setManualUploaderModuleTitle(unit.title);
+                                                    setManualUploaderUnitId(unit.id);
+                                                    setManualUploaderOpen(true);
+                                                  }}
+                                                >
+                                                  <Upload className="h-3.5 w-3.5 text-blue-600" />
+                                                  Subir PDF
+                                                </Button>
+                                              </div>
+                                            )}
+                                          </div>
+                                          {/* Self Assessment Quiz */}
                                           <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
                                         </div>
                                       )}
