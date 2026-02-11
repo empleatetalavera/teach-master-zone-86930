@@ -122,7 +122,7 @@ Genera ${numberOfQuestions} preguntas de evaluación basadas en este contenido.`
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 16000,
+        max_tokens: 32000,
       }),
     });
 
@@ -157,7 +157,7 @@ Genera ${numberOfQuestions} preguntas de evaluación basadas en este contenido.`
       );
     }
 
-    // Parse JSON from response
+    // Parse JSON from response - handle markdown code blocks and truncated JSON
     let jsonContent = content;
     if (content.includes("```json")) {
       jsonContent = content.split("```json")[1].split("```")[0].trim();
@@ -169,11 +169,28 @@ Genera ${numberOfQuestions} preguntas de evaluación basadas en este contenido.`
     try {
       parsedQuestions = JSON.parse(jsonContent);
     } catch {
-      console.error("JSON parse error, content:", content.substring(0, 500));
-      return new Response(
-        JSON.stringify({ error: "Error al parsear la respuesta de la IA" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // Try to salvage truncated JSON by closing arrays/objects
+      try {
+        // Find last complete question object (ends with })
+        const lastCompleteObj = jsonContent.lastIndexOf('}');
+        if (lastCompleteObj > 0) {
+          let trimmed = jsonContent.substring(0, lastCompleteObj + 1);
+          // Ensure questions array and root object are closed
+          if (!trimmed.endsWith("]}")) {
+            trimmed += "]}";
+          }
+          parsedQuestions = JSON.parse(trimmed);
+          console.log("Salvaged truncated JSON successfully");
+        } else {
+          throw new Error("No salvageable JSON");
+        }
+      } catch {
+        console.error("JSON parse error, content:", content.substring(0, 500));
+        return new Response(
+          JSON.stringify({ error: "Error al parsear la respuesta de la IA. Inténtalo de nuevo." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const questions = (parsedQuestions.questions || []).filter((q: any) =>
