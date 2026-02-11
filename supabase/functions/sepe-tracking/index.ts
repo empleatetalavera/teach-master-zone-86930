@@ -44,12 +44,14 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Return service info for basic GET request
+    // Return service info for basic GET request - use proxy URL
+    const centerDomain = 'https://campusarmaformacion.es'
+    const proxyBaseUrl = `${centerDomain}/sepe-proxy/centro/cif/${cif || 'B45270139'}`
     const serviceInfo = `<?xml version="1.0" encoding="UTF-8"?>
 <service>
   <name>ProveedorCentroTFService</name>
   <status>ACTIVE</status>
-  <wsdl>${supabaseUrl}/functions/v1/sepe-tracking?wsdl</wsdl>
+  <wsdl>${proxyBaseUrl}?wsdl</wsdl>
   <timestamp>${new Date().toISOString()}</timestamp>
 </service>`
     return new Response(serviceInfo, { 
@@ -198,7 +200,9 @@ async function handleObtenerDatosCentro(supabase: any, body: string, credentials
     centerData = data
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  // Build the proxy URL for SEPE (must point to the center's proxy, not internal Supabase URL)
+  const centerDomain = centerData?.custom_domain ? centerData.custom_domain.replace(/\/$/, '') : 'https://campusarmaformacion.es'
+  const proxyUrl = `${centerDomain}/sepe-proxy/centro/cif/${centerData?.cif || cifFromUrl || 'B45270139'}`
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
@@ -214,8 +218,8 @@ async function handleObtenerDatosCentro(supabase: any, body: string, credentials
             <entsal:CODIGO>${escapeXml(centerData?.cif || 'N/A')}</entsal:CODIGO>
           </entsal:ID_CENTRO>
           <entsal:NOMBRE_CENTRO>${escapeXml(centerData?.name || 'Centro de Formación')}</entsal:NOMBRE_CENTRO>
-          <entsal:URL_PLATAFORMA>${escapeXml(centerData?.custom_domain ? centerData.custom_domain.replace(/\/$/, '') : (centerData?.slug ? `https://talentcloudsolution.com/auth?center=${centerData.slug}` : 'https://talentcloudsolution.com'))}</entsal:URL_PLATAFORMA>
-          <entsal:URL_SEGUIMIENTO>${supabaseUrl}/functions/v1/sepe-tracking</entsal:URL_SEGUIMIENTO>
+          <entsal:URL_PLATAFORMA>${escapeXml(centerDomain)}</entsal:URL_PLATAFORMA>
+          <entsal:URL_SEGUIMIENTO>${escapeXml(proxyUrl)}</entsal:URL_SEGUIMIENTO>
           <entsal:NUMERO_USUARIOS_PLATAFORMA>1000</entsal:NUMERO_USUARIOS_PLATAFORMA>
           <entsal:TELEFONO>${escapeXml(centerData?.phone || centerData?.contact_phone || '665673416')}</entsal:TELEFONO>
           <entsal:EMAIL>${escapeXml(centerData?.email || centerData?.contact_email || 'formacion.empleate@gmail.com')}</entsal:EMAIL>
@@ -407,8 +411,9 @@ function escapeXml(str: string): string {
 }
 
 function generateWSDL(cif: string | null): string {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceUrl = `${supabaseUrl}/functions/v1/sepe-tracking`
+  // Use the proxy URL, not the internal Supabase URL
+  const centerDomain = 'https://campusarmaformacion.es'
+  const serviceUrl = `${centerDomain}/sepe-proxy/centro/cif/${cif || 'B45270139'}`
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
