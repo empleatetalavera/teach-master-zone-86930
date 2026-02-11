@@ -309,7 +309,8 @@ export default function CourseView() {
   
   // Determine if this is a CFC course (simplified template) vs certificate/SEPE courses
   const isCFCCourse = course?.course_type === 'cfc';
-  const showSEPEFeatures = !isCFCCourse; // Show SEPE features for all course types except CFC
+  const isPropio = course?.course_type === 'propio';
+  const showSEPEFeatures = !isCFCCourse && !isPropio; // Show SEPE features for certificate/SEPE courses only
   
   const openActivitySubmission = (activityId: string) => {
     setSelectedActivityId(activityId);
@@ -686,17 +687,17 @@ export default function CourseView() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  {course.qualification_level && (
+                  {!isPropio && course.qualification_level && (
                     <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold">
                       Certificado de Profesionalidad Nivel {course.qualification_level}
                     </Badge>
                   )}
-                  {course.professional_family && (
+                  {!isPropio && course.professional_family && (
                     <Badge variant="secondary" className="font-medium">
                       {course.professional_family}
                     </Badge>
                   )}
-                  {course.course_code && (
+                  {!isPropio && course.course_code && (
                     <Badge variant="outline" className="font-mono text-xs">
                       {course.course_code}
                     </Badge>
@@ -1001,7 +1002,7 @@ export default function CourseView() {
                     className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "modules" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                   >
                     <BookOpen className="h-4 w-4" />
-                    {isCFCCourse ? 'Contenido del Curso' : 'Formación en Campus'}
+                    {isCFCCourse ? 'Contenido del Curso' : isPropio ? 'Temario' : 'Formación en Campus'}
                   </button>
                   <button
                     onClick={() => setActiveTab("grades")}
@@ -1119,7 +1120,7 @@ export default function CourseView() {
                   {!showSEPEFeatures && <TabsTrigger value="course-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>}
                   {showSEPEFeatures && <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>}
                   {showSEPEFeatures && <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>}
-                  <TabsTrigger value="modules" className="text-xs px-2 py-1.5">{isCFCCourse ? 'Contenido' : 'Formación'}</TabsTrigger>
+                  <TabsTrigger value="modules" className="text-xs px-2 py-1.5">{isCFCCourse ? 'Contenido' : isPropio ? 'Temario' : 'Formación'}</TabsTrigger>
                   <TabsTrigger value="grades" className="text-xs px-2 py-1.5">{userRole === 'teacher' ? 'Actividades' : 'Calificaciones'}</TabsTrigger>
                   {showSEPEFeatures && <TabsTrigger value="exams" className="text-xs px-2 py-1.5">Exámenes</TabsTrigger>}
                   {showSEPEFeatures && <TabsTrigger value="tutorials" className="text-xs px-2 py-1.5">Tutorías</TabsTrigger>}
@@ -1838,7 +1839,7 @@ export default function CourseView() {
             )}
 
             <div>
-              <h2 className="text-lg font-semibold">{isCFCCourse ? 'Contenido del Curso' : 'Formación en Campus - Módulos Formativos'}</h2>
+              <h2 className="text-lg font-semibold">{isCFCCourse ? 'Contenido del Curso' : isPropio ? 'Temario del Curso' : 'Formación en Campus - Módulos Formativos'}</h2>
               <p className="text-sm text-muted-foreground">
                 Haz clic en cada módulo para expandir y ver su contenido
               </p>
@@ -2105,7 +2106,8 @@ export default function CourseView() {
                                               </div>
                                             )}
 
-                                            {/* Contenido Interactivo */}
+                                            {/* Contenido Interactivo - Hidden for propio courses */}
+                                            {!isPropio && (
                                             <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
                                               <div className="p-2 bg-primary/10 rounded">
                                                 <Layers className="h-5 w-5 text-primary" />
@@ -2139,6 +2141,7 @@ export default function CourseView() {
                                                 )}
                                               </div>
                                             </div>
+                                            )}
 
                                             {/* Manual PDF */}
                                             <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
@@ -2183,7 +2186,8 @@ export default function CourseView() {
                                               </div>
                                             </div>
 
-                                            {/* Actividad */}
+                                            {/* Actividad - Hidden for propio courses */}
+                                            {!isPropio && (
                                             <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
                                               <div className="p-2 bg-green-50 dark:bg-green-950 rounded">
                                                 <PenTool className="h-5 w-5 text-green-600" />
@@ -2206,6 +2210,7 @@ export default function CourseView() {
                                                 </Button>
                                               </div>
                                             </div>
+                                            )}
 
                                             {/* Test Final */}
                                             <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
