@@ -80,25 +80,11 @@ REGLAS:
 4. Preguntas claras, sin ambigüedades
 5. Evita "todas las anteriores" o "ninguna de las anteriores"
 6. Distribuye respuestas correctas aleatoriamente entre a, b, c, d
-7. Las explicaciones deben ser educativas
+7. Las explicaciones deben ser BREVES (máximo 1 frase)
+8. Las opciones deben ser CONCISAS (máximo 15 palabras cada una)
 
-Responde ÚNICAMENTE con JSON válido:
-{
-  "questions": [
-    {
-      "id": "q1",
-      "question": "Texto de la pregunta",
-      "options": [
-        { "id": "a", "text": "Opción A" },
-        { "id": "b", "text": "Opción B" },
-        { "id": "c", "text": "Opción C" },
-        { "id": "d", "text": "Opción D" }
-      ],
-      "correctOptionId": "b",
-      "explanation": "Explicación de la respuesta correcta."
-    }
-  ]
-}`;
+Responde ÚNICAMENTE con JSON válido (sin markdown, sin backticks):
+{"questions":[{"id":"q1","question":"...","options":[{"id":"a","text":"..."},{"id":"b","text":"..."},{"id":"c","text":"..."},{"id":"d","text":"..."}],"correctOptionId":"b","explanation":"..."}]}`;
 
     const userPrompt = `Unidad Formativa: "${formativeUnitTitle}"
 
@@ -157,32 +143,34 @@ Genera ${numberOfQuestions} preguntas de evaluación basadas en este contenido.`
       );
     }
 
-    // Parse JSON from response - handle markdown code blocks and truncated JSON
-    let jsonContent = content;
-    if (content.includes("```json")) {
-      jsonContent = content.split("```json")[1].split("```")[0].trim();
-    } else if (content.includes("```")) {
-      jsonContent = content.split("```")[1].split("```")[0].trim();
+    // Parse JSON from response
+    let jsonContent = content.trim();
+    // Remove markdown code blocks if present
+    const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) {
+      jsonContent = jsonMatch[1].trim();
     }
 
     let parsedQuestions;
     try {
       parsedQuestions = JSON.parse(jsonContent);
     } catch {
-      // Try to salvage truncated JSON by closing arrays/objects
+      // Try to extract individual complete question objects via regex
       try {
-        // Find last complete question object (ends with })
-        const lastCompleteObj = jsonContent.lastIndexOf('}');
-        if (lastCompleteObj > 0) {
-          let trimmed = jsonContent.substring(0, lastCompleteObj + 1);
-          // Ensure questions array and root object are closed
-          if (!trimmed.endsWith("]}")) {
-            trimmed += "]}";
+        const questionRegex = /\{[^{}]*"id"\s*:\s*"q\d+"[^{}]*"question"\s*:[^{}]*"options"\s*:\s*\[[^\]]*\][^{}]*"correctOptionId"\s*:[^{}]*"explanation"\s*:[^{}]*\}/g;
+        const matches = jsonContent.match(questionRegex);
+        if (matches && matches.length > 0) {
+          const salvaged = matches.map(m => {
+            try { return JSON.parse(m); } catch { return null; }
+          }).filter(Boolean);
+          if (salvaged.length > 0) {
+            parsedQuestions = { questions: salvaged };
+            console.log(`Salvaged ${salvaged.length} questions from truncated response`);
+          } else {
+            throw new Error("No parseable questions");
           }
-          parsedQuestions = JSON.parse(trimmed);
-          console.log("Salvaged truncated JSON successfully");
         } else {
-          throw new Error("No salvageable JSON");
+          throw new Error("No question patterns found");
         }
       } catch {
         console.error("JSON parse error, content:", content.substring(0, 500));
