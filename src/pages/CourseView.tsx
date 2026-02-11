@@ -1882,7 +1882,14 @@ export default function CourseView() {
                       </AccordionTrigger>
                       <AccordionContent className="px-4 pb-4 pt-2 border-t">
                         {moduleUnits.length === 0 ? (
-                          <p className="text-sm text-muted-foreground text-center py-4">Sin unidades formativas</p>
+                          <div>
+                            <p className="text-sm text-muted-foreground text-center py-4">Sin unidades formativas en este módulo</p>
+                            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                              <div className="pt-2 border-t">
+                                <ModuleFormativeUnitManager moduleId={module.id} moduleTitle={module.title} formativeUnits={moduleUnits} onUpdate={loadCourseData} />
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <div className="space-y-3">
                             {moduleUnits.map((unit: any) => (
