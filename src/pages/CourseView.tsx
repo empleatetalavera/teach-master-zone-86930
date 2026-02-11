@@ -2440,6 +2440,11 @@ export default function CourseView() {
                                             </div>
                                             )}
 
+                                            {/* Self Assessment Quiz for propio courses */}
+                                            {isPropio && (
+                                              <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
+                                            )}
+
                                             {/* Test Final - Only for non-propio courses */}
                                             {!isPropio && (() => {
                                               const unitEvals = (module.evaluations || []).filter((ev: any) => ev.formative_unit_id === unit.id);
