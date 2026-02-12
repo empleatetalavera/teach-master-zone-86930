@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { moduleId, moduleTitle, numberOfQuestions = 50 } = await req.json();
+    const { moduleId, moduleTitle, numberOfQuestions = 30 } = await req.json();
     
     if (!moduleId) {
       return new Response(
