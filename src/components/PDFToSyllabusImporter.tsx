@@ -147,68 +147,34 @@ export function PDFToSyllabusImporter({
   };
 
   const extractTextFromPDF = async (file: File): Promise<string> => {
-    // For now, we'll use a simpler approach - read the file and send to backend
-    // In production, you might want to use pdf.js for client-side extraction
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const arrayBuffer = e.target?.result as ArrayBuffer;
-          
-          // We'll use a text extraction approach
-          // For binary PDFs, we extract readable text content
-          const uint8Array = new Uint8Array(arrayBuffer);
-          let text = '';
-          
-          // Simple text extraction from PDF streams
-          const decoder = new TextDecoder('utf-8', { fatal: false });
-          const rawText = decoder.decode(uint8Array);
-          
-          // Extract text between stream markers and common patterns
-          const streamMatches = rawText.match(/stream[\s\S]*?endstream/g) || [];
-          const textMatches = rawText.match(/\(([^)]+)\)/g) || [];
-          const tjMatches = rawText.match(/\[([^\]]+)\]\s*TJ/g) || [];
-          
-          // Process TJ arrays (more reliable for modern PDFs)
-          tjMatches.forEach(match => {
-            const innerText = match.match(/\(([^)]+)\)/g) || [];
-            innerText.forEach(t => {
-              const cleaned = t.slice(1, -1);
-              if (cleaned.length > 0 && !/^[\x00-\x1F]+$/.test(cleaned)) {
-                text += cleaned + ' ';
-              }
-            });
-          });
+    const pdfjsLib = await import('pdfjs-dist');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
-          // Also get direct text matches
-          textMatches.forEach(match => {
-            const cleaned = match.slice(1, -1);
-            if (cleaned.length > 2 && !/^[\x00-\x1F\s]+$/.test(cleaned)) {
-              text += cleaned + ' ';
-            }
-          });
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    let text = '';
+    // Limit to first 80 pages to avoid excessive processing
+    const maxPages = Math.min(pdf.numPages, 80);
+    
+    for (let i = 1; i <= maxPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items
+        .map((item: any) => item.str)
+        .join(' ');
+      text += pageText + '\n\n';
+      // Update progress during extraction (10-30%)
+      setProgress(10 + Math.round((i / maxPages) * 20));
+    }
 
-          // Clean up the extracted text
-          text = text
-            .replace(/\\n/g, '\n')
-            .replace(/\\r/g, '')
-            .replace(/\s+/g, ' ')
-            .replace(/[^\x20-\x7E\xA0-\xFF\u0100-\uFFFF\n]/g, '')
-            .trim();
+    text = text.trim();
+    
+    if (text.length < 100) {
+      text = `[Contenido del PDF: ${file.name}]\n\nEl texto del PDF no pudo extraerse completamente. Por favor, usa un PDF con texto seleccionable.`;
+    }
 
-          if (text.length < 100) {
-            // If extraction failed, provide a fallback message
-            text = `[Contenido del PDF: ${file.name}]\n\nEl texto del PDF no pudo extraerse completamente. Por favor, copia y pega el contenido manualmente o usa un PDF con texto seleccionable.`;
-          }
-
-          resolve(text);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = () => reject(new Error('Error reading file'));
-      reader.readAsArrayBuffer(file);
-    });
+    return text;
   };
 
   const handleGenerateSlides = async () => {
