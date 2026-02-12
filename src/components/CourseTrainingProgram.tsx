@@ -204,14 +204,18 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
   });
 
   const handleDownloadPDF = () => {
-    const url = course.training_program_pdf_url || '/documents/proyecto_formativo_ADGG0408.pdf';
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (course.training_program_pdf_url) {
+      const link = document.createElement('a');
+      link.href = course.training_program_pdf_url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // Print the current page as PDF
+      window.print();
+    }
   };
 
   return (
