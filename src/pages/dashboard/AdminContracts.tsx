@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { FileSignature, Eye, Download, Building2 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { generateContractPDF } from "@/lib/generateContractPDF";
 
 interface Contract {
   id: string;
@@ -23,6 +24,7 @@ interface Contract {
   signed_at: string;
   signature_data: string;
   contract_content: string;
+  metadata: any;
   training_centers?: {
     name: string;
   };
@@ -63,42 +65,28 @@ export default function AdminContracts() {
     setShowContractDialog(true);
   };
 
-  const downloadContract = (contract: Contract) => {
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8">
-        <title>Contrato - ${contract.training_centers?.name || "Centro"}</title>
-        <style>
-          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; }
-          h1 { text-align: center; font-size: 18px; }
-          h2 { font-size: 16px; margin-top: 20px; }
-          h3 { font-size: 14px; margin-top: 15px; }
-          p, li { font-size: 12px; line-height: 1.6; }
-          .signature-section { margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px; }
-          .signature-img { max-width: 200px; border: 1px solid #ccc; }
-        </style>
-      </head>
-      <body>
-        ${contract.contract_content}
-        <div class="signature-section">
-          <h3>Firma Digital:</h3>
-          <img src="${contract.signature_data}" class="signature-img" alt="Firma" />
-        </div>
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob([htmlContent], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `contrato_${contract.training_centers?.name?.replace(/\s+/g, "_") || "centro"}_${format(new Date(contract.signed_at), "yyyy-MM-dd")}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const downloadContract = async (contract: Contract) => {
+    const metadata = contract.metadata;
+    try {
+      await generateContractPDF({
+        centerName: contract.training_centers?.name || "Centro de Formación",
+        signerName: contract.signer_name,
+        signerDni: contract.signer_dni,
+        signerPosition: contract.signer_position,
+        signerEmail: contract.signer_email,
+        signedAt: contract.signed_at,
+        contractVersion: contract.contract_version,
+        contractType: contract.contract_type,
+        signatureData: contract.signature_data,
+        planName: metadata?.plan_name,
+        planPrice: metadata?.plan_price,
+        planCommitment: metadata?.plan_commitment,
+      });
+      toast.success("Contrato descargado en PDF");
+    } catch (error) {
+      console.error("Error generating contract PDF:", error);
+      toast.error("Error al generar el PDF del contrato");
+    }
   };
 
   return (
