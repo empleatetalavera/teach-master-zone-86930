@@ -216,12 +216,10 @@ export async function generateContractPDF(data: ContractPDFData) {
   doc.text("TalentCloud Solutions S.L.", pageWidth / 2 + 10, y);
   y += 6;
   doc.setFont("helvetica", "normal");
-  doc.text(`D. ${data.signerName}`, margin, y);
+  doc.text(`Representante: D. ${data.signerName}`, margin, y);
   doc.text("Administración", pageWidth / 2 + 10, y);
   y += 5;
-  doc.text(`DNI: ${data.signerDni}`, margin, y);
-  y += 5;
-  doc.text(`Cargo: ${data.signerPosition}`, margin, y);
+  doc.text(`DNI/NIE: ${data.signerDni}`, margin, y);
   y += 5;
   doc.text(`Email: ${data.signerEmail}`, margin, y);
   y += 5;
