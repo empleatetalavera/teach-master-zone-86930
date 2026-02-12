@@ -39,15 +39,18 @@ export const SingleDocumentUploader: React.FC<SingleDocumentUploaderProps> = ({
 
   const handleUpload = async (file: File) => {
     setUploading(true);
+    console.log('[SingleDocumentUploader] Starting upload:', { fileName: file.name, fileSize: file.size, courseId, dbField });
 
     try {
       const fileExt = file.name.split('.').pop();
       const storagePath = `${courseId}/${fileName}-${Date.now()}.${fileExt}`;
       
-      const { error: uploadError } = await supabase.storage
+      console.log('[SingleDocumentUploader] Uploading to storage path:', storagePath);
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('course-documents')
         .upload(storagePath, file, { upsert: true });
 
+      console.log('[SingleDocumentUploader] Upload result:', { uploadError, uploadData });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
