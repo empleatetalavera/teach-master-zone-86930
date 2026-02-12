@@ -88,8 +88,8 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
       return;
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      toast({ title: "Error", description: "El archivo no debe superar 50MB. Comprime el PDF o divídelo en partes más pequeñas.", variant: "destructive" });
+    if (file.size > 250 * 1024 * 1024) {
+      toast({ title: "Error", description: "El archivo no debe superar 250MB", variant: "destructive" });
       return;
     }
 
@@ -345,7 +345,7 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
                     <>
                       <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-sm font-medium">Arrastra o haz clic para subir</p>
-                      <p className="text-xs text-muted-foreground">PDF hasta 50MB</p>
+                      <p className="text-xs text-muted-foreground">PDF hasta 250MB</p>
                     </>
                   )}
                 </div>
