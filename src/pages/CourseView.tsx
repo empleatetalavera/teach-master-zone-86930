@@ -2401,7 +2401,7 @@ export default function CourseView() {
                                                       <div className="flex-1 min-w-0">
                                                         <span className="text-sm font-medium">Test Final de la Unidad</span>
                                                         <p className="text-xs text-muted-foreground">
-                                                          {hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de 50 preguntas para verificar el aprendizaje'}
+                                                          {hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de 30 preguntas para verificar el aprendizaje'}
                                                         </p>
                                                       </div>
                                                     </div>

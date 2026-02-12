@@ -44,7 +44,7 @@ interface TestResult {
   answers: Record<string, string>;
 }
 
-// Generate 50 questions covering all units of the module
+// Generate 30 questions covering all units of the module
 const generateModuleQuestions = (moduleTitle: string): Question[] => {
   const questions: Question[] = [];
   
@@ -772,7 +772,7 @@ export function ModuleEvaluationTest({
         body: {
           moduleId,
           moduleTitle,
-          numberOfQuestions: 50
+          numberOfQuestions: 30
         }
       });
 
@@ -931,7 +931,7 @@ export function ModuleEvaluationTest({
             <h3 className="text-2xl font-bold">Evaluación Final del Módulo</h3>
             <p className="text-muted-foreground max-w-md mx-auto">
               Este test evalúa todos los conocimientos adquiridos en el módulo. 
-              Dispones de 60 minutos para completar las {questions.length || 50} preguntas.
+              Dispones de 60 minutos para completar las {questions.length || 30} preguntas.
             </p>
           </div>
 
@@ -985,7 +985,7 @@ export function ModuleEvaluationTest({
             <Card className="text-center">
               <CardContent className="pt-6">
                 <FileQuestion className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="font-semibold">{questions.length || 50} Preguntas</p>
+                <p className="font-semibold">{questions.length || 30} Preguntas</p>
                 <p className="text-xs text-muted-foreground">Tipo test múltiple</p>
               </CardContent>
             </Card>
@@ -1251,7 +1251,7 @@ export function ModuleEvaluationTest({
             Test de Evaluación del Módulo
           </DialogTitle>
           <DialogDescription>
-            {moduleTitle} - 50 preguntas tipo test
+            {moduleTitle} - 30 preguntas tipo test
           </DialogDescription>
         </DialogHeader>
         {testContent}
