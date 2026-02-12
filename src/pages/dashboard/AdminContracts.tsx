@@ -104,7 +104,7 @@ export default function AdminContracts() {
           {
             codigo: "SSCE0110",
             nombre: "Habilitación para la docencia en grados A, B y C del Sistema de Formación Profesional",
-            nivel: "2",
+            nivel: "3",
           },
         ],
       });
