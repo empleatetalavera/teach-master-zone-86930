@@ -7,10 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FileSignature, Eye, Download, Building2 } from "lucide-react";
+import { FileSignature, Eye, Download, Building2, FilePlus2 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { generateContractPDF } from "@/lib/generateContractPDF";
+import { generateAnnexCertificadosPDF } from "@/lib/generateAnnexCertificadosPDF";
 
 interface Contract {
   id: string;
@@ -86,6 +87,24 @@ export default function AdminContracts() {
     } catch (error) {
       console.error("Error generating contract PDF:", error);
       toast.error("Error al generar el PDF del contrato");
+    }
+  };
+
+  const downloadAnnexCertificados = async (contract: Contract) => {
+    try {
+      await generateAnnexCertificadosPDF({
+        centerName: contract.training_centers?.name || "Centro de Formación",
+        signerName: contract.signer_name,
+        signerDni: contract.signer_dni,
+        signerPosition: contract.signer_position,
+        signerEmail: contract.signer_email,
+        signedAt: contract.signed_at,
+        signatureData: contract.signature_data,
+      });
+      toast.success("Anexo de Certificados descargado en PDF");
+    } catch (error) {
+      console.error("Error generating annex PDF:", error);
+      toast.error("Error al generar el PDF del anexo");
     }
   };
 
@@ -193,8 +212,17 @@ export default function AdminContracts() {
                           variant="ghost"
                           size="sm"
                           onClick={() => downloadContract(contract)}
+                          title="Descargar Contrato"
                         >
                           <Download className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => downloadAnnexCertificados(contract)}
+                          title="Anexo Certificados de Profesionalidad"
+                        >
+                          <FilePlus2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
