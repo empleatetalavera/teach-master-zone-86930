@@ -100,6 +100,13 @@ export default function AdminContracts() {
         signerEmail: contract.signer_email,
         signedAt: contract.signed_at,
         signatureData: contract.signature_data,
+        certificados: [
+          {
+            codigo: "SSCE0110",
+            nombre: "Habilitación para la docencia en grados A, B y C del Sistema de Formación Profesional",
+            nivel: "2",
+          },
+        ],
       });
       toast.success("Anexo de Certificados descargado en PDF");
     } catch (error) {
