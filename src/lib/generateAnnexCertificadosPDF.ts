@@ -295,12 +295,10 @@ export async function generateAnnexCertificadosPDF(data: AnnexCertificadosPDFDat
   doc.text("TalentCloud Solutions S.L.", pageWidth / 2 + 10, y);
   y += 6;
   doc.setFont("helvetica", "normal");
-  doc.text(`D./Dña. ${data.signerName}`, margin, y);
+  doc.text(`Representante: D./Dña. ${data.signerName}`, margin, y);
   doc.text("Administración", pageWidth / 2 + 10, y);
   y += 5;
-  doc.text(`DNI: ${data.signerDni}`, margin, y);
-  y += 5;
-  doc.text(`Cargo: ${data.signerPosition}`, margin, y);
+  doc.text(`DNI/NIE: ${data.signerDni}`, margin, y);
   y += 5;
 
   // Signature
