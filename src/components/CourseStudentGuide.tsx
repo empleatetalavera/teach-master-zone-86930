@@ -6,13 +6,15 @@ import {
   UserCheck, ClipboardList, Lightbulb, Folder, Timer, FileDown
 } from "lucide-react";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { generateStudentGuidePDF } from "@/lib/generateStudentGuidePDF";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CourseStudentGuideProps {
   course: {
+    id?: string;
     title: string;
     description?: string;
     duration_hours?: number;
@@ -21,7 +23,6 @@ interface CourseStudentGuideProps {
     training_center_id?: string;
     support_email?: string;
     support_phone?: string;
-    // New dynamic fields
     course_code?: string | null;
     professional_family?: string | null;
     qualification_level?: number | null;
@@ -77,11 +78,56 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
     if (course.student_guide_pdf_url) {
       window.open(course.student_guide_pdf_url, '_blank');
     } else {
-      // Generate dynamic PDF if no uploaded file
+      // Fetch modules and formative units from DB for dynamic PDF
+      let modulesData: any[] = [];
+      if (course.id) {
+        const { data: mods } = await supabase
+          .from('modules')
+          .select('id, title, description, duration_minutes, objectives, order_index')
+          .eq('course_id', course.id)
+          .eq('is_active', true)
+          .order('order_index');
+        
+        if (mods && mods.length > 0) {
+          // Fetch formative units for each module
+          const moduleIds = mods.map(m => m.id);
+          const { data: ufs } = await supabase
+            .from('formative_units')
+            .select('id, module_id, title, description, duration_hours, objectives, order_index')
+            .in('module_id', moduleIds)
+            .eq('is_active', true)
+            .order('order_index');
+          
+          modulesData = mods.map(mod => ({
+            title: mod.title,
+            durationMinutes: mod.duration_minutes,
+            description: mod.description,
+            objectives: mod.objectives,
+            formativeUnits: (ufs || [])
+              .filter(uf => uf.module_id === mod.id)
+              .map(uf => ({
+                title: uf.title,
+                durationHours: uf.duration_hours,
+                objectives: uf.objectives,
+              })),
+          }));
+        }
+      }
+
       await generateStudentGuidePDF(course.title, {
         centerName: branding.centerName,
         centerLogo: branding.centerLogo,
         primaryColor: branding.primaryColor
+      }, {
+        title: course.title,
+        code: course.course_code,
+        professionalFamily: course.professional_family,
+        qualificationLevel: course.qualification_level,
+        durationHours: course.duration_hours,
+        objectives: course.objectives,
+        modules: modulesData,
+        supportEmail: course.support_email,
+        supportPhone: course.support_phone,
       });
     }
   };
