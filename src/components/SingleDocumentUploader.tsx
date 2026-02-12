@@ -57,12 +57,19 @@ export const SingleDocumentUploader: React.FC<SingleDocumentUploaderProps> = ({
         .from('course-documents')
         .getPublicUrl(storagePath);
 
-      const { error: updateError } = await supabase
+      console.log('[SingleDocumentUploader] Updating course with:', { dbField, publicUrl, courseId });
+      const { error: updateError, data: updateData, count } = await supabase
         .from('courses')
         .update({ [dbField]: publicUrl })
-        .eq('id', courseId);
+        .eq('id', courseId)
+        .select();
 
+      console.log('[SingleDocumentUploader] Update result:', { updateError, updateData, count });
       if (updateError) throw updateError;
+      if (!updateData || updateData.length === 0) {
+        console.error('[SingleDocumentUploader] Update returned no rows - likely RLS policy blocking update');
+        throw new Error('No se pudo actualizar el curso. Verifica que tienes permisos de administrador.');
+      }
 
       toast.success(`${documentLabel} subido correctamente`);
       onUpdate();
