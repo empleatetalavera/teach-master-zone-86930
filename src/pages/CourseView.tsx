@@ -2225,7 +2225,10 @@ export default function CourseView() {
 
                                               {/* Contenido Interactivo - Hidden for propio courses */}
                                               {!isPropio && (
-                                              <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                                              <div 
+                                                className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
+                                                onClick={() => openScormViewer(unit.id, unit.title)}
+                                              >
                                                 <div className="p-2 bg-primary/10 rounded">
                                                   <Layers className="h-5 w-5 text-primary" />
                                                 </div>
