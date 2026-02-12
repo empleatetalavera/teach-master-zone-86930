@@ -526,29 +526,79 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
           </div>
 
           <div className="border rounded-lg p-4">
-            <h3 className="font-semibold text-primary mb-2">5.3 Recursos Didácticos</h3>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Contenido Interactivo Multimedia (CIM) con +60 pantallas por unidad
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Material complementario: PDFs, vídeos explicativos y audios
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Actividades de aprendizaje evaluables (casos prácticos)
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Foros de debate y tutorías virtuales semanales
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Test de autoevaluación al final de cada unidad
-              </li>
-            </ul>
+            <h3 className="font-semibold text-primary mb-4">5.3 Recursos Didácticos</h3>
+            
+            {/* Tabla Alumno / Tutor-Formador */}
+            <div className="border rounded-lg overflow-hidden">
+              <div className="grid grid-cols-2">
+                <div className="bg-primary text-primary-foreground font-bold text-center py-2 text-sm border-r border-primary-foreground/20">
+                  ALUMNO
+                </div>
+                <div className="bg-primary text-primary-foreground font-bold text-center py-2 text-sm">
+                  TUTOR-FORMADOR
+                </div>
+              </div>
+              <div className="grid grid-cols-2 text-sm">
+                {/* Columna Alumno */}
+                <div className="border-r p-3 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Guía del alumno.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Guía del Contenido Interactivo Multimedia.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Guía del Campus (Ayuda).</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Contenidos Interactivos Multimedia + Ejercicios de Autoevaluación.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Actividades de aprendizaje (casos prácticos, vídeos, documentos complementarios, foros, etc.).</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Test de autoevaluación al final de cada unidad de aprendizaje (tema) y test de evaluación final de la unidad o módulo formativo.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Tutoría presencial – Cuaderno del alumno.</span>
+                  </div>
+                </div>
+                {/* Columna Tutor-Formador */}
+                <div className="p-3 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Guía del tutor-formador.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Guía del Contenido Interactivo Multimedia.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Guía del Campus (Ayuda).</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Actividades de aprendizaje (casos prácticos, vídeos, documentos complementarios, foros, etc.).</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Orientaciones metodológicas para el desarrollo de las actividades de aprendizaje.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Tutoría presencial – Cuaderno del formador.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
