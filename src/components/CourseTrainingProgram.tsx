@@ -204,12 +204,14 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
   });
 
   const handleDownloadPDF = () => {
-    if (course.training_program_pdf_url) {
-      window.open(course.training_program_pdf_url, '_blank');
-    } else {
-      // Fallback to default template
-      window.open('/documents/proyecto_formativo_ADGG0408.pdf', '_blank');
-    }
+    const url = course.training_program_pdf_url || '/documents/proyecto_formativo_ADGG0408.pdf';
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
