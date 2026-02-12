@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScormAuthorTool, ScormProject, Slide, generateScormPackage } from "@/components/scorm-author";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { getMF1442Templates } from "@/components/scorm/MF1442SlidesGenerator";
 
 interface ScormAuthorModalProps {
   open: boolean;
@@ -246,6 +247,18 @@ export function ScormAuthorModal({
     });
   };
 
+  const handleLoadTemplate = useCallback((): Slide[] | null => {
+    if (!formativeUnitId) return null;
+    const templates = getMF1442Templates();
+    const template = templates[formativeUnitId];
+    if (template) {
+      return template.generator();
+    }
+    return null;
+  }, [formativeUnitId]);
+
+  const hasTemplate = formativeUnitId ? !!getMF1442Templates()[formativeUnitId] : false;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] h-[90vh] p-0" aria-describedby={undefined}>
@@ -259,6 +272,7 @@ export function ScormAuthorModal({
           onSave={handleSave}
           onExportScorm={handleExportScorm}
           onGenerateFromPDF={handleGenerateFromPDF}
+          onLoadTemplate={hasTemplate ? handleLoadTemplate : undefined}
         />
       </DialogContent>
     </Dialog>

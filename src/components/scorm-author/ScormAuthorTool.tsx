@@ -33,7 +33,8 @@ import {
   HelpCircle,
   Video,
   Image,
-  MousePointer2
+  MousePointer2,
+  BookTemplate
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -121,6 +122,7 @@ interface ScormAuthorToolProps {
   onSave?: (project: ScormProject) => void;
   onExportScorm?: (project: ScormProject) => void;
   onGenerateFromPDF?: (file: File) => Promise<Slide[]>;
+  onLoadTemplate?: () => Slide[] | null;
 }
 
 export function ScormAuthorTool({ 
@@ -129,7 +131,8 @@ export function ScormAuthorTool({
   initialSlides = [],
   onSave,
   onExportScorm,
-  onGenerateFromPDF
+  onGenerateFromPDF,
+  onLoadTemplate
 }: ScormAuthorToolProps) {
   const { toast } = useToast();
   const [slides, setSlides] = useState<Slide[]>(initialSlides);
@@ -392,6 +395,24 @@ export function ScormAuthorTool({
           <Badge variant="secondary">{slides.length} slides</Badge>
         </div>
         <div className="flex items-center gap-2">
+          {onLoadTemplate && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                const templateSlides = onLoadTemplate();
+                if (templateSlides && templateSlides.length > 0) {
+                  setSlides(templateSlides);
+                  setSelectedSlideId(templateSlides[0].id);
+                  toast({ title: "Plantilla BOE cargada", description: `Se han cargado ${templateSlides.length} slides predefinidos` });
+                } else {
+                  toast({ title: "Sin plantilla", description: "No hay plantilla predefinida para esta unidad", variant: "destructive" });
+                }
+              }}
+              disabled={slides.length > 0}
+            >
+              <BookTemplate className="w-4 h-4 mr-2" /> Plantilla BOE
+            </Button>
+          )}
           <label className="cursor-pointer">
             <input
               type="file"
