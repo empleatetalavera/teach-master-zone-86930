@@ -1602,13 +1602,22 @@ export default function ScormProfessionalViewer({
           }));
           setSlides(dbSlides);
         } else {
-          // Fallback to generated content if no database slides exist
-          setSlides(generateComprehensiveSlides(unitTitle));
+          // No slides exist for this unit - show empty state placeholder
+          setSlides([{
+            id: 'empty-placeholder',
+            type: 'intro',
+            title: unitTitle || 'Sin contenido',
+            content: `# 📚 Contenido pendiente de generar\n\nEsta unidad formativa aún no tiene contenido interactivo generado.\n\n**Para crear el contenido:**\n1. Accede al **Modo Edición** del curso\n2. Abre el **Editor SCORM Avanzado** de esta unidad\n3. Usa la **Plantilla BOE** o genera contenido desde un **PDF**\n4. Guarda el proyecto para que aparezca aquí\n\nEl contenido se generará específicamente para esta unidad formativa del certificado.`
+          }]);
         }
       } catch (error) {
         console.error("Error loading slides from database:", error);
-        // Fallback to generated content on error
-        setSlides(generateComprehensiveSlides(unitTitle));
+        setSlides([{
+          id: 'error-placeholder',
+          type: 'intro',
+          title: unitTitle || 'Error',
+          content: `# ⚠️ Error al cargar el contenido\n\nNo se pudo cargar el contenido interactivo de esta unidad.\n\nPor favor, inténtalo de nuevo más tarde o contacta con tu tutor.`
+        }]);
       } finally {
         setLoadingSlides(false);
       }
