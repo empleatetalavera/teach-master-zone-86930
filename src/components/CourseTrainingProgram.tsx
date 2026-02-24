@@ -206,18 +206,25 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
   });
 
   const handleDownloadPDF = () => {
-    if (course.training_program_pdf_url) {
-      const link = document.createElement('a');
-      link.href = course.training_program_pdf_url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      // Print the current page as PDF
-      window.print();
-    }
+    generateProyectoFormativoPDF({
+      courseTitle: course.title,
+      courseCode: course.course_code || "SSC_C_017_5B",
+      durationHours: course.duration_hours || 0,
+      startDate: course.start_date,
+      endDate: course.end_date,
+      objectives: course.objectives,
+      professionalFamily: course.professional_family || course.category || "Servicios Socioculturales y a la Comunidad",
+      qualificationLevel: course.qualification_level,
+      modules: modules,
+      centerName: datosDelCentro.nombre,
+      centerPhone: centerContact?.phone,
+      centerEmail: centerContact?.email,
+      centerAddress: datosDelCentro.direccion,
+      centerCity: datosDelCentro.localidad,
+      centerProvince: datosDelCentro.provincia,
+      centerPostalCode: datosDelCentro.codigoPostal,
+      centerCif: datosDelCentro.cif,
+    });
   };
 
   return (
