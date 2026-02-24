@@ -110,7 +110,7 @@ const AdminUsers = () => {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserFullName, setNewUserFullName] = useState("");
-  const [newUserRole, setNewUserRole] = useState<"admin" | "teacher" | "student">("student");
+  const [newUserRole, setNewUserRole] = useState<"admin" | "teacher" | "student" | "auditor" | "inspector">("student");
   const [newUserTrainingCenter, setNewUserTrainingCenter] = useState<string>("");
   const [trainingCenters, setTrainingCenters] = useState<Array<{ id: string; name: string }>>([]);
   
@@ -956,6 +956,8 @@ const AdminUsers = () => {
                 <SelectContent>
                   <SelectItem value="student">Alumno</SelectItem>
                   <SelectItem value="teacher">Profesor</SelectItem>
+                  <SelectItem value="auditor">Auditor</SelectItem>
+                  <SelectItem value="inspector">Inspector</SelectItem>
                   {isSuperAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                 </SelectContent>
               </Select>
