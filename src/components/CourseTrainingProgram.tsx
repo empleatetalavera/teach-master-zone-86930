@@ -870,19 +870,6 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         </div>
       </section>
 
-      {/* Section 12: Documentación Anexos - Dynamic Upload */}
-      {course.id && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <FileText className="h-6 w-6 text-primary" />
-            </div>
-            <h2 className="text-xl font-bold">12. Documentación Oficial - Anexos III, IV y V</h2>
-          </div>
-          <CourseAnnexesUploader courseId={course.id} isEditable={isEditable} />
-        </section>
-      )}
-
       {/* ANEXO I: Calendario y Plan de Trabajo - Descarga PDF */}
       <section className="space-y-4">
         <div className="flex items-center gap-3 mb-4">
