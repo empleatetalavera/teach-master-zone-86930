@@ -141,7 +141,20 @@ export const SingleDocumentUploader: React.FC<SingleDocumentUploaderProps> = ({
             variant="ghost"
             size="icon"
             className="h-7 w-7"
-            onClick={() => window.open(documentUrl, '_blank')}
+            onClick={async () => {
+              try {
+                const response = await fetch(documentUrl!);
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+              } catch { window.open(documentUrl!, '_blank'); }
+            }}
           >
             <ExternalLink className="h-3.5 w-3.5" />
           </Button>
