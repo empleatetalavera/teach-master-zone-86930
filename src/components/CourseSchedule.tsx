@@ -211,11 +211,11 @@ export function CourseSchedule({ courseTitle, courseStartDate, courseEndDate, mo
                       </div>
 
                       {/* Module info */}
-                      <div className="flex-1 text-left">
-                        <div className="flex items-center gap-2 mb-1">
-                          <BookOpen className="h-4 w-4 text-primary" />
-                          <span className="font-medium">{module.title}</span>
-                          {getStatusBadge(status)}
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="flex items-start gap-2 mb-1">
+                          <BookOpen className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          <span className="font-medium break-words line-clamp-2">{module.title}</span>
+                          <span className="shrink-0">{getStatusBadge(status)}</span>
                         </div>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
                           {module.start_date && (
@@ -259,10 +259,10 @@ export function CourseSchedule({ courseTitle, courseStartDate, courseEndDate, mo
                                 unitStatus === 'active' ? 'border-primary/50 bg-primary/5' : 'bg-muted/30'
                               }`}
                             >
-                              <div className="flex items-center gap-2 mb-1">
-                                <ListChecks className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-sm font-medium">UF{unitIndex + 1}: {unit.title}</span>
-                                {getStatusBadge(unitStatus)}
+                              <div className="flex items-start gap-2 mb-1">
+                                <ListChecks className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                                <span className="text-sm font-medium break-words line-clamp-2">UF{unitIndex + 1}: {unit.title}</span>
+                                <span className="shrink-0">{getStatusBadge(unitStatus)}</span>
                               </div>
                               <div className="flex items-center gap-3 text-xs text-muted-foreground ml-5">
                                 {unit.start_date && (
