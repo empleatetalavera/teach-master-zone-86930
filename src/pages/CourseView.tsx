@@ -64,6 +64,7 @@ import { CourseCertificateDownload } from "@/components/CourseCertificateDownloa
 import { SEPECertificateUploader } from "@/components/SEPECertificateUploader";
 import { SEPECertificateStudentView } from "@/components/SEPECertificateStudentView";
 import { SEPEFormacionCampus } from "@/components/campus/SEPEFormacionCampus";
+import TeacherTutorGuide from "@/pages/dashboard/TeacherTutorGuide";
 
 interface Course {
   id: string;
@@ -1517,97 +1518,9 @@ export default function CourseView() {
             )}
           </TabsContent>
 
-          {/* Tutor Guide Tab - Only for teachers */}
+          {/* Tutor Guide Tab - For teachers and admins */}
           <TabsContent value="tutor-guide" className="space-y-4">
-            {/* CIM Navigation Guide Download Card */}
-            <Card className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-900/20 dark:to-teal-900/20 border-blue-200 dark:border-blue-800">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <MonitorPlay className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm">Guía de Navegación del CIM</h4>
-                      <p className="text-xs text-muted-foreground">Manual de uso del Contenido Interactivo Multimedia</p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="shrink-0"
-                    onClick={async () => {
-                      const { generateCIMNavigationGuidePDF } = await import('@/lib/generateCIMNavigationGuidePDF');
-                      await generateCIMNavigationGuidePDF({
-                        centerName: centerName || 'Centro de Formación',
-                        contactEmail: centerContact.email || course.support_email || '',
-                        contactPhone: centerContact.phone || course.support_phone || '',
-                      });
-                    }}
-                  >
-                    <FileDown className="h-4 w-4 mr-2" />
-                    Descargar PDF
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <SingleDocumentUploader
-              courseId={courseId || ''}
-              documentUrl={course.tutor_guide_pdf_url}
-              documentType="tutor-guide"
-              onUpdate={loadCourseData}
-              isAdmin={true}
-            />
-            
-            {course.tutor_guide_pdf_url ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookMarked className="h-5 w-5 text-primary" />
-                    Guía del Tutor (PDF)
-                  </CardTitle>
-                  <CardDescription>Documento oficial de la guía del tutor-formador para este curso</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <FileText className="h-16 w-16 text-primary mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">Guía del Tutor Disponible</h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Documento PDF con toda la información para el tutor-formador
-                    </p>
-                  </div>
-                  <Button asChild className="w-full">
-                    <a 
-                      href={course.tutor_guide_pdf_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      <FileDown className="h-4 w-4" />
-                      Descargar Guía del Tutor (PDF)
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookMarked className="h-5 w-5 text-primary" />
-                    Guía del Tutor-Formador
-                  </CardTitle>
-                  <CardDescription>Sube el documento oficial de la guía del tutor para este certificado profesional</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                    <FileText className="h-12 w-12 mb-4 opacity-50" />
-                    <p className="text-sm">No hay guía del tutor subida todavía.</p>
-                    <p className="text-xs mt-2">Utiliza el panel de arriba para subir el PDF.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <TeacherTutorGuide />
           </TabsContent>
 
 
