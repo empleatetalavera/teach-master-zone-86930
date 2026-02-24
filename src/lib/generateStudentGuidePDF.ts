@@ -5,6 +5,11 @@ interface CenterBranding {
   centerName: string;
   centerLogo?: string;
   primaryColor?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  cif?: string;
+  sepeRegistryNumber?: string;
 }
 
 interface ModuleData {
@@ -59,8 +64,11 @@ export const generateStudentGuidePDF = async (
   const totalHours = courseData?.durationHours || 0;
   const courseObjectives = courseData?.objectives || "Con este curso aprenderás a desarrollar las competencias profesionales necesarias para el desempeño de las funciones propias de la ocupación relacionada con el certificado de profesionalidad.";
   const modules = courseData?.modules || [];
-  const supportEmail = courseData?.supportEmail || "soporte@campus.es";
-  const supportPhone = courseData?.supportPhone || "";
+  const supportEmail = branding.contactEmail || courseData?.supportEmail || "soporte@campus.es";
+  const supportPhone = branding.contactPhone || courseData?.supportPhone || "";
+  const centerAddress = branding.address || "";
+  const centerCIF = branding.cif || "";
+  const centerSepeReg = branding.sepeRegistryNumber || "";
 
   // Helper para añadir nueva página
   const addNewPage = () => {
@@ -244,7 +252,420 @@ export const generateStudentGuidePDF = async (
     yPos += 5;
   };
 
-  // ===== DYNAMIC TABLE GENERATORS =====
+  // ===== CAMPUS SCREENSHOT DIAGRAMS =====
+  
+  const BLUE_ACCENT: [number, number, number] = [59, 130, 246];
+  const LIGHT_BLUE: [number, number, number] = [219, 234, 254];
+  const SIDEBAR_BG: [number, number, number] = [243, 244, 246];
+  
+  /** Draw an annotated diagram of the main campus view (Inicio tab) */
+  const drawCampusDiagramInicio = () => {
+    checkPageBreak(130);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BLACK);
+    doc.text('Figura 1: Pantalla principal del Campus Virtual - Pestaña INICIO', margin, yPos);
+    yPos += 5;
+    
+    const diagX = margin;
+    const diagY = yPos;
+    const diagW = contentWidth;
+    const diagH = 110;
+    
+    // Outer border
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.5);
+    doc.rect(diagX, diagY, diagW, diagH);
+    
+    // Header bar
+    doc.setFillColor(...BLUE_ACCENT);
+    doc.rect(diagX, diagY, diagW, 10, 'F');
+    doc.setFontSize(8);
+    doc.setTextColor(...WHITE);
+    doc.setFont('helvetica', 'bold');
+    doc.text('← Volver', diagX + 3, diagY + 6);
+    doc.text(branding.centerName, diagX + diagW / 2, diagY + 6, { align: 'center' });
+    
+    // Course title area
+    doc.setFillColor(245, 245, 245);
+    doc.rect(diagX, diagY + 10, diagW, 15, 'F');
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text(courseTitle.substring(0, 80), diagX + 5, diagY + 18);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.text(`${totalHours} horas  |  ${modules.length} módulos  |  0% completado`, diagX + 5, diagY + 23);
+    
+    // Top tabs
+    const tabY = diagY + 25;
+    doc.setFillColor(...WHITE);
+    doc.rect(diagX, tabY, diagW, 8, 'F');
+    doc.setDrawColor(200, 200, 200);
+    doc.line(diagX, tabY + 8, diagX + diagW, tabY + 8);
+    doc.setFontSize(6);
+    doc.setTextColor(...BLUE_ACCENT);
+    const tabs = ['Mis Cursos', 'Mensajes', 'CAU', 'WhatsApp', 'Contacto', 'Gestor Calidad'];
+    tabs.forEach((tab, i) => {
+      doc.text(tab, diagX + 5 + i * 28, tabY + 5);
+    });
+    
+    // Left sidebar
+    const sideW = 38;
+    const contentY = tabY + 8;
+    const contentH = diagH - (contentY - diagY);
+    doc.setFillColor(...SIDEBAR_BG);
+    doc.rect(diagX, contentY, sideW, contentH, 'F');
+    
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(6);
+    const menuItems = ['► Inicio', '  Guía del Alumno', '  Programa Formativo', '  Plan de Trabajo', '  Cronograma', '  Formación en Campus', '  Calificaciones', '  Exámenes', '  Tutorías', '  Calendario', '  Foro', '  Glosario'];
+    menuItems.forEach((item, i) => {
+      if (i === 0) {
+        doc.setFillColor(...BLUE_ACCENT);
+        doc.rect(diagX, contentY + i * 5, sideW, 5, 'F');
+        doc.setTextColor(...WHITE);
+      } else {
+        doc.setTextColor(80, 80, 80);
+      }
+      doc.text(item, diagX + 3, contentY + 3.5 + i * 5);
+    });
+    
+    // Center content area
+    const centerX = diagX + sideW + 2;
+    const centerW = diagW - sideW - 45;
+    doc.setFillColor(...WHITE);
+    doc.rect(centerX, contentY, centerW, contentH, 'F');
+    
+    doc.setTextColor(...BLUE_ACCENT);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Centro de Ayuda', centerX + 5, contentY + 8);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Recursos y guías para usar la plataforma', centerX + 5, contentY + 13);
+    
+    // Resource boxes
+    const boxW = (centerW - 15) / 3;
+    ['Guía Campus', 'Video Tutorial', 'Soporte Técnico'].forEach((label, i) => {
+      const bx = centerX + 5 + i * (boxW + 2);
+      doc.setDrawColor(200, 200, 200);
+      doc.rect(bx, contentY + 17, boxW, 12);
+      doc.setTextColor(...BLUE_ACCENT);
+      doc.setFontSize(5);
+      doc.text(label, bx + 2, contentY + 24);
+    });
+    
+    // FAQs section
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Preguntas Frecuentes (FAQs)', centerX + 5, contentY + 35);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(5);
+    ['¿Cómo accedo al contenido?', '¿Dónde veo mi progreso?', '¿Cómo contacto con mi tutor?', '¿Cómo envío una actividad?'].forEach((q, i) => {
+      doc.text(`${i+1}. ${q}`, centerX + 8, contentY + 41 + i * 4);
+    });
+    
+    // Right sidebar
+    const rightX = diagX + diagW - 42;
+    doc.setFillColor(248, 248, 248);
+    doc.rect(rightX, contentY, 42, contentH, 'F');
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Tu Tutor', rightX + 3, contentY + 8);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(5);
+    doc.text('Tutor del curso', rightX + 3, contentY + 14);
+    doc.text('Mi Perfil', rightX + 3, contentY + 25);
+    doc.setFontSize(4.5);
+    doc.text('Datos personales y', rightX + 3, contentY + 30);
+    doc.text('documentación', rightX + 3, contentY + 34);
+    
+    // Annotations with arrows
+    doc.setTextColor(200, 0, 0);
+    doc.setFontSize(5.5);
+    doc.setFont('helvetica', 'bold');
+    
+    yPos = diagY + diagH + 5;
+    
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('En la imagen se muestra la pantalla principal del Campus Virtual con el menú lateral, el área', margin, yPos);
+    yPos += 4;
+    doc.text('central de contenido y la barra lateral derecha con información del tutor y perfil.', margin, yPos);
+    yPos += 10;
+  };
+  
+  /** Draw annotated diagram of Formación en Campus */
+  const drawCampusDiagramFormacion = () => {
+    checkPageBreak(100);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BLACK);
+    doc.text('Figura 2: Sección "Formación en Campus" - Módulos Formativos', margin, yPos);
+    yPos += 5;
+    
+    const diagX = margin;
+    const diagY = yPos;
+    const diagW = contentWidth;
+    const diagH = 80;
+    
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.5);
+    doc.rect(diagX, diagY, diagW, diagH);
+    
+    // Header
+    doc.setFillColor(...BLUE_ACCENT);
+    doc.rect(diagX, diagY, diagW, 8, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(7);
+    doc.text('Formación en Campus — Módulos Formativos', diagX + diagW / 2, diagY + 5, { align: 'center' });
+    
+    // Info box
+    doc.setFillColor(255, 251, 235);
+    doc.rect(diagX + 5, diagY + 12, diagW - 10, 8, 'F');
+    doc.setTextColor(180, 120, 0);
+    doc.setFontSize(5.5);
+    doc.text('Cada módulo incluye: contenido interactivo, manual PDF, actividad de desarrollo y test final. Nota mínima: 50%.', diagX + 8, diagY + 17);
+    
+    // Module cards
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(6);
+    const displayModules = modules.slice(0, 4);
+    displayModules.forEach((mod, i) => {
+      const cardY = diagY + 24 + i * 13;
+      doc.setDrawColor(200, 200, 200);
+      doc.rect(diagX + 10, cardY, diagW - 20, 11);
+      
+      // Progress circle
+      doc.setFillColor(220, 220, 220);
+      doc.circle(diagX + 16, cardY + 5.5, 3, 'F');
+      doc.setTextColor(150, 150, 150);
+      doc.setFontSize(4);
+      doc.text('0%', diagX + 14.5, cardY + 6.5);
+      
+      // Module badge
+      doc.setFillColor(...BLUE_ACCENT);
+      doc.roundedRect(diagX + 22, cardY + 1.5, 10, 4, 1, 1, 'F');
+      doc.setTextColor(...WHITE);
+      doc.setFontSize(4.5);
+      doc.text(`MF ${i + 1}`, diagX + 24, cardY + 4.2);
+      
+      // Module title
+      doc.setTextColor(...BLACK);
+      doc.setFontSize(5.5);
+      doc.setFont('helvetica', 'bold');
+      doc.text(mod.title.substring(0, 85), diagX + 35, cardY + 5);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(5);
+      const modHours = mod.durationMinutes ? Math.round(mod.durationMinutes / 60) : 0;
+      doc.setTextColor(100, 100, 100);
+      doc.text(`${modHours}h  |  UFs  |  Tests  |  Actividades`, diagX + 35, cardY + 9);
+    });
+    
+    yPos = diagY + diagH + 5;
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Cada módulo muestra su progreso, horas, unidades formativas, tests y actividades disponibles.', margin, yPos);
+    yPos += 10;
+  };
+  
+  /** Draw annotated diagram of Calificaciones */
+  const drawCampusDiagramCalificaciones = () => {
+    checkPageBreak(90);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BLACK);
+    doc.text('Figura 3: Sección "Calificaciones" - Progresos y Calificaciones', margin, yPos);
+    yPos += 5;
+    
+    const diagX = margin;
+    const diagY = yPos;
+    const diagW = contentWidth;
+    const diagH = 65;
+    
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.5);
+    doc.rect(diagX, diagY, diagW, diagH);
+    
+    // Header with icon
+    doc.setFillColor(255, 200, 0);
+    doc.circle(diagX + 15, diagY + 12, 5, 'F');
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PROGRESOS Y CALIFICACIONES', diagX + 25, diagY + 10);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.text('En este módulo podrá realizar el seguimiento de todos los progresos y evaluaciones.', diagX + 25, diagY + 15);
+    
+    // Selectors
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(diagX + 10, diagY + 22, 65, 7);
+    doc.rect(diagX + 80, diagY + 22, 65, 7);
+    doc.setFontSize(5);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Módulo: Seleccionar...', diagX + 12, diagY + 27);
+    doc.text('Unidad formativa: Seleccionar...', diagX + 82, diagY + 27);
+    
+    // Grades table
+    doc.setFillColor(60, 60, 60);
+    doc.rect(diagX + 10, diagY + 33, diagW - 20, 6, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(5.5);
+    doc.text('CALIFICACIÓN FORMACIÓN EN CAMPUS', diagX + 15, diagY + 37);
+    
+    const gradeItems = ['Mis Accesos', 'Contenidos interactivos', 'Ejercicios y tareas', 'Participación en foros'];
+    gradeItems.forEach((item, i) => {
+      const gy = diagY + 39 + i * 5;
+      doc.setFillColor(i % 2 === 0 ? 255 : 248, i % 2 === 0 ? 255 : 248, i % 2 === 0 ? 255 : 248);
+      doc.rect(diagX + 10, gy, diagW - 20, 5, 'F');
+      doc.setTextColor(...TEAL_COLOR);
+      doc.setFontSize(5);
+      doc.text(item, diagX + 15, gy + 3.5);
+      doc.text('--', diagX + diagW - 35, gy + 3.5);
+    });
+    
+    yPos = diagY + diagH + 5;
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('La sección de calificaciones te permite consultar tus progresos por módulo y unidad formativa.', margin, yPos);
+    yPos += 10;
+  };
+  
+  /** Draw annotated diagram of Foro */
+  const drawCampusDiagramForo = () => {
+    checkPageBreak(75);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BLACK);
+    doc.text('Figura 4: Sección "Foro" - Foros del Curso', margin, yPos);
+    yPos += 5;
+    
+    const diagX = margin;
+    const diagY = yPos;
+    const diagW = contentWidth;
+    const diagH = 50;
+    
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.5);
+    doc.rect(diagX, diagY, diagW, diagH);
+    
+    // Title
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Foros del Curso', diagX + 10, diagY + 10);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.text('El tutor responderá en un máximo de 48 horas. Participación obligatoria.', diagX + 10, diagY + 16);
+    
+    // Tabs
+    const tabTypes = ['Formativo', 'Ayuda Técnica', 'Administrativo'];
+    tabTypes.forEach((t, i) => {
+      const tx = diagX + 10 + i * 50;
+      doc.setDrawColor(...BLUE_ACCENT);
+      if (i === 0) {
+        doc.setFillColor(...LIGHT_BLUE);
+        doc.rect(tx, diagY + 20, 45, 6, 'FD');
+      } else {
+        doc.rect(tx, diagY + 20, 45, 6);
+      }
+      doc.setTextColor(i === 0 ? BLUE_ACCENT[0] : 100, i === 0 ? BLUE_ACCENT[1] : 100, i === 0 ? BLUE_ACCENT[2] : 100);
+      doc.setFontSize(5);
+      doc.text(t, tx + 5, diagY + 24);
+    });
+    
+    // Info box
+    doc.setFillColor(239, 246, 255);
+    doc.rect(diagX + 10, diagY + 30, diagW - 20, 8, 'F');
+    doc.setTextColor(...BLUE_ACCENT);
+    doc.setFontSize(5);
+    doc.text('Foro de participación formativa: Pregunta, aclara, debate y reflexiona sobre los temas del curso.', diagX + 13, diagY + 35);
+    
+    // New topic button
+    doc.setFillColor(...BLUE_ACCENT);
+    doc.roundedRect(diagX + diagW - 45, diagY + 40, 30, 6, 1, 1, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(5);
+    doc.text('+ Nuevo tema', diagX + diagW - 42, diagY + 44);
+    
+    yPos = diagY + diagH + 5;
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Los foros se organizan en tres categorías: Formativo, Ayuda Técnica y Administrativo.', margin, yPos);
+    yPos += 10;
+  };
+  
+  /** Draw annotated diagram of Exámenes */
+  const drawCampusDiagramExamenes = () => {
+    checkPageBreak(75);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...BLACK);
+    doc.text('Figura 5: Sección "Exámenes" - Evaluaciones', margin, yPos);
+    yPos += 5;
+    
+    const diagX = margin;
+    const diagY = yPos;
+    const diagW = contentWidth;
+    const diagH = 55;
+    
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.5);
+    doc.rect(diagX, diagY, diagW, diagH);
+    
+    // Header
+    doc.setFillColor(...BLUE_ACCENT);
+    doc.rect(diagX + 5, diagY + 5, diagW - 10, 8, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EVALUACIÓN', diagX + 10, diagY + 10);
+    
+    // Test items
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(5.5);
+    const testNames = [
+      'UD 1. Estructura de la Formación Profesional - Test Final',
+      'UD 2. Certificados de profesionalidad - Test Final',
+      'UD 3. Elaboración de la programación didáctica - Test Final',
+    ];
+    testNames.forEach((test, i) => {
+      const ty = diagY + 17 + i * 8;
+      doc.setFillColor(i % 2 === 0 ? 255 : 248, 255, i % 2 === 0 ? 255 : 248);
+      doc.rect(diagX + 5, ty, diagW - 10, 7, 'F');
+      doc.setTextColor(...BLACK);
+      doc.text(test, diagX + 20, ty + 4.5);
+      // Check icon
+      doc.setFillColor(34, 197, 94);
+      doc.circle(diagX + diagW - 15, ty + 3.5, 2.5, 'F');
+      doc.setTextColor(...WHITE);
+      doc.setFontSize(4);
+      doc.text('✓', diagX + diagW - 16.5, ty + 4.5);
+      doc.setFontSize(5.5);
+    });
+    
+    yPos = diagY + diagH + 5;
+    doc.setTextColor(...BLACK);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Los exámenes están organizados por unidad formativa. Un tick verde indica que está disponible.', margin, yPos);
+    yPos += 10;
+  };
+  
 
   // Tabla de identificación dinámica
   const addIdentificationTable = () => {
@@ -552,6 +973,15 @@ export const generateStudentGuidePDF = async (
   });
   yPos = (doc as any).lastAutoTable.finalY + 10;
   
+  // INSERT CAMPUS DIAGRAMS
+  addParagraph('A continuación se muestran capturas de las principales secciones del Campus Virtual:');
+  yPos += 5;
+  drawCampusDiagramInicio();
+  drawCampusDiagramFormacion();
+  drawCampusDiagramCalificaciones();
+  drawCampusDiagramForo();
+  drawCampusDiagramExamenes();
+  
   addParagraph('Dispones de tres áreas diferenciadas para organizar tu formación:');
   yPos += 8;
   
@@ -762,7 +1192,12 @@ export const generateStudentGuidePDF = async (
   
   addInfoBox('DIRECCIÓN DEL CENTRO DE FORMACIÓN');
   yPos -= 5;
-  addParagraph(`Consulta con tu centro de formación (${branding.centerName}) la dirección exacta para las sesiones presenciales.`);
+  if (centerAddress) {
+    addParagraph(`${branding.centerName}`);
+    addParagraph(centerAddress);
+  } else {
+    addParagraph(`Consulta con tu centro de formación (${branding.centerName}) la dirección exacta para las sesiones presenciales.`);
+  }
   yPos += 10;
   
   // SECCIÓN 5: METODOLOGÍA
@@ -871,19 +1306,49 @@ export const generateStudentGuidePDF = async (
   addParagraph('En todo momento podrás visualizar qué apartados has visto o cuáles te quedan por ver gracias al índice de la izquierda.');
   yPos += 10;
   
+  // SECCIÓN 5.2: TIEMPO DE DEDICACIÓN
+  addSubsectionTitle('5.2', 'TIEMPO DE DEDICACIÓN');
+  addParagraph('Para desarrollar tu curso correctamente debes dedicar un tiempo cada día al estudio de los contenidos y la realización de las actividades de aprendizaje.');
+  yPos += 3;
+  addParagraph('Es fundamental que mantengas una disciplina de estudio constante para poder cumplir con los plazos establecidos y aprovechar al máximo la formación.');
+  yPos += 3;
+  addParagraph(`La duración total del curso es de ${totalHours} horas. Tu tutor/a-formador/a te orientará sobre el tiempo recomendado de dedicación diaria según el módulo formativo o unidad formativa que estés cursando.`);
+  yPos += 3;
+  addParagraph('IMPORTANTE: El Campus Virtual registra tu tiempo de dedicación. Puedes consultar tu tiempo invertido en la sección "Tiempos Invertidos" del menú lateral.');
+  yPos += 10;
+
   // SECCIÓN 6: SISTEMA DE TUTORÍAS
   addMainSectionTitle('6', 'SISTEMA DE TUTORÍAS');
-  addParagraph('A lo largo del curso contarás con el apoyo de un tutor/a-formador/a que te acompañará durante todo el proceso formativo. Podrás comunicarte a través de:');
-  yPos += 3;
-  addBulletList([
-    'Correo electrónico interno del Campus Virtual',
-    'Foros de consulta y debate',
-    'Tutorías virtuales por chat/videollamada',
-    'Sesiones presenciales programadas',
-  ]);
-  
+  addParagraph('A lo largo del curso contarás con el apoyo de un tutor/a-formador/a que te acompañará durante todo el proceso formativo.');
   yPos += 5;
-  const horarioText = `HORARIO DE ATENCIÓN TUTORIAL:\nLunes a Viernes de 09:00 a 15:00 horas${supportPhone ? `\nTeléfono CAU: ${supportPhone}` : ''}${supportEmail ? `\nEmail: ${supportEmail}` : ''}`;
+  
+  addSubsectionTitle('6.1', 'TUTORÍAS VIRTUALES');
+  addParagraph('Las tutorías virtuales son sesiones en directo con tu tutor-formador a través del Campus Virtual.');
+  yPos += 3;
+  addParagraph('Tipos de tutorías virtuales:');
+  addBulletList([
+    'Tutorías grupales: Sesiones programadas con todo el grupo de alumnos a través del chat o videollamada.',
+    'Tutorías individuales: Puedes solicitarlas a través del correo electrónico del Campus o el botón "Contacto".',
+  ]);
+  addParagraph('En estas sesiones podrás plantear tus dudas, repasar contenidos y recibir orientación sobre la prueba de evaluación final.');
+  yPos += 3;
+  addParagraph('Tu tutor-formador te informará con antelación de las fechas y horarios de las tutorías programadas.');
+  yPos += 5;
+  
+  addSubsectionTitle('6.2', 'TUTORÍAS PRESENCIALES');
+  addParagraph('Las tutorías presenciales se desarrollan en el Centro de Formación según el calendario establecido en el Plan de Trabajo.');
+  yPos += 3;
+  addParagraph('En estas sesiones:');
+  addBulletList([
+    'Se desarrollarán actividades de aprendizaje prácticas',
+    'Se realizarán pruebas de evaluación presencial',
+    'Contarás con un formador que te guiará en el desarrollo de las actividades',
+    'Se trabajarán los conocimientos adquiridos en la plataforma',
+  ]);
+  addParagraph('Toda la información relativa a las tutorías presenciales la encontrarás en el apartado "Tutorías" del Campus, el Cuaderno del Alumno y a través de comunicaciones de tu tutor-formador.');
+
+  yPos += 5;
+  const horarioText = `HORARIO DE ATENCIÓN TUTORIAL:\nLunes a Viernes de 09:00 a 15:00 horas${supportPhone ? `\nTeléfono: ${supportPhone}` : ''}${supportEmail ? `\nEmail: ${supportEmail}` : ''}`;
   addInfoBox(horarioText);
   
   // SECCIÓN 7: EVALUACIÓN
@@ -973,13 +1438,19 @@ export const generateStudentGuidePDF = async (
   
   yPos += 5;
   
+  const centerData: string[][] = [
+    [branding.centerName],
+  ];
+  if (centerCIF) centerData.push([`CIF: ${centerCIF}`]);
+  if (centerSepeReg) centerData.push([`Nº Registro SEPE: ${centerSepeReg}`]);
+  if (centerAddress) centerData.push([centerAddress]);
+  if (supportPhone) centerData.push([`Teléfono: ${supportPhone}`]);
+  if (supportEmail) centerData.push([`Email: ${supportEmail}`]);
+  
   autoTable(doc, {
     startY: yPos,
-    head: [['DATOS DEL CENTRO']],
-    body: [
-      [branding.centerName],
-      ['Centro Acreditado SEPE'],
-    ],
+    head: [['DATOS DEL CENTRO DE FORMACIÓN']],
+    body: centerData,
     margin: { left: margin + 20, right: margin + 20 },
     headStyles: { fillColor: TEAL_COLOR, textColor: WHITE, fontSize: 10, fontStyle: 'bold', halign: 'center' },
     bodyStyles: { fontSize: 10, textColor: BLACK, halign: 'center' },

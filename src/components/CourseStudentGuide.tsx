@@ -132,10 +132,37 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
         }
       }
 
+      // Load center contact data
+      let contactEmail = '';
+      let contactPhone = '';
+      let centerAddress = '';
+      let centerCIF = '';
+      let centerSepeReg = '';
+      
+      if (course.training_center_id) {
+        const { data: center } = await supabase
+          .from('training_centers')
+          .select('contact_email, contact_phone, address, cif, sepe_registry_number')
+          .eq('id', course.training_center_id)
+          .maybeSingle();
+        if (center) {
+          contactEmail = center.contact_email || '';
+          contactPhone = center.contact_phone || '';
+          centerAddress = center.address || '';
+          centerCIF = center.cif || '';
+          centerSepeReg = center.sepe_registry_number || '';
+        }
+      }
+
       await generateStudentGuidePDF(course.title, {
         centerName: branding.centerName,
         centerLogo: branding.centerLogo,
-        primaryColor: branding.primaryColor
+        primaryColor: branding.primaryColor,
+        contactEmail: contactEmail || course.support_email || '',
+        contactPhone: contactPhone || course.support_phone || '',
+        address: centerAddress,
+        cif: centerCIF,
+        sepeRegistryNumber: centerSepeReg,
       }, {
         title: course.title,
         code: course.course_code,
@@ -144,8 +171,8 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
         durationHours: course.duration_hours,
         objectives: course.objectives,
         modules: modulesData,
-        supportEmail: course.support_email,
-        supportPhone: course.support_phone,
+        supportEmail: contactEmail || course.support_email,
+        supportPhone: contactPhone || course.support_phone,
       });
     }
   };
