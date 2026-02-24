@@ -1468,14 +1468,23 @@ export default function CourseView() {
                   </div>
                   <Button 
                     className="w-full flex items-center gap-2"
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = course.student_guide_pdf_url!;
-                      link.target = '_blank';
-                      link.rel = 'noopener noreferrer';
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(course.student_guide_pdf_url!);
+                        const blob = await response.blob();
+                        const blobUrl = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                      } catch (err) {
+                        console.error('Error opening PDF:', err);
+                        window.open(course.student_guide_pdf_url!, '_blank');
+                      }
                     }}
                   >
                     <FileDown className="h-4 w-4" />
