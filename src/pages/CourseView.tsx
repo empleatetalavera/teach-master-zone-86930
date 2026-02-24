@@ -947,14 +947,23 @@ export default function CourseView() {
                     Inicio
                   </button>
                   {showSEPEFeatures && (
-                    userRole === 'teacher' ? (
-                      <button
-                        onClick={() => setActiveTab("tutor-guide")}
-                        className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutor-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                      >
-                        <BookMarked className="h-4 w-4" />
-                        Guía del Tutor
-                      </button>
+                    (userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') ? (
+                      <>
+                        <button
+                          onClick={() => setActiveTab("tutor-guide")}
+                          className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutor-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                        >
+                          <BookMarked className="h-4 w-4" />
+                          Guía del Tutor
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("student-guide")}
+                          className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "student-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                        >
+                          <BookMarked className="h-4 w-4" />
+                          Guía del Alumno
+                        </button>
+                      </>
                     ) : (
                       <button
                         onClick={() => setActiveTab("student-guide")}
@@ -1113,8 +1122,11 @@ export default function CourseView() {
                 <TabsList className="w-max min-w-full flex h-auto p-1 gap-1">
                   <TabsTrigger value="intro" className="text-xs px-2 py-1.5">Inicio</TabsTrigger>
                   {showSEPEFeatures && (
-                    userRole === 'teacher' ? (
-                      <TabsTrigger value="tutor-guide" className="text-xs px-2 py-1.5">Guía Tutor</TabsTrigger>
+                    (userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') ? (
+                      <>
+                        <TabsTrigger value="tutor-guide" className="text-xs px-2 py-1.5">Guía Tutor</TabsTrigger>
+                        <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
+                      </>
                     ) : (
                       <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
                     )
@@ -1652,49 +1664,17 @@ export default function CourseView() {
               </Card>
             )}
 
-            {course.training_program_pdf_url ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5 text-primary" />
-                    Programa Formativo (PDF)
-                  </CardTitle>
-                  <CardDescription>Documento oficial del programa formativo para este curso</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <FileText className="h-16 w-16 text-primary mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">Programa Formativo Disponible</h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Documento PDF con la programación didáctica del curso
-                    </p>
-                  </div>
-                  <Button asChild className="w-full">
-                    <a 
-                      href={course.training_program_pdf_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      <FileDown className="h-4 w-4" />
-                      Descargar Programa Formativo (PDF)
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="p-6">
-                  <CourseTrainingProgram 
-                    course={course} 
-                    modules={modules}
-                    centerSlug={centerSlug}
-                    centerContact={centerContact}
-                    isEditable={userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin'}
-                  />
-                </CardContent>
-              </Card>
-            )}
+            <Card>
+              <CardContent className="p-6">
+                <CourseTrainingProgram 
+                  course={course} 
+                  modules={modules}
+                  centerSlug={centerSlug}
+                  centerContact={centerContact}
+                  isEditable={userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin'}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* CFC Course Program - simplified version */}
