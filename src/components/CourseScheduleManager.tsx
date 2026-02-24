@@ -248,11 +248,11 @@ export default function CourseScheduleManager({ courseId }: CourseScheduleManage
           {modules.map((module, moduleIndex) => (
             <AccordionItem key={module.id} value={module.id}>
               <AccordionTrigger className="hover:no-underline">
-                <div className="flex items-center gap-3 flex-1 text-left">
+                <div className="flex items-center gap-3 flex-1 min-w-0 text-left">
                   <Badge variant="outline" className="shrink-0">
                     M{moduleIndex + 1}
                   </Badge>
-                  <span className="font-medium truncate">{module.title}</span>
+                  <span className="font-medium flex-1 min-w-0 whitespace-normal break-words">{module.title}</span>
                   {module.start_date && module.end_date && (
                     <span className="text-xs text-muted-foreground ml-auto mr-4">
                       {format(new Date(module.start_date), "dd/MM")} - {format(new Date(module.end_date), "dd/MM")}
@@ -292,7 +292,7 @@ export default function CourseScheduleManager({ courseId }: CourseScheduleManage
                           <Badge variant="secondary" className="shrink-0 text-xs">
                             UF{unitIndex + 1}
                           </Badge>
-                          <span className="text-sm truncate flex-1 max-w-[200px]">
+                          <span className="text-sm flex-1 min-w-0 whitespace-normal break-words">
                             {unit.title}
                           </span>
                           <div className="flex items-center gap-2">
