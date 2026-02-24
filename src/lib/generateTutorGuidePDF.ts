@@ -98,6 +98,8 @@ interface TutorGuidePDFParams {
   centerName?: string;
   centerLogo?: string;
   courseTitle?: string;
+  primaryColor?: [number, number, number];
+  secondaryColor?: [number, number, number];
 }
 
 export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) => {
@@ -111,17 +113,18 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   const contentWidth = pageWidth - margin * 2;
   let y = margin;
 
-  const primaryColor: [number, number, number] = [0, 128, 128];
-  const darkColor: [number, number, number] = [33, 33, 33];
-  const grayColor: [number, number, number] = [100, 100, 100];
-  const lightBg: [number, number, number] = [245, 245, 245];
+  // Grupo Arma blue branding colors - hsl(227, 73%, 57%) and hsl(227, 73%, 47%)
+  const primaryColor: [number, number, number] = params.primaryColor || [65, 100, 225];
+  const secondaryColor: [number, number, number] = params.secondaryColor || [32, 70, 207];
+  const darkColor: [number, number, number] = [33, 37, 41];
+  const grayColor: [number, number, number] = [80, 80, 80];
+  const lightBg: [number, number, number] = [240, 243, 248];
+  const lightBlueBg: [number, number, number] = [230, 236, 250];
 
   const checkPage = (needed: number) => {
-    if (y + needed > pageHeight - 25) {
+    if (y + needed > pageHeight - 30) {
       doc.addPage();
       y = margin;
-      // Footer on previous page
-      addFooter(doc, doc.getNumberOfPages() - 1);
     }
   };
 
@@ -129,39 +132,44 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
     d.setPage(pageNum);
     d.setFontSize(8);
     d.setTextColor(...grayColor);
-    d.text(`${centerName} — Guía del Tutor-Formador SEPE`, margin, pageHeight - 10);
-    d.text(`Página ${pageNum}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+    d.text(`${centerName} — Guía del Tutor-Formador`, margin, pageHeight - 10);
+    d.text(`Página ${pageNum - 1}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+    // Blue line at bottom
+    d.setDrawColor(...primaryColor);
+    d.setLineWidth(0.8);
+    d.line(margin, pageHeight - 14, pageWidth - margin, pageHeight - 14);
   };
 
   const addSectionTitle = (title: string) => {
-    checkPage(15);
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
+    checkPage(18);
+    // Blue background bar for section title
+    doc.setFillColor(...primaryColor);
+    doc.roundedRect(margin, y - 2, contentWidth, 10, 1.5, 1.5, "F");
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.text(title, margin, y);
-    y += 2;
-    doc.setDrawColor(...primaryColor);
-    doc.setLineWidth(0.5);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 8;
+    doc.text(title, margin + 4, y + 5);
+    y += 14;
   };
 
   const addSubTitle = (title: string) => {
-    checkPage(12);
-    doc.setFontSize(11);
-    doc.setTextColor(...darkColor);
+    checkPage(14);
+    doc.setFillColor(...lightBlueBg);
+    doc.roundedRect(margin, y - 2, contentWidth, 8, 1, 1, "F");
+    doc.setFontSize(10);
+    doc.setTextColor(...secondaryColor);
     doc.setFont("helvetica", "bold");
-    doc.text(title, margin, y);
-    y += 6;
+    doc.text(title, margin + 3, y + 4);
+    y += 10;
   };
 
   const addParagraph = (text: string, indent = 0) => {
     doc.setFontSize(9);
-    doc.setTextColor(...grayColor);
+    doc.setTextColor(...darkColor);
     doc.setFont("helvetica", "normal");
     const lines = doc.splitTextToSize(text, contentWidth - indent);
     for (const line of lines) {
-      checkPage(5);
+      checkPage(6);
       doc.text(line, margin + indent, y);
       y += 4.5;
     }
@@ -170,86 +178,132 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
 
   const addBullet = (text: string, indent = 5) => {
     doc.setFontSize(9);
-    doc.setTextColor(...grayColor);
+    doc.setTextColor(...darkColor);
     doc.setFont("helvetica", "normal");
-    const lines = doc.splitTextToSize(text, contentWidth - indent - 4);
-    checkPage(5);
-    doc.text("•", margin + indent, y);
+    const lines = doc.splitTextToSize(text, contentWidth - indent - 5);
+    checkPage(6);
+    doc.setTextColor(...primaryColor);
+    doc.text("●", margin + indent, y);
+    doc.setTextColor(...darkColor);
     for (let i = 0; i < lines.length; i++) {
-      if (i > 0) checkPage(5);
-      doc.text(lines[i], margin + indent + 4, y);
+      if (i > 0) checkPage(6);
+      doc.text(lines[i], margin + indent + 5, y);
       y += 4.5;
     }
   };
 
+  const addNote = (text: string) => {
+    const lines = doc.splitTextToSize(text, contentWidth - 10);
+    const boxHeight = lines.length * 4.5 + 10;
+    checkPage(boxHeight + 4);
+    doc.setFillColor(...lightBlueBg);
+    doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2, "F");
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2, "S");
+    doc.setFontSize(9);
+    doc.setTextColor(...primaryColor);
+    doc.setFont("helvetica", "bold");
+    doc.text("RECUERDA:", margin + 5, y + 6);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...darkColor);
+    doc.text(lines, margin + 5, y + 12);
+    y += boxHeight + 4;
+  };
+
   // ==================== COVER PAGE ====================
+  // Blue gradient cover
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, pageWidth, pageHeight, "F");
 
+  // Lighter overlay for depth
+  doc.setFillColor(...secondaryColor);
+  doc.rect(0, pageHeight * 0.65, pageWidth, pageHeight * 0.35, "F");
+
+  // White decorative elements
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.3);
+  doc.line(margin, 50, pageWidth - margin, 50);
+  doc.line(margin, pageHeight - 50, pageWidth - margin, pageHeight - 50);
+
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(32);
+  doc.setFontSize(36);
   doc.setFont("helvetica", "bold");
   doc.text("GUÍA DEL", pageWidth / 2, 80, { align: "center" });
-  doc.text("TUTOR-FORMADOR", pageWidth / 2, 95, { align: "center" });
+  doc.text("TUTOR-FORMADOR", pageWidth / 2, 98, { align: "center" });
 
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
-  const titleLines = doc.splitTextToSize(courseTitle, contentWidth);
-  let ty = 115;
+  const titleLines = doc.splitTextToSize(courseTitle, contentWidth - 20);
+  let ty = 120;
   for (const line of titleLines) {
     doc.text(line, pageWidth / 2, ty, { align: "center" });
     ty += 6;
   }
 
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("SSC_C_017_5B", pageWidth / 2, ty + 10, { align: "center" });
-  doc.text("510 horas", pageWidth / 2, ty + 20, { align: "center" });
+  doc.text("SSC_C_017_5B", pageWidth / 2, ty + 12, { align: "center" });
+  doc.setFontSize(14);
+  doc.text("510 horas | Nivel 3", pageWidth / 2, ty + 22, { align: "center" });
 
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text(centerName.toUpperCase(), pageWidth / 2, pageHeight - 38, { align: "center" });
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(centerName, pageWidth / 2, pageHeight - 40, { align: "center" });
-  doc.text(`Fecha: ${new Date().toLocaleDateString("es-ES")}`, pageWidth / 2, pageHeight - 32, { align: "center" });
+  doc.text(`Fecha: ${new Date().toLocaleDateString("es-ES")}`, pageWidth / 2, pageHeight - 28, { align: "center" });
 
   // ==================== TABLE OF CONTENTS ====================
   doc.addPage();
   y = margin;
-  doc.setFontSize(20);
-  doc.setTextColor(...primaryColor);
+  
+  // Title bar
+  doc.setFillColor(...primaryColor);
+  doc.roundedRect(margin, y - 2, contentWidth, 12, 2, 2, "F");
+  doc.setFontSize(16);
+  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.text("ÍNDICE", margin, y);
-  y += 15;
+  doc.text("ÍNDICE", margin + 4, y + 7);
+  y += 20;
 
   const tocItems = [
-    "1. Datos de la Acción Formativa",
-    "   1.1 Objetivos",
-    "   1.2 Organización y Fechas de Realización",
-    "2. Alumnos y Equipo Docente",
-    "3. El Campus Virtual y las Aplicaciones Informáticas",
-    "   3.1 Requisitos técnicos del equipo informático",
-    "   3.2 Funcionamiento y recursos",
-    "   3.3 Ayuda, preguntas frecuentes y visita guiada",
-    "   3.4 Aplicaciones informáticas",
-    "4. Programación Didáctica y Planificación de la Evaluación",
-    "   4.1 ¿Cómo debe desarrollar el alumno la acción formativa?",
-    "   4.2 ¿Qué se evalúa en la acción formativa?",
-    "5. Procedimiento de Seguimiento del Aprendizaje y Evaluación",
-    "   5.1 ¿Quién, cómo y cuándo se realiza el seguimiento?",
-    "   5.2 ¿Quién, cómo y cuándo se evalúa?",
-    "   5.3 Adaptación de la programación didáctica",
-    "6. Sistema Tutorial",
-    "   6.1 Tutorías virtuales",
-    "   6.2 Tutorías presenciales",
-    "7. Gestión y Administración de la Acción Formativa",
-    "8. Recursos Didácticos para el Tutor-Formador",
+    { text: "1. Datos de la Acción Formativa", level: 0 },
+    { text: "1.1 Objetivos", level: 1 },
+    { text: "1.2 Organización y Fechas de Realización", level: 1 },
+    { text: "2. Alumnos y Equipo Docente", level: 0 },
+    { text: "3. El Campus Virtual y las Aplicaciones Informáticas", level: 0 },
+    { text: "3.1 Requisitos técnicos del equipo informático", level: 1 },
+    { text: "3.2 Funcionamiento y recursos", level: 1 },
+    { text: "3.3 Ayuda, preguntas frecuentes y visita guiada", level: 1 },
+    { text: "3.4 Aplicaciones informáticas", level: 1 },
+    { text: "4. Programación Didáctica y Planificación de la Evaluación", level: 0 },
+    { text: "4.1 ¿Cómo debe desarrollar el alumno la acción formativa?", level: 1 },
+    { text: "4.2 ¿Qué se evalúa en la acción formativa?", level: 1 },
+    { text: "5. Procedimiento de Seguimiento del Aprendizaje y Evaluación", level: 0 },
+    { text: "5.1 ¿Quién, cómo y cuándo se realiza el seguimiento?", level: 1 },
+    { text: "5.2 ¿Quién, cómo y cuándo se evalúa?", level: 1 },
+    { text: "5.3 Adaptación de la programación didáctica", level: 1 },
+    { text: "6. Sistema Tutorial", level: 0 },
+    { text: "6.1 Tutorías virtuales", level: 1 },
+    { text: "6.2 Tutorías presenciales", level: 1 },
+    { text: "7. Gestión y Administración de la Acción Formativa", level: 0 },
+    { text: "8. Recursos Didácticos para el Tutor-Formador", level: 0 },
   ];
 
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...darkColor);
   for (const item of tocItems) {
-    doc.text(item, margin, y);
-    y += 6;
+    const indent = item.level * 8;
+    if (item.level === 0) {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...primaryColor);
+    } else {
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...darkColor);
+    }
+    doc.text(item.text, margin + indent, y);
+    y += item.level === 0 ? 8 : 6;
   }
 
   // ==================== SECTION 1 ====================
@@ -263,25 +317,26 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   addParagraph("Con este curso el alumno aprenderá a programar, impartir, tutorizar y evaluar acciones formativas de los Grados A, B y C del Sistema de Formación Profesional, elaborando y utilizando materiales, medios y recursos didácticos, orientando sobre los itinerarios formativos y salidas profesionales que ofrece el mercado laboral en su especialidad, promoviendo de forma permanente la calidad de la formación y la actualización didáctica.");
   addParagraph("A continuación, podrás ver las capacidades que deberán trabajarse en cada módulo formativo:");
 
-  // Modules objectives table
-  const objRows = MODULES_SSC.map(mod => {
+  // Modules objectives - split into individual tables per module to avoid cutoff
+  for (const mod of MODULES_SSC) {
     const obj = MODULE_OBJECTIVES[mod.code];
-    const objectives = `Objetivo general: ${obj.general}\n\n${obj.specifics.map((s, i) => `${i + 1}. ${s}`).join("\n")}`;
-    return [`MF${mod.code}_3\n${mod.title}`, objectives];
-  });
+    const objectivesText = `Objetivo general: ${obj.general}\n\n${obj.specifics.map((s, i) => `${i + 1}. ${s}`).join("\n")}`;
+    
+    checkPage(40);
+    autoTable(doc, {
+      startY: y,
+      head: [[`MF${mod.code}_3 — ${mod.title} (${mod.hours}h)`]],
+      body: [[objectivesText]],
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7.5, cellPadding: 4, lineColor: [200, 210, 230], lineWidth: 0.2 },
+      headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: lightBg },
+    });
+    y = (doc as any).lastAutoTable.finalY + 3;
+  }
 
-  autoTable(doc, {
-    startY: y,
-    head: [["MÓDULOS FORMATIVOS", "OBJETIVOS"]],
-    body: objRows,
-    margin: { left: margin, right: margin },
-    styles: { fontSize: 7, cellPadding: 3, lineColor: [200, 200, 200], lineWidth: 0.1 },
-    headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: "bold" },
-    columnStyles: { 0: { cellWidth: 45 }, 1: { cellWidth: contentWidth - 45 } },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
-  });
-  y = (doc as any).lastAutoTable.finalY + 10;
-
+  // ==================== 1.2 ORGANIZACIÓN ====================
+  checkPage(30);
   addSubTitle("1.2 ORGANIZACIÓN Y FECHAS DE REALIZACIÓN");
   addParagraph("Este curso se corresponde con el certificado de profesionalidad:");
 
@@ -292,36 +347,39 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
       ["CÓDIGO", "SSC_C_017_5B"],
       ["FAMILIA PROFESIONAL", "Servicios Socioculturales y a la Comunidad"],
       ["NIVEL DE CUALIFICACIÓN", "3 (MECU 5B)"],
+      ["DURACIÓN TOTAL", "510 horas"],
+      ["MODALIDAD", "Teleformación"],
     ],
     margin: { left: margin, right: margin },
-    styles: { fontSize: 9, cellPadding: 4, lineColor: [200, 200, 200], lineWidth: 0.1 },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
+    styles: { fontSize: 9, cellPadding: 4, lineColor: [200, 210, 230], lineWidth: 0.2 },
+    columnStyles: { 0: { fontStyle: "bold", cellWidth: 55, fillColor: lightBlueBg, textColor: secondaryColor } },
+    alternateRowStyles: { fillColor: [252, 252, 255] },
   });
   y = (doc as any).lastAutoTable.finalY + 8;
 
   addParagraph("Se compone de los siguientes módulos formativos:");
 
   const modRows = MODULES_SSC.map(m => [`MF${m.code}_3 ${m.title}`, `${m.hours}`]);
-  modRows.push(["TOTAL", "510"]);
+  modRows.push(["TOTAL HORAS", "510"]);
 
   autoTable(doc, {
     startY: y,
     head: [["MÓDULOS FORMATIVOS", "HORAS"]],
     body: modRows,
     margin: { left: margin, right: margin },
-    styles: { fontSize: 8, cellPadding: 3, lineColor: [200, 200, 200], lineWidth: 0.1 },
+    styles: { fontSize: 8, cellPadding: 3.5, lineColor: [200, 210, 230], lineWidth: 0.2 },
     headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: "bold" },
-    columnStyles: { 1: { halign: "center", cellWidth: 20 } },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
+    columnStyles: { 1: { halign: "center", cellWidth: 22 } },
+    alternateRowStyles: { fillColor: lightBg },
     didParseCell: (data) => {
       if (data.row.index === modRows.length - 1) {
         data.cell.styles.fontStyle = "bold";
-        data.cell.styles.fillColor = [230, 230, 230];
+        data.cell.styles.fillColor = lightBlueBg;
+        data.cell.styles.textColor = secondaryColor;
       }
     },
   });
-  y = (doc as any).lastAutoTable.finalY + 8;
+  y = (doc as any).lastAutoTable.finalY + 6;
 
   addParagraph("En el ANEXO I \"PROGRAMACIÓN DIDÁCTICA Y PLANIFICACIÓN DE LA EVALUACIÓN\" de esta guía, encontrarás la relación de las unidades didácticas de cada uno de los módulos formativos que componen el certificado de profesionalidad, las capacidades que deberá adquirir el alumno, así como las actividades y pruebas de evaluación.");
   addParagraph("En el ANEXO II \"CALENDARIO Y PLAN DE TRABAJO\" podrás encontrar la planificación por semanas y la secuencia de actividades.");
@@ -382,6 +440,7 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   addSubTitle("3.4 APLICACIONES INFORMÁTICAS");
   addParagraph("Los siguientes módulos requieren aplicaciones informáticas específicas:");
 
+  checkPage(30);
   autoTable(doc, {
     startY: y,
     head: [["MÓDULO", "APLICACIONES NECESARIAS"]],
@@ -392,13 +451,13 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
       ["Resto de módulos", "NO SE REQUIERE software específico adicional"],
     ],
     margin: { left: margin, right: margin },
-    styles: { fontSize: 8, cellPadding: 3, lineColor: [200, 200, 200], lineWidth: 0.1 },
+    styles: { fontSize: 8, cellPadding: 3.5, lineColor: [200, 210, 230], lineWidth: 0.2 },
     headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: "bold" },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
+    alternateRowStyles: { fillColor: lightBg },
   });
   y = (doc as any).lastAutoTable.finalY + 6;
 
-  addParagraph("RECUERDA: Debes facilitar a los alumnos las instrucciones para la descarga de las aplicaciones informáticas necesarias a través del correo electrónico del Campus Virtual.");
+  addNote("Debes facilitar a los alumnos las instrucciones para la descarga de las aplicaciones informáticas necesarias a través del correo electrónico del Campus Virtual.");
 
   // ==================== SECTION 4 ====================
   doc.addPage();
@@ -407,7 +466,8 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   addSectionTitle("4. PROGRAMACIÓN DIDÁCTICA Y PLANIFICACIÓN DE LA EVALUACIÓN");
   addParagraph("En el ANEXO I \"PROGRAMACIÓN DIDÁCTICA Y PLANIFICACIÓN DE LA EVALUACIÓN\" de esta guía encontrarás la planificación didáctica y la evaluación del curso (Anexos III, IV y V).");
   addParagraph("Además, en el ANEXO II \"CALENDARIO Y PLAN DE TRABAJO\" podrás encontrar el \"PLAN DE TRABAJO\" del que disponen los alumnos.");
-  addParagraph("RECUERDA: A través de la herramienta MI AGENDA del Campus Virtual, deberás programar e informar de las actividades y evaluación al alumnado.");
+
+  addNote("A través de la herramienta MI AGENDA del Campus Virtual, deberás programar e informar de las actividades y evaluación al alumnado.");
 
   addSubTitle("4.1 ¿CÓMO DEBE DESARROLLAR EL ALUMNO LA ACCIÓN FORMATIVA?");
 
@@ -416,12 +476,14 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   addBullet("Consultar los objetivos y contenidos (PDF y vídeo de presentación).");
   addBullet("Realizar el test de conocimientos previos.");
 
+  y += 3;
   addSubTitle("B) DESARROLLAR LA FORMACIÓN EN CAMPUS");
   addBullet("Estudiar los contenidos multimedia y ampliar con materiales complementarios.");
   addBullet("Consultar los documentos y vídeos de apoyo.");
   addBullet("Realizar las actividades de aprendizaje evaluables.");
   addBullet("Participar en los foros de debate.");
 
+  y += 3;
   addSubTitle("C) REALIZAR LAS PRUEBAS DE EVALUACIÓN");
   addBullet("Test Final de evaluación en Campus.");
   addBullet("Cuestionario de Evaluación de la Calidad.");
@@ -441,22 +503,23 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   y += 4;
   addSubTitle("Ponderación de la nota final por módulo:");
 
+  checkPage(25);
   autoTable(doc, {
     startY: y,
-    head: [["INSTRUMENTO", "PESO"]],
+    head: [["INSTRUMENTO DE EVALUACIÓN", "PESO"]],
     body: [
-      ["Actividades de aprendizaje + Foros + Evaluación continua (Campus + Tutorías Presenciales)", "30%"],
-      ["Prueba de evaluación final presencial (mínimo 5 puntos)", "70%"],
+      ["Actividades de aprendizaje + Foros + Evaluación continua\n(Campus + Tutorías Presenciales)", "30%"],
+      ["Prueba de evaluación final presencial\n(mínimo 5 puntos para superar)", "70%"],
     ],
     margin: { left: margin, right: margin },
-    styles: { fontSize: 9, cellPadding: 4, lineColor: [200, 200, 200], lineWidth: 0.1 },
+    styles: { fontSize: 9, cellPadding: 5, lineColor: [200, 210, 230], lineWidth: 0.2 },
     headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: "bold" },
-    columnStyles: { 1: { halign: "center", cellWidth: 20 } },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
+    columnStyles: { 1: { halign: "center", cellWidth: 25, fontStyle: "bold" } },
+    alternateRowStyles: { fillColor: lightBg },
   });
   y = (doc as any).lastAutoTable.finalY + 6;
 
-  addParagraph("IMPORTANTE: Para superar la formación con evaluación positiva también se tendrán en cuenta los tiempos de acceso al Campus Virtual.");
+  addNote("Para superar la formación con evaluación positiva también se tendrán en cuenta los tiempos de acceso al Campus Virtual.");
 
   // ==================== SECTION 5 ====================
   doc.addPage();
@@ -464,7 +527,7 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
 
   addSectionTitle("5. PROCEDIMIENTO DE SEGUIMIENTO DEL APRENDIZAJE Y EVALUACIÓN");
 
-  addSubTitle("5.1 ¿QUIÉN, CÓMO Y CUÁNDO SE REALIZA EL SEGUIMIENTO DEL APRENDIZAJE?");
+  addSubTitle("5.1 ¿QUIÉN, CÓMO Y CUÁNDO SE REALIZA EL SEGUIMIENTO?");
   addParagraph("El seguimiento del aprendizaje es responsabilidad directa del tutor-formador de cada módulo formativo. Deberás:");
   addBullet("Realizar un seguimiento diario del progreso de los alumnos a través del Campus Virtual.");
   addBullet("Controlar los tiempos de acceso y la realización de actividades.");
@@ -481,7 +544,7 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   addBullet("Seguimiento de tareas: ADMINISTRACIÓN → SEGUIMIENTO → SEGUIMIENTO DE TAREAS.");
 
   y += 4;
-  addSubTitle("5.2 ¿QUIÉN, CÓMO Y CUÁNDO SE EVALÚA Y SE REGISTRAN LOS RESULTADOS?");
+  addSubTitle("5.2 ¿QUIÉN, CÓMO Y CUÁNDO SE EVALÚA?");
   addParagraph("El tutor-formador es responsable de evaluar y registrar los resultados de las actividades de aprendizaje, participación en foros y pruebas de evaluación. Los resultados se comunican al alumno a través del Campus Virtual.");
   addBullet("Corregir las actividades de aprendizaje en un plazo máximo de 48 horas.");
   addBullet("Enviar al alumno la corrección y puntuación por correo electrónico del Campus.");
@@ -489,7 +552,7 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   addBullet("Calcular la nota final conforme a la ponderación establecida (30% continua + 70% presencial).");
 
   y += 4;
-  addSubTitle("5.3 ADAPTACIÓN DE LA PROGRAMACIÓN DIDÁCTICA PARA DÉFICITS EN EL PROCESO DE APRENDIZAJE");
+  addSubTitle("5.3 ADAPTACIÓN DE LA PROGRAMACIÓN DIDÁCTICA");
   addParagraph("Cuando se detecten déficits en el proceso de aprendizaje de los alumnos, el tutor-formador deberá:");
   addBullet("Identificar las causas del bajo rendimiento mediante comunicación directa con el alumno.");
   addBullet("Proponer actividades de refuerzo y material complementario adicional.");
@@ -548,6 +611,7 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   addBullet("Reuniones periódicas de coordinación (presenciales o virtuales).");
   addBullet("Correo electrónico interno del Campus.");
 
+  y += 3;
   addSubTitle("7.5 PROCEDIMIENTO DE GESTIÓN DE INCIDENCIAS Y RECLAMACIONES");
   addParagraph("Ante cualquier incidencia o reclamación:");
   addBullet("Registrar la incidencia con detalle (fecha, alumno, descripción).");
@@ -584,29 +648,21 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
     "• Contenido Interactivo Multimedia (CIM)\n• Manual en formato PDF\n• Material complementario\n• Actividades de aprendizaje con solucionario\n• Test Final con solucionario\n• Prueba de evaluación presencial + instrucciones",
   ]);
 
+  checkPage(50);
   autoTable(doc, {
     startY: y,
     head: [["MÓDULO", "RECURSOS DISPONIBLES"]],
     body: resourceRows,
     margin: { left: margin, right: margin },
-    styles: { fontSize: 8, cellPadding: 3, lineColor: [200, 200, 200], lineWidth: 0.1 },
+    styles: { fontSize: 8, cellPadding: 3.5, lineColor: [200, 210, 230], lineWidth: 0.2 },
     headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: "bold" },
-    columnStyles: { 0: { cellWidth: 30, halign: "center" } },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
+    columnStyles: { 0: { cellWidth: 30, halign: "center", fontStyle: "bold", textColor: secondaryColor } },
+    alternateRowStyles: { fillColor: lightBg },
   });
   y = (doc as any).lastAutoTable.finalY + 8;
 
-  checkPage(20);
-  doc.setFillColor(245, 245, 245);
-  doc.roundedRect(margin, y, contentWidth, 18, 2, 2, "F");
-  doc.setFontSize(9);
-  doc.setTextColor(...primaryColor);
-  doc.setFont("helvetica", "bold");
-  doc.text("RECUERDA:", margin + 4, y + 6);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...grayColor);
-  const reminderText = doc.splitTextToSize("Como tutor formador del módulo formativo debes implementar, una vez finalizada la formación del mismo, el cuestionario de satisfacción del tutor-formador. El análisis de resultados permitirá la mejora de la calidad de posteriores ediciones de la acción formativa.", contentWidth - 8);
-  doc.text(reminderText, margin + 4, y + 11);
+  checkPage(25);
+  addNote("Como tutor formador del módulo formativo debes implementar, una vez finalizada la formación del mismo, el cuestionario de satisfacción del tutor-formador. El análisis de resultados permitirá la mejora de la calidad de posteriores ediciones de la acción formativa.");
 
   // ==================== ADD FOOTERS ====================
   const totalPages = doc.getNumberOfPages();
@@ -614,12 +670,12 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
     addFooter(doc, i);
   }
 
-  // Save using blob mechanism to avoid popup blockers
+  // Save
   const pdfBlob = doc.output("blob");
   const blobUrl = URL.createObjectURL(pdfBlob);
   const link = document.createElement("a");
   link.href = blobUrl;
-  link.download = `Guia_Tutor_Formador_SSC_C_017_5B_${new Date().getTime()}.pdf`;
+  link.download = `Guia_Tutor_Formador_${centerName.replace(/\s+/g, '_')}_SSC_C_017_5B.pdf`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
