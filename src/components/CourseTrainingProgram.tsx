@@ -175,7 +175,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
   const qualificationLevel = course.qualification_level ?? null;
   const modality = course.modality || "teleformacion";
   const presentialHours = course.presential_hours ?? 10;
-  const internshipHours = course.internship_hours ?? 40;
+  const internshipHours = course.internship_hours ?? 90;
 
   // Get modality display text
   const getModalityText = (m: string) => {
