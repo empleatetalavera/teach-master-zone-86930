@@ -358,78 +358,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         </div>
       </section>
 
-      {/* Section 3: Planificación Didáctica (Anexo III) */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Calendar className="h-6 w-6 text-primary" />
-          </div>
-          <h2 className="text-xl font-bold">3. Planificación Didáctica (Anexo III)</h2>
-        </div>
-
-        {planificacionDinamica.length > 0 ? (
-          <div className="overflow-x-auto border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Módulos de Certificado (MF)</TableHead>
-                  <TableHead className="text-center w-20">Horas MF</TableHead>
-                  <TableHead>Unidades Formativas (UF)</TableHead>
-                  <TableHead className="text-center w-20">Horas UF</TableHead>
-                  <TableHead className="w-44">Fechas de Impartición</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {planificacionDinamica.map((modulo, index) => (
-                  modulo.unidades.length > 0 ? (
-                    modulo.unidades.map((uf, ufIndex) => (
-                      <TableRow key={`plan-${index}-${ufIndex}`}>
-                        {ufIndex === 0 && (
-                          <>
-                            <TableCell rowSpan={modulo.unidades.length} className="font-medium bg-muted/30 align-top">
-                              {modulo.modulo}
-                            </TableCell>
-                            <TableCell rowSpan={modulo.unidades.length} className="text-center font-semibold bg-muted/30 align-top">
-                              {modulo.horasMF}
-                            </TableCell>
-                          </>
-                        )}
-                        <TableCell className="text-sm">{uf.codigo}: {uf.titulo}</TableCell>
-                        <TableCell className="text-center">{uf.horas}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{uf.dias}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow key={`plan-${index}`}>
-                      <TableCell className="font-medium bg-muted/30">{modulo.modulo}</TableCell>
-                      <TableCell className="text-center font-semibold bg-muted/30">{modulo.horasMF}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground" colSpan={3}>Sin unidades formativas definidas</TableCell>
-                    </TableRow>
-                  )
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className="border rounded-lg p-8 text-center text-muted-foreground">
-            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No hay módulos definidos para este curso</p>
-            <p className="text-sm mt-2">Configura los módulos y unidades formativas para ver la planificación didáctica</p>
-          </div>
-        )}
-
-        {presentialHours > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Tutorías Presenciales
-            </h4>
-            <p className="text-sm text-amber-700">
-              Los alumnos asistirán a tutorías presenciales durante <strong>{presentialHours} horas</strong> en el centro de formación.
-            </p>
-          </div>
-        )}
-      </section>
+      {/* Section 3: Objectives (renumbered) */}
 
       {/* Section 4: Objectives */}
       <section className="space-y-4">
@@ -737,18 +666,32 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
           <div className="border rounded-lg p-4 space-y-3 bg-primary/5">
             <h4 className="font-semibold">Centro de Atención al Usuario (CAU)</h4>
             <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-primary" />
-                <span><strong>Teléfono:</strong> 665 673 416</span>
-              </div>
+              {centerContact?.phone ? (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-primary" />
+                  <span><strong>Teléfono:</strong> {centerContact.phone}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  <span>Teléfono no especificado</span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" />
                 <span><strong>Horario:</strong> L-V de 09:00 a 15:00</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-primary" />
-                <span><strong>Email:</strong> formacion.empleate@gmail.com</span>
-              </div>
+              {centerContact?.email ? (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-primary" />
+                  <span><strong>Email:</strong> {centerContact.email}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  <span>Email no especificado</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
