@@ -76,13 +76,25 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
 
   const handleDownloadPDF = async () => {
     if (course.student_guide_pdf_url) {
-      const link = document.createElement('a');
-      link.href = course.student_guide_pdf_url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        const response = await fetch(course.student_guide_pdf_url);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = 'Guia_del_Alumno.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      } catch {
+        const link = document.createElement('a');
+        link.href = course.student_guide_pdf_url;
+        link.download = 'Guia_del_Alumno.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } else {
       // Fetch modules and formative units from DB for dynamic PDF
       let modulesData: any[] = [];
