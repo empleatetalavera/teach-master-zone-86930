@@ -1,5 +1,5 @@
 import { BookOpen, Users, FileText, Clock, Target, Award, CheckCircle2, GraduationCap, Building2, Calendar, ClipboardList, BarChart3, Briefcase, Settings, Globe, MapPin, Phone, Mail, Download, Monitor, Laptop, FileCheck, UserCog, Shield } from "lucide-react";
-import { AnnexCalendarWorkPlan } from "./AnnexCalendarWorkPlan";
+import { generateAnnexCalendarPDF } from "@/lib/generateAnnexCalendarPDF";
 import { Button } from "@/components/ui/button";
 import { CourseAnnexesUploader } from "./CourseAnnexesUploader";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
@@ -883,13 +883,40 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         </section>
       )}
 
-      {/* ANEXO I: Calendario y Plan de Trabajo */}
-      <AnnexCalendarWorkPlan
-        course={course}
-        modules={modules}
-        centerName={datosDelCentro.nombre}
-        centerCity={datosDelCentro.localidad}
-      />
+      {/* ANEXO I: Calendario y Plan de Trabajo - Descarga PDF */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Calendar className="h-6 w-6 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold">Anexo I: Calendario y Plan de Trabajo</h2>
+        </div>
+        <div className="border rounded-lg p-6 text-center space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Documento detallado con la tabla resumen de módulos y unidades formativas, calendario de sesiones,
+            prescripciones de formadores y plan de trabajo sesión a sesión.
+          </p>
+          <Button 
+            onClick={() => generateAnnexCalendarPDF({
+              courseTitle: course.title,
+              courseCode: courseCode,
+              durationHours: course.duration_hours || 0,
+              presentialHours: presentialHours,
+              internshipHours: internshipHours,
+              modules: modules,
+              centerName: datosDelCentro.nombre,
+              centerCity: datosDelCentro.localidad,
+              startDate: course.start_date,
+              endDate: course.end_date,
+            })}
+            className="gap-2"
+            size="lg"
+          >
+            <Download className="h-5 w-5" />
+            Descargar Anexo I - Calendario y Plan de Trabajo (PDF)
+          </Button>
+        </div>
+      </section>
 
       {/* Footer */}
       <div className="text-center pt-6 border-t text-sm text-muted-foreground">
