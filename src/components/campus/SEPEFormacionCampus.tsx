@@ -1,0 +1,635 @@
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ModuleFormativeUnitManager } from "@/components/ModuleFormativeUnitManager";
+import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
+import {
+  BookOpen, Clock, FileText, CheckCircle2, ChevronDown, PlayCircle,
+  Layers, PenTool, ClipboardList, ListChecks, Target, Upload,
+  ExternalLink, Star, User, AlertCircle, MessageSquare, FileQuestion,
+  CheckSquare, Plus, BarChart3
+} from "lucide-react";
+
+interface Module {
+  id: string;
+  title: string;
+  description: string;
+  order_index: number;
+  duration_minutes: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  completed?: boolean;
+  progress?: number;
+  evaluations?: any[];
+  activities?: any[];
+  scorm_content?: any[];
+  formative_units?: FormativeUnit[];
+  concept_map_url?: string | null;
+  objectives?: string | null;
+  content?: string | null;
+  forum_enabled?: boolean;
+}
+
+interface FormativeUnit {
+  id: string;
+  module_id: string;
+  title: string;
+  description: string | null;
+  content: string | null;
+  objectives: string | null;
+  order_index: number;
+  duration_hours: number | null;
+  is_active: boolean;
+  start_date?: string | null;
+  end_date?: string | null;
+  evaluations?: any[];
+  activities?: any[];
+}
+
+interface UnitProgressData {
+  content_progress: number;
+  activities_progress: number;
+  overall_progress: number;
+}
+
+interface SEPEFormacionCampusProps {
+  modules: Module[];
+  courseId: string;
+  courseTitle: string;
+  userRole: string | null;
+  getUnitProgress: (unitId: string) => UnitProgressData;
+  onOpenScormViewer: (unitId: string, unitTitle: string) => void;
+  onOpenActivityManager: (unitId: string, unitTitle: string) => void;
+  onOpenManualUploader: (moduleId: string, unitTitle: string, unitId: string) => void;
+  onOpenScormAuthor: (moduleId: string, unitId: string, unitTitle: string) => void;
+  onReloadCourse: () => void;
+}
+
+// Helper to fetch and open PDF
+async function fetchAndOpenPDF(
+  moduleId: string,
+  unitId: string,
+  toast: any
+) {
+  let pdfData: any[] | null = null;
+  const { data: exactMatch } = await (supabase as any)
+    .from('module_content')
+    .select('file_path, title')
+    .eq('module_id', moduleId)
+    .eq('content_type', 'manual_pdf')
+    .eq('formative_unit_id', unitId)
+    .limit(1);
+  pdfData = exactMatch;
+  if (!pdfData || pdfData.length === 0) {
+    const { data: fallback } = await (supabase as any)
+      .from('module_content')
+      .select('file_path, title')
+      .eq('module_id', moduleId)
+      .eq('content_type', 'manual_pdf')
+      .is('formative_unit_id', null)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    pdfData = fallback;
+  }
+  if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+    const { data: signedData } = await supabase.storage
+      .from('module-content')
+      .createSignedUrl(pdfData[0].file_path, 3600);
+    if (signedData?.signedUrl) {
+      window.open(signedData.signedUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({ title: "Error", description: "No se pudo abrir el PDF", variant: "destructive" });
+    }
+  } else {
+    toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+  }
+}
+
+// Progress ring component
+function ProgressRing({ value, size = 40, strokeWidth = 3 }: { value: number; size?: number; strokeWidth?: number }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (value / 100) * circumference;
+  const color = value >= 100 ? 'text-green-500' : value > 50 ? 'text-primary' : value > 0 ? 'text-amber-500' : 'text-muted-foreground/30';
+  
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg className="transform -rotate-90" width={size} height={size}>
+        <circle
+          className="text-muted/30"
+          strokeWidth={strokeWidth}
+          stroke="currentColor"
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+        />
+        <circle
+          className={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          stroke="currentColor"
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        {value >= 100 ? (
+          <CheckCircle2 className="h-4 w-4 text-green-500" />
+        ) : (
+          <span className="text-[10px] font-bold text-foreground">{value}%</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Unit resource item
+function UnitResourceItem({ 
+  icon, 
+  iconBg, 
+  iconColor,
+  title, 
+  subtitle, 
+  status,
+  onClick,
+  actions 
+}: {
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+  title: string;
+  subtitle: string;
+  status?: 'completed' | 'in_progress' | 'pending' | 'locked';
+  onClick?: () => void;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <div 
+      className={`group flex items-center gap-3 p-3 rounded-lg border transition-all ${
+        onClick ? 'cursor-pointer hover:shadow-sm hover:border-primary/30 hover:bg-muted/30' : ''
+      } ${status === 'completed' ? 'bg-green-50/30 dark:bg-green-950/10 border-green-200/50' : 'border-border/50'}`}
+      onClick={onClick}
+    >
+      <div className={`p-2 rounded-lg ${iconBg} shrink-0`}>
+        <div className={iconColor}>{icon}</div>
+      </div>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm font-medium block truncate">{title}</span>
+        <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
+      </div>
+      {status === 'completed' && (
+        <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+      )}
+      {actions && (
+        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {actions}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function SEPEFormacionCampus({
+  modules,
+  courseId,
+  courseTitle,
+  userRole,
+  getUnitProgress,
+  onOpenScormViewer,
+  onOpenActivityManager,
+  onOpenManualUploader,
+  onOpenScormAuthor,
+  onReloadCourse,
+}: SEPEFormacionCampusProps) {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher';
+
+  // Calculate module progress from UF progress
+  const getModuleProgress = useCallback((module: Module) => {
+    const units = module.formative_units || [];
+    if (units.length === 0) return 0;
+    const totalProgress = units.reduce((sum, u) => sum + getUnitProgress(u.id).overall_progress, 0);
+    return Math.round(totalProgress / units.length);
+  }, [getUnitProgress]);
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-primary" />
+            Formación en Campus — Módulos Formativos
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Estructura modular del certificado de profesionalidad
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            {modules.length} módulos
+          </Badge>
+          <Badge variant="outline" className="text-xs">
+            {modules.flatMap(m => m.formative_units || []).length} UFs
+          </Badge>
+        </div>
+      </div>
+
+      {/* SEPE Info Banner */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200/50 dark:border-blue-800/50">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg shrink-0">
+              <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              Cada módulo incluye: <strong>contenido interactivo</strong>, <strong>manual PDF</strong>, <strong>actividad de desarrollo</strong> y <strong>test final</strong>. Nota mínima: 50%.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Module list */}
+      {modules.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center">
+            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="font-medium mb-2">Sin módulos configurados</h3>
+            <p className="text-sm text-muted-foreground">
+              Este curso aún no tiene módulos formativos
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {modules.map((module, index) => {
+            const moduleUnits = module.formative_units || [];
+            const moduleProgress = getModuleProgress(module);
+            const totalEvaluations = (module.evaluations?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.evaluations?.length || 0), 0);
+            const totalActivities = (module.activities?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.activities?.length || 0), 0);
+
+            return (
+              <Collapsible key={module.id}>
+                <div className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  <CollapsibleTrigger className="w-full text-left">
+                    <div className="p-4 bg-gradient-to-r from-muted/40 to-muted/20">
+                      <div className="flex items-start gap-3">
+                        {/* Module number */}
+                        <div className="relative shrink-0">
+                          <ProgressRing value={moduleProgress} size={44} strokeWidth={3} />
+                        </div>
+
+                        {/* Module info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono shrink-0">
+                              MF {index + 1}
+                            </Badge>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180 shrink-0" />
+                          </div>
+                          <h3 className="font-semibold text-sm leading-tight line-clamp-2">
+                            {module.title}
+                          </h3>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {module.duration_minutes ? Math.round(module.duration_minutes / 60) : 0}h
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <ListChecks className="h-3 w-3" />
+                              {moduleUnits.length} UFs
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <ClipboardList className="h-3 w-3" />
+                              {totalEvaluations} tests
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <PenTool className="h-3 w-3" />
+                              {totalActivities} actividades
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleTrigger>
+
+                  <CollapsibleContent>
+                    <div className="border-t">
+                      {/* Chat Inicial */}
+                      <div className="p-4 border-b bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                            <MessageSquare className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">Chat de Sesión Inicial</h4>
+                            <p className="text-xs text-blue-600 dark:text-blue-300">Bienvenida, organización y objetivos del módulo</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Test Conocimientos Previos */}
+                      <div className="p-4 border-b bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/20">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                            <FileQuestion className="h-4 w-4 text-amber-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100">Test de Conocimientos Previos</h4>
+                            <p className="text-xs text-amber-600 dark:text-amber-300">Evaluación diagnóstica de 20 preguntas</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* FORMACIÓN EN CAMPUS header */}
+                      <div className="bg-primary text-primary-foreground px-4 py-2.5 font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
+                        <Layers className="h-3.5 w-3.5" />
+                        FORMACIÓN EN CAMPUS
+                      </div>
+
+                      {/* Formative units */}
+                      {moduleUnits.length === 0 ? (
+                        <div className="p-6 text-center">
+                          <p className="text-sm text-muted-foreground mb-3">Sin unidades formativas en este módulo</p>
+                          {isAdmin && (
+                            <ModuleFormativeUnitManager
+                              moduleId={module.id}
+                              moduleTitle={module.title}
+                              formativeUnits={moduleUnits}
+                              onUpdate={onReloadCourse}
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          {moduleUnits.map((unit, unitIndex) => {
+                            const unitProgress = getUnitProgress(unit.id);
+                            const unitEvals = (module.evaluations || []).filter((ev: any) => ev.formative_unit_id === unit.id);
+                            const hasTest = unitEvals.length > 0;
+
+                            return (
+                              <Accordion type="single" collapsible key={unit.id}>
+                                <AccordionItem value={unit.id} className="border-0 border-b last:border-b-0">
+                                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                                    <div className="flex items-center gap-3 w-full">
+                                      <ProgressRing value={unitProgress.overall_progress} size={36} strokeWidth={2.5} />
+                                      <div className="flex-1 text-left min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono shrink-0">
+                                            UF{unitIndex + 1}
+                                          </Badge>
+                                        </div>
+                                        <h4 className="font-medium text-sm mt-0.5 line-clamp-1">{unit.title}</h4>
+                                        {unit.duration_hours && (
+                                          <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                            <Clock className="h-3 w-3" />{unit.duration_hours}h
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="px-4 pb-4 pt-1">
+                                    <div className="space-y-2">
+                                      {/* Progress breakdown */}
+                                      <div className="flex items-center gap-4 p-2.5 rounded-lg bg-muted/30 text-xs">
+                                        <div className="flex-1">
+                                          <div className="flex justify-between mb-1">
+                                            <span className="text-muted-foreground">Contenido</span>
+                                            <span className="font-medium">{unitProgress.content_progress}%</span>
+                                          </div>
+                                          <Progress value={unitProgress.content_progress} className="h-1.5" />
+                                        </div>
+                                        <div className="w-px h-6 bg-border" />
+                                        <div className="flex-1">
+                                          <div className="flex justify-between mb-1">
+                                            <span className="text-muted-foreground">Actividades</span>
+                                            <span className="font-medium">{unitProgress.activities_progress}%</span>
+                                          </div>
+                                          <Progress value={unitProgress.activities_progress} className="h-1.5" />
+                                        </div>
+                                      </div>
+
+                                      {/* Objectives */}
+                                      {unit.objectives && (
+                                        <div className="p-2.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/50">
+                                          <div className="flex items-start gap-2">
+                                            <Target className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+                                            <div>
+                                              <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Objetivo</span>
+                                              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5 leading-relaxed">{unit.objectives}</p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Contenido Interactivo */}
+                                      <UnitResourceItem
+                                        icon={<Layers className="h-4 w-4" />}
+                                        iconBg="bg-primary/10"
+                                        iconColor="text-primary"
+                                        title="Contenido Interactivo"
+                                        subtitle="Material multimedia e interactivo de la unidad"
+                                        onClick={() => onOpenScormViewer(unit.id, unit.title)}
+                                        actions={
+                                          isAdmin ? (
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-7 text-xs gap-1"
+                                              onClick={() => onOpenScormAuthor(module.id, unit.id, unit.title)}
+                                            >
+                                              <Plus className="h-3 w-3" />Editor
+                                            </Button>
+                                          ) : undefined
+                                        }
+                                      />
+
+                                      {/* Manual PDF */}
+                                      <UnitResourceItem
+                                        icon={<FileText className="h-4 w-4" />}
+                                        iconBg="bg-blue-50 dark:bg-blue-950/30"
+                                        iconColor="text-blue-600"
+                                        title="Manual / Documentación PDF"
+                                        subtitle="Documentación descargable del módulo formativo"
+                                        onClick={() => fetchAndOpenPDF(module.id, unit.id, toast)}
+                                        actions={
+                                          <>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-7 text-xs gap-1"
+                                              onClick={() => fetchAndOpenPDF(module.id, unit.id, toast)}
+                                            >
+                                              <ExternalLink className="h-3 w-3" />PDF
+                                            </Button>
+                                            {isAdmin && (
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 text-xs gap-1"
+                                                onClick={() => onOpenManualUploader(module.id, unit.title, unit.id)}
+                                              >
+                                                <Upload className="h-3 w-3" />Subir
+                                              </Button>
+                                            )}
+                                          </>
+                                        }
+                                      />
+
+                                      {/* Actividad de Desarrollo */}
+                                      <UnitResourceItem
+                                        icon={<PenTool className="h-4 w-4" />}
+                                        iconBg="bg-green-50 dark:bg-green-950/30"
+                                        iconColor="text-green-600"
+                                        title="Actividad de Desarrollo"
+                                        subtitle="Ejercicio práctico para aplicar los conocimientos"
+                                        onClick={() => onOpenActivityManager(unit.id, unit.title)}
+                                        actions={
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 text-xs gap-1"
+                                            onClick={() => onOpenActivityManager(unit.id, unit.title)}
+                                          >
+                                            <PenTool className="h-3 w-3" />
+                                            {isAdmin ? 'Gestionar' : 'Entregar'}
+                                          </Button>
+                                        }
+                                      />
+
+                                      {/* Test Final */}
+                                      <UnitResourceItem
+                                        icon={<ClipboardList className="h-4 w-4" />}
+                                        iconBg="bg-purple-50 dark:bg-purple-950/30"
+                                        iconColor="text-purple-600"
+                                        title="Test Final de la Unidad"
+                                        subtitle={hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de preguntas para verificar el aprendizaje'}
+                                        onClick={hasTest ? () => navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`) : undefined}
+                                        actions={
+                                          <>
+                                            {hasTest && (
+                                              <Button
+                                                variant="default"
+                                                size="sm"
+                                                className="h-7 text-xs gap-1 bg-purple-600 hover:bg-purple-700"
+                                                onClick={() => navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`)}
+                                              >
+                                                <PlayCircle className="h-3 w-3" />Realizar
+                                              </Button>
+                                            )}
+                                            {isAdmin && !hasTest && (
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 text-xs gap-1"
+                                                onClick={() => toast({ title: "Crear Test", description: "Usa el generador de tests en la UF." })}
+                                              >
+                                                <Plus className="h-3 w-3" />Crear
+                                              </Button>
+                                            )}
+                                          </>
+                                        }
+                                      />
+
+                                      {/* Self Assessment Quiz */}
+                                      <SelfAssessmentQuiz courseId={courseId} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              </Accordion>
+                            );
+                          })}
+
+                          {/* Admin: manage UFs */}
+                          {isAdmin && (
+                            <div className="p-4 border-t">
+                              <ModuleFormativeUnitManager
+                                moduleId={module.id}
+                                moduleTitle={module.title}
+                                formativeUnits={moduleUnits}
+                                onUpdate={onReloadCourse}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+            );
+          })}
+        </div>
+      )}
+
+      {/* EVALUACIÓN Section */}
+      <Accordion type="single" collapsible className="w-full mt-2">
+        <AccordionItem value="evaluacion-global" className="border-0">
+          <AccordionTrigger className="bg-[#8B1538] text-white px-4 py-3 rounded-t-lg hover:no-underline data-[state=open]:rounded-b-none">
+            <span className="font-bold text-lg">EVALUACIÓN</span>
+          </AccordionTrigger>
+          <AccordionContent className="border border-t-0 rounded-b-lg p-0 bg-card">
+            <div className="space-y-0">
+              <div 
+                className="flex items-center gap-3 p-4 border-b hover:bg-muted/30 cursor-pointer transition-colors"
+                onClick={() => toast({ title: "Test Final Global", description: "Accediendo al test final de evaluación..." })}
+              >
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                  <ClipboardList className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <span className="text-sm font-medium">{courseTitle} - Test Final</span>
+                  <p className="text-xs text-muted-foreground">Evaluación final de todos los módulos</p>
+                </div>
+                <Badge variant="outline" className="text-xs">Obligatorio</Badge>
+              </div>
+
+              <div 
+                className="flex items-center gap-3 p-4 hover:bg-muted/30 cursor-pointer transition-colors"
+                onClick={() => toast({ title: "Evaluación de Calidad", description: "Accediendo a la encuesta..." })}
+              >
+                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                  <Star className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <span className="text-sm font-medium">Evaluación de la calidad de la formación</span>
+                  <p className="text-xs text-muted-foreground">Encuesta de satisfacción</p>
+                </div>
+                <Badge variant="secondary" className="text-xs">Recomendado</Badge>
+              </div>
+
+              {userRole === 'teacher' && (
+                <div 
+                  className="flex items-center gap-3 p-4 border-t hover:bg-muted/30 cursor-pointer transition-colors"
+                  onClick={() => toast({ title: "Cuestionario del Tutor-Formador", description: "Accediendo..." })}
+                >
+                  <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+                    <User className="h-5 w-5 text-teal-600" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">Cuestionario de Satisfacción del Tutor-Formador</span>
+                    <p className="text-xs text-muted-foreground">Valoración exclusiva del tutor</p>
+                  </div>
+                  <Badge className="text-xs bg-teal-600 text-white">Solo Tutor</Badge>
+                </div>
+              )}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  );
+}
