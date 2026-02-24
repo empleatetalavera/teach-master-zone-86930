@@ -1,5 +1,6 @@
 import { BookOpen, Users, FileText, Clock, Target, Award, CheckCircle2, GraduationCap, Building2, Calendar, ClipboardList, BarChart3, Briefcase, Settings, Globe, MapPin, Phone, Mail, Download, Monitor, Laptop, FileCheck, UserCog, Shield } from "lucide-react";
 import { generateAnnexCalendarPDF } from "@/lib/generateAnnexCalendarPDF";
+import { generateProyectoFormativoPDF } from "@/lib/generateProyectoFormativoPDF";
 import { Button } from "@/components/ui/button";
 import { CourseAnnexesUploader } from "./CourseAnnexesUploader";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
@@ -844,6 +845,49 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
           >
             <Download className="h-5 w-5" />
             Descargar Anexo I - Calendario y Plan de Trabajo (PDF)
+          </Button>
+        </div>
+      </section>
+
+      {/* Proyecto Formativo Aula Virtual - Descarga PDF */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <FileText className="h-6 w-6 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold">Proyecto Formativo - Aula Virtual (F11)</h2>
+        </div>
+        <div className="border rounded-lg p-6 text-center space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Documento F11 con la programación didáctica por módulo y unidad formativa,
+            recursos humanos y técnicos del aula virtual, y formación en PRL.
+          </p>
+          <Button 
+            onClick={() => generateProyectoFormativoPDF({
+              courseTitle: course.title,
+              courseCode: courseCode,
+              durationHours: course.duration_hours || 0,
+              startDate: course.start_date,
+              endDate: course.end_date,
+              objectives: course.objectives,
+              professionalFamily: course.professional_family || course.category,
+              qualificationLevel: course.qualification_level,
+              modules: modules,
+              centerName: datosDelCentro.nombre,
+              centerPhone: centerContact?.phone,
+              centerEmail: centerContact?.email,
+              centerAddress: datosDelCentro.direccion,
+              centerCity: datosDelCentro.localidad,
+              centerProvince: datosDelCentro.provincia,
+              centerPostalCode: datosDelCentro.codigoPostal,
+              centerCif: centerContact?.cif,
+            })}
+            className="gap-2"
+            size="lg"
+            variant="outline"
+          >
+            <Download className="h-5 w-5" />
+            Descargar Proyecto Formativo Aula Virtual - F11 (PDF)
           </Button>
         </div>
       </section>
