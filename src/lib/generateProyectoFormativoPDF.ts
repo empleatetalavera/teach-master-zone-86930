@@ -522,7 +522,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     currentY += 2;
   };
 
-  const platformUrl = params.platformUrl || "https://campus.talentcloudsolution.com";
+  const platformUrl = params.platformUrl || "https://campus.grupoarmaformacion.com";
   const fullAddress = `${params.centerAddress || ""}, ${params.centerPostalCode || ""} ${params.centerCity || ""} (${params.centerProvince || ""})`;
 
   // ===== PAGE 1: COVER =====
@@ -571,7 +571,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   // ===== PAGE 2: CLAVES DE ACCESO =====
   doc.addPage();
   currentY = margin;
-  sectionHeader("CLAVES DE ACCESO AL CAMPUS VIRTUAL");
+  sectionHeader("CLAVES DE ACCESO AL CAMPUS GRUPO ARMA FORMACIÓN");
 
   paragraph("En la solicitud telemática de acreditación del certificado de profesionalidad en modalidad teleformación, se han incluido unas claves de acceso con un perfil de administrador, que permiten el acceso a las herramientas y recursos necesarios para gestionar, administrar, organizar, diseñar, impartir y evaluar acciones formativas a través de Internet tal y como se indica en el punto \"1. Requisitos técnicos de la plataforma de teleformación\" del anexo II de la Orden ESS/1897/2013, de 10 de octubre.");
   currentY += 3;
@@ -710,10 +710,10 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   bulletList([
     "Informar de las fechas del curso.",
     "Recabar la información/documentación acreditativa del cumplimiento de los requisitos para acceder a la formación del certificado de profesionalidad.",
-    "Realización de la prueba de competencia digital, establecida en el apartado 2 del artículo 6 de la Orden ESS/1897/2013, o recopilación de la documentación que acredite la exención. Para la realización de dicha prueba se facilitará a través de correo electrónico la URL de acceso al Campus Virtual, una guía de uso, e instrucciones junto con claves de acceso temporal.",
+    "Realización de la prueba de competencia digital, establecida en el apartado 2 del artículo 6 de la Orden ESS/1897/2013, o recopilación de la documentación que acredite la exención. Para la realización de dicha prueba se facilitará a través de correo electrónico la URL de acceso al Campus Grupo Arma Formación, una guía de uso, e instrucciones junto con claves de acceso temporal.",
     "Recabar la información/documentación para acreditación de requisitos establecidos en la normativa de formación financiada con fondos públicos.",
     "Informar sobre las fechas de desarrollo, o realizar directamente vía telemática, pruebas específicas para la selección.",
-    "Recabar y registrar en el Campus Virtual: sexo, edad, nivel formativo, situación laboral, provincia/CA de residencia, medio de conocimiento, experiencia online, razones de elección de teleformación, valoración sobre la modalidad."
+    "Recabar y registrar en la plataforma LMS: sexo, edad, nivel formativo, situación laboral, provincia/CA de residencia, medio de conocimiento, experiencia online, razones de elección de teleformación, valoración sobre la modalidad."
   ], 7);
 
   checkPageBreak(30);
@@ -731,17 +731,17 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     "URL de acceso al Campus.",
     "Claves de acceso a la plataforma.",
     "Guía del alumno.",
-    "Guía de uso del Campus Virtual.",
+    "Guía de uso de la plataforma LMS.",
     "Fechas de inicio y fin de la acción formativa.",
     "Información de los tutores-formadores y horario de tutorías.",
     "Medios de contacto con la entidad.",
-    "Instrucciones para el/la alumno/a para responder confirmando el correcto acceso al Campus Virtual."
+    "Instrucciones para el/la alumno/a para responder confirmando el correcto acceso al Campus Grupo Arma Formación."
   ], 7);
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(8);
   checkPageBreak(10);
   doc.text("Comprobación de acceso a Campus.", margin + 3, currentY); currentY += 5;
-  paragraph("Desde la entidad, el/la orientador/a académico/a contactará con aquellos/as alumnos/as que no hayan confirmado su acceso al Campus Virtual con una antelación mínima de 2 días a la fecha de inicio.");
+  paragraph("Desde la entidad, el/la orientador/a académico/a contactará con aquellos/as alumnos/as que no hayan confirmado su acceso al Campus Grupo Arma Formación con una antelación mínima de 2 días a la fecha de inicio.");
 
   // e) Procedimiento de seguimiento
   checkPageBreak(40);
@@ -751,7 +751,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.text("1) Durante la formación en la plataforma de formación virtual", margin + 3, currentY); currentY += 5;
   bulletList([
     "Inicio: sesión inicial con el tutor-formador para informar sobre objetivos, organización, programación didáctica, planificación de la evaluación. Realización de encuesta de diagnóstico inicial sobre conocimientos previos y motivación.",
-    "Semanalmente: seguimiento del desarrollo y contacto a través del correo electrónico para informar sobre tareas pendientes. Apoyo a través de las herramientas del Campus Virtual.",
+    "Semanalmente: seguimiento del desarrollo y contacto a través del correo electrónico para informar sobre tareas pendientes. Apoyo a través de las herramientas de la plataforma LMS.",
     "A lo largo del curso: tutorías virtuales a través de videoconferencia, chat, foro, para evaluar el desarrollo e informar sobre las pruebas de evaluación.",
     "A la finalización: contacto individualizado con cada alumno para comentar el desarrollo y los resultados obtenidos."
   ], 7);
@@ -776,7 +776,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   // f) Instrumentos de seguimiento
   checkPageBreak(15);
   subHeader("f) INSTRUMENTOS PARA EL SEGUIMIENTO DEL ALUMNADO");
-  paragraph("Siguiendo la normativa para el desarrollo del seguimiento, la plataforma de teleformación debe posibilitar la emisión de una serie de informes de seguimiento. La plataforma dispone de estos informes a los que se puede acceder a través de Menú/Administración/Informes. Al acceder a esta área se muestra la equivalencia entre los informes requeridos en la Orden ESS/1897/2013 y la denominación de estos informes en el Campus Virtual.");
+  paragraph("Siguiendo la normativa para el desarrollo del seguimiento, la plataforma de teleformación debe posibilitar la emisión de una serie de informes de seguimiento. La plataforma dispone de estos informes a los que se puede acceder a través de Menú/Administración/Informes. Al acceder a esta área se muestra la equivalencia entre los informes requeridos en la Orden ESS/1897/2013 y la denominación de estos informes en el Campus Grupo Arma Formación.");
 
   // Perfil de tutores
   checkPageBreak(30);
@@ -815,7 +815,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   doc.setFont("helvetica", "bold"); doc.setFontSize(8);
   doc.text("Recursos tecnológicos generales:", margin + 5, currentY); currentY += 5;
   bulletList([
-    "Plataforma de teleformación: TalentCloud Solution - Campus Virtual LMS.",
+    "Plataforma de teleformación: Campus Grupo Arma Formación - Plataforma LMS.",
     "Herramientas de comunicación síncrona: Chat, Videoconferencia, Mensajería instantánea.",
     "Herramientas de comunicación asíncrona: Foros de debate, Correo electrónico interno, Tablón de anuncios.",
     "Herramientas de seguimiento y evaluación: Tests autoevaluables, Actividades evaluables, Informes de seguimiento, Registro de actividad.",
@@ -845,8 +845,8 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     margin: { left: margin, right: margin },
     head: [["ALUMNO", "TUTOR-FORMADOR"]],
     body: [[
-      "• Guía del alumno\n• Guía de uso del Campus Virtual\n• Contenido Interactivo Multimedia (CIM)\n• Cuaderno del alumno (ejercicios y actividades)\n• Material complementario (documentos, vídeos)\n• Glosario de términos",
-      "• Guía del tutor-formador\n• Orientaciones metodológicas por módulo/UF\n• Cuaderno del formador\n• Instrumentos de evaluación\n• Guía de uso del Campus Virtual\n• Plantillas de documentación preceptiva"
+      "• Guía del alumno\n• Guía de uso de la plataforma LMS\n• Contenido Interactivo Multimedia (CIM)\n• Cuaderno del alumno (ejercicios y actividades)\n• Material complementario (documentos, vídeos)\n• Glosario de términos",
+      "• Guía del tutor-formador\n• Orientaciones metodológicas por módulo/UF\n• Cuaderno del formador\n• Instrumentos de evaluación\n• Guía de uso de la plataforma LMS\n• Plantillas de documentación preceptiva"
     ]],
     theme: "grid",
     headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 8, halign: "center" as const },
@@ -1078,7 +1078,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
         { content: `${ra.ra}: ${ra.title}`, styles: { fontStyle: "bold", fontSize: 7 } },
         { content: cesText },
         { content: getMethodologyText(modCurr.code) },
-        { content: "Campus Virtual TalentCloud Solution\n\nAula virtual síncrona (videoconferencia)\n\nPlataforma LMS con acceso 24h" },
+        { content: "Campus Grupo Arma Formación\n\nAula virtual síncrona (videoconferencia)\n\nPlataforma LMS con acceso 24h" },
         { content: modCurr.code === "1782" ? "X" : "", styles: { halign: "center" as const } }
       ]);
     });
@@ -1207,7 +1207,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     margin: { left: margin, right: margin },
     head: [[{ content: "DATOS DEL AULA ON-LINE ACCESO ALUMNADO", colSpan: 2, styles: { fillColor: BLUE_HEADER } }]],
     body: [
-      [{ content: "Aula virtual (nombre):", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 50 } }, "TalentCloud Solution - Campus Virtual"],
+      [{ content: "Aula virtual (nombre):", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 50 } }, "Campus Grupo Arma Formación - Plataforma LMS"],
       [{ content: "URL:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, platformUrl],
       [{ content: "Usuario:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, "(Se proporcionará individualmente al alumnado)"],
       [{ content: "Contraseña:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, "(Se proporcionará individualmente al alumnado)"]
@@ -1292,7 +1292,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
         { content: `${ra.ra}: ${ra.title}`, styles: { fontStyle: "bold", fontSize: 7 } },
         { content: cesText },
         { content: getMethodologyText(modCurr.code) },
-        { content: "Campus Virtual TalentCloud Solution\n\nAula virtual síncrona (videoconferencia)\n\nPlataforma LMS con acceso 24h" },
+        { content: "Campus Grupo Arma Formación\n\nAula virtual síncrona (videoconferencia)\n\nPlataforma LMS con acceso 24h" },
         { content: modCurr.code === "1782" ? "X" : "", styles: { halign: "center" as const } }
       ]);
     });
@@ -1392,7 +1392,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     margin: { left: margin, right: margin },
     head: [["Espacios, instalaciones\ny equipamiento", "Contenidos", "Estrategias metodológicas", "PRUEBA DE EVALUACIÓN"]],
     body: [[
-      "Campus Virtual\nTalentCloud Solution\n(Plataforma LMS)",
+      "Campus Grupo Arma Formación\n(Plataforma LMS)",
       "Módulo 1782: Prevención de riesgos laborales\n- Factores de riesgo\n- Daños profesionales\n- Evaluación de riesgos\n- Protocolos de emergencia\n- Derechos y deberes PRL\n- Primeros auxilios",
       "• Contenido Interactivo Multimedia\n• Test de autoevaluación\n• Actividades prácticas\n• Foro temático\n• Recursos complementarios",
       "Test de evaluación tipo test\nFecha: Por determinar\n\nRequisito previo a la\nformación en empresa"
