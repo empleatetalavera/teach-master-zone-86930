@@ -5,6 +5,8 @@ interface CenterBranding {
   centerName: string;
   centerLogo?: string;
   primaryColor?: string;
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 // Color principal teal
@@ -326,13 +328,12 @@ export const generateCIMNavigationGuidePDF = async (
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text('CAMPUS EMPLEATE', margin, 30);
+  doc.text(branding.centerName || 'Campus Virtual', margin, 30);
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...GRAY);
-  doc.text('MINISTERIO DE TRABAJO Y ECONOMÍA SOCIAL', pageWidth - margin, 28, { align: 'right' });
-  doc.text('SEPE', pageWidth - margin, 35, { align: 'right' });
+  doc.text('Formación Profesional para el Empleo', pageWidth - margin, 28, { align: 'right' });
 
   // Línea separadora
   doc.setDrawColor(...TEAL_COLOR);
@@ -362,7 +363,7 @@ export const generateCIMNavigationGuidePDF = async (
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text(branding.centerName || 'Empléate Talavera Formación', pageWidth / 2, 160, { align: 'center' });
+  doc.text(branding.centerName || 'Centro de Formación', pageWidth / 2, 160, { align: 'center' });
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
@@ -820,9 +821,9 @@ export const generateCIMNavigationGuidePDF = async (
   
   yPos += 12;
   doc.setFont('helvetica', 'bold');
-  doc.text('📧 formacion.empleate@gmail.com', pageWidth / 2, yPos, { align: 'center' });
+  doc.text(`📧 ${branding.contactEmail || 'soporte@plataforma.com'}`, pageWidth / 2, yPos, { align: 'center' });
   yPos += 8;
-  doc.text('📞 665 673 416', pageWidth / 2, yPos, { align: 'center' });
+  doc.text(`📞 ${branding.contactPhone || ''}`, pageWidth / 2, yPos, { align: 'center' });
 
   yPos += 30;
   
@@ -834,7 +835,7 @@ export const generateCIMNavigationGuidePDF = async (
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text(branding.centerName || 'Empléate Talavera Formación', pageWidth / 2, yPos, { align: 'center' });
+  doc.text(branding.centerName || 'Centro de Formación', pageWidth / 2, yPos, { align: 'center' });
   
   yPos += 10;
   doc.setFontSize(10);
