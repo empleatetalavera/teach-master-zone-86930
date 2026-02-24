@@ -1427,7 +1427,9 @@ export default function CourseView() {
                     onClick={async () => {
                       const { generateCIMNavigationGuidePDF } = await import('@/lib/generateCIMNavigationGuidePDF');
                       await generateCIMNavigationGuidePDF({
-                        centerName: centerName || 'Empléate Talavera Formación'
+                        centerName: centerName || 'Centro de Formación',
+                        contactEmail: centerContact.email || course.support_email || '',
+                        contactPhone: centerContact.phone || course.support_phone || '',
                       });
                     }}
                   >
@@ -1525,7 +1527,9 @@ export default function CourseView() {
                     onClick={async () => {
                       const { generateCIMNavigationGuidePDF } = await import('@/lib/generateCIMNavigationGuidePDF');
                       await generateCIMNavigationGuidePDF({
-                        centerName: centerName || 'Empléate Talavera Formación'
+                        centerName: centerName || 'Centro de Formación',
+                        contactEmail: centerContact.email || course.support_email || '',
+                        contactPhone: centerContact.phone || course.support_phone || '',
                       });
                     }}
                   >
