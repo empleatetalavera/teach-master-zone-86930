@@ -16,8 +16,10 @@ import {
   Loader2,
   FileIcon,
   Paperclip,
-  GraduationCap
+  GraduationCap,
+  FileDown
 } from "lucide-react";
+import { generateTutorGuidePDF } from "@/lib/generateTutorGuidePDF";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -150,6 +152,19 @@ const TeacherTutorGuide = () => {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [sections, setSections] = useState<GuideSection[]>(sectionDefs);
   const [uploadingSection, setUploadingSection] = useState<string | null>(null);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    try {
+      setGeneratingPDF(true);
+      await generateTutorGuidePDF({ centerName: "Grupo Arma Formación" });
+      toast({ title: "PDF generado", description: "La Guía del Tutor-Formador se ha descargado correctamente" });
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo generar el PDF", variant: "destructive" });
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
 
   const canManageFiles = userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher';
 
@@ -725,10 +740,19 @@ const TeacherTutorGuide = () => {
             Habilitación para la docencia en grados A, B y C del Sistema de Formación Profesional (SSC_C_017_5B)
           </p>
         </div>
-        <Badge variant="outline" className="mt-1">
-          <GraduationCap className="h-3 w-3 mr-1" />
-          510 horas
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="mt-1">
+            <GraduationCap className="h-3 w-3 mr-1" />
+            510 horas
+          </Badge>
+          <Button onClick={handleDownloadPDF} disabled={generatingPDF} className="gap-2">
+            {generatingPDF ? (
+              <><Loader2 className="h-4 w-4 animate-spin" />Generando...</>
+            ) : (
+              <><FileDown className="h-4 w-4" />Descargar PDF</>
+            )}
+          </Button>
+        </div>
       </div>
 
       <Card className="bg-primary/5 border-primary/20">
