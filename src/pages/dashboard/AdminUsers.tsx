@@ -110,6 +110,7 @@ const AdminUsers = () => {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserFullName, setNewUserFullName] = useState("");
+  const [newUserUsername, setNewUserUsername] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "teacher" | "student" | "auditor" | "inspector">("student");
   const [newUserTrainingCenter, setNewUserTrainingCenter] = useState<string>("");
   const [trainingCenters, setTrainingCenters] = useState<Array<{ id: string; name: string }>>([]);
@@ -386,10 +387,10 @@ const AdminUsers = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!newUserEmail || !newUserPassword) {
+    if (!newUserEmail && !newUserUsername) {
       toast({
         title: "Error",
-        description: "Email y contraseña son obligatorios",
+        description: "Email o nombre de usuario son obligatorios",
         variant: "destructive",
       });
       return;
@@ -410,7 +411,8 @@ const AdminUsers = () => {
       // Call edge function to create user
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
-          email: newUserEmail,
+          email: newUserEmail || undefined,
+          username: newUserUsername || undefined,
           password: newUserPassword,
           fullName: newUserFullName || undefined,
           role: newUserRole,
@@ -423,7 +425,7 @@ const AdminUsers = () => {
 
       // Store credentials and show modal
       setCreatedUserCredentials({
-        email: newUserEmail,
+        email: data.user?.email || newUserEmail || newUserUsername,
         password: newUserPassword,
         fullName: newUserFullName || undefined,
         role: newUserRole,
@@ -437,6 +439,7 @@ const AdminUsers = () => {
       setNewUserEmail("");
       setNewUserPassword("");
       setNewUserFullName("");
+      setNewUserUsername("");
       setNewUserRole("student");
       setNewUserTrainingCenter("");
 
@@ -879,6 +882,7 @@ const AdminUsers = () => {
           setNewUserEmail("");
           setNewUserPassword("");
           setNewUserFullName("");
+          setNewUserUsername("");
           setNewUserRole("student");
           setNewUserTrainingCenter("");
         }
@@ -892,7 +896,22 @@ const AdminUsers = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="username">Nombre de Usuario</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Ej: AUDITORCFC"
+                value={newUserUsername}
+                onChange={(e) => setNewUserUsername(e.target.value.toUpperCase().replace(/\s/g, ''))}
+                disabled={isCreating}
+              />
+              <p className="text-xs text-muted-foreground">
+                El usuario podrá iniciar sesión con este nombre de usuario
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email (opcional si tiene nombre de usuario)</Label>
               <Input
                 id="email"
                 type="email"
@@ -1062,16 +1081,16 @@ const AdminUsers = () => {
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Email:</span>
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Usuario:</span>
                     <span className="text-sm font-mono">{createdUserCredentials.email}</span>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard(createdUserCredentials.email, 'Email')}
+                    onClick={() => copyToClipboard(createdUserCredentials.email, 'Usuario')}
                   >
-                    {copiedField === 'Email' ? (
+                    {copiedField === 'Usuario' ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Copy className="h-4 w-4" />
