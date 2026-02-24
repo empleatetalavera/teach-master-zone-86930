@@ -142,32 +142,34 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
 
   const addSectionTitle = (title: string) => {
     checkPage(18);
-    // Blue background bar for section title
+    const safeTitle = title.replace(/→/g, ">").replace(/—/g, "-");
     doc.setFillColor(...primaryColor);
     doc.roundedRect(margin, y - 2, contentWidth, 10, 1.5, 1.5, "F");
     doc.setFontSize(12);
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.text(title, margin + 4, y + 5);
+    doc.text(safeTitle, margin + 4, y + 5);
     y += 14;
   };
 
   const addSubTitle = (title: string) => {
     checkPage(14);
+    const safeTitle = title.replace(/→/g, ">").replace(/—/g, "-");
     doc.setFillColor(...lightBlueBg);
     doc.roundedRect(margin, y - 2, contentWidth, 8, 1, 1, "F");
     doc.setFontSize(10);
     doc.setTextColor(...secondaryColor);
     doc.setFont("helvetica", "bold");
-    doc.text(title, margin + 3, y + 4);
+    doc.text(safeTitle, margin + 3, y + 4);
     y += 10;
   };
 
   const addParagraph = (text: string, indent = 0) => {
+    const safeText = text.replace(/→/g, ">").replace(/—/g, "-").replace(/"/g, '"').replace(/"/g, '"');
     doc.setFontSize(9);
     doc.setTextColor(...darkColor);
     doc.setFont("helvetica", "normal");
-    const lines = doc.splitTextToSize(text, contentWidth - indent);
+    const lines = doc.splitTextToSize(safeText, contentWidth - indent);
     for (const line of lines) {
       checkPage(6);
       doc.text(line, margin + indent, y);
@@ -177,13 +179,16 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   };
 
   const addBullet = (text: string, indent = 5) => {
+    // Replace arrows with safe ASCII to avoid encoding issues in jsPDF
+    const safeText = text.replace(/→/g, ">").replace(/—/g, "-");
     doc.setFontSize(9);
     doc.setTextColor(...darkColor);
     doc.setFont("helvetica", "normal");
-    const lines = doc.splitTextToSize(text, contentWidth - indent - 5);
+    const lines = doc.splitTextToSize(safeText, contentWidth - indent - 5);
     checkPage(6);
-    doc.setTextColor(...primaryColor);
-    doc.text("●", margin + indent, y);
+    // Use a simple dash as bullet (safe for helvetica encoding)
+    doc.setFillColor(...primaryColor);
+    doc.circle(margin + indent + 1, y - 1, 1, "F");
     doc.setTextColor(...darkColor);
     for (let i = 0; i < lines.length; i++) {
       if (i > 0) checkPage(6);
@@ -193,7 +198,8 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   };
 
   const addNote = (text: string) => {
-    const lines = doc.splitTextToSize(text, contentWidth - 10);
+    const safeText = text.replace(/→/g, ">").replace(/—/g, "-").replace(/"/g, '"').replace(/"/g, '"');
+    const lines = doc.splitTextToSize(safeText, contentWidth - 10);
     const boxHeight = lines.length * 4.5 + 10;
     checkPage(boxHeight + 4);
     doc.setFillColor(...lightBlueBg);
