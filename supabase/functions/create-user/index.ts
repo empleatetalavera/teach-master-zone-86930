@@ -12,13 +12,23 @@ serve(async (req) => {
   }
 
   try {
-    const { email, password, fullName, role, trainingCenterId } = await req.json();
+    const { email, username, password, fullName, role, trainingCenterId } = await req.json();
 
-    console.log(`Creating user: ${email} with role ${role}`);
+    console.log(`Creating user: ${email || username} with role ${role}`);
 
-    if (!email || !password || !role) {
+    if (!password || !role) {
       return new Response(
-        JSON.stringify({ error: "Email, password y rol son requeridos" }),
+        JSON.stringify({ error: "Password y rol son requeridos" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (!email && !username) {
+      return new Response(
+        JSON.stringify({ error: "Email o nombre de usuario son requeridos" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -126,13 +136,35 @@ serve(async (req) => {
       }
     }
 
+    // If no email provided, generate one from username
+    const effectiveEmail = email || `${username.toLowerCase()}@internal.plataforma.local`;
+
+    // If username provided, check it doesn't already exist
+    if (username) {
+      const { data: existingUser } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .ilike("username", username)
+        .maybeSingle();
+
+      if (existingUser) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Ya existe un usuario con este nombre de usuario." }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
     // Create the new user with admin client
     const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: effectiveEmail,
       password,
       email_confirm: true,
       user_metadata: {
-        full_name: fullName || undefined,
+        full_name: fullName || username || undefined,
       },
     });
 
@@ -179,13 +211,15 @@ serve(async (req) => {
       );
     }
 
-    // Create/update profile with training center
+    // Create/update profile with training center and username
     const profileData: any = {
       id: authData.user.id,
     };
     
     if (fullName) profileData.full_name = fullName;
+    else if (username) profileData.full_name = username;
     if (effectiveTrainingCenterId) profileData.training_center_id = effectiveTrainingCenterId;
+    if (username) profileData.username = username.toLowerCase();
 
     // Use upsert to handle potential profile already created by trigger
     const { error: profileError } = await supabaseAdmin
@@ -196,7 +230,7 @@ serve(async (req) => {
       console.error("Error creating/updating profile:", profileError);
     }
 
-    console.log(`User created successfully: ${email} with role ${role}${effectiveTrainingCenterId ? ` and training center ${effectiveTrainingCenterId}` : ''}`);
+    console.log(`User created successfully: ${effectiveEmail} with role ${role}${username ? ` and username ${username}` : ''}${effectiveTrainingCenterId ? ` and training center ${effectiveTrainingCenterId}` : ''}`);
 
     return new Response(
       JSON.stringify({ 
