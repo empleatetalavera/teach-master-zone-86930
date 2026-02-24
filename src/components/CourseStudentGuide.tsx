@@ -76,7 +76,13 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
 
   const handleDownloadPDF = async () => {
     if (course.student_guide_pdf_url) {
-      window.open(course.student_guide_pdf_url, '_blank');
+      const link = document.createElement('a');
+      link.href = course.student_guide_pdf_url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else {
       // Fetch modules and formative units from DB for dynamic PDF
       let modulesData: any[] = [];

@@ -1466,16 +1466,20 @@ export default function CourseView() {
                       Documento PDF con toda la información del curso
                     </p>
                   </div>
-                  <Button asChild className="w-full">
-                    <a 
-                      href={course.student_guide_pdf_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      <FileDown className="h-4 w-4" />
-                      Descargar Guía del Alumno (PDF)
-                    </a>
+                  <Button 
+                    className="w-full flex items-center gap-2"
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = course.student_guide_pdf_url!;
+                      link.target = '_blank';
+                      link.rel = 'noopener noreferrer';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                  >
+                    <FileDown className="h-4 w-4" />
+                    Descargar Guía del Alumno (PDF)
                   </Button>
                 </CardContent>
               </Card>
