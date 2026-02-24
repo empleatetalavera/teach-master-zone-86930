@@ -148,12 +148,19 @@ export const SingleDocumentUploader: React.FC<SingleDocumentUploaderProps> = ({
                 const blobUrl = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = blobUrl;
-                link.target = '_blank';
+                link.download = `${documentLabel}.pdf`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-              } catch { window.open(documentUrl!, '_blank'); }
+              } catch {
+                const link = document.createElement('a');
+                link.href = documentUrl!;
+                link.download = `${documentLabel}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }
             }}
           >
             <ExternalLink className="h-3.5 w-3.5" />

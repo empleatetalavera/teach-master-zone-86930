@@ -1475,15 +1475,14 @@ export default function CourseView() {
                         const blobUrl = URL.createObjectURL(blob);
                         const link = document.createElement('a');
                         link.href = blobUrl;
-                        link.target = '_blank';
-                        link.rel = 'noopener noreferrer';
+                        link.download = 'Guia_del_Alumno.pdf';
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
                         setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
                       } catch (err) {
-                        console.error('Error opening PDF:', err);
-                        window.open(course.student_guide_pdf_url!, '_blank');
+                        console.error('Error downloading PDF:', err);
+                        alert('Error al descargar el PDF. Inténtelo de nuevo.');
                       }
                     }}
                   >
