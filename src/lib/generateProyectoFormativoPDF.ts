@@ -447,7 +447,6 @@ const BOE_CURRICULUM: ModuleCurriculum[] = [
 ];
 
 export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
-  // LANDSCAPE orientation as per SEPE template
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -489,159 +488,544 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     currentY += 10;
   };
 
+  const subHeader = (text: string) => {
+    checkPageBreak(10);
+    doc.setFillColor(...LIGHT_BLUE);
+    doc.rect(margin, currentY, contentWidth, 7, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(0);
+    doc.text(text, margin + 3, currentY + 5);
+    currentY += 9;
+  };
+
+  const paragraph = (text: string, fontSize = 8) => {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(fontSize);
+    doc.setTextColor(30);
+    const lines = doc.splitTextToSize(text, contentWidth - 6);
+    checkPageBreak(lines.length * 4 + 2);
+    doc.text(lines, margin + 3, currentY);
+    currentY += lines.length * 4 + 2;
+  };
+
+  const bulletList = (items: string[], fontSize = 8) => {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(fontSize);
+    doc.setTextColor(30);
+    items.forEach(item => {
+      const lines = doc.splitTextToSize(`• ${item}`, contentWidth - 10);
+      checkPageBreak(lines.length * 4 + 1);
+      doc.text(lines, margin + 5, currentY);
+      currentY += lines.length * 4 + 1;
+    });
+    currentY += 2;
+  };
+
+  const platformUrl = params.platformUrl || "https://campus.talentcloudsolution.com";
+  const fullAddress = `${params.centerAddress || ""}, ${params.centerPostalCode || ""} ${params.centerCity || ""} (${params.centerProvince || ""})`;
+
   // ===== PAGE 1: COVER =====
-  currentY = 35;
+  currentY = 30;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(26);
+  doc.setFontSize(28);
   doc.setTextColor(...BLUE_HEADER);
   doc.text("PROYECTO FORMATIVO", pageWidth / 2, currentY, { align: "center" });
-  currentY += 12;
-  doc.setFontSize(20);
-  doc.text("AULA VIRTUAL", pageWidth / 2, currentY, { align: "center" });
+  currentY += 14;
+  doc.setFontSize(16);
+  doc.text("Modalidad Teleformación", pageWidth / 2, currentY, { align: "center" });
   currentY += 16;
 
   doc.setDrawColor(...BLUE_HEADER);
   doc.setLineWidth(0.5);
   doc.line(margin + 40, currentY, pageWidth - margin - 40, currentY);
-  currentY += 12;
+  currentY += 14;
 
   doc.setTextColor(50);
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.text("CERTIFICADO PROFESIONAL:", margin + 20, currentY);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   currentY += 7;
-  const cpText = `${params.courseCode} - ${params.courseTitle}`;
-  const cpLines = doc.splitTextToSize(cpText, contentWidth - 40);
+  const cpLines = doc.splitTextToSize(`${params.courseCode} - ${params.courseTitle}`, contentWidth - 40);
   doc.text(cpLines, margin + 20, currentY);
   currentY += cpLines.length * 5 + 10;
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text("EXPEDIENTE:", margin + 20, currentY);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text("(A cumplimentar antes del inicio de la acción formativa)", margin + 50, currentY);
-  currentY += 12;
-
-  // Center info block
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.text("CENTRO DE FORMACIÓN:", margin + 20, currentY);
   currentY += 7;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(params.centerName, margin + 20, currentY);
-  currentY += 5;
+  doc.text(params.centerName, margin + 20, currentY); currentY += 5;
   if (params.centerCif) { doc.text(`CIF: ${params.centerCif}`, margin + 20, currentY); currentY += 5; }
   if (params.centerAddress) {
-    doc.text(params.centerAddress, margin + 20, currentY); currentY += 5;
-    doc.text(`${params.centerPostalCode || ""} ${params.centerCity || ""} (${params.centerProvince || ""})`, margin + 20, currentY);
-    currentY += 5;
+    doc.text(fullAddress, margin + 20, currentY); currentY += 5;
   }
   if (params.centerPhone) { doc.text(`Tel: ${params.centerPhone}`, margin + 20, currentY); currentY += 5; }
-  if (params.centerEmail) { doc.text(`Email: ${params.centerEmail}`, margin + 20, currentY); }
+  if (params.centerEmail) { doc.text(`Email: ${params.centerEmail}`, margin + 20, currentY); currentY += 5; }
+  currentY += 5;
+  doc.text(`Sitio WEB: ${platformUrl}`, margin + 20, currentY);
 
-  // ===== PAGE 2: INSTRUCCIONES =====
+  // ===== PAGE 2: CLAVES DE ACCESO =====
   doc.addPage();
   currentY = margin;
-  sectionHeader("INSTRUCCIONES");
+  sectionHeader("CLAVES DE ACCESO AL CAMPUS VIRTUAL");
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  const instrLines = [
-    "El presente Anexo al proyecto formativo, deberá de cumplimentarse y entregarse para la impartición a través de aula virtual, tal y como recoge el artículo 28, de la orden 178/2020, de 19 de noviembre.",
-    "",
-    "Este anexo diseñado para la formación auxiliar a través de aula virtual, consta de:",
-    "  1. Los datos de los recursos humanos y técnicos.",
-    "  2. La programación de los contenidos impartidos a través del aula virtual.",
-    "",
-    "Se recuerda, así mismo:",
-    "  1. Que se considera aula virtual, al entorno de aprendizaje, donde el formador/a y el alumnado interactúan, de forma concurrente y en tiempo real, a través de un sistema de comunicación telemático de carácter síncrono.",
-    "  2. No se podrá utilizar el aula virtual para la realización de la prueba final de módulo.",
-    "  3. A título orientativo, en aquellos certificados profesionales que posean \"Especificaciones de los certificados profesionales en modalidad de teleformación\" en forma de ficha, en el anexo I de la Orden ESS/1897/2013, de 10 de octubre, se pueden consultar que contenidos son los idóneos para su impartición a través de esta modalidad.",
-    "",
-    "El presente F-11 sólo se debe cumplimentar para aquellos contenidos que se vayan a impartir mediante aula virtual.",
-    "Este documento se debe presentar cuando se comunique el uso del aula virtual, a través de \"incidencias/otras\"."
-  ];
-  instrLines.forEach(line => {
-    const splitLines = doc.splitTextToSize(line || " ", contentWidth - 6);
-    checkPageBreak(splitLines.length * 4);
-    doc.text(splitLines, margin + 3, currentY);
-    currentY += splitLines.length * 4 + 1;
+  paragraph("En la solicitud telemática de acreditación del certificado de profesionalidad en modalidad teleformación, se han incluido unas claves de acceso con un perfil de administrador, que permiten el acceso a las herramientas y recursos necesarios para gestionar, administrar, organizar, diseñar, impartir y evaluar acciones formativas a través de Internet tal y como se indica en el punto \"1. Requisitos técnicos de la plataforma de teleformación\" del anexo II de la Orden ESS/1897/2013, de 10 de octubre.");
+  currentY += 3;
+  paragraph("No obstante, a continuación facilitamos las siguientes claves de acceso para los perfiles de alumno y de tutor-formador para poder verificar las herramientas y recursos de los que van a disponer:");
+  currentY += 3;
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin + 30, right: margin + 30 },
+    head: [["CLAVE ALUMNO", "CLAVE TUTOR-FORMADOR"]],
+    body: [
+      ["Usuario: ALUMNOCERTIFICADOS\nContraseña: (A facilitar)", "Usuario: TUTORCERTIFICADOS\nContraseña: (A facilitar)"]
+    ],
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 9, halign: "center" as const },
+    bodyStyles: { fontSize: 9, halign: "center" as const },
+    styles: { cellPadding: 5 }
   });
+  currentY = (doc as any).lastAutoTable.finalY + 10;
 
-  // ===== PAGE 3: RECURSOS HUMANOS Y TÉCNICOS =====
+  // ===== PAGE 3: DATOS DEL CENTRO =====
   doc.addPage();
   currentY = margin;
-  sectionHeader("RECURSOS HUMANOS Y TÉCNICOS DEL AULA VIRTUAL");
+  sectionHeader("1. DATOS DEL CENTRO QUE SOLICITA LA ACREDITACIÓN");
 
   autoTable(doc, {
     startY: currentY,
     margin: { left: margin, right: margin },
-    head: [[{ content: "RECURSOS HUMANOS", colSpan: 4, styles: { fillColor: BLUE_HEADER } }]],
     body: [
-      [
-        { content: "Nombre del tutor/a\n-formador/a responsable:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 50 } },
-        { content: "(A cumplimentar con datos del tutor asignado)" },
-        { content: "Teléfono de contacto:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 40 } },
-        { content: params.centerPhone || "" }
-      ],
-      [
-        { content: "E-mail", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } },
-        { content: params.centerEmail || "(A cumplimentar)", colSpan: 3 }
-      ]
+      [{ content: "Nombre:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 40 } }, params.centerName],
+      [{ content: "CIF/NIF/NIE:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, params.centerCif || "(A cumplimentar)"],
+      [{ content: "Sitio WEB:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, platformUrl],
+      [{ content: "Dirección:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, fullAddress],
+      [{ content: "Teléfono:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, params.centerPhone || ""],
+      [{ content: "Email:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, params.centerEmail || ""],
     ],
     theme: "grid",
-    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 9, fontStyle: "bold" },
-    bodyStyles: { fontSize: 8 },
+    bodyStyles: { fontSize: 9 },
     styles: { cellPadding: 3 }
   });
+  currentY = (doc as any).lastAutoTable.finalY + 10;
 
-  currentY = (doc as any).lastAutoTable.finalY + 8;
+  // ===== SECTION 2: CARACTERIZACIÓN =====
+  sectionHeader("2. CARACTERIZACIÓN DE LA ACCIÓN FORMATIVA");
 
   autoTable(doc, {
     startY: currentY,
     margin: { left: margin, right: margin },
-    head: [[{ content: "DATOS DEL AULA ON-LINE ACCESO ALUMNADO", colSpan: 2, styles: { fillColor: BLUE_HEADER } }]],
-    body: [
-      [{ content: "Aula virtual (nombre):", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 50 } }, "TalentCloud Solution - Campus Virtual"],
-      [{ content: "URL:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, params.platformUrl || "https://campus.talentcloudsolution.com"],
-      [{ content: "Usuario:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, "(Se proporcionará individualmente al alumnado)"],
-      [{ content: "Contraseña:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, "(Se proporcionará individualmente al alumnado)"]
-    ],
-    theme: "grid",
-    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 9, fontStyle: "bold" },
-    bodyStyles: { fontSize: 8 },
-    styles: { cellPadding: 3 }
-  });
-
-  currentY = (doc as any).lastAutoTable.finalY + 8;
-
-  autoTable(doc, {
-    startY: currentY,
-    margin: { left: margin, right: margin },
-    head: [[{ content: "DATOS DEL AULA ON-LINE ACCESO AL ADMINISTRADOR", colSpan: 3, styles: { fillColor: BLUE_HEADER } }]],
-    body: [
-      [
-        { content: "URL:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } },
-        { content: "Usuario:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } },
-        { content: "Contraseña:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }
-      ],
-      [params.platformUrl || "https://campus.talentcloudsolution.com", "(Datos reservados)", "(Datos reservados)"]
-    ],
+    head: [["Código", "Denominación"]],
+    body: [[params.courseCode, params.courseTitle]],
     theme: "grid",
     headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 9 },
-    bodyStyles: { fontSize: 8 },
+    bodyStyles: { fontSize: 9 },
     styles: { cellPadding: 3 }
   });
+  currentY = (doc as any).lastAutoTable.finalY + 6;
 
-  // ===== F11 PAGES: One per module with real BOE data =====
+  subHeader("Relación de módulos y unidades formativas");
+
+  const modulesTableBody: any[][] = BOE_CURRICULUM.map(m => [
+    `${m.code}. ${m.title}`,
+    `${m.hours}`,
+    "2"
+  ]);
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [["Módulo", "Duración (horas)", "Nº tutores-formadores"]],
+    body: modulesTableBody,
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 8 },
+    bodyStyles: { fontSize: 7.5 },
+    styles: { cellPadding: 2.5 }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 4;
+
+  paragraph("Nota: Para establecer el número de tutores-formadores se atiende a lo estipulado en el art. 6 y el artículo 30 de la Orden ESS/1897/2013 de 10 de octubre, y en el apartado 4 de la Disposición adicional quinta de la Resolución de 26 de mayo del Servicio Público de Empleo Estatal.", 7);
+
+  // ===== SECTION 3: ORGANIZACIÓN Y GESTIÓN =====
+  doc.addPage();
+  currentY = margin;
+  sectionHeader("3. ORGANIZACIÓN Y GESTIÓN DE LA ACCIÓN FORMATIVA");
+
+  // 3a: Selección del alumnado
+  subHeader("Selección del alumnado");
+  paragraph("Para la selección del alumnado de la acción formativa se tendrán en cuenta las siguientes cuestiones:");
+  bulletList([
+    "Número máximo de alumnos",
+    "Ámbito geográfico",
+    "Medios de difusión",
+    "Procedimiento de solicitud, inscripción, selección y matriculación",
+    "Procedimiento de seguimiento del alumnado",
+    "Instrumentos para el seguimiento del alumnado"
+  ]);
+
+  subHeader("a) NÚMERO MÁXIMO DE ALUMNOS");
+  paragraph("15. No obstante, el número de alumnos se ajustará a lo establecido en el apartado 3 del artículo 6 de la Orden ESS/1897/2013 de 10 de octubre, y a la disponibilidad de plazas para la realización de las sesiones presenciales (pruebas de evaluación final y, en su caso, tutorías presenciales).");
+
+  subHeader("b) ÁMBITO GEOGRÁFICO");
+  paragraph("ESTATAL");
+  paragraph("Los centros acreditados para las sesiones presenciales en los que tendrán lugar las pruebas de evaluación final y las tutorías presenciales son:");
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [["DIRECCIÓN DEL CENTRO DE FORMACIÓN"]],
+    body: [[`${params.centerName}\n${fullAddress}`]],
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 8 },
+    bodyStyles: { fontSize: 8 },
+    styles: { cellPadding: 4 }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 4;
+  paragraph("Nota: se ampliarán los centros en función de las necesidades del alumnado y de la impartición.", 7);
+
+  subHeader("c) MEDIOS DE DIFUSIÓN");
+  paragraph("c.1) Página Web de la entidad. Siempre, a través de la Web de la entidad, donde se recogerá la siguiente información: objetivos y programa de la acción formativa, fechas de realización, metodología y requisitos de acceso.");
+  paragraph("En relación a los requisitos de acceso se publicará la información relativa a:");
+  bulletList([
+    "Requisitos para el acceso a certificados de profesionalidad de niveles 2 y/o 3 según lo establecido en el art. 5.5.c y 20 del RD 34/2008, modificados y/o incorporados por el RD 1675/2010 y el RD 189/2013, y lo establecido en el artículo 4 o en el anexo del Real Decreto que aprueba cada certificado de profesionalidad.",
+    "Requisitos de comprobación o acreditación de las competencias digitales establecida en el apartado 2 del artículo 6 de la Orden ESS/1897/2013.",
+    "Otros requisitos establecidos en base a la normativa que regule la formación financiada con fondos públicos."
+  ], 7);
+  paragraph("c.2) Otros según normativa. Además, en caso de acciones formativas financiadas con fondos públicos, a través de los medios que se establezcan en las bases de la convocatoria.", 7);
+
+  // d) Procedimiento de solicitud
+  checkPageBreak(60);
+  subHeader("d) PROCEDIMIENTO DE SOLICITUD, INSCRIPCIÓN, SELECCIÓN Y MATRICULACIÓN");
+  
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.text("Inscripción.", margin + 3, currentY); currentY += 5;
+  paragraph("La persona solicitante debe completar la solicitud de inscripción en la acción formativa por vía telemática a través de la página Web de la entidad. En esta solicitud se incluyen datos personales y, en caso de formación financiada a través de la iniciativa privada, los datos sobre modo de pago. El plazo de inscripción estará abierto todo el año.");
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.text("Recogida de datos y comprobación de requisitos.", margin + 3, currentY); currentY += 5;
+  paragraph("Desde la entidad un/a orientador/a académico contactará con la persona solicitante con objeto de:");
+  bulletList([
+    "Informar de las fechas del curso.",
+    "Recabar la información/documentación acreditativa del cumplimiento de los requisitos para acceder a la formación del certificado de profesionalidad.",
+    "Realización de la prueba de competencia digital, establecida en el apartado 2 del artículo 6 de la Orden ESS/1897/2013, o recopilación de la documentación que acredite la exención. Para la realización de dicha prueba se facilitará a través de correo electrónico la URL de acceso al Campus Virtual, una guía de uso, e instrucciones junto con claves de acceso temporal.",
+    "Recabar la información/documentación para acreditación de requisitos establecidos en la normativa de formación financiada con fondos públicos.",
+    "Informar sobre las fechas de desarrollo, o realizar directamente vía telemática, pruebas específicas para la selección.",
+    "Recabar y registrar en el Campus Virtual: sexo, edad, nivel formativo, situación laboral, provincia/CA de residencia, medio de conocimiento, experiencia online, razones de elección de teleformación, valoración sobre la modalidad."
+  ], 7);
+
+  checkPageBreak(30);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.text("Matriculación.", margin + 3, currentY); currentY += 5;
+  paragraph("El proceso de matriculación depende de la vía de financiación:");
+  bulletList([
+    "En caso de financiación privada: aportar toda la documentación, haber realizado el ingreso del precio del curso, y haber desarrollado la prueba de competencia digital, con una antelación mínima de 10 días.",
+    "En caso de financiación pública: la matriculación se realizará una vez la Administración Competente haya dado el visto bueno a la selección del alumnado."
+  ], 7);
+
+  checkPageBreak(30);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.text("Comunicación de inicio.", margin + 3, currentY); currentY += 5;
+  paragraph("Una vez cumplido lo establecido, desde la entidad, con una antelación mínima de 7 días a la fecha de inicio, se facilitará a través de correo electrónico:");
+  bulletList([
+    "URL de acceso al Campus.",
+    "Claves de acceso a la plataforma.",
+    "Guía del alumno.",
+    "Guía de uso del Campus Virtual.",
+    "Fechas de inicio y fin de la acción formativa.",
+    "Información de los tutores-formadores y horario de tutorías.",
+    "Medios de contacto con la entidad.",
+    "Instrucciones para el/la alumno/a para responder confirmando el correcto acceso al Campus Virtual."
+  ], 7);
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+  checkPageBreak(10);
+  doc.text("Comprobación de acceso a Campus.", margin + 3, currentY); currentY += 5;
+  paragraph("Desde la entidad, el/la orientador/a académico/a contactará con aquellos/as alumnos/as que no hayan confirmado su acceso al Campus Virtual con una antelación mínima de 2 días a la fecha de inicio.");
+
+  // e) Procedimiento de seguimiento
+  checkPageBreak(40);
+  subHeader("e) PROCEDIMIENTO DE SEGUIMIENTO DEL ALUMNADO");
+  paragraph("Una vez iniciada la acción formativa el seguimiento del alumnado se desarrollará a través de los medios y herramientas, así como en los momentos, que se indican a continuación:");
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.text("1) Durante la formación en la plataforma de formación virtual", margin + 3, currentY); currentY += 5;
+  bulletList([
+    "Inicio: sesión inicial con el tutor-formador para informar sobre objetivos, organización, programación didáctica, planificación de la evaluación. Realización de encuesta de diagnóstico inicial sobre conocimientos previos y motivación.",
+    "Semanalmente: seguimiento del desarrollo y contacto a través del correo electrónico para informar sobre tareas pendientes. Apoyo a través de las herramientas del Campus Virtual.",
+    "A lo largo del curso: tutorías virtuales a través de videoconferencia, chat, foro, para evaluar el desarrollo e informar sobre las pruebas de evaluación.",
+    "A la finalización: contacto individualizado con cada alumno para comentar el desarrollo y los resultados obtenidos."
+  ], 7);
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); 
+  checkPageBreak(20);
+  doc.text("2) Durante las tutorías presenciales en el centro de formación", margin + 3, currentY); currentY += 5;
+  bulletList([
+    "Antes: al menos 10 días, comunicación de lugar, fechas y horario por el tutor-formador.",
+    "Supervisión por parte del formador durante el desarrollo.",
+    "Contacto del tutor-formador tras la finalización y comunicación de resultados."
+  ], 7);
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+  checkPageBreak(15);
+  doc.text("3) Tras la finalización de la formación", margin + 3, currentY); currentY += 5;
+  bulletList([
+    "Contacto del tutor-formador con el alumno vía correo electrónico o telefónico, para valoración de la satisfacción e impacto de la formación sobre el desarrollo profesional, laboral y personal.",
+    "Durante la formación se utilizarán preferentemente las herramientas de comunicación de la plataforma. En caso de no obtener respuesta, se utilizarán medios externos (correo electrónico o teléfono)."
+  ], 7);
+
+  // f) Instrumentos de seguimiento
+  checkPageBreak(15);
+  subHeader("f) INSTRUMENTOS PARA EL SEGUIMIENTO DEL ALUMNADO");
+  paragraph("Siguiendo la normativa para el desarrollo del seguimiento, la plataforma de teleformación debe posibilitar la emisión de una serie de informes de seguimiento. La plataforma dispone de estos informes a los que se puede acceder a través de Menú/Administración/Informes. Al acceder a esta área se muestra la equivalencia entre los informes requeridos en la Orden ESS/1897/2013 y la denominación de estos informes en el Campus Virtual.");
+
+  // Perfil de tutores
+  checkPageBreak(30);
+  subHeader("Perfil de los tutores-formadores intervinientes");
+
+  const tutorProfileRows = BOE_CURRICULUM.filter(m => m.code !== "1782").map(m => [
+    m.code,
+    m.title,
+    "Licenciado, Ingeniero, Arquitecto o el título de grado correspondiente u otros títulos equivalentes.",
+    "1 año"
+  ]);
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [["Módulo", "Denominación", "Acreditación requerida", "Experiencia profesional"]],
+    body: tutorProfileRows,
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 7 },
+    bodyStyles: { fontSize: 7 },
+    styles: { cellPadding: 2 }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // RECURSOS MATERIALES
+  checkPageBreak(20);
+  subHeader("Recursos materiales y humanos");
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9); 
+  checkPageBreak(10);
+  doc.text("RECURSOS MATERIALES", margin + 3, currentY); currentY += 6;
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+  doc.text("A) Recursos para la formación en la plataforma de teleformación", margin + 3, currentY); currentY += 5;
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+  doc.text("Recursos tecnológicos generales:", margin + 5, currentY); currentY += 5;
+  bulletList([
+    "Plataforma de teleformación: TalentCloud Solution - Campus Virtual LMS.",
+    "Herramientas de comunicación síncrona: Chat, Videoconferencia, Mensajería instantánea.",
+    "Herramientas de comunicación asíncrona: Foros de debate, Correo electrónico interno, Tablón de anuncios.",
+    "Herramientas de seguimiento y evaluación: Tests autoevaluables, Actividades evaluables, Informes de seguimiento, Registro de actividad.",
+    "Herramientas de gestión: Gestión de alumnos, Gestión de tutores, Calendario, Expediente académico.",
+    "Accesibilidad: Compatible con los principales navegadores web, acceso 24h/365d."
+  ], 7);
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+  checkPageBreak(15);
+  doc.text("Recursos tecnológicos específicos para la acción formativa:", margin + 5, currentY); currentY += 5;
+  bulletList([
+    "Contenidos Interactivos Multimedia (CIM) para cada módulo formativo/unidad formativa.",
+    "Actividades de autoevaluación integradas en el CIM.",
+    "Tests de evaluación por módulo/unidad formativa.",
+    "Actividades de aprendizaje evaluables (casos prácticos, ejercicios teórico-prácticos).",
+    "Foros de debate temáticos por unidad didáctica.",
+    "Documentos de apoyo y material complementario (documentos PDF, vídeos, enlaces web).",
+    "Glosario de términos."
+  ], 7);
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+  checkPageBreak(20);
+  doc.text("Recursos didácticos:", margin + 5, currentY); currentY += 5;
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [["ALUMNO", "TUTOR-FORMADOR"]],
+    body: [[
+      "• Guía del alumno\n• Guía de uso del Campus Virtual\n• Contenido Interactivo Multimedia (CIM)\n• Cuaderno del alumno (ejercicios y actividades)\n• Material complementario (documentos, vídeos)\n• Glosario de términos",
+      "• Guía del tutor-formador\n• Orientaciones metodológicas por módulo/UF\n• Cuaderno del formador\n• Instrumentos de evaluación\n• Guía de uso del Campus Virtual\n• Plantillas de documentación preceptiva"
+    ]],
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 8, halign: "center" as const },
+    bodyStyles: { fontSize: 7.5 },
+    styles: { cellPadding: 4 }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 6;
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+  checkPageBreak(15);
+  doc.text("B) Recursos para las sesiones presenciales en el centro de formación", margin + 3, currentY); currentY += 5;
+  bulletList([
+    "Aula equipada con capacidad mínima de 15 alumnos.",
+    "Equipos informáticos con conexión a Internet para cada alumno.",
+    "Proyector multimedia y pantalla de proyección.",
+    "Pizarra (tradicional y/o digital).",
+    "Material fungible (papel, bolígrafos, etc.).",
+    "Impresora para la impresión de pruebas de evaluación."
+  ], 7);
+
+  // RECURSOS HUMANOS
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+  checkPageBreak(15);
+  doc.text("RECURSOS HUMANOS", margin + 3, currentY); currentY += 6;
+
+  const rrhhData = [
+    { role: "a) Personal de venta/captación", desc: "Información a personas interesadas sobre la acción formativa. Asesoramiento sobre cuestiones del procedimiento de inscripción/matriculación, financiación y requisitos de acceso." },
+    { role: "b) Personal administrativo y de orientación académica", desc: "Realización de la prueba de competencia digital durante el proceso de inscripción/matriculación. Selección de participantes, constitución de grupos y gestión de documentación. Comunicación de inicio de acciones formativas a la Administración Competente. Gestión del aprovisionamiento de recursos materiales. Asesoramiento al alumno para el inicio y durante el desarrollo de la acción formativa. Supervisión del desarrollo correcto de la acción formativa." },
+    { role: "c) Tutor/a-formador/a", desc: "Acogida de los alumnos y explicación del proceso formativo en la sesión inicial. Información al alumno sobre los hitos del curso. Seguimiento del alumnado a través de las vías de contacto e instrumentos de seguimiento. Corrección de actividades de aprendizaje. Información puntual y periódica al alumnado sobre resultados. Atención de consultas individuales. Adaptación de procesos de aprendizaje. Organización de tutorías virtuales grupales. Coordinación con el formador para sesiones presenciales. Comunicación de incidencias." },
+    { role: "d) Formador/a (si distinto del tutor)", desc: "Organización con el tutor-formador de las sesiones presenciales. Desarrollo de las sesiones presenciales y corrección de actividades e instrumentos de evaluación. Atención de consultas de alumnos durante sesiones presenciales. Control de asistencia. Comunicación de incidencias al tutor-formador. Cumplimentación de documentación preceptiva." },
+    { role: "e) Personal informático", desc: "Mantenimiento del funcionamiento de la plataforma de teleformación. Atención y resolución de incidencias de alumnos recibidas a través del CAU. Prestación de ayuda y soporte técnico al personal. Gestión de quejas y reclamaciones técnicas." },
+    { role: "f) Personal de administración", desc: "Gestión de cobros (formación privada y/o pública). Atención de quejas y reclamaciones económicas. Justificación económica y/o liquidación en formación pública." },
+    { role: "g) Personal de atención al cliente", desc: "Recepción/recogida de quejas y reclamaciones. Derivación al personal administrativo y de gestión académica de la acción formativa." },
+    { role: "h) Tutor de empresa", desc: "Desarrollo, junto con el tutor-formador, de la programación didáctica y planificación de la evaluación. Supervisión y apoyo al alumno durante la formación práctica. Atención de dudas y consultas. Comunicación de incidencias. Evaluación de la formación práctica junto con el tutor-formador." }
+  ];
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [["Perfil", "Descripción de funciones"]],
+    body: rrhhData.map(r => [r.role, r.desc]),
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 8 },
+    bodyStyles: { fontSize: 7, valign: "top" as const },
+    styles: { cellPadding: 3, overflow: "linebreak" as const },
+    columnStyles: { 0: { cellWidth: 55, fontStyle: "bold" } }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // Sistemas de gestión de la calidad
+  checkPageBreak(25);
+  subHeader("Sistemas de gestión de la calidad de la formación");
+  paragraph("La entidad dispone de un sistema de gestión de la calidad conforme a la norma UNE EN ISO 9001:2015. El alcance de las actividades certificadas incluye: Prestación de los servicios de formación general, incluyendo formación profesional para el empleo y certificados de profesionalidad.");
+  paragraph("En el Anexo B se adjunta documentación acreditativa del sistema de gestión de la calidad.");
+
+  // Indicadores de calidad
+  checkPageBreak(25);
+  subHeader("Indicadores e instrumentos para la medición de la calidad y la mejora continua");
+  bulletList([
+    "Encuesta de satisfacción del alumnado al finalizar cada módulo formativo/unidad formativa.",
+    "Encuesta de satisfacción global al finalizar la acción formativa.",
+    "Encuesta de evaluación del tutor-formador por parte del alumnado.",
+    "Encuesta de valoración del impacto de la formación (3-6 meses tras la finalización).",
+    "Informe de resultados de evaluación del aprendizaje por módulo/UF.",
+    "Informe de seguimiento de la acción formativa (indicadores de actividad, participación, abandono).",
+    "Registro de incidencias técnicas y pedagógicas.",
+    "Informe de reclamaciones y sugerencias.",
+    "Auditoría interna del proceso formativo."
+  ], 7);
+
+  // ===== SECTION 4: PROCESO FORMATIVO =====
+  doc.addPage();
+  currentY = margin;
+  sectionHeader("4. PROCESO FORMATIVO");
+
+  paragraph("A continuación, se incluye la siguiente documentación adjunta:");
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    body: [
+      ["Planificación didáctica (curso completo)", "Según formato del Anexo III"],
+      ["Programaciones didácticas (Por módulo/UF)", "Según formato del Anexo IV"],
+      ["Planificaciones de la evaluación (Por módulo/UF)", "Según formato del Anexo V"],
+    ],
+    theme: "grid",
+    bodyStyles: { fontSize: 9 },
+    styles: { cellPadding: 4 },
+    columnStyles: { 0: { fontStyle: "bold" } }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 6;
+
+  paragraph("ANEXO A: Documentación acreditativa del derecho de uso de la plataforma de teleformación y del contenido virtual de aprendizaje.");
+  paragraph("ANEXO B: Documentación justificativa de la implantación de un sistema de gestión de la calidad de la formación.");
+
+  // ===== ANNEX III: PLANIFICACIÓN DIDÁCTICA =====
+  doc.addPage();
+  currentY = margin;
+  sectionHeader("ANEXO III - PLANIFICACIÓN DIDÁCTICA (CURSO COMPLETO) - Modalidad Teleformación");
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    body: [
+      [{ content: "CERTIFICADO PROFESIONAL:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 55 } }, `${params.courseCode} - ${params.courseTitle}`],
+      [{ content: "DURACIÓN DEL CERTIFICADO:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, `${params.durationHours} horas`],
+      [{ content: "FECHAS DE IMPARTICIÓN:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, `Del ${formatDate(params.startDate)} al ${formatDate(params.endDate)}`],
+      [{ content: "CENTRO DE FORMACIÓN:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, params.centerName],
+      [{ content: "DIRECCIÓN:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, params.centerAddress || ""],
+      [{ content: "LOCALIDAD:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, params.centerCity || ""],
+      [{ content: "PROVINCIA:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, params.centerProvince || ""],
+    ],
+    theme: "grid",
+    bodyStyles: { fontSize: 9 },
+    styles: { cellPadding: 3 }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  subHeader("PLANIFICACIÓN DIDÁCTICA DEL CURSO COMPLETO");
+
+  // Calculate cumulative days for each module
+  let cumulativeDays = 0;
+  const planificationRows = BOE_CURRICULUM.map(m => {
+    const daysForModule = Math.ceil(m.hours / 4); // ~4h/day
+    const startDay = cumulativeDays + 1;
+    const endDay = cumulativeDays + daysForModule;
+    cumulativeDays = endDay;
+    return [
+      `${m.code}. ${m.title}`,
+      `${m.hours}`,
+      `Del día ${startDay}º al ${endDay}º`
+    ];
+  });
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [["MÓDULOS DEL CERTIFICADO (MF)", "HORAS", "FECHAS DE IMPARTICIÓN"]],
+    body: planificationRows,
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 8 },
+    bodyStyles: { fontSize: 7.5 },
+    styles: { cellPadding: 3 },
+    columnStyles: { 1: { halign: "center" as const, cellWidth: 20 }, 2: { cellWidth: 55 } }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // ===== ESTRATEGIAS METODOLÓGICAS (NOTA INFORMATIVA) =====
+  checkPageBreak(40);
+  subHeader("ESTRATEGIAS METODOLÓGICAS, ACTIVIDADES DE APRENDIZAJE Y RECURSOS DIDÁCTICOS");
+  paragraph("La formación desarrollada en la plataforma de teleformación se basará en el uso de una o varias de las siguientes estrategias metodológicas y recursos didácticos, así como de las actividades de aprendizaje que se indican a continuación:");
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [["Estrategia / Recurso", "Descripción"]],
+    body: [
+      ["Presentación", "La sesión inicial del módulo/UF tiene como objetivo informar al alumno sobre cuestiones generales relativas a la organización de la formación, presentación de tutores-formadores, exposición de objetivos, etc."],
+      ["Estudio directo: CIM", "Aprendizaje a través del estudio directo del Contenido Interactivo Multimedia (CIM): documentos de lectura, vídeos didácticos, enlaces web, demos/tutoriales, glosario. Incluye actividades de autoevaluación integradas (ordenar conceptos, relacionar, completar, verdadero/falso, etc.)."],
+      ["Actividades de aprendizaje", "Individual y/o grupal: Estudios de caso con situaciones reales o ficticias. Ejercicios teórico-prácticos. El enunciado incluye la forma de realización (individual, grupal o mixta) y los instrumentos de comunicación (foro, chat)."],
+      ["Foros de debate", "Debates dirigidos moderados por el tutor-formador donde el alumnado expresa su opinión sobre aspectos relacionados con la unidad didáctica."],
+      ["Tutorías virtuales", "En cada UD: foro de resolución de dudas. En fechas programadas: chat en directo. Al finalizar el módulo/UF: tutoría virtual grupal final. Las tutorías individuales podrán concertarse en cualquier momento."],
+      ["Evaluación diagnóstica", "Determinación de la situación de partida del alumnado mediante una prueba de evaluación diagnóstica. El análisis se utiliza para la adaptación de las actividades propuestas."],
+      ["Medidas de apoyo", "Ante déficits de aprendizaje, actividades adicionales y medidas de apoyo al alumnado para alcanzar los objetivos de la acción formativa."],
+    ],
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 8 },
+    bodyStyles: { fontSize: 7, valign: "top" as const },
+    styles: { cellPadding: 3, overflow: "linebreak" as const },
+    columnStyles: { 0: { cellWidth: 45, fontStyle: "bold" } }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // ===== ANNEX IV (F11): PROGRAMACIÓN DIDÁCTICA POR MÓDULO =====
   BOE_CURRICULUM.forEach((modCurr) => {
     doc.addPage();
     currentY = margin;
 
-    sectionHeader(`F11- PROGRAMACIÓN DIDÁCTICA: ${modCurr.code}. ${modCurr.title}`);
+    sectionHeader(`ANEXO IV - PROGRAMACIÓN DIDÁCTICA: ${modCurr.code}. ${modCurr.title}`);
 
     // Header info
     autoTable(doc, {
@@ -689,7 +1073,6 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     const bodyRows: any[][] = [];
 
     modCurr.ras.forEach((ra) => {
-      // First row: RA title with all CEs
       const cesText = ra.ces.join("\n");
       bodyRows.push([
         { content: `${ra.ra}: ${ra.title}`, styles: { fontStyle: "bold", fontSize: 7 } },
@@ -716,7 +1099,6 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
       bodyStyles: { fontSize: 6.5, valign: "top" as const },
       styles: { cellPadding: 2, overflow: "linebreak" as const },
       didDrawPage: () => {
-        // Header on each new page
         doc.setFontSize(7);
         doc.setTextColor(100);
         doc.text(`${modCurr.code}. ${modCurr.title}`, margin, margin - 3);
@@ -727,7 +1109,219 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     currentY = (doc as any).lastAutoTable.finalY + 5;
   });
 
-  // ===== LAST SECTION: PRL =====
+  // ===== ANNEX V: PLANIFICACIÓN DE LA EVALUACIÓN =====
+  doc.addPage();
+  currentY = margin;
+  sectionHeader("ANEXO V - PLANIFICACIÓN DE LA EVALUACIÓN DEL APRENDIZAJE");
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    body: [
+      [{ content: "CERTIFICADO PROFESIONAL:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 55 } }, `${params.courseCode} - ${params.courseTitle}`],
+      [{ content: "DURACIÓN:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, `${params.durationHours} horas`],
+      [{ content: "CENTRO:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, params.centerName],
+    ],
+    theme: "grid",
+    bodyStyles: { fontSize: 9 },
+    styles: { cellPadding: 3 }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  const evalRows = BOE_CURRICULUM.map(m => [
+    `${m.code}. ${m.title}`,
+    `${m.hours}h`,
+    "Evaluación continua:\n• Tests de autoevaluación (CIM)\n• Actividades evaluables (casos prácticos)\n• Participación en foros\n\nEvaluación final:\n• Prueba de evaluación final presencial\n(1ª y 2ª convocatoria)",
+    "• Tests objetivos (tipo test)\n• Ejercicios teórico-prácticos\n• Casos prácticos\n• Rúbricas de evaluación\n• Registro de participación",
+    "Presencial en el\ncentro de formación\n\nFecha: Por determinar\n(se comunicará con\nmín. 10 días antelación)"
+  ]);
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [["Módulo Profesional", "Horas", "Sistema de evaluación", "Instrumentos de evaluación", "Lugar y fecha de evaluación final"]],
+    body: evalRows,
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 7, halign: "center" as const },
+    bodyStyles: { fontSize: 6.5, valign: "top" as const },
+    styles: { cellPadding: 2, overflow: "linebreak" as const },
+    columnStyles: { 0: { cellWidth: 55 }, 1: { cellWidth: 18, halign: "center" as const } }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // ===== F11: AULA VIRTUAL =====
+  doc.addPage();
+  currentY = margin;
+  sectionHeader("F11 - PROYECTO FORMATIVO AULA VIRTUAL");
+
+  // Instrucciones F11
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  const instrLines = [
+    "El presente Anexo al proyecto formativo, deberá de cumplimentarse y entregarse para la impartición a través de aula virtual, tal y como recoge el artículo 28 de la Orden 178/2020.",
+    "",
+    "Este anexo diseñado para la formación auxiliar a través de aula virtual, consta de:",
+    "  1. Los datos de los recursos humanos y técnicos.",
+    "  2. La programación de los contenidos impartidos a través del aula virtual.",
+    "",
+    "Se recuerda que se considera aula virtual al entorno de aprendizaje donde el formador/a y el alumnado interactúan, de forma concurrente y en tiempo real, a través de un sistema de comunicación telemático de carácter síncrono.",
+    "No se podrá utilizar el aula virtual para la realización de la prueba final de módulo.",
+    "El presente F-11 sólo se debe cumplimentar para aquellos contenidos que se vayan a impartir mediante aula virtual.",
+  ];
+  instrLines.forEach(line => {
+    const splitLines = doc.splitTextToSize(line || " ", contentWidth - 6);
+    checkPageBreak(splitLines.length * 4);
+    doc.text(splitLines, margin + 3, currentY);
+    currentY += splitLines.length * 4 + 1;
+  });
+  currentY += 4;
+
+  // Recursos humanos y técnicos del aula virtual
+  subHeader("RECURSOS HUMANOS Y TÉCNICOS DEL AULA VIRTUAL");
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [[{ content: "RECURSOS HUMANOS", colSpan: 4, styles: { fillColor: BLUE_HEADER } }]],
+    body: [
+      [
+        { content: "Nombre del tutor/a\n-formador/a responsable:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 50 } },
+        { content: "(A cumplimentar con datos del tutor asignado)" },
+        { content: "Teléfono de contacto:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 40 } },
+        { content: params.centerPhone || "" }
+      ],
+      [
+        { content: "E-mail", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } },
+        { content: params.centerEmail || "(A cumplimentar)", colSpan: 3 }
+      ]
+    ],
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 9, fontStyle: "bold" },
+    bodyStyles: { fontSize: 8 },
+    styles: { cellPadding: 3 }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 6;
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [[{ content: "DATOS DEL AULA ON-LINE ACCESO ALUMNADO", colSpan: 2, styles: { fillColor: BLUE_HEADER } }]],
+    body: [
+      [{ content: "Aula virtual (nombre):", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 50 } }, "TalentCloud Solution - Campus Virtual"],
+      [{ content: "URL:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, platformUrl],
+      [{ content: "Usuario:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, "(Se proporcionará individualmente al alumnado)"],
+      [{ content: "Contraseña:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, "(Se proporcionará individualmente al alumnado)"]
+    ],
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 9, fontStyle: "bold" },
+    bodyStyles: { fontSize: 8 },
+    styles: { cellPadding: 3 }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 6;
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: margin, right: margin },
+    head: [[{ content: "DATOS DEL AULA ON-LINE ACCESO AL ADMINISTRADOR", colSpan: 3, styles: { fillColor: BLUE_HEADER } }]],
+    body: [
+      [
+        { content: "URL:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } },
+        { content: "Usuario:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } },
+        { content: "Contraseña:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }
+      ],
+      [platformUrl, "(Datos reservados)", "(Datos reservados)"]
+    ],
+    theme: "grid",
+    headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 9 },
+    bodyStyles: { fontSize: 8 },
+    styles: { cellPadding: 3 }
+  });
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // ===== F11 Programming per module =====
+  BOE_CURRICULUM.forEach((modCurr) => {
+    doc.addPage();
+    currentY = margin;
+
+    sectionHeader(`F11- PROGRAMACIÓN DIDÁCTICA AULA VIRTUAL: ${modCurr.code}. ${modCurr.title}`);
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: margin, right: margin },
+      body: [
+        [
+          { content: "DURACIÓN ACCIÓN", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 35 } },
+          { content: `${params.durationHours}h`, styles: { cellWidth: 25 } },
+          { content: "FECHA INICIO", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 30 } },
+          { content: formatDate(params.startDate), styles: { cellWidth: 30 } },
+          { content: "FECHA FIN", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 25 } },
+          { content: formatDate(params.endDate), styles: { cellWidth: 30 } },
+          { content: "HORAS MÓDULO", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 30 } },
+          { content: `${modCurr.hours}h`, styles: { cellWidth: 20 } }
+        ]
+      ],
+      theme: "grid",
+      bodyStyles: { fontSize: 7.5 },
+      styles: { cellPadding: 2 }
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 3;
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: margin, right: margin },
+      body: [
+        [
+          { content: "CERTIFICADO PROFESIONAL", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 55 } },
+          { content: `${params.courseCode} - ${params.courseTitle}` }
+        ],
+        [
+          { content: "MÓDULO PROFESIONAL", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 55 } },
+          { content: `${modCurr.code}. ${modCurr.title} (${modCurr.hours}h)` }
+        ]
+      ],
+      theme: "grid",
+      bodyStyles: { fontSize: 7.5 },
+      styles: { cellPadding: 3 }
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 5;
+
+    const bodyRows: any[][] = [];
+    modCurr.ras.forEach((ra) => {
+      const cesText = ra.ces.join("\n");
+      bodyRows.push([
+        { content: `${ra.ra}: ${ra.title}`, styles: { fontStyle: "bold", fontSize: 7 } },
+        { content: cesText },
+        { content: getMethodologyText(modCurr.code) },
+        { content: "Campus Virtual TalentCloud Solution\n\nAula virtual síncrona (videoconferencia)\n\nPlataforma LMS con acceso 24h" },
+        { content: modCurr.code === "1782" ? "X" : "", styles: { halign: "center" as const } }
+      ]);
+    });
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: margin, right: margin },
+      head: [[
+        { content: "Resultados de Aprendizaje (RA)\nObjetivos específicos", styles: { cellWidth: 55 } },
+        { content: "Criterios de Evaluación (CE)\nContenidos y secuenciación" },
+        { content: "Estrategias metodológicas,\nactividades de aprendizaje\ny recursos didácticos", styles: { cellWidth: 55 } },
+        { content: "AULA / TALLER\n(espacios, instalaciones\ny equipamiento)", styles: { cellWidth: 45 } },
+        { content: "EN LA\nEMPRESA\n(X)", styles: { cellWidth: 16 } }
+      ]],
+      body: bodyRows,
+      theme: "grid",
+      headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 7, fontStyle: "bold", halign: "center" as const, valign: "middle" as const },
+      bodyStyles: { fontSize: 6.5, valign: "top" as const },
+      styles: { cellPadding: 2, overflow: "linebreak" as const },
+      didDrawPage: () => {
+        doc.setFontSize(7);
+        doc.setTextColor(100);
+        doc.text(`F11 - ${modCurr.code}. ${modCurr.title}`, margin, margin - 3);
+        doc.setTextColor(0);
+      }
+    });
+  });
+
+  // ===== PRL SECTION =====
   doc.addPage();
   currentY = margin;
   sectionHeader("F11- PROGRAMACIÓN DIDÁCTICA. CONTENIDO PREVENCIÓN DE RIESGOS LABORALES");
@@ -812,7 +1406,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   // Page numbers
   addPageNumber();
 
-  const fileName = `Proyecto_Formativo_AV_${params.courseCode.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+  const fileName = `Proyecto_Formativo_${params.courseCode.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
   doc.save(fileName);
 }
 
@@ -820,21 +1414,22 @@ function getMethodologyText(moduleCode: string): string {
   const base = [
     "• Contenido Interactivo Multimedia (CIM)",
     "• Actividades de aprendizaje evaluables",
-    "• Foros temáticos",
+    "• Foros temáticos de debate",
     "• Tests de autoevaluación",
     "• Tutorías virtuales síncronas",
     "• Tutorías presenciales",
+    "• Documentos y vídeos de apoyo",
   ];
 
   switch (moduleCode) {
     case "1705":
       return [...base, "• Casos prácticos de programación didáctica", "• Elaboración de programaciones"].join("\n");
     case "1706":
-      return [...base, "• Diseño de materiales didácticos", "• Prácticas con herramientas multimedia"].join("\n");
+      return [...base, "• Diseño de materiales didácticos", "• Prácticas con herramientas multimedia", "• Elaboración de presentaciones"].join("\n");
     case "1707":
       return [...base, "• Análisis del mercado laboral", "• Simulación de orientación profesional"].join("\n");
     case "1783":
-      return [...base, "• Diseño de instrumentos de evaluación", "• Prácticas de corrección y calificación"].join("\n");
+      return [...base, "• Diseño de instrumentos de evaluación", "• Prácticas de corrección y calificación", "• Rúbricas de evaluación"].join("\n");
     case "1784":
       return [...base, "• Microenseñanza y autoscopia", "• Dinámicas de grupo", "• Simulación docente"].join("\n");
     case "1785":
