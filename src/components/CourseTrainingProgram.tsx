@@ -882,6 +882,172 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         </section>
       )}
 
+      {/* ANEXO I: Calendario y Plan de Trabajo */}
+      <section className="space-y-6 mt-8">
+        <div className="text-center py-8 border-2 border-muted rounded-lg bg-muted/10">
+          <h2 className="text-2xl font-bold text-muted-foreground tracking-widest">ANEXO I: CALENDARIO Y</h2>
+          <h2 className="text-2xl font-bold text-muted-foreground tracking-widest mt-2">PLAN DE TRABAJO</h2>
+        </div>
+
+        {/* Datos generales */}
+        <div className="border rounded-lg overflow-hidden">
+          <div className="bg-primary/10 px-4 py-3">
+            <h3 className="font-bold text-primary">Datos Generales de la Acción Formativa</h3>
+          </div>
+          <div className="p-4">
+            <div className="grid md:grid-cols-2 gap-4 text-sm">
+              <div className="space-y-2">
+                <p><span className="font-semibold">Denominación:</span> {course.title}</p>
+                <p><span className="font-semibold">Código:</span> {courseCode}</p>
+                <p><span className="font-semibold">Modalidad:</span> {getModalityText(modality)}</p>
+              </div>
+              <div className="space-y-2">
+                <p><span className="font-semibold">Duración total:</span> {course.duration_hours || 0} horas</p>
+                <p><span className="font-semibold">Fecha inicio:</span> {course.start_date ? new Date(course.start_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Por determinar'}</p>
+                <p><span className="font-semibold">Fecha fin:</span> {course.end_date ? new Date(course.end_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Por determinar'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabla de planificación temporal */}
+        <div className="border rounded-lg overflow-hidden">
+          <div className="bg-primary/10 px-4 py-3">
+            <h3 className="font-bold text-primary">Planificación Temporal por Módulos y Unidades Formativas</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="font-bold">Módulo Formativo / Unidad Formativa</TableHead>
+                  <TableHead className="text-center w-20 font-bold">Horas</TableHead>
+                  <TableHead className="w-36 font-bold">Fecha Inicio</TableHead>
+                  <TableHead className="w-36 font-bold">Fecha Fin</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {planificacionDinamica.map((modulo, mIndex) => (
+                  <>
+                    <TableRow key={`anexo-mod-${mIndex}`} className="bg-primary/5 font-semibold">
+                      <TableCell className="font-bold text-primary">{modulo.modulo}</TableCell>
+                      <TableCell className="text-center font-bold">{modulo.horasMF}</TableCell>
+                      <TableCell colSpan={2} className="text-sm text-muted-foreground">
+                        {modules[mIndex]?.formative_units?.[0]?.start_date && modules[mIndex]?.formative_units?.slice(-1)[0]?.end_date
+                          ? `${new Date(modules[mIndex].formative_units![0].start_date!).toLocaleDateString('es-ES')} - ${new Date(modules[mIndex].formative_units!.slice(-1)[0].end_date!).toLocaleDateString('es-ES')}`
+                          : 'Por programar'}
+                      </TableCell>
+                    </TableRow>
+                    {modulo.unidades.map((uf, ufIndex) => {
+                      const realUnit = modules[mIndex]?.formative_units?.[ufIndex];
+                      return (
+                        <TableRow key={`anexo-uf-${mIndex}-${ufIndex}`}>
+                          <TableCell className="pl-8 text-sm">{uf.codigo}: {uf.titulo}</TableCell>
+                          <TableCell className="text-center text-sm">{uf.horas}</TableCell>
+                          <TableCell className="text-sm">
+                            {realUnit?.start_date 
+                              ? new Date(realUnit.start_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                              : 'Por determinar'}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {realUnit?.end_date
+                              ? new Date(realUnit.end_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                              : 'Por determinar'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </>
+                ))}
+                {/* Fila de totales */}
+                <TableRow className="bg-muted/50 font-bold">
+                  <TableCell className="font-bold">TOTAL HORAS</TableCell>
+                  <TableCell className="text-center font-bold">{course.duration_hours || planificacionDinamica.reduce((acc, m) => acc + m.horasMF, 0)}</TableCell>
+                  <TableCell colSpan={2}></TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        {/* Distribución de horas */}
+        <div className="border rounded-lg overflow-hidden">
+          <div className="bg-primary/10 px-4 py-3">
+            <h3 className="font-bold text-primary">Distribución de Horas por Modalidad</h3>
+          </div>
+          <div className="p-4">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="p-4 bg-primary/5 rounded-lg">
+                <div className="text-2xl font-bold text-primary">{(course.duration_hours || 0) - presentialHours - internshipHours}h</div>
+                <div className="text-xs text-muted-foreground mt-1">Teleformación</div>
+              </div>
+              <div className="p-4 bg-primary/5 rounded-lg">
+                <div className="text-2xl font-bold text-primary">{presentialHours}h</div>
+                <div className="text-xs text-muted-foreground mt-1">Tutorías Presenciales + Evaluación</div>
+              </div>
+              <div className="p-4 bg-primary/5 rounded-lg">
+                <div className="text-2xl font-bold text-primary">{internshipHours}h</div>
+                <div className="text-xs text-muted-foreground mt-1">Prácticas Profesionales (MP)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Convocatorias de evaluación */}
+        <div className="border rounded-lg overflow-hidden">
+          <div className="bg-primary/10 px-4 py-3">
+            <h3 className="font-bold text-primary">Convocatorias de Evaluación</h3>
+          </div>
+          <div className="p-4">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-bold">Convocatoria</TableHead>
+                    <TableHead className="font-bold">Descripción</TableHead>
+                    <TableHead className="font-bold">Lugar</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-semibold">1ª Convocatoria</TableCell>
+                    <TableCell className="text-sm">Al finalizar cada módulo/unidad formativa según cronograma</TableCell>
+                    <TableCell className="text-sm">{datosDelCentro.nombre}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-semibold">2ª Convocatoria</TableCell>
+                    <TableCell className="text-sm">Fecha alternativa para alumnos que no superen la primera convocatoria</TableCell>
+                    <TableCell className="text-sm">{datosDelCentro.nombre}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              * Las pruebas de evaluación final se realizan de forma <strong>presencial</strong> en las instalaciones del centro de formación.
+              Las fechas exactas se comunicarán con antelación suficiente.
+            </p>
+          </div>
+        </div>
+
+        {/* Firma */}
+        <div className="border rounded-lg p-6 mt-4">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="text-center space-y-2">
+              <p className="text-sm font-medium">El/La Responsable del Centro</p>
+              <div className="h-20 border-b border-dashed"></div>
+              <p className="text-xs text-muted-foreground">Fdo.: ________________________</p>
+              <p className="text-xs text-muted-foreground">{datosDelCentro.nombre}</p>
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-sm font-medium">Fecha y Sello</p>
+              <div className="h-20 border-b border-dashed"></div>
+              <p className="text-xs text-muted-foreground">
+                En {datosDelCentro.localidad || '____________'}, a _____ de _______________ de {new Date().getFullYear()}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <div className="text-center pt-6 border-t text-sm text-muted-foreground">
         <p>Documento conforme a los Anexos III, IV y V {courseCode !== "Sin código" ? `de la especialidad formativa ${courseCode}` : "de la acción formativa"}</p>
