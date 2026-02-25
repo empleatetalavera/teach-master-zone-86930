@@ -2298,6 +2298,7 @@ export default function CourseView() {
               userRole={userRole} 
               courseName={course?.title}
               centerName={centerName}
+              courseId={course?.id || ''}
             />
 
             {tutorials.length === 0 ? (
