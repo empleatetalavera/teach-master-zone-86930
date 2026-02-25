@@ -361,12 +361,29 @@ export default function CourseView() {
     }));
   };
 
-  const handleWhatsAppSupportClick = () => {
+  const handleWhatsAppSupportClick = async () => {
     const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
     const cleanPhone = waPhone.replace(/\D/g, '');
     const fullPhone = cleanPhone.startsWith('34') ? cleanPhone : `34${cleanPhone}`;
     const message = `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`;
     const waUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
+
+    // En preview embebido (iframe), WhatsApp suele bloquearse con ERR_BLOCKED_BY_RESPONSE.
+    if (window.self !== window.top) {
+      try {
+        await navigator.clipboard.writeText(waUrl);
+        toast({
+          title: "Enlace de WhatsApp copiado",
+          description: "Ábrelo en una pestaña normal del navegador (fuera del preview).",
+        });
+      } catch {
+        toast({
+          title: "Abre este enlace fuera del preview",
+          description: waUrl,
+        });
+      }
+      return;
+    }
 
     const popup = window.open(waUrl, '_blank');
     if (!popup) {
