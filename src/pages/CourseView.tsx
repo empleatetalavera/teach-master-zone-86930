@@ -1335,7 +1335,7 @@ export default function CourseView() {
                           setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
                         } catch (err) {
                           console.error('Error downloading campus guide:', err);
-                          window.open(course.campus_guide_url!, '_blank');
+                          toast({ title: "Error", description: "No se pudo descargar la guía. Desactiva el bloqueador de anuncios.", variant: "destructive" });
                         }
                       }}>
                         <FileDown className="h-4 w-4" />
@@ -1827,7 +1827,7 @@ export default function CourseView() {
                                       link.click();
                                       document.body.removeChild(link);
                                       setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-                                    } catch { window.open(signedData.signedUrl, '_blank'); }
+                                    } catch { toast({ title: "Error", description: "No se pudo abrir el PDF. Desactiva el bloqueador de anuncios.", variant: "destructive" }); }
                                   }
                                 } else {
                                   toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de este módulo.", variant: "destructive" });
@@ -1908,13 +1908,20 @@ export default function CourseView() {
                                         .from('module-content')
                                         .createSignedUrl(pdfData[0].file_path, 3600);
                                       if (signedData?.signedUrl) {
-                                        const link = document.createElement('a');
-                                        link.href = signedData.signedUrl;
-                                        link.target = '_blank';
-                                        link.rel = 'noopener noreferrer';
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
+                                        try {
+                                          const resp = await fetch(signedData.signedUrl);
+                                          const blob = await resp.blob();
+                                          const blobUrl = URL.createObjectURL(blob);
+                                          const link = document.createElement('a');
+                                          link.href = blobUrl;
+                                          link.download = `${unit.title || 'temario'}.pdf`;
+                                          document.body.appendChild(link);
+                                          link.click();
+                                          document.body.removeChild(link);
+                                          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                                        } catch {
+                                          toast({ title: "Error", description: "No se pudo descargar el PDF. Desactiva el bloqueador de anuncios e inténtalo de nuevo.", variant: "destructive" });
+                                        }
                                       }
                                     } else {
                                       toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
@@ -1954,13 +1961,20 @@ export default function CourseView() {
                                           .from('module-content')
                                           .createSignedUrl(pdfData[0].file_path, 3600);
                                         if (signedData?.signedUrl) {
-                                          const link = document.createElement('a');
-                                          link.href = signedData.signedUrl;
-                                          link.target = '_blank';
-                                          link.rel = 'noopener noreferrer';
-                                          document.body.appendChild(link);
-                                          link.click();
-                                          document.body.removeChild(link);
+                                          try {
+                                            const resp = await fetch(signedData.signedUrl);
+                                            const blob = await resp.blob();
+                                            const blobUrl = URL.createObjectURL(blob);
+                                            const link = document.createElement('a');
+                                            link.href = blobUrl;
+                                            link.download = `${unit.title || 'temario'}.pdf`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                                          } catch {
+                                            toast({ title: "Error", description: "No se pudo descargar el PDF. Desactiva el bloqueador de anuncios.", variant: "destructive" });
+                                          }
                                         }
                                       } else {
                                         toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
@@ -2555,9 +2569,22 @@ export default function CourseView() {
                       {/* Guía del Tutor-Formador */}
                       <div 
                         className="flex items-center gap-3 p-3 border-b hover:bg-slate-50 cursor-pointer transition-colors"
-                        onClick={() => {
+                        onClick={async () => {
                           if (course?.tutor_guide_pdf_url) {
-                            window.open(course.tutor_guide_pdf_url, '_blank');
+                            try {
+                              const resp = await fetch(course.tutor_guide_pdf_url);
+                              const blob = await resp.blob();
+                              const blobUrl = URL.createObjectURL(blob);
+                              const link = document.createElement('a');
+                              link.href = blobUrl;
+                              link.download = 'Guia_Tutor_Formador.pdf';
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                            } catch {
+                              toast({ title: "Error", description: "No se pudo descargar la guía.", variant: "destructive" });
+                            }
                           } else {
                             toast({
                               title: "Guía del Tutor-Formador",
