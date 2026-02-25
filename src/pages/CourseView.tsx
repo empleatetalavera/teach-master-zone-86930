@@ -255,6 +255,7 @@ export default function CourseView() {
     name: string;
     email: string; 
     phone: string;
+    whatsapp_phone?: string;
     address?: string;
     city?: string;
     province?: string;
@@ -400,7 +401,7 @@ export default function CourseView() {
       if (centerIdToUse) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name, email, phone, address, city, province, postal_code, cif, logo_url")
+          .select("slug, name, email, phone, whatsapp_phone, address, city, province, postal_code, cif, logo_url")
           .eq("id", centerIdToUse)
           .single();
         
@@ -415,6 +416,7 @@ export default function CourseView() {
           name: centerData?.name || "",
           email: centerData?.email || "",
           phone: centerData?.phone || "",
+          whatsapp_phone: (centerData as any)?.whatsapp_phone || "",
           address: centerData?.address || "",
           city: centerData?.city || "",
           province: centerData?.province || "",
@@ -883,18 +885,22 @@ export default function CourseView() {
                 asChild
               >
                 <a 
-                  href={centerContact.phone 
-                    ? `https://web.whatsapp.com/send?phone=34${centerContact.phone.replace(/\s/g, '')}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`
-                    : `https://web.whatsapp.com/send?phone=34665673416&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`
-                  }
+                  href={(() => {
+                    const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
+                    const cleanPhone = waPhone.replace(/\s/g, '');
+                    const prefix = cleanPhone.startsWith('34') ? '' : '34';
+                    return `https://web.whatsapp.com/send?phone=${prefix}${cleanPhone}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`;
+                  })()}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
                   onClick={(e) => {
-                    const phoneNumber = centerContact.phone?.replace(/\s/g, '') || '665673416';
+                    const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
+                    const cleanPhone = waPhone.replace(/\s/g, '');
+                    const prefix = cleanPhone.startsWith('34') ? '' : '34';
                     if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                       e.preventDefault();
-                      window.open(`https://api.whatsapp.com/send?phone=34${phoneNumber}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`, '_blank');
+                      window.open(`https://api.whatsapp.com/send?phone=${prefix}${cleanPhone}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`, '_blank');
                     }
                   }}
                 >
