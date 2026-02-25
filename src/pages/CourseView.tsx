@@ -1799,8 +1799,73 @@ export default function CourseView() {
                       </AccordionTrigger>
                       <AccordionContent className="px-4 pb-4 pt-2 border-t">
                         {moduleUnits.length === 0 ? (
-                          <div>
-                            <p className="text-sm text-muted-foreground text-center py-4">Sin unidades formativas en este módulo</p>
+                          <div className="space-y-3">
+                            {/* Show module-level PDF even without UFs */}
+                            <div 
+                              className="flex items-center gap-3 p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-950/40 transition-colors"
+                              onClick={async () => {
+                                const { data: pdfData } = await (supabase as any)
+                                  .from('module_content')
+                                  .select('file_path, title')
+                                  .eq('module_id', module.id)
+                                  .eq('content_type', 'manual_pdf')
+                                  .order('created_at', { ascending: false })
+                                  .limit(1);
+                                if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
+                                  const { data: signedData } = await supabase.storage
+                                    .from('module-content')
+                                    .createSignedUrl(pdfData[0].file_path, 3600);
+                                  if (signedData?.signedUrl) {
+                                    try {
+                                      const resp = await fetch(signedData.signedUrl);
+                                      const blob = await resp.blob();
+                                      const blobUrl = URL.createObjectURL(blob);
+                                      const link = document.createElement('a');
+                                      link.href = blobUrl;
+                                      link.target = '_blank';
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                                    } catch { window.open(signedData.signedUrl, '_blank'); }
+                                  }
+                                } else {
+                                  toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de este módulo.", variant: "destructive" });
+                                }
+                              }}
+                            >
+                              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded"><FileText className="h-4 w-4 text-blue-600" /></div>
+                              <div className="flex-1">
+                                <span className="text-sm font-medium">{module.title}</span>
+                                <p className="text-xs text-muted-foreground">PDF del temario de este módulo</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                                  <Button variant="outline" size="sm" className="gap-2" onClick={(e) => {
+                                    e.stopPropagation();
+                                    setManualUploaderModuleId(module.id);
+                                    setManualUploaderModuleTitle(module.title);
+                                    setManualUploaderUnitId(undefined);
+                                    setManualUploaderOpen(true);
+                                  }}><Upload className="h-3 w-3" />Subir PDF</Button>
+                                )}
+                              </div>
+                            </div>
+                            {/* Test & Activity placeholders */}
+                            <div className="flex items-center gap-3 p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200/50">
+                              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded"><ClipboardList className="h-4 w-4 text-purple-600" /></div>
+                              <div className="flex-1">
+                                <span className="text-sm font-medium">Test Final del Módulo</span>
+                                <p className="text-xs text-muted-foreground">Examen tipo test</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-green-50/50 dark:bg-green-950/20 rounded-lg border border-green-200/50">
+                              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded"><PenTool className="h-4 w-4 text-green-600" /></div>
+                              <div className="flex-1">
+                                <span className="text-sm font-medium">Actividad / Tarea</span>
+                                <p className="text-xs text-muted-foreground">Ejercicio práctico del módulo</p>
+                              </div>
+                            </div>
                             {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
                               <div className="pt-2 border-t">
                                 <ModuleFormativeUnitManager moduleId={module.id} moduleTitle={module.title} formativeUnits={moduleUnits} onUpdate={loadCourseData} />
