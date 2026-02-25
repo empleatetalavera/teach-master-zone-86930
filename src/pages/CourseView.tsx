@@ -366,34 +366,25 @@ export default function CourseView() {
     const cleanPhone = waPhone.replace(/\D/g, '');
     const fullPhone = cleanPhone.startsWith('34') ? cleanPhone : `34${cleanPhone}`;
     const message = `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`;
-    const waUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
+    const waUrl = `https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(message)}`;
 
-    // En preview embebido, el navegador bloquea la navegación a WhatsApp.
-    if (window.self !== window.top) {
-      navigator.clipboard.writeText(waUrl)
-        .then(() => {
-          toast({
-            title: "Enlace de WhatsApp copiado",
-            description: "Pégalo en una pestaña normal del navegador (fuera del preview).",
-          });
-        })
-        .catch(() => {
-          toast({
-            title: "Enlace WhatsApp",
-            description: waUrl,
-          });
-        });
-      return;
-    }
+    const link = document.createElement('a');
+    link.href = waUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-    const popup = window.open(waUrl, '_blank', 'noopener,noreferrer');
-    if (!popup) {
+    // Fallback por si el navegador bloquea popups
+    setTimeout(() => {
+      if (!document.hasFocus()) return;
       toast({
-        title: "Popup bloqueado",
-        description: "Permite ventanas emergentes para abrir WhatsApp.",
+        title: "Si no se abrió WhatsApp",
+        description: "Permite ventanas emergentes y vuelve a intentarlo.",
         variant: "destructive",
       });
-    }
+    }, 300);
   };
 
   useEffect(() => {
