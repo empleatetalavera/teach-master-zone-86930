@@ -50,6 +50,19 @@ export const generateStudentGuidePDF = async (
   courseData?: CourseDataForPDF
 ) => {
   const doc = new jsPDF();
+  
+  // Sanitize text to avoid jsPDF encoding issues with special chars
+  const sanitize = (t: string) => t
+    .replace(/→/g, '>').replace(/—/g, '-').replace(/–/g, '-')
+    .replace(/\u201c/g, '"').replace(/\u201d/g, '"')
+    .replace(/\u2018/g, "'").replace(/\u2019/g, "'")
+    .replace(/●/g, '-').replace(/•/g, '-');
+  const _origText = doc.text.bind(doc);
+  (doc as any).text = (text: any, x: number, y: number, options?: any) => {
+    if (typeof text === 'string') text = sanitize(text);
+    else if (Array.isArray(text)) text = text.map((t: any) => typeof t === 'string' ? sanitize(t) : t);
+    return _origText(text, x, y, options);
+  };
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
@@ -425,7 +438,7 @@ export const generateStudentGuidePDF = async (
     doc.rect(diagX, diagY, diagW, 8, 'F');
     doc.setTextColor(...WHITE);
     doc.setFontSize(7);
-    doc.text('Formación en Campus — Módulos Formativos', diagX + diagW / 2, diagY + 5, { align: 'center' });
+    doc.text('Formacion en Campus - Modulos Formativos', diagX + diagW / 2, diagY + 5, { align: 'center' });
     
     // Info box
     doc.setFillColor(255, 251, 235);
@@ -1137,12 +1150,12 @@ export const generateStudentGuidePDF = async (
     startY: yPos,
     head: [['ESTRUCTURA DEL CONTENIDO', 'DESCRIPCIÓN']],
     body: [
-      ['MÓDULOS FORMATIVOS (MF)', 'Grandes bloques de contenido'],
-      ['  → UNIDADES FORMATIVAS (UF)', 'Subdivisiones del módulo'],
-      ['      → TEMARIO / CIM', 'Contenido Interactivo Multimedia con el temario teórico'],
-      ['      → CONTENIDO INTERACTIVO', 'Vídeos, audios, presentaciones, documentos'],
-      ['      → ACTIVIDADES', 'Casos prácticos y ejercicios evaluables'],
-      ['      → EVALUACIONES', 'Test de cada unidad formativa'],
+      ['MODULOS FORMATIVOS (MF)', 'Grandes bloques de contenido'],
+      ['  > UNIDADES FORMATIVAS (UF)', 'Subdivisiones del modulo'],
+      ['      > TEMARIO / CIM', 'Contenido Interactivo Multimedia con el temario teorico'],
+      ['      > CONTENIDO INTERACTIVO', 'Videos, audios, presentaciones, documentos'],
+      ['      > ACTIVIDADES', 'Casos practicos y ejercicios evaluables'],
+      ['      > EVALUACIONES', 'Test de cada unidad formativa'],
     ],
     margin: { left: margin, right: margin },
     bodyStyles: { fontSize: 9, textColor: BLACK },
