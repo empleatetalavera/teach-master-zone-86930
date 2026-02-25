@@ -207,6 +207,21 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
 
   const handleDownloadPDF = () => {
     try {
+      if (course.training_program_pdf_url) {
+        const opened = window.open(course.training_program_pdf_url, '_blank', 'noopener,noreferrer');
+
+        if (!opened) {
+          const link = document.createElement('a');
+          link.href = course.training_program_pdf_url;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+        return;
+      }
+
       generateProyectoFormativoPDF({
         courseTitle: course.title,
         courseCode: course.course_code || "SSC_C_017_5B",

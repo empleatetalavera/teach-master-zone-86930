@@ -1508,53 +1508,25 @@ export default function CourseView() {
                   </div>
                   <Button 
                     className="w-full flex items-center gap-2"
-                    onClick={async () => {
+                    onClick={() => {
                       try {
-                        toast({ title: "Descargando...", description: "Preparando la Guía del Alumno." });
                         const pdfUrl = course.student_guide_pdf_url!;
-                        
-                        // Extract storage path from public URL to create signed URL
-                        const storageMatch = pdfUrl.match(/\/storage\/v1\/object\/public\/([^?]+)/);
-                        let downloadUrl = pdfUrl;
-                        
-                        if (storageMatch) {
-                          const fullPath = storageMatch[1]; // e.g. "course-documents/courseId/file.pdf"
-                          const bucketAndPath = fullPath.split('/');
-                          const bucket = bucketAndPath[0];
-                          const filePath = bucketAndPath.slice(1).join('/');
-                          
-                          const { data: signedData, error: signedError } = await supabase.storage
-                            .from(bucket)
-                            .createSignedUrl(filePath, 300);
-                          
-                          if (signedData?.signedUrl) {
-                            downloadUrl = signedData.signedUrl;
-                          } else {
-                            console.warn('Could not create signed URL, falling back to public URL:', signedError);
-                          }
+                        const opened = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+
+                        if (!opened) {
+                          const link = document.createElement('a');
+                          link.href = pdfUrl;
+                          link.target = '_blank';
+                          link.rel = 'noopener noreferrer';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
                         }
-                        
-                        const response = await fetch(downloadUrl);
-                        if (!response.ok) {
-                          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        }
-                        const blob = await response.blob();
-                        if (blob.size === 0) {
-                          throw new Error('El archivo descargado está vacío');
-                        }
-                        const blobUrl = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = blobUrl;
-                        link.download = 'Guia_del_Alumno.pdf';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
                       } catch (err) {
-                        console.error('Error downloading PDF:', err);
+                        console.error('Error opening PDF:', err);
                         toast({
-                          title: "Error al descargar",
-                          description: "No se pudo descargar la Guía del Alumno. Inténtelo de nuevo.",
+                          title: "Error al abrir",
+                          description: "No se pudo abrir la Guía del Alumno.",
                           variant: "destructive",
                         });
                       }
