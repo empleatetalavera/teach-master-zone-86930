@@ -78,7 +78,27 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
     try {
       if (course.student_guide_pdf_url) {
         try {
-          const response = await fetch(course.student_guide_pdf_url);
+          let downloadUrl = course.student_guide_pdf_url;
+          
+          // Extract storage path from public URL to create signed URL
+          const storageMatch = downloadUrl.match(/\/storage\/v1\/object\/public\/([^?]+)/);
+          if (storageMatch) {
+            const fullPath = storageMatch[1];
+            const bucketAndPath = fullPath.split('/');
+            const bucket = bucketAndPath[0];
+            const filePath = bucketAndPath.slice(1).join('/');
+            
+            const { data: signedData } = await supabase.storage
+              .from(bucket)
+              .createSignedUrl(filePath, 300);
+            
+            if (signedData?.signedUrl) {
+              downloadUrl = signedData.signedUrl;
+            }
+          }
+          
+          const response = await fetch(downloadUrl);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const blob = await response.blob();
           const blobUrl = URL.createObjectURL(blob);
           const link = document.createElement('a');
@@ -88,7 +108,9 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
           link.click();
           document.body.removeChild(link);
           setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-        } catch {
+        } catch (fetchErr) {
+          console.error('Error fetching uploaded PDF:', fetchErr);
+          // Fallback: direct link
           const link = document.createElement('a');
           link.href = course.student_guide_pdf_url;
           link.download = 'Guia_del_Alumno.pdf';
