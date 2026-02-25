@@ -366,11 +366,15 @@ export default function CourseView() {
     const cleanPhone = waPhone.replace(/\D/g, '');
     const fullPhone = cleanPhone.startsWith('34') ? cleanPhone : `34${cleanPhone}`;
     const message = `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`;
-    const waUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
+    const waUrl = `https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(message)}`;
 
-    const popup = window.open(waUrl, '_blank', 'noopener,noreferrer');
+    const popup = window.open(waUrl, '_blank');
     if (!popup) {
-      window.location.href = waUrl;
+      toast({
+        title: "Popup bloqueado",
+        description: "Permite ventanas emergentes para abrir WhatsApp en una pestaña nueva.",
+        variant: "destructive",
+      });
     }
   };
 
