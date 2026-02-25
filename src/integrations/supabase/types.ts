@@ -3034,6 +3034,7 @@ export type Database = {
           sepe_registry_number: string | null
           slug: string | null
           updated_at: string | null
+          whatsapp_phone: string | null
         }
         Insert: {
           address?: string | null
@@ -3062,6 +3063,7 @@ export type Database = {
           sepe_registry_number?: string | null
           slug?: string | null
           updated_at?: string | null
+          whatsapp_phone?: string | null
         }
         Update: {
           address?: string | null
@@ -3090,6 +3092,7 @@ export type Database = {
           sepe_registry_number?: string | null
           slug?: string | null
           updated_at?: string | null
+          whatsapp_phone?: string | null
         }
         Relationships: []
       }
