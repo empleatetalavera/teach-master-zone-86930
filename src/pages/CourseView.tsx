@@ -361,6 +361,19 @@ export default function CourseView() {
     }));
   };
 
+  const handleWhatsAppSupportClick = () => {
+    const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
+    const cleanPhone = waPhone.replace(/\D/g, '');
+    const fullPhone = cleanPhone.startsWith('34') ? cleanPhone : `34${cleanPhone}`;
+    const message = `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`;
+    const waUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
+
+    const popup = window.open(waUrl, '_blank', 'noopener,noreferrer');
+    if (!popup) {
+      window.location.href = waUrl;
+    }
+  };
+
   useEffect(() => {
     if (courseId && user) {
       loadCourseData();
@@ -882,22 +895,11 @@ export default function CourseView() {
               <Button
                 variant="outline"
                 size="sm"
-                asChild
+                onClick={handleWhatsAppSupportClick}
+                className="flex items-center gap-2"
               >
-                <a 
-                  href={(() => {
-                    const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
-                    const cleanPhone = waPhone.replace(/\s/g, '');
-                    const prefix = cleanPhone.startsWith('34') ? '' : '34';
-                    return `https://api.whatsapp.com/send?phone=${prefix}${cleanPhone}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`;
-                  })()}
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  WhatsApp Dudas
-                </a>
+                <MessageSquare className="h-4 w-4" />
+                WhatsApp Dudas
               </Button>
               
               <Popover>
