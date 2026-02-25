@@ -368,19 +368,31 @@ export default function CourseView() {
     const message = `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`;
     const waUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
 
-    try {
-      // Intentar abrir desde la ventana principal (escapa del iframe)
-      const target = window.top || window.parent || window;
-      target.open(waUrl, '_blank');
-    } catch {
-      // Si falla por restricciones de seguridad, fallback normal
-      const popup = window.open(waUrl, '_blank');
-      if (!popup) {
-        toast({
-          title: "Enlace WhatsApp",
-          description: "Copia este enlace y ábrelo en tu navegador: " + waUrl,
+    // En preview embebido, el navegador bloquea la navegación a WhatsApp.
+    if (window.self !== window.top) {
+      navigator.clipboard.writeText(waUrl)
+        .then(() => {
+          toast({
+            title: "Enlace de WhatsApp copiado",
+            description: "Pégalo en una pestaña normal del navegador (fuera del preview).",
+          });
+        })
+        .catch(() => {
+          toast({
+            title: "Enlace WhatsApp",
+            description: waUrl,
+          });
         });
-      }
+      return;
+    }
+
+    const popup = window.open(waUrl, '_blank', 'noopener,noreferrer');
+    if (!popup) {
+      toast({
+        title: "Popup bloqueado",
+        description: "Permite ventanas emergentes para abrir WhatsApp.",
+        variant: "destructive",
+      });
     }
   };
 
