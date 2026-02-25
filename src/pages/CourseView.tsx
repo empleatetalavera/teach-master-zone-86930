@@ -1519,8 +1519,38 @@ export default function CourseView() {
                     className="w-full flex items-center gap-2"
                     onClick={async () => {
                       try {
-                        const response = await fetch(course.student_guide_pdf_url!);
+                        toast({ title: "Descargando...", description: "Preparando la Guía del Alumno." });
+                        const pdfUrl = course.student_guide_pdf_url!;
+                        
+                        // Extract storage path from public URL to create signed URL
+                        const storageMatch = pdfUrl.match(/\/storage\/v1\/object\/public\/([^?]+)/);
+                        let downloadUrl = pdfUrl;
+                        
+                        if (storageMatch) {
+                          const fullPath = storageMatch[1]; // e.g. "course-documents/courseId/file.pdf"
+                          const bucketAndPath = fullPath.split('/');
+                          const bucket = bucketAndPath[0];
+                          const filePath = bucketAndPath.slice(1).join('/');
+                          
+                          const { data: signedData, error: signedError } = await supabase.storage
+                            .from(bucket)
+                            .createSignedUrl(filePath, 300);
+                          
+                          if (signedData?.signedUrl) {
+                            downloadUrl = signedData.signedUrl;
+                          } else {
+                            console.warn('Could not create signed URL, falling back to public URL:', signedError);
+                          }
+                        }
+                        
+                        const response = await fetch(downloadUrl);
+                        if (!response.ok) {
+                          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
                         const blob = await response.blob();
+                        if (blob.size === 0) {
+                          throw new Error('El archivo descargado está vacío');
+                        }
                         const blobUrl = URL.createObjectURL(blob);
                         const link = document.createElement('a');
                         link.href = blobUrl;
@@ -1531,7 +1561,11 @@ export default function CourseView() {
                         setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
                       } catch (err) {
                         console.error('Error downloading PDF:', err);
-                        alert('Error al descargar el PDF. Inténtelo de nuevo.');
+                        toast({
+                          title: "Error al descargar",
+                          description: "No se pudo descargar la Guía del Alumno. Inténtelo de nuevo.",
+                          variant: "destructive",
+                        });
                       }
                     }}
                   >

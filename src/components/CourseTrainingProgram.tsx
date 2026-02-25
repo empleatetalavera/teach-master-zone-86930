@@ -228,7 +228,6 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
       });
     } catch (error) {
       console.error('Error generating training program PDF:', error);
-      alert('Error al generar el Programa Formativo. Inténtelo de nuevo.');
     }
   };
 
