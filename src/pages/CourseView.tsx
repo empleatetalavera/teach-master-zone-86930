@@ -889,20 +889,11 @@ export default function CourseView() {
                     const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
                     const cleanPhone = waPhone.replace(/\s/g, '');
                     const prefix = cleanPhone.startsWith('34') ? '' : '34';
-                    return `https://web.whatsapp.com/send?phone=${prefix}${cleanPhone}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`;
+                    return `https://api.whatsapp.com/send?phone=${prefix}${cleanPhone}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`;
                   })()}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
-                  onClick={(e) => {
-                    const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
-                    const cleanPhone = waPhone.replace(/\s/g, '');
-                    const prefix = cleanPhone.startsWith('34') ? '' : '34';
-                    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                      e.preventDefault();
-                      window.open(`https://api.whatsapp.com/send?phone=${prefix}${cleanPhone}&text=${encodeURIComponent(`Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`)}`, '_blank');
-                    }
-                  }}
                 >
                   <MessageSquare className="h-4 w-4" />
                   WhatsApp Dudas
