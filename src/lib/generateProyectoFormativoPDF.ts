@@ -448,6 +448,19 @@ const BOE_CURRICULUM: ModuleCurriculum[] = [
 
 export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  
+  // Sanitize text to avoid jsPDF encoding issues with special chars
+  const sanitize = (t: string) => t
+    .replace(/→/g, '>').replace(/—/g, '-').replace(/–/g, '-')
+    .replace(/\u201c/g, '"').replace(/\u201d/g, '"')
+    .replace(/\u2018/g, "'").replace(/\u2019/g, "'")
+    .replace(/●/g, '-').replace(/•/g, '-');
+  const _origText = doc.text.bind(doc);
+  (doc as any).text = (text: any, x: number, y: number, options?: any) => {
+    if (typeof text === 'string') text = sanitize(text);
+    else if (Array.isArray(text)) text = text.map((t: any) => typeof t === 'string' ? sanitize(t) : t);
+    return _origText(text, x, y, options);
+  };
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 12;

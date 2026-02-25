@@ -1321,16 +1321,25 @@ export default function CourseView() {
                           title="Guía del Campus"
                         />
                       </div>
-                      <Button asChild className="w-full">
-                        <a 
-                          href={course.campus_guide_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2"
-                        >
-                          <FileDown className="h-4 w-4" />
-                          Descargar Guía del Campus (PDF)
-                        </a>
+                      <Button className="w-full flex items-center gap-2" onClick={async () => {
+                        try {
+                          const response = await fetch(course.campus_guide_url!);
+                          const blob = await response.blob();
+                          const blobUrl = URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = blobUrl;
+                          link.download = 'Guia_Campus_Virtual.pdf';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                        } catch (err) {
+                          console.error('Error downloading campus guide:', err);
+                          window.open(course.campus_guide_url!, '_blank');
+                        }
+                      }}>
+                        <FileDown className="h-4 w-4" />
+                        Descargar Guía del Campus (PDF)
                       </Button>
                     </>
                   ) : (
@@ -1338,16 +1347,20 @@ export default function CourseView() {
                       <p className="text-muted-foreground text-center">
                         Consulta la guía completa del campus virtual con instrucciones detalladas.
                       </p>
-                      <Button asChild className="w-full">
-                        <a 
-                          href={centerSlug ? `/campus-guide?center=${centerSlug}` : "/campus-guide"} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2"
-                        >
-                          <MapIcon className="h-4 w-4" />
-                          Ver Guía del Campus Virtual
-                        </a>
+                      <Button className="w-full flex items-center gap-2" onClick={async () => {
+                        try {
+                          const { generateCampusGuidePDF } = await import('@/lib/generateCampusGuidePDF');
+                          const { useCenterBranding } = await import('@/hooks/useCenterBranding');
+                          await generateCampusGuidePDF({
+                            centerName: centerName || 'Centro de Formación',
+                          });
+                        } catch (err) {
+                          console.error('Error generating campus guide PDF:', err);
+                          toast({ title: 'Error', description: 'No se pudo generar la guía del campus', variant: 'destructive' });
+                        }
+                      }}>
+                        <MapIcon className="h-4 w-4" />
+                        Descargar Guía del Campus Virtual
                       </Button>
                     </div>
                   )}
