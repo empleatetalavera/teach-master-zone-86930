@@ -368,23 +368,7 @@ export default function CourseView() {
     const message = `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`;
     const waUrl = `https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(message)}`;
 
-    const link = document.createElement('a');
-    link.href = waUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Fallback por si el navegador bloquea popups
-    setTimeout(() => {
-      if (!document.hasFocus()) return;
-      toast({
-        title: "Si no se abrió WhatsApp",
-        description: "Permite ventanas emergentes y vuelve a intentarlo.",
-        variant: "destructive",
-      });
-    }, 300);
+    window.location.href = waUrl;
   };
 
   useEffect(() => {
@@ -1511,17 +1495,7 @@ export default function CourseView() {
                     onClick={() => {
                       try {
                         const pdfUrl = course.student_guide_pdf_url!;
-                        const opened = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
-
-                        if (!opened) {
-                          const link = document.createElement('a');
-                          link.href = pdfUrl;
-                          link.target = '_blank';
-                          link.rel = 'noopener noreferrer';
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }
+                        window.location.href = pdfUrl;
                       } catch (err) {
                         console.error('Error opening PDF:', err);
                         toast({
