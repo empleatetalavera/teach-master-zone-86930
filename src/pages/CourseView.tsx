@@ -361,15 +361,12 @@ export default function CourseView() {
     }));
   };
 
-  const handleWhatsAppSupportClick = () => {
-    const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
-    const cleanPhone = waPhone.replace(/\D/g, '');
-    const fullPhone = cleanPhone.startsWith('34') ? cleanPhone : `34${cleanPhone}`;
-    const message = `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`;
-    const waUrl = `https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(message)}`;
-
-    window.location.href = waUrl;
-  };
+  const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
+  const cleanPhone = waPhone.replace(/\D/g, '');
+  const fullPhone = cleanPhone.startsWith('34') ? cleanPhone : `34${cleanPhone}`;
+  const whatsappSupportUrl = `https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(
+    `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`
+  )}`;
 
   useEffect(() => {
     if (courseId && user) {
@@ -892,11 +889,13 @@ export default function CourseView() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleWhatsAppSupportClick}
+                asChild
                 className="flex items-center gap-2"
               >
-                <MessageSquare className="h-4 w-4" />
-                WhatsApp Dudas
+                <a href={whatsappSupportUrl} target="_blank" rel="noopener noreferrer">
+                  <MessageSquare className="h-4 w-4" />
+                  WhatsApp Dudas
+                </a>
               </Button>
               
               <Popover>
@@ -1490,24 +1489,15 @@ export default function CourseView() {
                       Documento PDF con toda la información del curso
                     </p>
                   </div>
-                  <Button 
-                    className="w-full flex items-center gap-2"
-                    onClick={() => {
-                      try {
-                        const pdfUrl = course.student_guide_pdf_url!;
-                        window.location.href = pdfUrl;
-                      } catch (err) {
-                        console.error('Error opening PDF:', err);
-                        toast({
-                          title: "Error al abrir",
-                          description: "No se pudo abrir la Guía del Alumno.",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                  >
-                    <FileDown className="h-4 w-4" />
-                    Descargar Guía del Alumno (PDF)
+                  <Button asChild className="w-full flex items-center gap-2">
+                    <a
+                      href={course.student_guide_pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Descargar Guía del Alumno (PDF)
+                    </a>
                   </Button>
                 </CardContent>
               </Card>
