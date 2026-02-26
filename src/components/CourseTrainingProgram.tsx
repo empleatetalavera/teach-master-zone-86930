@@ -207,10 +207,6 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
 
   const handleDownloadPDF = () => {
     try {
-      if (course.training_program_pdf_url) {
-        window.location.href = course.training_program_pdf_url;
-        return;
-      }
 
       generateProyectoFormativoPDF({
         courseTitle: course.title,
@@ -252,10 +248,19 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         
         {/* Download Button */}
         <div className="mt-4">
-          <Button onClick={handleDownloadPDF} className="gap-2">
-            <Download className="h-4 w-4" />
-            Descargar Proyecto Formativo (PDF)
-          </Button>
+          {course.training_program_pdf_url ? (
+            <Button asChild className="gap-2">
+              <a href={course.training_program_pdf_url} target="_blank" rel="noopener noreferrer">
+                <Download className="h-4 w-4" />
+                Descargar Proyecto Formativo (PDF)
+              </a>
+            </Button>
+          ) : (
+            <Button onClick={handleDownloadPDF} className="gap-2">
+              <Download className="h-4 w-4" />
+              Descargar Proyecto Formativo (PDF)
+            </Button>
+          )}
         </div>
       </div>
 
