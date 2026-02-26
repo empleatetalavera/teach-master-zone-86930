@@ -364,9 +364,36 @@ export default function CourseView() {
   const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
   const cleanPhone = waPhone.replace(/\D/g, '');
   const fullPhone = cleanPhone.startsWith('34') ? cleanPhone : `34${cleanPhone}`;
-  const whatsappSupportUrl = `https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(
+  const whatsappSupportUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(
     `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`
   )}`;
+
+  const openPdfViaBlob = async (pdfUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(pdfUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (error) {
+      console.error("Error opening PDF via blob:", error);
+      toast({
+        title: "Documento bloqueado por el navegador",
+        description: "Prueba en otra ventana o desactiva el bloqueador para este sitio.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     if (courseId && user) {
@@ -1489,15 +1516,15 @@ export default function CourseView() {
                       Documento PDF con toda la información del curso
                     </p>
                   </div>
-                  <Button asChild className="w-full flex items-center gap-2">
-                    <a
-                      href={course.student_guide_pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <FileDown className="h-4 w-4" />
-                      Descargar Guía del Alumno (PDF)
-                    </a>
+                  <Button
+                    className="w-full flex items-center gap-2"
+                    onClick={() => openPdfViaBlob(
+                      course.student_guide_pdf_url!,
+                      `${course.title.replace(/\s+/g, '-').toLowerCase()}-guia-alumno.pdf`
+                    )}
+                  >
+                    <FileDown className="h-4 w-4" />
+                    Descargar Guía del Alumno (PDF)
                   </Button>
                 </CardContent>
               </Card>
