@@ -310,6 +310,37 @@ export default function ScormProfessionalViewer({
     loadManuals();
   }, [open, unitId]);
 
+
+  const downloadManualPdf = async (filePath: string, fileName: string) => {
+    try {
+      const { data: signedData } = await supabase.storage
+        .from('module-content')
+        .createSignedUrl(filePath, 3600);
+
+      if (!signedData?.signedUrl) throw new Error('No se pudo generar el enlace del manual');
+
+      const response = await fetch(signedData.signedUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${fileName || 'manual'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch (err) {
+      console.error('Error downloading manual PDF:', err);
+      toast({
+        title: 'Error al abrir manual',
+        description: 'No se pudo descargar el manual. Reintenta en unos segundos.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   // Mark slide as completed when navigating
   useEffect(() => {
     if (currentSlideIndex > 0) {
@@ -971,14 +1002,7 @@ export default function ScormProfessionalViewer({
                       {manualFiles.length > 0 ? manualFiles.map((file, idx) => (
                         <button
                           key={idx}
-                          onClick={async () => {
-                            const { data: signedData } = await supabase.storage
-                              .from('module-content')
-                              .createSignedUrl(file.filePath, 3600);
-                            if (signedData?.signedUrl) {
-                              window.open(signedData.signedUrl, '_blank');
-                            }
-                          }}
+                          onClick={() => downloadManualPdf(file.filePath, file.name)}
                           className="flex items-center gap-4 p-4 border-2 rounded-xl hover:bg-muted/50 hover:border-primary transition-all group w-full text-left"
                         >
                           <div className="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">

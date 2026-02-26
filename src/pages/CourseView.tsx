@@ -361,12 +361,6 @@ export default function CourseView() {
     }));
   };
 
-  const waPhone = centerContact.whatsapp_phone || centerContact.phone || '665673416';
-  const cleanPhone = waPhone.replace(/\D/g, '');
-  const fullPhone = cleanPhone.startsWith('34') ? cleanPhone : `34${cleanPhone}`;
-  const whatsappSupportUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(
-    `Hola, soy ${user?.email || 'alumno/a'} del curso "${course?.title || 'formación'}". Tengo una consulta:`
-  )}`;
 
   const openPdfViaBlob = async (pdfUrl: string, fileName: string) => {
     try {
@@ -913,17 +907,6 @@ export default function CourseView() {
                 </PopoverContent>
               </Popover>
 
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="flex items-center gap-2"
-              >
-                <a href={whatsappSupportUrl} target="_blank" rel="noopener noreferrer">
-                  <MessageSquare className="h-4 w-4" />
-                  WhatsApp Dudas
-                </a>
-              </Button>
               
               <Popover>
                 <PopoverTrigger asChild>
@@ -1825,18 +1808,10 @@ export default function CourseView() {
                                     .from('module-content')
                                     .createSignedUrl(pdfData[0].file_path, 3600);
                                   if (signedData?.signedUrl) {
-                                    try {
-                                      const resp = await fetch(signedData.signedUrl);
-                                      const blob = await resp.blob();
-                                      const blobUrl = URL.createObjectURL(blob);
-                                      const link = document.createElement('a');
-                                      link.href = blobUrl;
-                                      link.target = '_blank';
-                                      document.body.appendChild(link);
-                                      link.click();
-                                      document.body.removeChild(link);
-                                      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-                                    } catch { toast({ title: "Error", description: "No se pudo abrir el PDF. Desactiva el bloqueador de anuncios.", variant: "destructive" }); }
+                                    await openPdfViaBlob(
+                                      signedData.signedUrl,
+                                      `${module.title || 'temario-modulo'}.pdf`
+                                    );
                                   }
                                 } else {
                                   toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de este módulo.", variant: "destructive" });
@@ -1917,20 +1892,10 @@ export default function CourseView() {
                                         .from('module-content')
                                         .createSignedUrl(pdfData[0].file_path, 3600);
                                       if (signedData?.signedUrl) {
-                                        try {
-                                          const resp = await fetch(signedData.signedUrl);
-                                          const blob = await resp.blob();
-                                          const blobUrl = URL.createObjectURL(blob);
-                                          const link = document.createElement('a');
-                                          link.href = blobUrl;
-                                          link.download = `${unit.title || 'temario'}.pdf`;
-                                          document.body.appendChild(link);
-                                          link.click();
-                                          document.body.removeChild(link);
-                                          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-                                        } catch {
-                                          toast({ title: "Error", description: "No se pudo descargar el PDF. Desactiva el bloqueador de anuncios e inténtalo de nuevo.", variant: "destructive" });
-                                        }
+                                        await openPdfViaBlob(
+                                          signedData.signedUrl,
+                                          `${unit.title || 'temario'}.pdf`
+                                        );
                                       }
                                     } else {
                                       toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
@@ -1970,20 +1935,10 @@ export default function CourseView() {
                                           .from('module-content')
                                           .createSignedUrl(pdfData[0].file_path, 3600);
                                         if (signedData?.signedUrl) {
-                                          try {
-                                            const resp = await fetch(signedData.signedUrl);
-                                            const blob = await resp.blob();
-                                            const blobUrl = URL.createObjectURL(blob);
-                                            const link = document.createElement('a');
-                                            link.href = blobUrl;
-                                            link.download = `${unit.title || 'temario'}.pdf`;
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-                                          } catch {
-                                            toast({ title: "Error", description: "No se pudo descargar el PDF. Desactiva el bloqueador de anuncios.", variant: "destructive" });
-                                          }
+                                          await openPdfViaBlob(
+                                            signedData.signedUrl,
+                                            `${unit.title || 'temario'}.pdf`
+                                          );
                                         }
                                       } else {
                                         toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
