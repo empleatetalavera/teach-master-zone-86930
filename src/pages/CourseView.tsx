@@ -364,13 +364,6 @@ export default function CourseView() {
 
   const openPdfWithFallback = async (pdfUrl: string, fileName: string) => {
     try {
-      const openedWindow = window.open(pdfUrl, "_blank", "noopener,noreferrer");
-      if (openedWindow) return;
-    } catch (error) {
-      console.warn("Direct PDF open failed, trying blob fallback:", error);
-    }
-
-    try {
       const response = await fetch(pdfUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
@@ -379,18 +372,24 @@ export default function CourseView() {
       const link = document.createElement("a");
       link.href = blobUrl;
       link.download = fileName;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch (error) {
-      console.error("Error opening PDF with fallback:", error);
+      console.error("Error downloading PDF via blob:", error);
+
+      // Último recurso para navegadores muy restrictivos
+      try {
+        window.open(pdfUrl, "_blank", "noopener,noreferrer");
+      } catch (openError) {
+        console.error("Direct PDF open also failed:", openError);
+      }
+
       toast({
-        title: "No se pudo abrir el documento",
-        description: "Tu navegador está bloqueando la descarga. Prueba en otra pestaña o desactiva el bloqueador para este sitio.",
+        title: "No se pudo descargar el documento",
+        description: "Tu navegador o una extensión está bloqueando el archivo. Permite este sitio e inténtalo de nuevo.",
         variant: "destructive",
       });
     }
