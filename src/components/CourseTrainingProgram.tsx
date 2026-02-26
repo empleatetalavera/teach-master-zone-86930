@@ -205,6 +205,28 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
     };
   });
 
+  const openUploadedPdfViaBlob = async (pdfUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(pdfUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (error) {
+      console.error("Error opening uploaded training program PDF:", error);
+    }
+  };
+
   const handleDownloadPDF = () => {
     try {
 
@@ -249,11 +271,17 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         {/* Download Button */}
         <div className="mt-4">
           {course.training_program_pdf_url ? (
-            <Button asChild className="gap-2">
-              <a href={course.training_program_pdf_url} target="_blank" rel="noopener noreferrer">
-                <Download className="h-4 w-4" />
-                Descargar Proyecto Formativo (PDF)
-              </a>
+            <Button
+              className="gap-2"
+              onClick={() =>
+                openUploadedPdfViaBlob(
+                  course.training_program_pdf_url!,
+                  `${course.title.replace(/\s+/g, '-').toLowerCase()}-programa-formativo.pdf`
+                )
+              }
+            >
+              <Download className="h-4 w-4" />
+              Descargar Proyecto Formativo (PDF)
             </Button>
           ) : (
             <Button onClick={handleDownloadPDF} className="gap-2">
