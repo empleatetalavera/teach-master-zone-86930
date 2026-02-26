@@ -362,7 +362,14 @@ export default function CourseView() {
   };
 
 
-  const openPdfViaBlob = async (pdfUrl: string, fileName: string) => {
+  const openPdfWithFallback = async (pdfUrl: string, fileName: string) => {
+    try {
+      const openedWindow = window.open(pdfUrl, "_blank", "noopener,noreferrer");
+      if (openedWindow) return;
+    } catch (error) {
+      console.warn("Direct PDF open failed, trying blob fallback:", error);
+    }
+
     try {
       const response = await fetch(pdfUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -380,14 +387,16 @@ export default function CourseView() {
 
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch (error) {
-      console.error("Error opening PDF via blob:", error);
+      console.error("Error opening PDF with fallback:", error);
       toast({
-        title: "Documento bloqueado por el navegador",
-        description: "Prueba en otra ventana o desactiva el bloqueador para este sitio.",
+        title: "No se pudo abrir el documento",
+        description: "Tu navegador está bloqueando la descarga. Prueba en otra pestaña o desactiva el bloqueador para este sitio.",
         variant: "destructive",
       });
     }
   };
+
+  const openPdfViaBlob = openPdfWithFallback;
 
   useEffect(() => {
     if (courseId && user) {
@@ -1501,7 +1510,7 @@ export default function CourseView() {
                   </div>
                   <Button
                     className="w-full flex items-center gap-2"
-                    onClick={() => openPdfViaBlob(
+                    onClick={() => openPdfWithFallback(
                       course.student_guide_pdf_url!,
                       `${course.title.replace(/\s+/g, '-').toLowerCase()}-guia-alumno.pdf`
                     )}
