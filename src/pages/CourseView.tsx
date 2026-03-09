@@ -65,7 +65,7 @@ import { SEPECertificateUploader } from "@/components/SEPECertificateUploader";
 import { SEPECertificateStudentView } from "@/components/SEPECertificateStudentView";
 import { SEPEFormacionCampus } from "@/components/campus/SEPEFormacionCampus";
 import TeacherTutorGuide from "@/pages/dashboard/TeacherTutorGuide";
-import { ItinerarySelector } from "@/components/ItinerarySelector";
+import { ElectiveModuleContent } from "@/components/ElectiveModuleContent";
 import { ElectiveModuleContent } from "@/components/ElectiveModuleContent";
 
 interface Course {
