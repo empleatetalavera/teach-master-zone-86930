@@ -1775,7 +1775,7 @@ export default function CourseView() {
                 ) : null}
               </>
             )}
-            {isCFCCourse && modules.length > 0 ? (
+            {(isCFCCourse || isPropio) && modules.length > 0 ? (
               /* ===== CFC SIMPLIFIED MODULE VIEW ===== */
               <Accordion type="multiple" className="space-y-3">
                 {modules.map((module, index) => {
