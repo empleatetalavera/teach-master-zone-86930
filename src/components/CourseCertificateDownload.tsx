@@ -759,7 +759,7 @@ export function CourseCertificateDownload({
             <Button
               className="w-full"
               size="lg"
-              onClick={handleDownload}
+              onClick={hasStaticCert ? handleStaticCertDownload : handleDownload}
               disabled={generating}
             >
               {generating ? (
@@ -767,7 +767,7 @@ export function CourseCertificateDownload({
               ) : (
                 <Download className="h-5 w-5 mr-2" />
               )}
-              {issuedCert ? "Descargar Diploma" : "Generar y Descargar Diploma"}
+              {hasStaticCert ? "Descargar Certificado Oficial" : (issuedCert ? "Descargar Diploma" : "Generar y Descargar Diploma")}
             </Button>
           ) : (
             <div className="p-4 rounded-lg bg-muted text-center">
