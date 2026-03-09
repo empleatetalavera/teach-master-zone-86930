@@ -22,7 +22,6 @@ import QRCode from "qrcode";
 import { getCurrentBranding } from "@/lib/branding";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { generateEmpleateTalaveraCertPDF } from "@/lib/generateEmpleateTalaveraCertPDF";
 
 interface CourseCertificateDownloadProps {
   courseId: string;
@@ -34,6 +33,7 @@ interface CourseCertificateDownloadProps {
   modality?: string | null;
   trainingCenterId?: string | null;
   courseType?: string | null;
+  certificateModelUrl?: string | null;
 }
 
 interface CompletionStatus {
@@ -84,8 +84,10 @@ export function CourseCertificateDownload({
   modality,
   trainingCenterId,
   courseType,
+  certificateModelUrl,
 }: CourseCertificateDownloadProps) {
   const isPropio = courseType === 'propio';
+  const hasStaticCert = !!certificateModelUrl;
   const { user, userRole } = useAuth();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<CompletionStatus | null>(null);
@@ -93,6 +95,24 @@ export function CourseCertificateDownload({
   const [generating, setGenerating] = useState(false);
   const branding = getCurrentBranding();
   const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+
+  const handleStaticCertDownload = () => {
+    if (!certificateModelUrl) return;
+    try {
+      setGenerating(true);
+      const a = document.createElement("a");
+      a.href = certificateModelUrl;
+      a.download = `Certificado_${courseTitle.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+      a.target = "_blank";
+      a.click();
+      toast.success("Certificado descargado");
+    } catch {
+      // Fallback: open in new tab
+      window.open(certificateModelUrl, "_blank");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   useEffect(() => {
     if (user && courseId) loadStatus();
@@ -665,9 +685,9 @@ export function CourseCertificateDownload({
             </div>
           </CardHeader>
           <CardContent>
-            <Button className="w-full" size="lg" onClick={handleDemoDownload} disabled={generating}>
+            <Button className="w-full" size="lg" onClick={hasStaticCert ? handleStaticCertDownload : handleDemoDownload} disabled={generating}>
               {generating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Download className="h-5 w-5 mr-2" />}
-              Descargar Diploma de Muestra
+              {hasStaticCert ? "Descargar Certificado Modelo" : "Descargar Diploma de Muestra"}
             </Button>
           </CardContent>
         </Card>
@@ -739,7 +759,7 @@ export function CourseCertificateDownload({
             <Button
               className="w-full"
               size="lg"
-              onClick={handleDownload}
+              onClick={hasStaticCert ? handleStaticCertDownload : handleDownload}
               disabled={generating}
             >
               {generating ? (
@@ -747,7 +767,7 @@ export function CourseCertificateDownload({
               ) : (
                 <Download className="h-5 w-5 mr-2" />
               )}
-              {issuedCert ? "Descargar Diploma" : "Generar y Descargar Diploma"}
+              {hasStaticCert ? "Descargar Certificado Oficial" : (issuedCert ? "Descargar Diploma" : "Generar y Descargar Diploma")}
             </Button>
           ) : (
             <div className="p-4 rounded-lg bg-muted text-center">
@@ -764,11 +784,11 @@ export function CourseCertificateDownload({
               className="w-full"
               size="lg"
               variant="outline"
-              onClick={handleDemoDownload}
+              onClick={hasStaticCert ? handleStaticCertDownload : handleDemoDownload}
               disabled={generating}
             >
               {generating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Download className="h-5 w-5 mr-2" />}
-              Descargar Diploma de Muestra (Admin)
+              {hasStaticCert ? "Descargar Certificado Modelo (Admin)" : "Descargar Diploma de Muestra (Admin)"}
             </Button>
           )}
 

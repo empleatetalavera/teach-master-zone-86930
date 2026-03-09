@@ -674,6 +674,7 @@ export type Database = {
           boe_url: string | null
           campus_guide_url: string | null
           category: string | null
+          certificate_model_url: string | null
           concept_map_url: string | null
           course_code: string | null
           course_type: string | null
@@ -714,6 +715,7 @@ export type Database = {
           boe_url?: string | null
           campus_guide_url?: string | null
           category?: string | null
+          certificate_model_url?: string | null
           concept_map_url?: string | null
           course_code?: string | null
           course_type?: string | null
@@ -754,6 +756,7 @@ export type Database = {
           boe_url?: string | null
           campus_guide_url?: string | null
           category?: string | null
+          certificate_model_url?: string | null
           concept_map_url?: string | null
           course_code?: string | null
           course_type?: string | null
