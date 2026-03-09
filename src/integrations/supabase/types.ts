@@ -1729,6 +1729,7 @@ export type Database = {
           forum_enabled: boolean | null
           id: string
           is_active: boolean | null
+          is_elective: boolean | null
           is_visible_to_students: boolean | null
           objectives: string | null
           order_index: number
@@ -1747,6 +1748,7 @@ export type Database = {
           forum_enabled?: boolean | null
           id?: string
           is_active?: boolean | null
+          is_elective?: boolean | null
           is_visible_to_students?: boolean | null
           objectives?: string | null
           order_index: number
@@ -1765,6 +1767,7 @@ export type Database = {
           forum_enabled?: boolean | null
           id?: string
           is_active?: boolean | null
+          is_elective?: boolean | null
           is_visible_to_students?: boolean | null
           objectives?: string | null
           order_index?: number
@@ -2702,6 +2705,45 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      student_elective_selections: {
+        Row: {
+          formative_unit_id: string
+          id: string
+          module_id: string
+          selected_at: string | null
+          user_id: string
+        }
+        Insert: {
+          formative_unit_id: string
+          id?: string
+          module_id: string
+          selected_at?: string | null
+          user_id: string
+        }
+        Update: {
+          formative_unit_id?: string
+          id?: string
+          module_id?: string
+          selected_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_elective_selections_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_elective_selections_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_employment_data: {
         Row: {
