@@ -123,6 +123,7 @@ interface Module {
   objectives?: string | null;
   content?: string | null;
   forum_enabled?: boolean;
+  is_elective?: boolean;
 }
 
 interface FormativeUnit {
