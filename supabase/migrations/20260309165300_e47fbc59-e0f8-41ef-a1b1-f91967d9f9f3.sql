@@ -1,0 +1,1 @@
+UPDATE public.courses SET certificate_model_url = 'https://fkxbgifvwivlvpwxdzdb.supabase.co/storage/v1/object/public/course-documents/c87ae1fe-d911-4d91-b1b9-424f331c2a30%2Fcertificado-modelo.pdf' WHERE id = 'c87ae1fe-d911-4d91-b1b9-424f331c2a30';
