@@ -84,8 +84,10 @@ export function CourseCertificateDownload({
   modality,
   trainingCenterId,
   courseType,
+  certificateModelUrl,
 }: CourseCertificateDownloadProps) {
   const isPropio = courseType === 'propio';
+  const hasStaticCert = !!certificateModelUrl;
   const { user, userRole } = useAuth();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<CompletionStatus | null>(null);
@@ -93,6 +95,24 @@ export function CourseCertificateDownload({
   const [generating, setGenerating] = useState(false);
   const branding = getCurrentBranding();
   const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+
+  const handleStaticCertDownload = () => {
+    if (!certificateModelUrl) return;
+    try {
+      setGenerating(true);
+      const a = document.createElement("a");
+      a.href = certificateModelUrl;
+      a.download = `Certificado_${courseTitle.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+      a.target = "_blank";
+      a.click();
+      toast.success("Certificado descargado");
+    } catch {
+      // Fallback: open in new tab
+      window.open(certificateModelUrl, "_blank");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   useEffect(() => {
     if (user && courseId) loadStatus();
