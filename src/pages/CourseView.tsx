@@ -1866,8 +1866,16 @@ export default function CourseView() {
                               </div>
                             )}
                           </div>
-                        ) : (
+                        ) : module.is_elective ? (
+                          /* ===== ELECTIVE MODULE - ITINERARY SELECTOR ===== */
                           <div className="space-y-3">
+                            <ItinerarySelector
+                              moduleId={module.id}
+                              formativeUnits={moduleUnits}
+                              onSelected={() => {}}
+                              selectedUnitId={null}
+                            />
+                            {/* After selection, the ItinerarySelector shows compact view and we render the selected unit below */}
                             {moduleUnits.map((unit: any) => (
                               <div key={unit.id} className="border rounded-lg p-4 space-y-3">
                                 <h4 className="font-medium text-sm">{unit.title}</h4>
@@ -1875,7 +1883,6 @@ export default function CourseView() {
                                 <div 
                                   className="flex items-center gap-3 p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-950/40 transition-colors"
                                   onClick={async () => {
-                                    // Fetch PDF for this unit
                                     let pdfData: any[] | null = null;
                                     const { data: exactMatch } = await (supabase as any)
                                       .from('module_content')
@@ -1896,16 +1903,12 @@ export default function CourseView() {
                                         .limit(1);
                                       pdfData = fallback;
                                     }
-                                    
                                     if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
                                       const { data: signedData } = await supabase.storage
                                         .from('module-content')
                                         .createSignedUrl(pdfData[0].file_path, 3600);
                                       if (signedData?.signedUrl) {
-                                        await openPdfViaBlob(
-                                          signedData.signedUrl,
-                                          `${unit.title || 'temario'}.pdf`
-                                        );
+                                        await openPdfViaBlob(signedData.signedUrl, `${unit.title || 'temario'}.pdf`);
                                       }
                                     } else {
                                       toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
@@ -1920,35 +1923,22 @@ export default function CourseView() {
                                   <div className="flex items-center gap-2">
                                     <Button variant="outline" size="sm" className="gap-2" onClick={async (e) => {
                                       e.stopPropagation();
-                                      // First try exact match by formative_unit_id
                                       let { data: pdfData } = await (supabase as any)
-                                        .from('module_content')
-                                        .select('file_path, title')
-                                        .eq('module_id', module.id)
-                                        .eq('content_type', 'manual_pdf')
-                                        .eq('formative_unit_id', unit.id)
-                                        .limit(1);
-                                      // Fallback to NULL formative_unit_id
+                                        .from('module_content').select('file_path, title')
+                                        .eq('module_id', module.id).eq('content_type', 'manual_pdf')
+                                        .eq('formative_unit_id', unit.id).limit(1);
                                       if (!pdfData || pdfData.length === 0) {
                                         const { data: fallback } = await (supabase as any)
-                                          .from('module_content')
-                                          .select('file_path, title')
-                                          .eq('module_id', module.id)
-                                          .eq('content_type', 'manual_pdf')
-                                          .is('formative_unit_id', null)
-                                          .order('created_at', { ascending: false })
-                                          .limit(1);
+                                          .from('module_content').select('file_path, title')
+                                          .eq('module_id', module.id).eq('content_type', 'manual_pdf')
+                                          .is('formative_unit_id', null).order('created_at', { ascending: false }).limit(1);
                                         pdfData = fallback;
                                       }
                                       if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
                                         const { data: signedData } = await supabase.storage
-                                          .from('module-content')
-                                          .createSignedUrl(pdfData[0].file_path, 3600);
+                                          .from('module-content').createSignedUrl(pdfData[0].file_path, 3600);
                                         if (signedData?.signedUrl) {
-                                          await openPdfViaBlob(
-                                            signedData.signedUrl,
-                                            `${unit.title || 'temario'}.pdf`
-                                          );
+                                          await openPdfViaBlob(signedData.signedUrl, `${unit.title || 'temario'}.pdf`);
                                         }
                                       } else {
                                         toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
@@ -1970,51 +1960,16 @@ export default function CourseView() {
                                   const unitEvals = (module.evaluations || []).filter((ev: any) => ev.formative_unit_id === unit.id);
                                   const hasTest = unitEvals.length > 0;
                                   return (
-                                    <div 
-                                      className={`flex items-center gap-3 p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200/50 ${hasTest && userRole === 'student' ? 'cursor-pointer hover:bg-purple-100/50 dark:hover:bg-purple-950/40 transition-colors' : ''}`}
-                                      onClick={() => {
-                                        if (hasTest && userRole === 'student') {
-                                          navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
-                                        }
-                                      }}
-                                    >
+                                    <div className={`flex items-center gap-3 p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200/50 ${hasTest && userRole === 'student' ? 'cursor-pointer hover:bg-purple-100/50' : ''}`}
+                                      onClick={() => { if (hasTest && userRole === 'student') navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`); }}>
                                       <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded"><ClipboardList className="h-4 w-4 text-purple-600" /></div>
                                       <div className="flex-1">
-                                        <span className="text-sm font-medium">Test Final de la Unidad</span>
-                                        <p className="text-xs text-muted-foreground">
-                                          {hasTest ? `Evaluación de ${unitEvals[0].title || 'la unidad'}` : 'Examen tipo test de la unidad'}
-                                        </p>
+                                        <span className="text-sm font-medium">Test del Itinerario</span>
+                                        <p className="text-xs text-muted-foreground">{hasTest ? unitEvals[0].title : 'Examen tipo test'}</p>
                                       </div>
-                                      {hasTest && userRole === 'student' && (
-                                        <Button variant="outline" size="sm" className="gap-2" onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
-                                        }}><PlayCircle className="h-3 w-3" />Realizar Test</Button>
-                                      )}
-                                      {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                        <Button variant="outline" size="sm" className="gap-2" onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (hasTest) {
-                                            navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`);
-                                          } else {
-                                            toast({ title: "Crear Test", description: "Accede al editor para crear el test." });
-                                          }
-                                        }}><Plus className="h-3 w-3" />{hasTest ? 'Ver Test' : 'Crear Test'}</Button>
-                                      )}
                                     </div>
                                   );
                                 })()}
-                                {/* Actividad */}
-                                <div className="flex items-center gap-3 p-3 bg-green-50/50 dark:bg-green-950/20 rounded-lg border border-green-200/50">
-                                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded"><PenTool className="h-4 w-4 text-green-600" /></div>
-                                  <div className="flex-1">
-                                    <span className="text-sm font-medium">Actividad / Tarea</span>
-                                    <p className="text-xs text-muted-foreground">Ejercicio práctico de la unidad</p>
-                                  </div>
-                                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-                                    <Button variant="outline" size="sm" className="gap-2" onClick={() => openActivityManager(unit.id, unit.title)}><Plus className="h-3 w-3" />Gestionar</Button>
-                                  )}
-                                </div>
                                 <SelfAssessmentQuiz courseId={courseId!} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
                               </div>
                             ))}
