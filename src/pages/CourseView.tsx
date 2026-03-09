@@ -2433,6 +2433,7 @@ export default function CourseView() {
                   modality={course.modality}
                   trainingCenterId={course.training_center_id}
                   courseType={course.course_type}
+                  certificateModelUrl={(course as any).certificate_model_url}
                 />
               )}
             </TabsContent>
