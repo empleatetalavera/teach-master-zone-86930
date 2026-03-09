@@ -33,6 +33,7 @@ interface CourseCertificateDownloadProps {
   modality?: string | null;
   trainingCenterId?: string | null;
   courseType?: string | null;
+  certificateModelUrl?: string | null;
 }
 
 interface CompletionStatus {
