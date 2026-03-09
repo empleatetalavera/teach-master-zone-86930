@@ -18,8 +18,7 @@ interface FormativeUnit {
 interface ItinerarySelectorProps {
   moduleId: string;
   formativeUnits: FormativeUnit[];
-  onSelected: (selectedUnitId: string) => void;
-  selectedUnitId?: string | null;
+  onSelectionChange: (selectedUnitId: string | null) => void;
 }
 
 const ITINERARY_ICONS: Record<number, React.ReactNode> = {
@@ -29,9 +28,9 @@ const ITINERARY_ICONS: Record<number, React.ReactNode> = {
 };
 
 const ITINERARY_COLORS: Record<number, string> = {
-  1: "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20",
-  2: "border-amber-300 bg-amber-50/50 dark:bg-amber-950/20",
-  3: "border-green-300 bg-green-50/50 dark:bg-green-950/20",
+  1: "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20 hover:border-emerald-400",
+  2: "border-amber-300 bg-amber-50/50 dark:bg-amber-950/20 hover:border-amber-400",
+  3: "border-green-300 bg-green-50/50 dark:bg-green-950/20 hover:border-green-400",
 };
 
 const ITINERARY_ICON_BG: Record<number, string> = {
@@ -40,15 +39,15 @@ const ITINERARY_ICON_BG: Record<number, string> = {
   3: "bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400",
 };
 
-export function ItinerarySelector({ moduleId, formativeUnits, onSelected, selectedUnitId }: ItinerarySelectorProps) {
+export function ItinerarySelector({ moduleId, formativeUnits, onSelectionChange }: ItinerarySelectorProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selection, setSelection] = useState<string | null>(selectedUnitId || null);
+  const [selection, setSelection] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     loadSelection();
   }, [user, moduleId]);
 
@@ -63,7 +62,7 @@ export function ItinerarySelector({ moduleId, formativeUnits, onSelected, select
     
     if (data) {
       setSelection(data.formative_unit_id);
-      onSelected(data.formative_unit_id);
+      onSelectionChange(data.formative_unit_id);
     }
     setLoading(false);
   };
@@ -73,7 +72,6 @@ export function ItinerarySelector({ moduleId, formativeUnits, onSelected, select
     setSaving(true);
 
     try {
-      // Upsert selection
       const { error } = await supabase
         .from('student_elective_selections')
         .upsert({
@@ -86,7 +84,7 @@ export function ItinerarySelector({ moduleId, formativeUnits, onSelected, select
       if (error) throw error;
 
       setSelection(unitId);
-      onSelected(unitId);
+      onSelectionChange(unitId);
       toast({
         title: "Itinerario seleccionado",
         description: `Has elegido: ${formativeUnits.find(u => u.id === unitId)?.title}`,
@@ -101,22 +99,23 @@ export function ItinerarySelector({ moduleId, formativeUnits, onSelected, select
 
   if (loading) return null;
 
-  // If already selected, show compact confirmation
+  // If already selected, show compact bar
   if (selection) {
     const selectedUnit = formativeUnits.find(u => u.id === selection);
     if (!selectedUnit) return null;
 
     return (
       <div className="mb-3 p-3 rounded-lg border-2 border-primary/30 bg-primary/5">
-        <div className="flex items-center gap-2 text-sm">
-          <CheckCircle2 className="h-4 w-4 text-primary" />
+        <div className="flex items-center gap-2 text-sm flex-wrap">
+          <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
           <span className="font-medium">Itinerario elegido:</span>
           <Badge variant="secondary">{selectedUnit.title}</Badge>
+          <span className="text-muted-foreground">({selectedUnit.duration_hours || 50}h)</span>
           <Button 
             variant="ghost" 
             size="sm" 
             className="ml-auto text-xs h-7"
-            onClick={() => { setSelection(null); }}
+            onClick={() => { setSelection(null); onSelectionChange(null); }}
           >
             Cambiar
           </Button>
@@ -125,11 +124,11 @@ export function ItinerarySelector({ moduleId, formativeUnits, onSelected, select
     );
   }
 
-  // Selection cards
+  // Full selection cards
   return (
     <div className="space-y-4">
       <div className="text-center p-4 bg-muted/50 rounded-lg border-2 border-dashed">
-        <h4 className="font-semibold text-base mb-1">Elige tu itinerario formativo</h4>
+        <h4 className="font-semibold text-base mb-1">🎯 Elige tu itinerario formativo</h4>
         <p className="text-sm text-muted-foreground">
           Este módulo te permite elegir una especialización. Selecciona el itinerario que mejor se adapte a tus intereses.
         </p>
@@ -144,12 +143,12 @@ export function ItinerarySelector({ moduleId, formativeUnits, onSelected, select
           >
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl ${ITINERARY_ICON_BG[idx + 1] || 'bg-muted'}`}>
+                <div className={`p-3 rounded-xl shrink-0 ${ITINERARY_ICON_BG[idx + 1] || 'bg-muted'}`}>
                   {ITINERARY_ICONS[idx + 1] || <Sprout className="h-8 w-8" />}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <h5 className="font-semibold text-sm mb-1">{unit.title}</h5>
-                  <p className="text-xs text-muted-foreground mb-2">{unit.description}</p>
+                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{unit.description}</p>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
