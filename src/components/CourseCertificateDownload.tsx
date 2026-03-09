@@ -784,11 +784,11 @@ export function CourseCertificateDownload({
               className="w-full"
               size="lg"
               variant="outline"
-              onClick={handleDemoDownload}
+              onClick={hasStaticCert ? handleStaticCertDownload : handleDemoDownload}
               disabled={generating}
             >
               {generating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Download className="h-5 w-5 mr-2" />}
-              Descargar Diploma de Muestra (Admin)
+              {hasStaticCert ? "Descargar Certificado Modelo (Admin)" : "Descargar Diploma de Muestra (Admin)"}
             </Button>
           )}
 
