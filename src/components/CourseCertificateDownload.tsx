@@ -685,9 +685,9 @@ export function CourseCertificateDownload({
             </div>
           </CardHeader>
           <CardContent>
-            <Button className="w-full" size="lg" onClick={handleDemoDownload} disabled={generating}>
+            <Button className="w-full" size="lg" onClick={hasStaticCert ? handleStaticCertDownload : handleDemoDownload} disabled={generating}>
               {generating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Download className="h-5 w-5 mr-2" />}
-              Descargar Diploma de Muestra
+              {hasStaticCert ? "Descargar Certificado Modelo" : "Descargar Diploma de Muestra"}
             </Button>
           </CardContent>
         </Card>
