@@ -1,0 +1,1 @@
+ALTER TABLE sepe_acciones ADD COLUMN IF NOT EXISTS accion_xml text;
