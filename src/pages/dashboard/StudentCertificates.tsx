@@ -416,12 +416,11 @@ const StudentCertificates = () => {
     pdf.text(`${cd?.city || 'Talavera de la Reina'}, ${issueDate}`, W / 2, y, { align: "center" });
 
     // Watermark (center background text - light)
-    pdf.setFontSize(80);
+    const centerNameUp = (cd?.name || branding.centerName || "").toUpperCase();
+    pdf.setFontSize(60);
     pdf.setTextColor(240, 240, 240);
     pdf.setFont("helvetica", "bold");
-    pdf.text("GRUPO ARMA", W / 2, H / 2 + 10, { align: "center" });
-    pdf.setFontSize(30);
-    pdf.text("F O R M A C I Ó N", W / 2, H / 2 + 30, { align: "center" });
+    pdf.text(centerNameUp, W / 2, H / 2 + 15, { align: "center" });
 
     // Signature area - left (director)
     const sigY = H - 45;
@@ -431,8 +430,8 @@ const StudentCertificates = () => {
     pdf.setFontSize(9);
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(40, 40, 40);
-    pdf.text("Fdo. M.ª del Coral Gómez Corrochano", 70, sigY + 5, { align: "center" });
-    pdf.text("Directora Grupo Arma Formación", 70, sigY + 10, { align: "center" });
+    pdf.text(`Fdo. ${cd?.representative_name || 'Responsable del Centro'}`, 70, sigY + 5, { align: "center" });
+    pdf.text(`${cd?.representative_position || 'Director/a'} ${cd?.name || branding.centerName}`, 70, sigY + 10, { align: "center" });
 
     // Signature area - right (student)
     pdf.line(W - 110, sigY, W - 30, sigY);
