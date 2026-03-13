@@ -179,7 +179,7 @@ export function CourseWorkPlan({ course, modules, centerSlug, centerContact }: C
                 )}
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />
-                  <span><strong>Horario:</strong> L-V de 09:00 a 15:00</span>
+                  <span><strong>Horario:</strong> L-V de 09:00 a 14:00</span>
                 </div>
                 {centerEmail ? (
                   <div className="flex items-center gap-2">
