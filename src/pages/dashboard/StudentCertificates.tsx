@@ -82,6 +82,7 @@ const StudentCertificates = () => {
   const [issuedCerts, setIssuedCerts] = useState<Record<string, IssuedCertificate>>({});
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
   const branding = getCurrentBranding();
+  const [centerDataMap, setCenterDataMap] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (user) loadData();
