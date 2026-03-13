@@ -100,6 +100,11 @@ interface TutorGuidePDFParams {
   courseTitle?: string;
   primaryColor?: [number, number, number];
   secondaryColor?: [number, number, number];
+  platformUrl?: string;
+  centerEmail?: string;
+  centerPhone?: string;
+  centerAddress?: string;
+  centerCif?: string;
 }
 
 export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) => {
