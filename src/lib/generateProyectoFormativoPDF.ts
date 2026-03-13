@@ -723,7 +723,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   bulletList([
     "Informar de las fechas del curso.",
     "Recabar la información/documentación acreditativa del cumplimiento de los requisitos para acceder a la formación del certificado de profesionalidad.",
-    "Realización de la prueba de competencia digital, establecida en el apartado 2 del artículo 6 de la Orden ESS/1897/2013, o recopilación de la documentación que acredite la exención. Para la realización de dicha prueba se facilitará a través de correo electrónico la URL de acceso al Campus Grupo Arma Formación, una guía de uso, e instrucciones junto con claves de acceso temporal.",
+    `Realización de la prueba de competencia digital, establecida en el apartado 2 del artículo 6 de la Orden ESS/1897/2013, o recopilación de la documentación que acredite la exención. Para la realización de dicha prueba se facilitará a través de correo electrónico la URL de acceso al Campus ${params.centerName}, una guía de uso, e instrucciones junto con claves de acceso temporal.`,
     "Recabar la información/documentación para acreditación de requisitos establecidos en la normativa de formación financiada con fondos públicos.",
     "Informar sobre las fechas de desarrollo, o realizar directamente vía telemática, pruebas específicas para la selección.",
     "Recabar y registrar en la plataforma LMS: sexo, edad, nivel formativo, situación laboral, provincia/CA de residencia, medio de conocimiento, experiencia online, razones de elección de teleformación, valoración sobre la modalidad."
