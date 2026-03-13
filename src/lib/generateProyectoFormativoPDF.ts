@@ -584,7 +584,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   // ===== PAGE 2: CLAVES DE ACCESO =====
   doc.addPage();
   currentY = margin;
-  sectionHeader("CLAVES DE ACCESO AL CAMPUS GRUPO ARMA FORMACIÓN");
+  sectionHeader(`CLAVES DE ACCESO AL CAMPUS ${params.centerName.toUpperCase()}`);
 
   paragraph("En la solicitud telemática de acreditación del certificado de profesionalidad en modalidad teleformación, se han incluido unas claves de acceso con un perfil de administrador, que permiten el acceso a las herramientas y recursos necesarios para gestionar, administrar, organizar, diseñar, impartir y evaluar acciones formativas a través de Internet tal y como se indica en el punto \"1. Requisitos técnicos de la plataforma de teleformación\" del anexo II de la Orden ESS/1897/2013, de 10 de octubre.");
   currentY += 3;
