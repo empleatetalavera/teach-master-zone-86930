@@ -1220,7 +1220,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     margin: { left: margin, right: margin },
     head: [[{ content: "DATOS DEL AULA ON-LINE ACCESO ALUMNADO", colSpan: 2, styles: { fillColor: BLUE_HEADER } }]],
     body: [
-      [{ content: "Aula virtual (nombre):", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 50 } }, "Campus Grupo Arma Formación - Plataforma LMS"],
+      [{ content: "Aula virtual (nombre):", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE, cellWidth: 50 } }, `Campus ${params.centerName} - Plataforma LMS`],
       [{ content: "URL:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, platformUrl],
       [{ content: "Usuario:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, "(Se proporcionará individualmente al alumnado)"],
       [{ content: "Contraseña:", styles: { fontStyle: "bold", fillColor: LIGHT_BLUE } }, "(Se proporcionará individualmente al alumnado)"]
