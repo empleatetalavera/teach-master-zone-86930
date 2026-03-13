@@ -539,13 +539,14 @@ export function CourseCertificateDownload({
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
-    // Watermark on reverso
-    if (watermarkData) {
-      pdf.saveGraphicsState();
-      pdf.setGState(new (pdf as any).GState({ opacity: 0.08 }));
-      pdf.addImage(watermarkData, "JPEG", W * 0.22, H * 0.18, W * 0.65, H * 0.68);
-      pdf.restoreGraphicsState();
-    }
+    // Watermark on reverso - faded center name
+    pdf.saveGraphicsState();
+    pdf.setGState(new (pdf as any).GState({ opacity: 0.06 }));
+    pdf.setFontSize(50);
+    pdf.setTextColor(180, 180, 180);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(watermarkName, W / 2, H / 2, { align: "center" });
+    pdf.restoreGraphicsState();
 
     // CFC-CLM logo removed per request
 
