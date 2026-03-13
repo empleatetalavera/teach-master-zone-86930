@@ -413,7 +413,7 @@ const StudentCertificates = () => {
     // Issue date and place
     y += 10;
     const issueDate = format(new Date(cert.issue_date), "dd 'de' MMMM 'de' yyyy", { locale: es });
-    pdf.text(`Talavera de la Reina, ${issueDate}`, W / 2, y, { align: "center" });
+    pdf.text(`${cd?.city || 'Talavera de la Reina'}, ${issueDate}`, W / 2, y, { align: "center" });
 
     // Watermark (center background text - light)
     pdf.setFontSize(80);
