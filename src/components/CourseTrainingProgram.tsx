@@ -388,7 +388,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
           <div className="border rounded-lg p-4">
             <h3 className="font-semibold text-primary mb-2">4.1 Objetivo General</h3>
             <p className="text-sm text-muted-foreground">
-              {course.objectives || "Distribuir, reproducir y transmitir la información y documentación requeridas en las tareas administrativas y de gestión, internas y externas, así como realizar trámites elementales de verificación de datos y documentos a requerimiento de técnicos de nivel superior con eficacia, de acuerdo con instrucciones o procedimientos establecidos."}
+              {course.objectives || "Adquirir las competencias profesionales necesarias para el desempeño de las funciones propias del perfil profesional vinculado al certificado de profesionalidad."}
             </p>
           </div>
 
