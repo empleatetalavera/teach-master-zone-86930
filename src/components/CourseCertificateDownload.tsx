@@ -311,19 +311,17 @@ export function CourseCertificateDownload({
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
-    // Watermark - large faded Grupo Arma logo covering center-right area
-    const watermarkData = await loadImageAsDataUrl("/branding/grupo-arma-watermark.jpg");
-    if (watermarkData) {
-      pdf.saveGraphicsState();
-      pdf.setGState(new (pdf as any).GState({ opacity: 0.12 }));
-      // Position: covers roughly right 60% of page, vertically centered
-      pdf.addImage(watermarkData, "JPEG", W * 0.22, H * 0.18, W * 0.65, H * 0.68);
-      pdf.restoreGraphicsState();
-    }
+    // Watermark - center name as large faded text
+    pdf.setFontSize(60);
+    pdf.setTextColor(240, 240, 240);
+    pdf.setFont("helvetica", "bold");
+    const watermarkName = (centerData?.name || branding.centerName || "").toUpperCase();
+    pdf.text(watermarkName, W / 2, H / 2 + 10, { align: "center" });
 
-    // Top-left: Grupo Arma Formación logo (birrete azul)
-    const logoData = await loadImageAsDataUrl("/branding/grupo-arma-logo.png");
-    if (logoData) pdf.addImage(logoData, "JPEG", 12, 8, 45, 22);
+    // Top-left: Center logo
+    const logoSrc = centerData?.logo_url || branding.centerLogo;
+    const logoData = await loadImageAsDataUrl(logoSrc);
+    if (logoData) pdf.addImage(logoData, "PNG", 12, 8, 45, 22);
 
     // Student name - centered
     let y = 48;
