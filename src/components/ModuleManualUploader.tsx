@@ -188,7 +188,13 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
       const { data } = await supabase.storage
         .from("module-content")
         .createSignedUrl(filePath, 3600);
-      return data?.signedUrl || null;
+      if (!data?.signedUrl) return null;
+      
+      // Fetch as blob to avoid ERR_BLOCKED_BY_CLIENT
+      const response = await fetch(data.signedUrl);
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
     } catch {
       return null;
     }
