@@ -748,7 +748,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     "Fechas de inicio y fin de la acción formativa.",
     "Información de los tutores-formadores y horario de tutorías.",
     "Medios de contacto con la entidad.",
-    "Instrucciones para el/la alumno/a para responder confirmando el correcto acceso al Campus Grupo Arma Formación."
+    `Instrucciones para el/la alumno/a para responder confirmando el correcto acceso al Campus ${params.centerName}.`
   ], 7);
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(8);
