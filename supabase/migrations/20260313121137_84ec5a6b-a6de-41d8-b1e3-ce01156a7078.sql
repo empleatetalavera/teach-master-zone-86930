@@ -1,0 +1,1 @@
+DELETE FROM sepe_acciones WHERE center_cif = 'B45878253';

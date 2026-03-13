@@ -2496,6 +2496,7 @@ export type Database = {
       }
       sepe_acciones: {
         Row: {
+          accion_xml: string | null
           center_cif: string
           codigo_accion: string
           created_at: string
@@ -2503,6 +2504,7 @@ export type Database = {
           origen_accion: string
         }
         Insert: {
+          accion_xml?: string | null
           center_cif: string
           codigo_accion: string
           created_at?: string
@@ -2510,6 +2512,7 @@ export type Database = {
           origen_accion: string
         }
         Update: {
+          accion_xml?: string | null
           center_cif?: string
           codigo_accion?: string
           created_at?: string
