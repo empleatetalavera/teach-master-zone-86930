@@ -150,15 +150,36 @@ const sectionDefs: GuideSection[] = [
 const TeacherTutorGuide = () => {
   const { user, userRole } = useAuth();
   const { toast } = useToast();
+  const { branding } = useBranding();
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [sections, setSections] = useState<GuideSection[]>(sectionDefs);
   const [uploadingSection, setUploadingSection] = useState<string | null>(null);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [centerContact, setCenterContact] = useState<any>(null);
+
+  useEffect(() => {
+    const loadCenterContact = async () => {
+      if (!user) return;
+      const { data: profile } = await supabase.from('profiles').select('training_center_id').eq('id', user.id).maybeSingle();
+      if (profile?.training_center_id) {
+        const { data: center } = await supabase.from('training_centers').select('contact_email, contact_phone, address, cif, campus_url').eq('id', profile.training_center_id).maybeSingle();
+        if (center) setCenterContact(center);
+      }
+    };
+    loadCenterContact();
+  }, [user]);
 
   const handleDownloadPDF = async () => {
     try {
       setGeneratingPDF(true);
-      await generateTutorGuidePDF({ centerName: "Grupo Arma Formación" });
+      await generateTutorGuidePDF({
+        centerName: branding.centerName,
+        platformUrl: centerContact?.campus_url || undefined,
+        centerEmail: centerContact?.contact_email || undefined,
+        centerPhone: centerContact?.contact_phone || undefined,
+        centerAddress: centerContact?.address || undefined,
+        centerCif: centerContact?.cif || undefined,
+      });
       toast({ title: "PDF generado", description: "La Guía del Tutor-Formador se ha descargado correctamente" });
     } catch (error) {
       toast({ title: "Error", description: "No se pudo generar el PDF", variant: "destructive" });
