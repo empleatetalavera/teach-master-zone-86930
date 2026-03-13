@@ -1,0 +1,5 @@
+INSERT INTO formative_units (module_id, title, description, order_index, duration_hours) VALUES
+('ba7be754-4682-40b0-82eb-8b575801a3c7', 'UD1. Conceptos básicos y marco normativo de PRL', 'Trabajo y salud, daños derivados del trabajo, marco normativo básico, derechos y obligaciones', 1, 8),
+('ba7be754-4682-40b0-82eb-8b575801a3c7', 'UD2. Riesgos generales y específicos. Evaluación y medidas preventivas', 'Condiciones de seguridad, medio ambiente, carga de trabajo, factores psicosociales, evaluación de riesgos', 2, 8),
+('ba7be754-4682-40b0-82eb-8b575801a3c7', 'UD3. Gestión de la prevención en la empresa', 'Modalidades de prevención, servicios de prevención, documentación, participación de trabajadores', 3, 8),
+('ba7be754-4682-40b0-82eb-8b575801a3c7', 'UD4. Emergencias y primeros auxilios', 'Planes y protocolos de emergencia, primeros auxilios, actuación ante accidentes', 4, 6);
