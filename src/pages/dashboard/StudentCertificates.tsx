@@ -328,11 +328,13 @@ const StudentCertificates = () => {
   };
 
   const generatePDF = async (enrollment: CourseForCert, cert: IssuedCertificate) => {
+    const centerId = enrollment.courses.training_center_id;
+    const cd = centerId ? centerDataMap[centerId] : null;
     const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const W = pdf.internal.pageSize.getWidth();
     const H = pdf.internal.pageSize.getHeight();
 
-    // ===== PAGE 1: DIPLOMA (matching template) =====
+    // ===== PAGE 1: DIPLOMA =====
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
