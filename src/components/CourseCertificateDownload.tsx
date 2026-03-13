@@ -307,7 +307,7 @@ export function CourseCertificateDownload({
     const W = pdf.internal.pageSize.getWidth();
     const H = pdf.internal.pageSize.getHeight();
 
-    // PAGE 1: DIPLOMA — exact replica of Grupo Arma CFC template
+    // PAGE 1: DIPLOMA
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
