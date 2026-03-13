@@ -440,16 +440,15 @@ const StudentCertificates = () => {
     // Company stamp area (bottom left)
     pdf.setFontSize(7);
     pdf.setTextColor(100, 100, 100);
-    pdf.text("GRUPO ARMA", 30, H - 25);
-    pdf.text("CIF: B45270139", 30, H - 21);
-    pdf.text("C/ Medellín 4, 45600 Talavera de la Reina", 30, H - 17);
-    pdf.text("925 812 889 | grupoarmaformacion@gmail.com", 30, H - 13);
+    pdf.text(cd?.name || branding.centerName, 30, H - 25);
+    pdf.text(`CIF: ${cd?.cif || ''}`, 30, H - 21);
+    pdf.text(`${cd?.address || ''}, ${cd?.city || ''}`, 30, H - 17);
+    pdf.text(`${cd?.contact_phone || ''} | ${cd?.contact_email || ''}`, 30, H - 13);
 
-    // Footer registry
+    // Footer
     pdf.setFontSize(7);
     pdf.setTextColor(120, 120, 120);
-    const regText = "Inscrita en el Registro Mercantil de Toledo, al Tomo 334, Folio 196, Sección General del Libro de Sociedades, Hoja número TO-2073, inscripción 1ª.";
-    pdf.text(regText, W / 2, H - 6, { align: "center" });
+    pdf.text(`${cd?.name || branding.centerName} - Documento oficial`, W / 2, H - 6, { align: "center" });
 
     // QR Code (bottom right, discrete)
     try {
