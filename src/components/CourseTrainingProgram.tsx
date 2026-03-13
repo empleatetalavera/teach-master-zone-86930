@@ -78,45 +78,8 @@ const defaultCenterData = {
   maximoAlumnos: 15
 };
 
-// Planificación didáctica completa basada en el Anexo III/IV del SEPE
-const planificacionDidactica = [
-  {
-    modulo: "MF0969_1: Técnicas administrativas básicas de oficina",
-    horasMF: 150,
-    tutores: 1,
-    unidades: [
-      { codigo: "UF0517", titulo: "Organización empresarial y de recursos humanos", horas: 30, dias: "Del día 1 al día 11" },
-      { codigo: "UF0518", titulo: "Gestión auxiliar de la correspondencia y paquetería en la empresa", horas: 30, dias: "Del día 12 al día 22" },
-      { codigo: "UF0519", titulo: "Gestión auxiliar de documentación económico-administrativa y comercial", horas: 90, dias: "Del día 23 al día 60" }
-    ]
-  },
-  {
-    modulo: "MF0970_1: Operaciones básicas de comunicación",
-    horasMF: 120,
-    tutores: 1,
-    unidades: [
-      { codigo: "UF0520", titulo: "Comunicación en las relaciones profesionales", horas: 50, dias: "Del día 61 al día 79" },
-      { codigo: "UF0521", titulo: "Comunicación oral y escrita en la empresa", horas: 70, dias: "Del día 80 al día 108" }
-    ]
-  },
-  {
-    modulo: "MF0971_1: Reproducción y archivo",
-    horasMF: 120,
-    tutores: 1,
-    unidades: [
-      { codigo: "UF0513", titulo: "Gestión auxiliar de archivo en soporte convencional o informático", horas: 60, dias: "Del día 109 al día 131" },
-      { codigo: "UF0514", titulo: "Gestión auxiliar de reproducción en soporte convencional o informático", horas: 60, dias: "Del día 132 al día 156" }
-    ]
-  },
-  {
-    modulo: "MP0112: Módulo de prácticas profesionales no laborales",
-    horasMF: 40,
-    tutores: 1,
-    unidades: [
-      { codigo: "MP0112", titulo: "Prácticas profesionales no laborales", horas: 40, dias: "Del día 157 al día 166" }
-    ]
-  }
-];
+// NOTE: planificacionDidactica removed — the component now uses planificacionDinamica
+// generated from actual course modules in the database.
 
 // Requisitos técnicos de la plataforma
 const requisitosDelSistema = {
