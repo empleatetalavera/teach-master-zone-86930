@@ -263,6 +263,7 @@ export default function CourseView() {
     province?: string;
     postal_code?: string;
     cif?: string;
+    campus_url?: string;
   }>({
     name: "",
     email: "", 
