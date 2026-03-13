@@ -521,10 +521,10 @@ export function CourseCertificateDownload({
     pdf.setFontSize(6);
     pdf.setTextColor(100, 100, 100);
     pdf.setFont("helvetica", "italic");
-    pdf.text(
-      "Inscrita en el Registro Mercantil de Toledo, al Tomo 334, Folio 196, Sección General del Libro de Sociedades, Hoja número TO-2073, inscripción 1ª.",
-      W / 2, H - 5, { align: "center" }
-    );
+    const footerText = centerData?.name 
+      ? `${centerData.name} - CIF: ${centerData.cif || ''} - ${centerData.address || ''}, ${centerData.city || ''}`
+      : branding.centerName;
+    pdf.text(footerText, W / 2, H - 5, { align: "center" });
 
     // QR Code + CSV verification
     const verifyUrl = `${window.location.origin}/verificar-diploma/${cert.verification_code}`;
