@@ -1405,7 +1405,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     margin: { left: margin, right: margin },
     head: [["Espacios, instalaciones\ny equipamiento", "Contenidos", "Estrategias metodológicas", "PRUEBA DE EVALUACIÓN"]],
     body: [[
-      "Campus Grupo Arma Formación\n(Plataforma LMS)",
+      `Campus ${params.centerName}\n(Plataforma LMS)`,
       "Módulo 1782: Prevención de riesgos laborales\n- Factores de riesgo\n- Daños profesionales\n- Evaluación de riesgos\n- Protocolos de emergencia\n- Derechos y deberes PRL\n- Primeros auxilios",
       "• Contenido Interactivo Multimedia\n• Test de autoevaluación\n• Actividades prácticas\n• Foro temático\n• Recursos complementarios",
       "Test de evaluación tipo test\nFecha: Por determinar\n\nRequisito previo a la\nformación en empresa"
