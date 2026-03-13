@@ -754,7 +754,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   doc.setFont("helvetica", "bold"); doc.setFontSize(8);
   checkPageBreak(10);
   doc.text("Comprobación de acceso a Campus.", margin + 3, currentY); currentY += 5;
-  paragraph("Desde la entidad, el/la orientador/a académico/a contactará con aquellos/as alumnos/as que no hayan confirmado su acceso al Campus Grupo Arma Formación con una antelación mínima de 2 días a la fecha de inicio.");
+  paragraph(`Desde la entidad, el/la orientador/a académico/a contactará con aquellos/as alumnos/as que no hayan confirmado su acceso al Campus ${params.centerName} con una antelación mínima de 2 días a la fecha de inicio.`);
 
   // e) Procedimiento de seguimiento
   checkPageBreak(40);
