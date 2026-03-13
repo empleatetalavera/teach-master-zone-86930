@@ -95,6 +95,25 @@ export function CourseCertificateDownload({
   const [generating, setGenerating] = useState(false);
   const branding = getCurrentBranding();
   const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+  const [centerData, setCenterData] = useState<{
+    name: string; cif: string; address: string; city: string;
+    contact_email: string; contact_phone: string; representative_name: string;
+    representative_position: string; logo_url: string;
+  } | null>(null);
+
+  // Load center data for dynamic certificate generation
+  useEffect(() => {
+    const loadCenter = async () => {
+      if (!trainingCenterId) return;
+      const { data } = await supabase
+        .from('training_centers')
+        .select('name, cif, address, city, contact_email, contact_phone, logo_url, representative_name, representative_position')
+        .eq('id', trainingCenterId)
+        .maybeSingle();
+      if (data) setCenterData(data as any);
+    };
+    loadCenter();
+  }, [trainingCenterId]);
 
   const handleStaticCertDownload = () => {
     if (!certificateModelUrl) return;
