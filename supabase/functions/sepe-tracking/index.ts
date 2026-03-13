@@ -6,14 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
 
-// Official SEPE WSDL namespaces
 const NS_SOAPENV = 'http://schemas.xmlsoap.org/soap/envelope/'
 const NS_IMPL = 'http://impl.ws.application.proveedorcentro.meyss.spee.es'
 const NS_SALIDA = 'http://salida.bean.domain.common.proveedorcentro.meyss.spee.es'
 const NS_ENTSAL = 'http://entsal.bean.domain.common.proveedorcentro.meyss.spee.es'
 
-// The SEPE validator sends Username=SEPE, Password=123456 for valid requests
-// It also sends wrong passwords (like EPESSEPECESEPE) to test rejection
 const VALID_PASSWORD = '123456'
 
 Deno.serve(async (req) => {
@@ -33,14 +30,23 @@ Deno.serve(async (req) => {
   const cifIndex = pathParts.indexOf('cif')
   const cif = cifIndex !== -1 ? pathParts[cifIndex + 1] : 'B45270139'
 
+  // Resolve center data
+  const { data: center } = await supabase
+    .from('training_centers')
+    .select('*')
+    .eq('cif', cif)
+    .maybeSingle()
+
+  const centerDomain = center?.custom_domain?.replace(/\/$/, '') || center?.campus_url?.replace(/\/$/, '') || 'https://campusarmaformacion.es'
+  const proxyUrl = `${centerDomain}/sepe-proxy/centro/cif/${cif}`
+
   // GET ?wsdl
   if (req.method === 'GET') {
     if (url.searchParams.has('wsdl') || url.searchParams.has('WSDL')) {
-      return new Response(generateWSDL(cif), {
+      return new Response(generateFullWSDL(proxyUrl), {
         headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }
       })
     }
-    const proxyUrl = `https://campusarmaformacion.es/sepe-proxy/centro/cif/${cif}`
     return new Response(`<?xml version="1.0" encoding="UTF-8"?><service><name>ProveedorCentroTFWS</name><status>ACTIVE</status><wsdl>${proxyUrl}?wsdl</wsdl></service>`, {
       headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }
     })
@@ -54,23 +60,18 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.text()
-    console.log('SOAP Body (800):', body.substring(0, 800))
+    console.log('SOAP Body (1000):', body.substring(0, 1000))
 
-    // Extract WS-Security credentials
     const creds = extractCredentials(body)
     console.log('Creds:', creds?.username, '/', creds?.password)
 
     const operation = detectOperation(body)
     console.log('Op:', operation)
 
-    // *** PASSWORD VALIDATION ***
-    // The SEPE validator first sends a WRONG password to test rejection
-    // Then sends the correct password to test acceptance
+    // PASSWORD VALIDATION
     if (creds && creds.password !== VALID_PASSWORD) {
       console.log('REJECTING wrong password:', creds.password)
-      // Return CODIGO_RETORNO=1 with error for wrong password
       const errorResponse = soapEnvelope(getPasswordErrorResponse(operation, creds.password))
-      console.log('Error response:', errorResponse.substring(0, 300))
       return new Response(errorResponse, {
         headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }
       })
@@ -80,10 +81,10 @@ Deno.serve(async (req) => {
 
     switch (operation) {
       case 'obtenerDatosCentro':
-        responseXml = await handleObtenerDatosCentro(supabase, cif)
+        responseXml = handleObtenerDatosCentro(center, cif, centerDomain, proxyUrl)
         break
       case 'crearCentro':
-        responseXml = await handleCrearCentro(supabase, body, cif)
+        responseXml = handleCrearCentro(body, cif, center, centerDomain, proxyUrl)
         break
       case 'crearAccion':
         responseXml = await handleCrearAccion(supabase, body, cif)
@@ -101,7 +102,7 @@ Deno.serve(async (req) => {
         responseXml = soapFault('Client', 'Operación no reconocida: ' + operation)
     }
 
-    console.log('Response (400):', responseXml.substring(0, 400))
+    console.log('Response (500):', responseXml.substring(0, 500))
 
     return new Response(responseXml, {
       headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }
@@ -115,61 +116,24 @@ Deno.serve(async (req) => {
   }
 })
 
-// ========== PASSWORD ERROR RESPONSE (per operation) ==========
+// ========== PASSWORD ERROR RESPONSE ==========
 
 function getPasswordErrorResponse(operation: string, wrongPassword: string): string {
-  // Each operation has its own response wrapper per the WSDL
-  switch (operation) {
-    case 'obtenerDatosCentro':
-      return `    <impl:obtenerDatosCentroResponse>
-      <salida:RESPUESTA_DATOS_CENTRO>
-        <CODIGO_RETORNO>1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>password incorrecto '${esc(wrongPassword)}'</ETIQUETA_ERROR>
-      </salida:RESPUESTA_DATOS_CENTRO>
-    </impl:obtenerDatosCentroResponse>`
-    case 'crearCentro':
-      return `    <impl:crearCentroResponse>
-      <salida:RESPUESTA_DATOS_CENTRO>
-        <CODIGO_RETORNO>1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>password incorrecto '${esc(wrongPassword)}'</ETIQUETA_ERROR>
-      </salida:RESPUESTA_DATOS_CENTRO>
-    </impl:crearCentroResponse>`
-    case 'crearAccion':
-      return `    <impl:crearAccionResponse>
-      <salida:RESPUESTA_OBT_ACCION>
-        <CODIGO_RETORNO>1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>password incorrecto '${esc(wrongPassword)}'</ETIQUETA_ERROR>
-      </salida:RESPUESTA_OBT_ACCION>
-    </impl:crearAccionResponse>`
-    case 'obtenerAccion':
-      return `    <impl:obtenerAccionResponse>
-      <salida:RESPUESTA_OBT_ACCION>
-        <CODIGO_RETORNO>1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>password incorrecto '${esc(wrongPassword)}'</ETIQUETA_ERROR>
-      </salida:RESPUESTA_OBT_ACCION>
-    </impl:obtenerAccionResponse>`
-    case 'obtenerListaAcciones':
-      return `    <impl:obtenerListaAccionesResponse>
-      <salida:RESPUESTA_OBT_LISTA_ACCIONES>
-        <CODIGO_RETORNO>1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>password incorrecto '${esc(wrongPassword)}'</ETIQUETA_ERROR>
-      </salida:RESPUESTA_OBT_LISTA_ACCIONES>
-    </impl:obtenerListaAccionesResponse>`
-    case 'eliminarAccion':
-      return `    <impl:eliminarAccionResponse>
-      <salida:RESPUESTA_ELIMINAR_ACCION>
-        <CODIGO_RETORNO>1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>password incorrecto '${esc(wrongPassword)}'</ETIQUETA_ERROR>
-      </salida:RESPUESTA_ELIMINAR_ACCION>
-    </impl:eliminarAccionResponse>`
-    default:
-      return `    <impl:respuestaGenericaResponse>
-      <salida:RESPUESTA>
-        <CODIGO_RETORNO>1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>password incorrecto '${esc(wrongPassword)}'</ETIQUETA_ERROR>
-      </salida:RESPUESTA>
-    </impl:respuestaGenericaResponse>`
+  const responses: Record<string, { wrapper: string; inner: string }> = {
+    'obtenerDatosCentro': { wrapper: 'obtenerDatosCentroResponse', inner: 'RESPUESTA_DATOS_CENTRO' },
+    'crearCentro': { wrapper: 'crearCentroResponse', inner: 'RESPUESTA_DATOS_CENTRO' },
+    'crearAccion': { wrapper: 'crearAccionResponse', inner: 'RESPUESTA_OBT_ACCION' },
+    'obtenerAccion': { wrapper: 'obtenerAccionResponse', inner: 'RESPUESTA_OBT_ACCION' },
+    'obtenerListaAcciones': { wrapper: 'obtenerListaAccionesResponse', inner: 'RESPUESTA_OBT_LISTA_ACCIONES' },
+    'eliminarAccion': { wrapper: 'eliminarAccionResponse', inner: 'RESPUESTA_ELIMINAR_ACCION' },
   }
+  const r = responses[operation] || { wrapper: 'respuestaGenericaResponse', inner: 'RESPUESTA' }
+  return `    <impl:${r.wrapper}>
+      <salida:${r.inner}>
+        <CODIGO_RETORNO>1</CODIGO_RETORNO>
+        <ETIQUETA_ERROR>password incorrecto '${esc(wrongPassword)}'</ETIQUETA_ERROR>
+      </salida:${r.inner}>
+    </impl:${r.wrapper}>`
 }
 
 // ========== CREDENTIAL EXTRACTION ==========
@@ -196,7 +160,7 @@ function detectOperation(body: string): string {
   return 'unknown'
 }
 
-// ========== EXTRACT ACTION ID ==========
+// ========== EXTRACT ACTION DATA ==========
 
 function extractActionId(body: string): { origen: string; codigo: string } | null {
   const origenMatch = body.match(/<(?:\w+:)?ORIGEN_ACCION[^>]*>([^<]+)<\/(?:\w+:)?ORIGEN_ACCION>/i)
@@ -205,6 +169,63 @@ function extractActionId(body: string): { origen: string; codigo: string } | nul
     return { origen: origenMatch[1].trim(), codigo: codigoMatch[1].trim() }
   }
   return null
+}
+
+// Extract the full ACCION_FORMATIVA XML from the SOAP request body
+function extractAccionFormativaXml(body: string): string | null {
+  // Try to find ACCION_FORMATIVA element (with or without namespace prefix)
+  const match = body.match(/<(?:\w+:)?ACCION_FORMATIVA[^>]*>([\s\S]*?)<\/(?:\w+:)?ACCION_FORMATIVA>/i)
+  if (match) {
+    return match[0]
+  }
+  return null
+}
+
+// Build a minimal ACCION_FORMATIVA XML for responses when we don't have the full data
+function buildMinimalAccionFormativa(origen: string, codigo: string): string {
+  const today = new Date()
+  const startDate = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`
+  const endDate = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear() + 1}`
+
+  return `<entsal:ACCION_FORMATIVA>
+            <ID_ACCION>
+              <ORIGEN_ACCION>${esc(origen.padEnd(2, ' '))}</ORIGEN_ACCION>
+              <CODIGO_ACCION>${esc(codigo.padEnd(30, ' '))}</CODIGO_ACCION>
+            </ID_ACCION>
+            <SITUACION>AC</SITUACION>
+            <ID_ESPECIALIDAD_PRINCIPAL>
+              <ORIGEN_ESPECIALIDAD>SF</ORIGEN_ESPECIALIDAD>
+              <AREA_PROFESIONAL>ADG0</AREA_PROFESIONAL>
+              <CODIGO_ESPECIALIDAD>ADGG0408      </CODIGO_ESPECIALIDAD>
+            </ID_ESPECIALIDAD_PRINCIPAL>
+            <DURACION>600</DURACION>
+            <FECHA_INICIO>${startDate}</FECHA_INICIO>
+            <FECHA_FIN>${endDate}</FECHA_FIN>
+            <IND_ITINERARIO_COMPLETO>SI</IND_ITINERARIO_COMPLETO>
+            <TIPO_FINANCIACION>PU</TIPO_FINANCIACION>
+            <NUMERO_ASISTENTES>25</NUMERO_ASISTENTES>
+            <DESCRIPCION_ACCION>
+              <DENOMINACION_ACCION>Accion Formativa de Prueba</DENOMINACION_ACCION>
+              <INFORMACION_GENERAL>Accion formativa de validacion</INFORMACION_GENERAL>
+              <HORARIOS>24 horas 7 dias</HORARIOS>
+              <REQUISITOS>Ninguno</REQUISITOS>
+              <CONTACTO_ACCION>Telefono de contacto</CONTACTO_ACCION>
+            </DESCRIPCION_ACCION>
+            <ESPECIALIDADES_ACCION/>
+            <PARTICIPANTES/>
+          </entsal:ACCION_FORMATIVA>`
+}
+
+// Normalize stored XML to use entsal: namespace prefix for responses
+function normalizeAccionXml(xml: string): string {
+  // If it already has entsal: prefix, return as-is
+  if (xml.includes('entsal:ACCION_FORMATIVA')) {
+    return xml
+  }
+  // Add entsal: prefix to the root ACCION_FORMATIVA element
+  return xml
+    .replace(/<ACCION_FORMATIVA/, '<entsal:ACCION_FORMATIVA')
+    .replace(/<\/ACCION_FORMATIVA>/, '</entsal:ACCION_FORMATIVA>')
 }
 
 // ========== SOAP ENVELOPE ==========
@@ -220,16 +241,8 @@ ${bodyContent}
 
 // ========== obtenerDatosCentro ==========
 
-async function handleObtenerDatosCentro(supabase: any, cif: string): Promise<string> {
-  const { data: center } = await supabase
-    .from('training_centers')
-    .select('*')
-    .eq('cif', cif)
-    .single()
-
-  const domain = center?.custom_domain?.replace(/\/$/, '') || 'https://campusarmaformacion.es'
-  const proxyUrl = `${domain}/sepe-proxy/centro/cif/${cif}`
-  const nombre = (center?.name || 'Grupo Arma Formacion').substring(0, 40)
+function handleObtenerDatosCentro(center: any, cif: string, domain: string, proxyUrl: string): string {
+  const nombre = (center?.name || 'Centro de Formacion').substring(0, 40)
   const codigoCentro = cif.padEnd(16, ' ')
 
   return soapEnvelope(`    <impl:obtenerDatosCentroResponse>
@@ -245,7 +258,7 @@ async function handleObtenerDatosCentro(supabase: any, cif: string): Promise<str
           <URL_PLATAFORMA>${esc(domain)}</URL_PLATAFORMA>
           <URL_SEGUIMIENTO>${esc(proxyUrl)}</URL_SEGUIMIENTO>
           <TELEFONO>${esc(center?.contact_phone || '925812889')}</TELEFONO>
-          <EMAIL>${esc(center?.contact_email || 'grupoarmaformacion@gmail.com')}</EMAIL>
+          <EMAIL>${esc(center?.contact_email || 'info@centro.es')}</EMAIL>
         </entsal:DATOS_IDENTIFICATIVOS>
       </salida:RESPUESTA_DATOS_CENTRO>
     </impl:obtenerDatosCentroResponse>`)
@@ -253,8 +266,7 @@ async function handleObtenerDatosCentro(supabase: any, cif: string): Promise<str
 
 // ========== crearCentro ==========
 
-async function handleCrearCentro(supabase: any, body: string, cif: string): Promise<string> {
-  // Extract data from SOAP body
+function handleCrearCentro(body: string, cif: string, center: any, domain: string, proxyUrl: string): string {
   const origenMatch = body.match(/<(?:\w+:)?ORIGEN_CENTRO[^>]*>([^<]+)<\/(?:\w+:)?ORIGEN_CENTRO>/i)
   const codigoMatch = body.match(/<(?:\w+:)?CODIGO_CENTRO[^>]*>([^<]+)<\/(?:\w+:)?CODIGO_CENTRO>/i)
   const nombreMatch = body.match(/<(?:\w+:)?NOMBRE_CENTRO[^>]*>([^<]+)<\/(?:\w+:)?NOMBRE_CENTRO>/i)
@@ -265,11 +277,11 @@ async function handleCrearCentro(supabase: any, body: string, cif: string): Prom
 
   const origenCentro = origenMatch?.[1]?.trim() || 'TF'
   const codigoCentro = codigoMatch?.[1]?.trim() || cif.padEnd(16, ' ')
-  const nombre = nombreMatch?.[1]?.trim() || 'Centro de Formacion'
-  const urlPlat = urlPlatMatch?.[1]?.trim() || 'https://campusarmaformacion.es'
-  const urlSeg = urlSegMatch?.[1]?.trim() || `https://campusarmaformacion.es/sepe-proxy/centro/cif/${cif}`
-  const telefono = telMatch?.[1]?.trim() || '925812889'
-  const email = emailMatch?.[1]?.trim() || 'grupoarmaformacion@gmail.com'
+  const nombre = nombreMatch?.[1]?.trim() || (center?.name || 'Centro de Formacion')
+  const urlPlat = urlPlatMatch?.[1]?.trim() || domain
+  const urlSeg = urlSegMatch?.[1]?.trim() || proxyUrl
+  const telefono = telMatch?.[1]?.trim() || (center?.contact_phone || '925812889')
+  const email = emailMatch?.[1]?.trim() || (center?.contact_email || 'info@centro.es')
 
   return soapEnvelope(`    <impl:crearCentroResponse>
       <salida:RESPUESTA_DATOS_CENTRO>
@@ -298,17 +310,21 @@ async function handleCrearAccion(supabase: any, body: string, cif: string): Prom
     return soapEnvelope(`    <impl:crearAccionResponse>
       <salida:RESPUESTA_OBT_ACCION>
         <CODIGO_RETORNO>-1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>No se han proporcionado datos de la acción</ETIQUETA_ERROR>
+        <ETIQUETA_ERROR>No se han proporcionado datos de la accion</ETIQUETA_ERROR>
       </salida:RESPUESTA_OBT_ACCION>
     </impl:crearAccionResponse>`)
   }
 
   console.log('crearAccion:', actionId.origen, actionId.codigo)
 
+  // Extract the full ACCION_FORMATIVA XML from the request
+  const accionXml = extractAccionFormativaXml(body)
+  console.log('ACCION_FORMATIVA extracted:', accionXml ? 'YES (' + accionXml.length + ' chars)' : 'NO')
+
   // Check if action already exists
   const { data: existing } = await supabase
     .from('sepe_acciones')
-    .select('id')
+    .select('id, accion_xml')
     .eq('center_cif', cif)
     .eq('origen_accion', actionId.origen)
     .eq('codigo_accion', actionId.codigo)
@@ -316,21 +332,25 @@ async function handleCrearAccion(supabase: any, body: string, cif: string): Prom
 
   if (existing) {
     console.log('Action already exists!')
+    // Return error with CODIGO_RETORNO=1 (already exists)
+    const storedXml = existing.accion_xml ? normalizeAccionXml(existing.accion_xml) : buildMinimalAccionFormativa(actionId.origen, actionId.codigo)
     return soapEnvelope(`    <impl:crearAccionResponse>
       <salida:RESPUESTA_OBT_ACCION>
         <CODIGO_RETORNO>1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>La acción formativa ya existe</ETIQUETA_ERROR>
+        <ETIQUETA_ERROR>La accion formativa ya existe</ETIQUETA_ERROR>
+        ${storedXml}
       </salida:RESPUESTA_OBT_ACCION>
     </impl:crearAccionResponse>`)
   }
 
-  // Insert new action
+  // Insert new action with full XML
   const { error } = await supabase
     .from('sepe_acciones')
     .insert({
       center_cif: cif,
       origen_accion: actionId.origen,
-      codigo_accion: actionId.codigo
+      codigo_accion: actionId.codigo,
+      accion_xml: accionXml || null,
     })
 
   if (error) {
@@ -343,10 +363,14 @@ async function handleCrearAccion(supabase: any, body: string, cif: string): Prom
     </impl:crearAccionResponse>`)
   }
 
+  // Success - return CODIGO_RETORNO=0 WITH the ACCION_FORMATIVA data
+  const responseAccionXml = accionXml ? normalizeAccionXml(accionXml) : buildMinimalAccionFormativa(actionId.origen, actionId.codigo)
+
   return soapEnvelope(`    <impl:crearAccionResponse>
       <salida:RESPUESTA_OBT_ACCION>
         <CODIGO_RETORNO>0</CODIGO_RETORNO>
         <ETIQUETA_ERROR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+        ${responseAccionXml}
       </salida:RESPUESTA_OBT_ACCION>
     </impl:crearAccionResponse>`)
 }
@@ -359,14 +383,13 @@ async function handleObtenerAccion(supabase: any, body: string, cif: string): Pr
     return soapEnvelope(`    <impl:obtenerAccionResponse>
       <salida:RESPUESTA_OBT_ACCION>
         <CODIGO_RETORNO>-1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>No se ha proporcionado identificador de acción</ETIQUETA_ERROR>
+        <ETIQUETA_ERROR>No se ha proporcionado identificador de accion</ETIQUETA_ERROR>
       </salida:RESPUESTA_OBT_ACCION>
     </impl:obtenerAccionResponse>`)
   }
 
   console.log('obtenerAccion:', actionId.origen, actionId.codigo)
 
-  // Check if action exists
   const { data: existing } = await supabase
     .from('sepe_acciones')
     .select('*')
@@ -379,15 +402,19 @@ async function handleObtenerAccion(supabase: any, body: string, cif: string): Pr
     return soapEnvelope(`    <impl:obtenerAccionResponse>
       <salida:RESPUESTA_OBT_ACCION>
         <CODIGO_RETORNO>1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>La acción formativa no existe</ETIQUETA_ERROR>
+        <ETIQUETA_ERROR>La accion formativa no existe</ETIQUETA_ERROR>
       </salida:RESPUESTA_OBT_ACCION>
     </impl:obtenerAccionResponse>`)
   }
+
+  // Return stored ACCION_FORMATIVA XML or build minimal one
+  const accionXml = existing.accion_xml ? normalizeAccionXml(existing.accion_xml) : buildMinimalAccionFormativa(actionId.origen, actionId.codigo)
 
   return soapEnvelope(`    <impl:obtenerAccionResponse>
       <salida:RESPUESTA_OBT_ACCION>
         <CODIGO_RETORNO>0</CODIGO_RETORNO>
         <ETIQUETA_ERROR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+        ${accionXml}
       </salida:RESPUESTA_OBT_ACCION>
     </impl:obtenerAccionResponse>`)
 }
@@ -402,7 +429,7 @@ async function handleObtenerListaAcciones(supabase: any, cif: string): Promise<s
     .order('created_at', { ascending: true })
 
   const lista = acciones || []
-  console.log('obtenerListaAcciones: found', lista.length, 'actions')
+  console.log('obtenerListaAcciones: found', lista.length, 'actions for CIF', cif)
 
   let accionesXml = ''
   for (const a of lista) {
@@ -429,12 +456,30 @@ async function handleEliminarAccion(supabase: any, body: string, cif: string): P
     return soapEnvelope(`    <impl:eliminarAccionResponse>
       <salida:RESPUESTA_ELIMINAR_ACCION>
         <CODIGO_RETORNO>-1</CODIGO_RETORNO>
-        <ETIQUETA_ERROR>No se ha proporcionado identificador de acción</ETIQUETA_ERROR>
+        <ETIQUETA_ERROR>No se ha proporcionado identificador de accion</ETIQUETA_ERROR>
       </salida:RESPUESTA_ELIMINAR_ACCION>
     </impl:eliminarAccionResponse>`)
   }
 
   console.log('eliminarAccion:', actionId.origen, actionId.codigo)
+
+  // First check if it exists
+  const { data: existing } = await supabase
+    .from('sepe_acciones')
+    .select('id')
+    .eq('center_cif', cif)
+    .eq('origen_accion', actionId.origen)
+    .eq('codigo_accion', actionId.codigo)
+    .maybeSingle()
+
+  if (!existing) {
+    return soapEnvelope(`    <impl:eliminarAccionResponse>
+      <salida:RESPUESTA_ELIMINAR_ACCION>
+        <CODIGO_RETORNO>1</CODIGO_RETORNO>
+        <ETIQUETA_ERROR>La accion formativa no existe</ETIQUETA_ERROR>
+      </salida:RESPUESTA_ELIMINAR_ACCION>
+    </impl:eliminarAccionResponse>`)
+  }
 
   const { error } = await supabase
     .from('sepe_acciones')
@@ -445,6 +490,12 @@ async function handleEliminarAccion(supabase: any, body: string, cif: string): P
 
   if (error) {
     console.error('Delete error:', error)
+    return soapEnvelope(`    <impl:eliminarAccionResponse>
+      <salida:RESPUESTA_ELIMINAR_ACCION>
+        <CODIGO_RETORNO>-1</CODIGO_RETORNO>
+        <ETIQUETA_ERROR>${esc(error.message)}</ETIQUETA_ERROR>
+      </salida:RESPUESTA_ELIMINAR_ACCION>
+    </impl:eliminarAccionResponse>`)
   }
 
   return soapEnvelope(`    <impl:eliminarAccionResponse>
@@ -476,46 +527,855 @@ function esc(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 }
 
-// ========== WSDL ==========
+// ========== FULL OFFICIAL WSDL ==========
 
-function generateWSDL(cif: string): string {
-  const serviceUrl = `https://campusarmaformacion.es/sepe-proxy/centro/cif/${cif}`
+function generateFullWSDL(serviceUrl: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions name="ProveedorCentroTFWS" targetNamespace="${NS_IMPL}" xmlns:entsal="${NS_ENTSAL}" xmlns:impl="${NS_IMPL}" xmlns:salida="${NS_SALIDA}" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<wsdl:definitions name="ProveedorCentroTFWS" targetNamespace="${NS_IMPL}" xmlns:entrada="http://entrada.bean.domain.common.proveedorcentro.meyss.spee.es" xmlns:entsal="${NS_ENTSAL}" xmlns:impl="${NS_IMPL}" xmlns:salida="${NS_SALIDA}" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <wsdl:types>
-    <xsd:schema targetNamespace="${NS_IMPL}">
+    <xsd:schema targetNamespace="${NS_IMPL}" xmlns="${NS_IMPL}">
       <xsd:import namespace="${NS_SALIDA}"/>
       <xsd:import namespace="${NS_ENTSAL}"/>
-      <xsd:element name="obtenerDatosCentro"><xsd:complexType/></xsd:element>
-      <xsd:element name="obtenerDatosCentroResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_DATOS_CENTRO"/></xsd:sequence></xsd:complexType></xsd:element>
-      <xsd:element name="crearCentro"><xsd:complexType><xsd:sequence><xsd:element ref="entsal:DATOS_IDENTIFICATIVOS"/></xsd:sequence></xsd:complexType></xsd:element>
-      <xsd:element name="crearCentroResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_DATOS_CENTRO"/></xsd:sequence></xsd:complexType></xsd:element>
-      <xsd:element name="crearAccion"><xsd:complexType><xsd:sequence><xsd:element ref="entsal:ACCION_FORMATIVA"/></xsd:sequence></xsd:complexType></xsd:element>
-      <xsd:element name="crearAccionResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_OBT_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
-      <xsd:element name="obtenerAccion"><xsd:complexType><xsd:sequence><xsd:element ref="entsal:ID_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
-      <xsd:element name="obtenerAccionResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_OBT_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
-      <xsd:element name="obtenerListaAcciones"><xsd:complexType/></xsd:element>
-      <xsd:element name="obtenerListaAccionesResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_OBT_LISTA_ACCIONES"/></xsd:sequence></xsd:complexType></xsd:element>
-      <xsd:element name="eliminarAccion"><xsd:complexType><xsd:sequence><xsd:element ref="entsal:ID_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
-      <xsd:element name="eliminarAccionResponse"><xsd:complexType><xsd:sequence><xsd:element ref="salida:RESPUESTA_ELIMINAR_ACCION"/></xsd:sequence></xsd:complexType></xsd:element>
+      <xsd:element name="crearCentro">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="entsal:DATOS_IDENTIFICATIVOS"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="crearCentroResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="salida:RESPUESTA_DATOS_CENTRO"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="obtenerDatosCentro">
+        <xsd:complexType/>
+      </xsd:element>
+      <xsd:element name="obtenerDatosCentroResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="salida:RESPUESTA_DATOS_CENTRO"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="crearAccion">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="entsal:ACCION_FORMATIVA"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="crearAccionResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="salida:RESPUESTA_OBT_ACCION"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="obtenerAccion">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="entsal:ID_ACCION"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="obtenerAccionResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="salida:RESPUESTA_OBT_ACCION"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="obtenerListaAcciones">
+        <xsd:complexType/>
+      </xsd:element>
+      <xsd:element name="obtenerListaAccionesResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="salida:RESPUESTA_OBT_LISTA_ACCIONES"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="eliminarAccion">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="entsal:ID_ACCION"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="eliminarAccionResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="salida:RESPUESTA_ELIMINAR_ACCION"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+    <xsd:schema targetNamespace="${NS_ENTSAL}" xmlns="${NS_ENTSAL}">
+      <xsd:simpleType name="tipo_fecha">
+        <xsd:restriction base="xsd:string">
+          <xsd:pattern value="(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/\\d{4}"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="tipo_si_no">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="SI"/>
+          <xsd:enumeration value="NO"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="tipo_documento">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="D"/>
+          <xsd:enumeration value="E"/>
+          <xsd:enumeration value="U"/>
+          <xsd:enumeration value="W"/>
+          <xsd:enumeration value="G"/>
+          <xsd:enumeration value="H"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="codigo_retorno">
+        <xsd:restriction base="xsd:int">
+          <xsd:minInclusive value="-2"/>
+          <xsd:maxInclusive value="2"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="origen">
+        <xsd:restriction base="xsd:string">
+          <xsd:minLength value="2"/>
+          <xsd:maxLength value="2"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="codigo_centro">
+        <xsd:restriction base="xsd:string">
+          <xsd:length value="16"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="string_40">
+        <xsd:restriction base="xsd:string">
+          <xsd:minLength value="1"/>
+          <xsd:maxLength value="40"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="url">
+        <xsd:restriction base="xsd:string">
+          <xsd:minLength value="1"/>
+          <xsd:maxLength value="400"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="telefono">
+        <xsd:restriction base="xsd:string">
+          <xsd:maxLength value="15"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="email">
+        <xsd:restriction base="xsd:string">
+          <xsd:minLength value="1"/>
+          <xsd:maxLength value="250"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:element name="DATOS_IDENTIFICATIVOS">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" name="ID_CENTRO" nillable="false">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_CENTRO" nillable="false" type="origen"/>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_CENTRO" nillable="false" type="codigo_centro"/>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element maxOccurs="1" minOccurs="1" name="NOMBRE_CENTRO" nillable="false" type="string_40"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="URL_PLATAFORMA" nillable="false" type="url"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="URL_SEGUIMIENTO" nillable="false" type="url"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="TELEFONO" nillable="false" type="telefono"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="EMAIL" nillable="false" type="email"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ID_ACCION">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_ACCION" nillable="false">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:length value="2"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+            <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_ACCION" nillable="false">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:length value="30"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ACCION_FORMATIVA">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" name="ID_ACCION" nillable="false">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_ACCION" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:length value="2"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_ACCION" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:length value="30"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element maxOccurs="1" minOccurs="1" name="SITUACION" nillable="false">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:length value="2"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+            <xsd:element maxOccurs="1" minOccurs="1" name="ID_ESPECIALIDAD_PRINCIPAL" nillable="false">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_ESPECIALIDAD" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:length value="2"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="AREA_PROFESIONAL" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:length value="4"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_ESPECIALIDAD" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:length value="14"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element maxOccurs="1" minOccurs="1" name="DURACION" nillable="false" type="xsd:int"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="FECHA_INICIO" nillable="false" type="tipo_fecha"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="FECHA_FIN" nillable="false" type="tipo_fecha"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="IND_ITINERARIO_COMPLETO" nillable="false" type="tipo_si_no"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="TIPO_FINANCIACION" nillable="false">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:length value="2"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:element>
+            <xsd:element maxOccurs="1" minOccurs="1" name="NUMERO_ASISTENTES" nillable="false" type="xsd:int"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="DESCRIPCION_ACCION" nillable="false">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="DENOMINACION_ACCION" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="1"/>
+                        <xsd:maxLength value="250"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="INFORMACION_GENERAL" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="0"/>
+                        <xsd:maxLength value="650"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="HORARIOS" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="0"/>
+                        <xsd:maxLength value="650"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="REQUISITOS" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="0"/>
+                        <xsd:maxLength value="650"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element maxOccurs="1" minOccurs="1" name="CONTACTO_ACCION" nillable="false">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="0"/>
+                        <xsd:maxLength value="650"/>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element maxOccurs="1" minOccurs="1" name="ESPECIALIDADES_ACCION">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element maxOccurs="unbounded" minOccurs="0" name="ESPECIALIDAD">
+                    <xsd:complexType>
+                      <xsd:sequence>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="ID_ESPECIALIDAD" nillable="false">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_ESPECIALIDAD" nillable="false">
+                                <xsd:simpleType>
+                                  <xsd:restriction base="xsd:string">
+                                    <xsd:length value="2"/>
+                                  </xsd:restriction>
+                                </xsd:simpleType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="AREA_PROFESIONAL" nillable="false">
+                                <xsd:simpleType>
+                                  <xsd:restriction base="xsd:string">
+                                    <xsd:length value="4"/>
+                                  </xsd:restriction>
+                                </xsd:simpleType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_ESPECIALIDAD" nillable="false">
+                                <xsd:simpleType>
+                                  <xsd:restriction base="xsd:string">
+                                    <xsd:length value="14"/>
+                                  </xsd:restriction>
+                                </xsd:simpleType>
+                              </xsd:element>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="CENTRO_IMPARTICION" nillable="false">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_CENTRO" nillable="false">
+                                <xsd:simpleType>
+                                  <xsd:restriction base="xsd:string">
+                                    <xsd:length value="2"/>
+                                  </xsd:restriction>
+                                </xsd:simpleType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_CENTRO" nillable="false" type="codigo_centro"/>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="FECHA_INICIO" nillable="false" type="tipo_fecha"/>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="FECHA_FIN" nillable="false" type="tipo_fecha"/>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="MODALIDAD_IMPARTICION" nillable="false">
+                          <xsd:simpleType>
+                            <xsd:restriction base="xsd:string">
+                              <xsd:length value="2"/>
+                            </xsd:restriction>
+                          </xsd:simpleType>
+                        </xsd:element>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="DATOS_DURACION" nillable="false">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="HORAS_PRESENCIAL" nillable="false" type="xsd:int"/>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="HORAS_TELEFORMACION" nillable="false" type="xsd:int"/>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="CENTROS_SESIONES_PRESENCIALES">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element maxOccurs="unbounded" minOccurs="0" name="CENTRO_PRESENCIAL" nillable="false">
+                                <xsd:complexType>
+                                  <xsd:sequence>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_CENTRO" nillable="false">
+                                      <xsd:simpleType>
+                                        <xsd:restriction base="xsd:string">
+                                          <xsd:length value="2"/>
+                                        </xsd:restriction>
+                                      </xsd:simpleType>
+                                    </xsd:element>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_CENTRO" nillable="false" type="codigo_centro"/>
+                                  </xsd:sequence>
+                                </xsd:complexType>
+                              </xsd:element>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="TUTORES_FORMADORES">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element maxOccurs="unbounded" minOccurs="0" name="TUTOR_FORMADOR" nillable="false">
+                                <xsd:complexType>
+                                  <xsd:sequence>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="ID_TUTOR" nillable="false">
+                                      <xsd:complexType>
+                                        <xsd:sequence>
+                                          <xsd:element maxOccurs="1" minOccurs="1" name="TIPO_DOCUMENTO" nillable="false" type="tipo_documento"/>
+                                          <xsd:element maxOccurs="1" minOccurs="1" name="NUM_DOCUMENTO" nillable="false">
+                                            <xsd:simpleType>
+                                              <xsd:restriction base="xsd:string">
+                                                <xsd:length value="10"/>
+                                              </xsd:restriction>
+                                            </xsd:simpleType>
+                                          </xsd:element>
+                                          <xsd:element maxOccurs="1" minOccurs="1" name="LETRA_NIF" nillable="false">
+                                            <xsd:simpleType>
+                                              <xsd:restriction base="xsd:string">
+                                                <xsd:length value="1"/>
+                                              </xsd:restriction>
+                                            </xsd:simpleType>
+                                          </xsd:element>
+                                        </xsd:sequence>
+                                      </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="ACREDITACION_TUTOR" nillable="false">
+                                      <xsd:simpleType>
+                                        <xsd:restriction base="xsd:string">
+                                          <xsd:maxLength value="200"/>
+                                        </xsd:restriction>
+                                      </xsd:simpleType>
+                                    </xsd:element>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="EXPERIENCIA_PROFESIONAL" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="COMPETENCIA_DOCENTE" nillable="false">
+                                      <xsd:simpleType>
+                                        <xsd:restriction base="xsd:string">
+                                          <xsd:maxLength value="2"/>
+                                        </xsd:restriction>
+                                      </xsd:simpleType>
+                                    </xsd:element>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="EXPERIENCIA_MODALIDAD_TELEFORMACION" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="FORMACION_MODALIDAD_TELEFORMACION" nillable="false">
+                                      <xsd:simpleType>
+                                        <xsd:restriction base="xsd:string">
+                                          <xsd:maxLength value="2"/>
+                                        </xsd:restriction>
+                                      </xsd:simpleType>
+                                    </xsd:element>
+                                  </xsd:sequence>
+                                </xsd:complexType>
+                              </xsd:element>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="USO" nillable="false">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element maxOccurs="1" minOccurs="0" name="HORARIO_MANANA">
+                                <xsd:complexType>
+                                  <xsd:sequence>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUM_PARTICIPANTES" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUMERO_ACCESOS" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="DURACION_TOTAL" nillable="false" type="xsd:int"/>
+                                  </xsd:sequence>
+                                </xsd:complexType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="0" name="HORARIO_TARDE">
+                                <xsd:complexType>
+                                  <xsd:sequence>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUM_PARTICIPANTES" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUMERO_ACCESOS" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="DURACION_TOTAL" nillable="false" type="xsd:int"/>
+                                  </xsd:sequence>
+                                </xsd:complexType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="0" name="HORARIO_NOCHE">
+                                <xsd:complexType>
+                                  <xsd:sequence>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUM_PARTICIPANTES" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUMERO_ACCESOS" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="DURACION_TOTAL" nillable="false" type="xsd:int"/>
+                                  </xsd:sequence>
+                                </xsd:complexType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="0" name="SEGUIMIENTO_EVALUACION">
+                                <xsd:complexType>
+                                  <xsd:sequence>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUM_PARTICIPANTES" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUMERO_ACTIVIDADES_APRENDIZAJE" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUMERO_INTENTOS" nillable="false" type="xsd:int"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUMERO_ACTIVIDADES_EVALUACION" nillable="false" type="xsd:int"/>
+                                  </xsd:sequence>
+                                </xsd:complexType>
+                              </xsd:element>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                      </xsd:sequence>
+                    </xsd:complexType>
+                  </xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element maxOccurs="1" minOccurs="1" name="PARTICIPANTES">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element maxOccurs="unbounded" minOccurs="0" name="PARTICIPANTE">
+                    <xsd:complexType>
+                      <xsd:sequence>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="ID_PARTICIPANTE" nillable="false">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="TIPO_DOCUMENTO" nillable="false" type="tipo_documento"/>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="NUM_DOCUMENTO" nillable="false">
+                                <xsd:simpleType>
+                                  <xsd:restriction base="xsd:string">
+                                    <xsd:length value="10"/>
+                                  </xsd:restriction>
+                                </xsd:simpleType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="1" name="LETRA_NIF" nillable="false">
+                                <xsd:simpleType>
+                                  <xsd:restriction base="xsd:string">
+                                    <xsd:length value="1"/>
+                                  </xsd:restriction>
+                                </xsd:simpleType>
+                              </xsd:element>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="INDICADOR_COMPETENCIAS_CLAVE" nillable="false">
+                          <xsd:simpleType>
+                            <xsd:restriction base="xsd:string">
+                              <xsd:length value="2"/>
+                            </xsd:restriction>
+                          </xsd:simpleType>
+                        </xsd:element>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="CONTRATO_FORMACION">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element maxOccurs="1" minOccurs="0" name="ID_CONTRATO_CFA" nillable="false">
+                                <xsd:simpleType>
+                                  <xsd:restriction base="xsd:string">
+                                    <xsd:pattern value="^[A-Za-z]\\d{13}$"/>
+                                  </xsd:restriction>
+                                </xsd:simpleType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="0" name="CIF_EMPRESA" nillable="false">
+                                <xsd:simpleType>
+                                  <xsd:restriction base="xsd:string">
+                                    <xsd:length value="9"/>
+                                  </xsd:restriction>
+                                </xsd:simpleType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="0" name="ID_TUTOR_EMPRESA" nillable="false">
+                                <xsd:complexType>
+                                  <xsd:sequence>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="TIPO_DOCUMENTO" nillable="false" type="tipo_documento"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUM_DOCUMENTO" nillable="false">
+                                      <xsd:simpleType>
+                                        <xsd:restriction base="xsd:string">
+                                          <xsd:length value="10"/>
+                                        </xsd:restriction>
+                                      </xsd:simpleType>
+                                    </xsd:element>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="LETRA_NIF" nillable="false">
+                                      <xsd:simpleType>
+                                        <xsd:restriction base="xsd:string">
+                                          <xsd:length value="1"/>
+                                        </xsd:restriction>
+                                      </xsd:simpleType>
+                                    </xsd:element>
+                                  </xsd:sequence>
+                                </xsd:complexType>
+                              </xsd:element>
+                              <xsd:element maxOccurs="1" minOccurs="0" name="ID_TUTOR_FORMACION" nillable="false">
+                                <xsd:complexType>
+                                  <xsd:sequence>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="TIPO_DOCUMENTO" nillable="false" type="tipo_documento"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="NUM_DOCUMENTO" nillable="false">
+                                      <xsd:simpleType>
+                                        <xsd:restriction base="xsd:string">
+                                          <xsd:length value="10"/>
+                                        </xsd:restriction>
+                                      </xsd:simpleType>
+                                    </xsd:element>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="LETRA_NIF" nillable="false">
+                                      <xsd:simpleType>
+                                        <xsd:restriction base="xsd:string">
+                                          <xsd:length value="1"/>
+                                        </xsd:restriction>
+                                      </xsd:simpleType>
+                                    </xsd:element>
+                                  </xsd:sequence>
+                                </xsd:complexType>
+                              </xsd:element>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element maxOccurs="1" minOccurs="1" name="ESPECIALIDADES_PARTICIPANTE">
+                          <xsd:complexType>
+                            <xsd:sequence>
+                              <xsd:element maxOccurs="unbounded" minOccurs="1" name="ESPECIALIDAD" nillable="false">
+                                <xsd:complexType>
+                                  <xsd:sequence>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="ID_ESPECIALIDAD" nillable="false">
+                                      <xsd:complexType>
+                                        <xsd:sequence>
+                                          <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_ESPECIALIDAD" nillable="false">
+                                            <xsd:simpleType>
+                                              <xsd:restriction base="xsd:string">
+                                                <xsd:length value="2"/>
+                                              </xsd:restriction>
+                                            </xsd:simpleType>
+                                          </xsd:element>
+                                          <xsd:element maxOccurs="1" minOccurs="1" name="AREA_PROFESIONAL" nillable="false">
+                                            <xsd:simpleType>
+                                              <xsd:restriction base="xsd:string">
+                                                <xsd:length value="4"/>
+                                              </xsd:restriction>
+                                            </xsd:simpleType>
+                                          </xsd:element>
+                                          <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_ESPECIALIDAD" nillable="false">
+                                            <xsd:simpleType>
+                                              <xsd:restriction base="xsd:string">
+                                                <xsd:length value="14"/>
+                                              </xsd:restriction>
+                                            </xsd:simpleType>
+                                          </xsd:element>
+                                        </xsd:sequence>
+                                      </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element maxOccurs="1" minOccurs="0" name="FECHA_ALTA" nillable="false" type="tipo_fecha"/>
+                                    <xsd:element maxOccurs="1" minOccurs="0" name="FECHA_BAJA" nillable="false" type="tipo_fecha"/>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="TUTORIAS_PRESENCIALES">
+                                      <xsd:complexType>
+                                        <xsd:sequence>
+                                          <xsd:element maxOccurs="unbounded" minOccurs="0" name="TUTORIA_PRESENCIAL" nillable="false">
+                                            <xsd:complexType>
+                                              <xsd:sequence>
+                                                <xsd:element maxOccurs="1" minOccurs="1" name="CENTRO_PRESENCIAL_TUTORIA" nillable="false">
+                                                  <xsd:complexType>
+                                                    <xsd:sequence>
+                                                      <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_CENTRO" nillable="false">
+                                                        <xsd:simpleType>
+                                                          <xsd:restriction base="xsd:string">
+                                                            <xsd:length value="2"/>
+                                                          </xsd:restriction>
+                                                        </xsd:simpleType>
+                                                      </xsd:element>
+                                                      <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_CENTRO" nillable="false" type="codigo_centro"/>
+                                                    </xsd:sequence>
+                                                  </xsd:complexType>
+                                                </xsd:element>
+                                                <xsd:element maxOccurs="1" minOccurs="1" name="FECHA_INICIO" nillable="false" type="tipo_fecha"/>
+                                                <xsd:element maxOccurs="1" minOccurs="1" name="FECHA_FIN" nillable="false" type="tipo_fecha"/>
+                                              </xsd:sequence>
+                                            </xsd:complexType>
+                                          </xsd:element>
+                                        </xsd:sequence>
+                                      </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="EVALUACION_FINAL">
+                                      <xsd:complexType>
+                                        <xsd:sequence>
+                                          <xsd:element maxOccurs="1" minOccurs="0" name="CENTRO_PRESENCIAL_EVALUACION" nillable="false">
+                                            <xsd:complexType>
+                                              <xsd:sequence>
+                                                <xsd:element maxOccurs="1" minOccurs="1" name="ORIGEN_CENTRO" nillable="false">
+                                                  <xsd:simpleType>
+                                                    <xsd:restriction base="xsd:string">
+                                                      <xsd:length value="2"/>
+                                                    </xsd:restriction>
+                                                  </xsd:simpleType>
+                                                </xsd:element>
+                                                <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_CENTRO" nillable="false" type="codigo_centro"/>
+                                              </xsd:sequence>
+                                            </xsd:complexType>
+                                          </xsd:element>
+                                          <xsd:element maxOccurs="1" minOccurs="0" name="FECHA_INICIO" nillable="false" type="tipo_fecha"/>
+                                          <xsd:element maxOccurs="1" minOccurs="0" name="FECHA_FIN" nillable="false" type="tipo_fecha"/>
+                                        </xsd:sequence>
+                                      </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element maxOccurs="1" minOccurs="1" name="RESULTADOS">
+                                      <xsd:complexType>
+                                        <xsd:sequence>
+                                          <xsd:element maxOccurs="1" minOccurs="0" name="RESULTADO_FINAL" nillable="false">
+                                            <xsd:simpleType>
+                                              <xsd:restriction base="xsd:string">
+                                                <xsd:length value="1"/>
+                                              </xsd:restriction>
+                                            </xsd:simpleType>
+                                          </xsd:element>
+                                          <xsd:element maxOccurs="1" minOccurs="0" name="CALIFICACION_FINAL" nillable="false">
+                                            <xsd:simpleType>
+                                              <xsd:restriction base="xsd:int"/>
+                                            </xsd:simpleType>
+                                          </xsd:element>
+                                          <xsd:element maxOccurs="1" minOccurs="0" name="PUNTUACION_FINAL" nillable="false">
+                                            <xsd:simpleType>
+                                              <xsd:restriction base="xsd:int"/>
+                                            </xsd:simpleType>
+                                          </xsd:element>
+                                        </xsd:sequence>
+                                      </xsd:complexType>
+                                    </xsd:element>
+                                  </xsd:sequence>
+                                </xsd:complexType>
+                              </xsd:element>
+                            </xsd:sequence>
+                          </xsd:complexType>
+                        </xsd:element>
+                      </xsd:sequence>
+                    </xsd:complexType>
+                  </xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+    <xsd:schema targetNamespace="${NS_SALIDA}" xmlns="${NS_SALIDA}">
+      <xsd:import namespace="${NS_ENTSAL}"/>
+      <xsd:simpleType name="mensaje_error">
+        <xsd:restriction base="xsd:string">
+          <xsd:length value="250"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:element name="RESPUESTA_DATOS_CENTRO">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_RETORNO" nillable="false" type="entsal:codigo_retorno"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="ETIQUETA_ERROR" nillable="true" type="mensaje_error"/>
+            <xsd:element maxOccurs="1" ref="entsal:DATOS_IDENTIFICATIVOS"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="RESPUESTA_OBT_ACCION">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_RETORNO" nillable="false" type="entsal:codigo_retorno"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="ETIQUETA_ERROR" nillable="true" type="mensaje_error"/>
+            <xsd:element maxOccurs="1" ref="entsal:ACCION_FORMATIVA"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="RESPUESTA_OBT_LISTA_ACCIONES">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_RETORNO" nillable="false" type="entsal:codigo_retorno"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="ETIQUETA_ERROR" nillable="true" type="mensaje_error"/>
+            <xsd:element maxOccurs="unbounded" minOccurs="0" ref="entsal:ID_ACCION"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="RESPUESTA_ELIMINAR_ACCION">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" name="CODIGO_RETORNO" nillable="false" type="entsal:codigo_retorno"/>
+            <xsd:element maxOccurs="1" minOccurs="1" name="ETIQUETA_ERROR" nillable="true" type="mensaje_error"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
     </xsd:schema>
   </wsdl:types>
+  <wsdl:message name="obtenerDatosCentroMessageRequest">
+    <wsdl:part element="impl:obtenerDatosCentro" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="crearAccionMessageResponse">
+    <wsdl:part element="impl:crearAccionResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="eliminarAccionMessageResponse">
+    <wsdl:part element="impl:eliminarAccionResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="obtenerListaAccionesMessageResponse">
+    <wsdl:part element="impl:obtenerListaAccionesResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="crearCentroMessageResponse">
+    <wsdl:part element="impl:crearCentroResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="crearCentroMessageRequest">
+    <wsdl:part element="impl:crearCentro" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="crearAccionMessageRequest">
+    <wsdl:part element="impl:crearAccion" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="obtenerAccionMessageRequest">
+    <wsdl:part element="impl:obtenerAccion" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="obtenerDatosCentroMessageResponse">
+    <wsdl:part element="impl:obtenerDatosCentroResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="obtenerListaAccionesMessageRequest">
+    <wsdl:part element="impl:obtenerListaAcciones" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="eliminarAccionMessageRequest">
+    <wsdl:part element="impl:eliminarAccion" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="obtenerAccionMessageResponse">
+    <wsdl:part element="impl:obtenerAccionResponse" name="parameters"/>
+  </wsdl:message>
   <wsdl:portType name="IProveedorCentroEndPoint">
-    <wsdl:operation name="crearCentro"><wsdl:input message="impl:crearCentroRequest"/><wsdl:output message="impl:crearCentroResponse"/></wsdl:operation>
-    <wsdl:operation name="obtenerDatosCentro"><wsdl:input message="impl:obtenerDatosCentroRequest"/><wsdl:output message="impl:obtenerDatosCentroResponse"/></wsdl:operation>
-    <wsdl:operation name="crearAccion"><wsdl:input message="impl:crearAccionRequest"/><wsdl:output message="impl:crearAccionResponse"/></wsdl:operation>
-    <wsdl:operation name="obtenerAccion"><wsdl:input message="impl:obtenerAccionRequest"/><wsdl:output message="impl:obtenerAccionResponse"/></wsdl:operation>
-    <wsdl:operation name="obtenerListaAcciones"><wsdl:input message="impl:obtenerListaAccionesRequest"/><wsdl:output message="impl:obtenerListaAccionesResponse"/></wsdl:operation>
-    <wsdl:operation name="eliminarAccion"><wsdl:input message="impl:eliminarAccionRequest"/><wsdl:output message="impl:eliminarAccionResponse"/></wsdl:operation>
+    <wsdl:operation name="crearCentro">
+      <wsdl:input message="impl:crearCentroMessageRequest" name="crearCentroInput"/>
+      <wsdl:output message="impl:crearCentroMessageResponse" name="crearCentroOutput"/>
+    </wsdl:operation>
+    <wsdl:operation name="obtenerDatosCentro">
+      <wsdl:input message="impl:obtenerDatosCentroMessageRequest" name="obtenerDatosCentroInput"/>
+      <wsdl:output message="impl:obtenerDatosCentroMessageResponse" name="obtenerDatosCentroOutput"/>
+    </wsdl:operation>
+    <wsdl:operation name="crearAccion">
+      <wsdl:input message="impl:crearAccionMessageRequest" name="crearAccionInput"/>
+      <wsdl:output message="impl:crearAccionMessageResponse" name="crearAccionOutput"/>
+    </wsdl:operation>
+    <wsdl:operation name="obtenerAccion">
+      <wsdl:input message="impl:obtenerAccionMessageRequest" name="obtenerAccionInput"/>
+      <wsdl:output message="impl:obtenerAccionMessageResponse" name="obtenerAccionOutput"/>
+    </wsdl:operation>
+    <wsdl:operation name="obtenerListaAcciones">
+      <wsdl:input message="impl:obtenerListaAccionesMessageRequest" name="obtenerListaAccionesInput"/>
+      <wsdl:output message="impl:obtenerListaAccionesMessageResponse" name="obtenerListaAccionesOutput"/>
+    </wsdl:operation>
+    <wsdl:operation name="eliminarAccion">
+      <wsdl:input message="impl:eliminarAccionMessageRequest" name="eliminarAccionInput"/>
+      <wsdl:output message="impl:eliminarAccionMessageResponse" name="eliminarAccionOutput"/>
+    </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="ProveedorCentroEndPointSoapBinding" type="impl:IProveedorCentroEndPoint">
     <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
-    <wsdl:operation name="crearCentro"><soap:operation soapAction="crearCentro"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
-    <wsdl:operation name="obtenerDatosCentro"><soap:operation soapAction="obtenerDatosCentro"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
-    <wsdl:operation name="crearAccion"><soap:operation soapAction="crearAccion"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
-    <wsdl:operation name="obtenerAccion"><soap:operation soapAction="obtenerAccion"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
-    <wsdl:operation name="obtenerListaAcciones"><soap:operation soapAction="obtenerListaAcciones"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
-    <wsdl:operation name="eliminarAccion"><soap:operation soapAction="eliminarAccion"/><wsdl:input><soap:body use="literal"/></wsdl:input><wsdl:output><soap:body use="literal"/></wsdl:output></wsdl:operation>
+    <wsdl:operation name="crearCentro">
+      <soap:operation soapAction="crearCentro"/>
+      <wsdl:input name="crearCentroInput"><soap:body use="literal"/></wsdl:input>
+      <wsdl:output name="crearCentroOutput"><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="obtenerDatosCentro">
+      <soap:operation soapAction="obtenerDatosCentro"/>
+      <wsdl:input name="obtenerDatosCentroInput"><soap:body use="literal"/></wsdl:input>
+      <wsdl:output name="obtenerDatosCentroOutput"><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="crearAccion">
+      <soap:operation soapAction="crearAccion"/>
+      <wsdl:input name="crearAccionInput"><soap:body use="literal"/></wsdl:input>
+      <wsdl:output name="crearAccionOutput"><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="obtenerAccion">
+      <soap:operation soapAction="obtenerAccion"/>
+      <wsdl:input name="obtenerAccionInput"><soap:body use="literal"/></wsdl:input>
+      <wsdl:output name="obtenerAccionOutput"><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="obtenerListaAcciones">
+      <soap:operation soapAction="obtenerListaAcciones"/>
+      <wsdl:input name="obtenerListaAccionesInput"><soap:body use="literal"/></wsdl:input>
+      <wsdl:output name="obtenerListaAccionesOutput"><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="eliminarAccion">
+      <soap:operation soapAction="eliminarAccion"/>
+      <wsdl:input name="eliminarAccionInput"><soap:body use="literal"/></wsdl:input>
+      <wsdl:output name="eliminarAccionOutput"><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="ProveedorCentroTFWS">
     <wsdl:port binding="impl:ProveedorCentroEndPointSoapBinding" name="ProveedorCentroEndPoint">
