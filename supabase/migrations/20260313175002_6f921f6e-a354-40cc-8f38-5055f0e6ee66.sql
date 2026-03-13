@@ -1,0 +1,1 @@
+UPDATE training_centers SET representative_name = 'Representante del Centro', representative_position = 'Director/a' WHERE slug = 'empleate';

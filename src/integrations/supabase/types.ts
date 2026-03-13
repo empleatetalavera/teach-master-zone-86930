@@ -3071,6 +3071,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           logo_url: string | null
+          mercantile_registry: string | null
           name: string
           official_badge: string | null
           phone: string | null
@@ -3078,6 +3079,8 @@ export type Database = {
           primary_color: string | null
           province: string | null
           region: string | null
+          representative_name: string | null
+          representative_position: string | null
           secondary_color: string | null
           sepe_registry_number: string | null
           slug: string | null
@@ -3100,6 +3103,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          mercantile_registry?: string | null
           name: string
           official_badge?: string | null
           phone?: string | null
@@ -3107,6 +3111,8 @@ export type Database = {
           primary_color?: string | null
           province?: string | null
           region?: string | null
+          representative_name?: string | null
+          representative_position?: string | null
           secondary_color?: string | null
           sepe_registry_number?: string | null
           slug?: string | null
@@ -3129,6 +3135,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          mercantile_registry?: string | null
           name?: string
           official_badge?: string | null
           phone?: string | null
@@ -3136,6 +3143,8 @@ export type Database = {
           primary_color?: string | null
           province?: string | null
           region?: string | null
+          representative_name?: string | null
+          representative_position?: string | null
           secondary_color?: string | null
           sepe_registry_number?: string | null
           slug?: string | null

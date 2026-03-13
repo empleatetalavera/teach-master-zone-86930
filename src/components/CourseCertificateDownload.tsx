@@ -95,6 +95,25 @@ export function CourseCertificateDownload({
   const [generating, setGenerating] = useState(false);
   const branding = getCurrentBranding();
   const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+  const [centerData, setCenterData] = useState<{
+    name: string; cif: string; address: string; city: string;
+    contact_email: string; contact_phone: string; representative_name: string;
+    representative_position: string; logo_url: string;
+  } | null>(null);
+
+  // Load center data for dynamic certificate generation
+  useEffect(() => {
+    const loadCenter = async () => {
+      if (!trainingCenterId) return;
+      const { data } = await supabase
+        .from('training_centers')
+        .select('name, cif, address, city, contact_email, contact_phone, logo_url, representative_name, representative_position')
+        .eq('id', trainingCenterId)
+        .maybeSingle();
+      if (data) setCenterData(data as any);
+    };
+    loadCenter();
+  }, [trainingCenterId]);
 
   const handleStaticCertDownload = () => {
     if (!certificateModelUrl) return;
@@ -288,23 +307,21 @@ export function CourseCertificateDownload({
     const W = pdf.internal.pageSize.getWidth();
     const H = pdf.internal.pageSize.getHeight();
 
-    // PAGE 1: DIPLOMA — exact replica of Grupo Arma CFC template
+    // PAGE 1: DIPLOMA
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
-    // Watermark - large faded Grupo Arma logo covering center-right area
-    const watermarkData = await loadImageAsDataUrl("/branding/grupo-arma-watermark.jpg");
-    if (watermarkData) {
-      pdf.saveGraphicsState();
-      pdf.setGState(new (pdf as any).GState({ opacity: 0.12 }));
-      // Position: covers roughly right 60% of page, vertically centered
-      pdf.addImage(watermarkData, "JPEG", W * 0.22, H * 0.18, W * 0.65, H * 0.68);
-      pdf.restoreGraphicsState();
-    }
+    // Watermark - center name as large faded text
+    pdf.setFontSize(60);
+    pdf.setTextColor(240, 240, 240);
+    pdf.setFont("helvetica", "bold");
+    const watermarkName = (centerData?.name || branding.centerName || "").toUpperCase();
+    pdf.text(watermarkName, W / 2, H / 2 + 10, { align: "center" });
 
-    // Top-left: Grupo Arma Formación logo (birrete azul)
-    const logoData = await loadImageAsDataUrl("/branding/grupo-arma-logo.png");
-    if (logoData) pdf.addImage(logoData, "JPEG", 12, 8, 45, 22);
+    // Top-left: Center logo
+    const logoSrc = centerData?.logo_url || branding.centerLogo;
+    const logoData = await loadImageAsDataUrl(logoSrc);
+    if (logoData) pdf.addImage(logoData, "PNG", 12, 8, 45, 22);
 
     // Student name - centered
     let y = 48;
@@ -415,7 +432,7 @@ export function CourseCertificateDownload({
     pdf.setTextColor(40, 40, 40);
     const issueDate = format(new Date(cert.issue_date), "dd 'de' MMMM 'de' yyyy", { locale: es });
     const p1 = `\u201C`;
-    const p2 = "Talavera de la Reina";
+    const p2 = centerData?.city || "Talavera de la Reina";
     const p3 = `\u201D, \u201C`;
     const p4 = issueDate;
     const p5 = `\u201D`;
@@ -467,10 +484,10 @@ export function CourseCertificateDownload({
     pdf.setFontSize(6);
     pdf.setTextColor(30, 30, 30);
     pdf.setFont("helvetica", "bold");
-    pdf.text("Fdo: M.ª del Coral Gómez Corrochano", sigX + sigW / 2, sigY + 13, { align: "center" });
+    pdf.text(`Fdo: ${centerData?.representative_name || 'Responsable del Centro'}`, sigX + sigW / 2, sigY + 13, { align: "center" });
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(5.5);
-    pdf.text("Directora - Grupo Arma Formación S.L.", sigX + sigW / 2, sigY + 17, { align: "center" });
+    pdf.text(`${centerData?.representative_position || 'Director/a'} - ${centerData?.name || branding.centerName}`, sigX + sigW / 2, sigY + 17, { align: "center" });
     
     // Timestamp
     pdf.setFontSize(5);
@@ -504,10 +521,10 @@ export function CourseCertificateDownload({
     pdf.setFontSize(6);
     pdf.setTextColor(100, 100, 100);
     pdf.setFont("helvetica", "italic");
-    pdf.text(
-      "Inscrita en el Registro Mercantil de Toledo, al Tomo 334, Folio 196, Sección General del Libro de Sociedades, Hoja número TO-2073, inscripción 1ª.",
-      W / 2, H - 5, { align: "center" }
-    );
+    const footerText = centerData?.name 
+      ? `${centerData.name} - CIF: ${centerData.cif || ''} - ${centerData.address || ''}, ${centerData.city || ''}`
+      : branding.centerName;
+    pdf.text(footerText, W / 2, H - 5, { align: "center" });
 
     // QR Code + CSV verification
     const verifyUrl = `${window.location.origin}/verificar-diploma/${cert.verification_code}`;
@@ -522,13 +539,14 @@ export function CourseCertificateDownload({
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
-    // Watermark on reverso
-    if (watermarkData) {
-      pdf.saveGraphicsState();
-      pdf.setGState(new (pdf as any).GState({ opacity: 0.08 }));
-      pdf.addImage(watermarkData, "JPEG", W * 0.22, H * 0.18, W * 0.65, H * 0.68);
-      pdf.restoreGraphicsState();
-    }
+    // Watermark on reverso - faded center name
+    pdf.saveGraphicsState();
+    pdf.setGState(new (pdf as any).GState({ opacity: 0.06 }));
+    pdf.setFontSize(50);
+    pdf.setTextColor(180, 180, 180);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(watermarkName, W / 2, H / 2, { align: "center" });
+    pdf.restoreGraphicsState();
 
     // CFC-CLM logo removed per request
 

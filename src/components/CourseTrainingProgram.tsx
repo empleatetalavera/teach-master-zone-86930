@@ -78,45 +78,8 @@ const defaultCenterData = {
   maximoAlumnos: 15
 };
 
-// Planificación didáctica completa basada en el Anexo III/IV del SEPE
-const planificacionDidactica = [
-  {
-    modulo: "MF0969_1: Técnicas administrativas básicas de oficina",
-    horasMF: 150,
-    tutores: 1,
-    unidades: [
-      { codigo: "UF0517", titulo: "Organización empresarial y de recursos humanos", horas: 30, dias: "Del día 1 al día 11" },
-      { codigo: "UF0518", titulo: "Gestión auxiliar de la correspondencia y paquetería en la empresa", horas: 30, dias: "Del día 12 al día 22" },
-      { codigo: "UF0519", titulo: "Gestión auxiliar de documentación económico-administrativa y comercial", horas: 90, dias: "Del día 23 al día 60" }
-    ]
-  },
-  {
-    modulo: "MF0970_1: Operaciones básicas de comunicación",
-    horasMF: 120,
-    tutores: 1,
-    unidades: [
-      { codigo: "UF0520", titulo: "Comunicación en las relaciones profesionales", horas: 50, dias: "Del día 61 al día 79" },
-      { codigo: "UF0521", titulo: "Comunicación oral y escrita en la empresa", horas: 70, dias: "Del día 80 al día 108" }
-    ]
-  },
-  {
-    modulo: "MF0971_1: Reproducción y archivo",
-    horasMF: 120,
-    tutores: 1,
-    unidades: [
-      { codigo: "UF0513", titulo: "Gestión auxiliar de archivo en soporte convencional o informático", horas: 60, dias: "Del día 109 al día 131" },
-      { codigo: "UF0514", titulo: "Gestión auxiliar de reproducción en soporte convencional o informático", horas: 60, dias: "Del día 132 al día 156" }
-    ]
-  },
-  {
-    modulo: "MP0112: Módulo de prácticas profesionales no laborales",
-    horasMF: 40,
-    tutores: 1,
-    unidades: [
-      { codigo: "MP0112", titulo: "Prácticas profesionales no laborales", horas: 40, dias: "Del día 157 al día 166" }
-    ]
-  }
-];
+// NOTE: planificacionDidactica removed — the component now uses planificacionDinamica
+// generated from actual course modules in the database.
 
 // Requisitos técnicos de la plataforma
 const requisitosDelSistema = {
@@ -425,26 +388,31 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
           <div className="border rounded-lg p-4">
             <h3 className="font-semibold text-primary mb-2">4.1 Objetivo General</h3>
             <p className="text-sm text-muted-foreground">
-              {course.objectives || "Distribuir, reproducir y transmitir la información y documentación requeridas en las tareas administrativas y de gestión, internas y externas, así como realizar trámites elementales de verificación de datos y documentos a requerimiento de técnicos de nivel superior con eficacia, de acuerdo con instrucciones o procedimientos establecidos."}
+              {course.objectives || "Adquirir las competencias profesionales necesarias para el desempeño de las funciones propias del perfil profesional vinculado al certificado de profesionalidad."}
             </p>
           </div>
 
           <div className="border rounded-lg p-4">
             <h3 className="font-semibold text-primary mb-2">4.2 Objetivos Específicos</h3>
-            <ul className="space-y-2">
-              <li className="flex items-start gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Realizar e integrar operaciones de apoyo administrativo básico</span>
-              </li>
-              <li className="flex items-start gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Transmitir y recibir información operativa en gestiones rutinarias con agentes externos</span>
-              </li>
-              <li className="flex items-start gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Realizar operaciones auxiliares de reproducción y archivo en soporte convencional o informático</span>
-              </li>
-            </ul>
+            {course.specific_objectives && course.specific_objectives.length > 0 ? (
+              <ul className="space-y-2">
+                {course.specific_objectives.map((obj, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>{String(obj)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="space-y-2">
+                {modules.map((mod, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Adquirir las competencias del módulo: {mod.title}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </section>

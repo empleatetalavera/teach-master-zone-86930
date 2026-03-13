@@ -82,6 +82,7 @@ const StudentCertificates = () => {
   const [issuedCerts, setIssuedCerts] = useState<Record<string, IssuedCertificate>>({});
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
   const branding = getCurrentBranding();
+  const [centerDataMap, setCenterDataMap] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (user) loadData();
@@ -103,6 +104,18 @@ const StudentCertificates = () => {
 
       const enrolls = (enrollmentData || []) as any[];
       setEnrollments(enrolls.map((e: any) => ({ ...e, enrollment_id: e.id })));
+
+      // Load center data for each unique training_center_id
+      const centerIds = [...new Set(enrolls.map((e: any) => e.courses?.training_center_id).filter(Boolean))] as string[];
+      if (centerIds.length > 0) {
+        const { data: centers } = await supabase
+          .from('training_centers')
+          .select('id, name, cif, address, city, contact_email, contact_phone, logo_url, representative_name, representative_position')
+          .in('id', centerIds);
+        const cMap: Record<string, any> = {};
+        (centers || []).forEach((c: any) => { cMap[c.id] = c; });
+        setCenterDataMap(cMap);
+      }
 
       // Check completion status for each enrollment
       const statusMap: Record<string, CompletionStatus> = {};
@@ -315,16 +328,19 @@ const StudentCertificates = () => {
   };
 
   const generatePDF = async (enrollment: CourseForCert, cert: IssuedCertificate) => {
+    const centerId = enrollment.courses.training_center_id;
+    const cd = centerId ? centerDataMap[centerId] : null;
     const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const W = pdf.internal.pageSize.getWidth();
     const H = pdf.internal.pageSize.getHeight();
 
-    // ===== PAGE 1: DIPLOMA (matching template) =====
+    // ===== PAGE 1: DIPLOMA =====
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
-    // Top-left logo (Grupo Arma / center logo)
-    const logoData = await loadImageAsDataUrl(branding.centerLogo);
+    // Top-left logo (center logo)
+    const logoSrc = cd?.logo_url || branding.centerLogo;
+    const logoData = await loadImageAsDataUrl(logoSrc);
     if (logoData) pdf.addImage(logoData, "PNG", 18, 15, 50, 25);
 
     // Top-right CFC/SNS logo (only for CFC courses)
@@ -397,15 +413,14 @@ const StudentCertificates = () => {
     // Issue date and place
     y += 10;
     const issueDate = format(new Date(cert.issue_date), "dd 'de' MMMM 'de' yyyy", { locale: es });
-    pdf.text(`Talavera de la Reina, ${issueDate}`, W / 2, y, { align: "center" });
+    pdf.text(`${cd?.city || 'Talavera de la Reina'}, ${issueDate}`, W / 2, y, { align: "center" });
 
     // Watermark (center background text - light)
-    pdf.setFontSize(80);
+    const centerNameUp = (cd?.name || branding.centerName || "").toUpperCase();
+    pdf.setFontSize(60);
     pdf.setTextColor(240, 240, 240);
     pdf.setFont("helvetica", "bold");
-    pdf.text("GRUPO ARMA", W / 2, H / 2 + 10, { align: "center" });
-    pdf.setFontSize(30);
-    pdf.text("F O R M A C I Ó N", W / 2, H / 2 + 30, { align: "center" });
+    pdf.text(centerNameUp, W / 2, H / 2 + 15, { align: "center" });
 
     // Signature area - left (director)
     const sigY = H - 45;
@@ -415,8 +430,8 @@ const StudentCertificates = () => {
     pdf.setFontSize(9);
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(40, 40, 40);
-    pdf.text("Fdo. M.ª del Coral Gómez Corrochano", 70, sigY + 5, { align: "center" });
-    pdf.text("Directora Grupo Arma Formación", 70, sigY + 10, { align: "center" });
+    pdf.text(`Fdo. ${cd?.representative_name || 'Responsable del Centro'}`, 70, sigY + 5, { align: "center" });
+    pdf.text(`${cd?.representative_position || 'Director/a'} ${cd?.name || branding.centerName}`, 70, sigY + 10, { align: "center" });
 
     // Signature area - right (student)
     pdf.line(W - 110, sigY, W - 30, sigY);
@@ -425,16 +440,15 @@ const StudentCertificates = () => {
     // Company stamp area (bottom left)
     pdf.setFontSize(7);
     pdf.setTextColor(100, 100, 100);
-    pdf.text("GRUPO ARMA", 30, H - 25);
-    pdf.text("CIF: B45270139", 30, H - 21);
-    pdf.text("C/ Medellín 4, 45600 Talavera de la Reina", 30, H - 17);
-    pdf.text("925 812 889 | grupoarmaformacion@gmail.com", 30, H - 13);
+    pdf.text(cd?.name || branding.centerName, 30, H - 25);
+    pdf.text(`CIF: ${cd?.cif || ''}`, 30, H - 21);
+    pdf.text(`${cd?.address || ''}, ${cd?.city || ''}`, 30, H - 17);
+    pdf.text(`${cd?.contact_phone || ''} | ${cd?.contact_email || ''}`, 30, H - 13);
 
-    // Footer registry
+    // Footer
     pdf.setFontSize(7);
     pdf.setTextColor(120, 120, 120);
-    const regText = "Inscrita en el Registro Mercantil de Toledo, al Tomo 334, Folio 196, Sección General del Libro de Sociedades, Hoja número TO-2073, inscripción 1ª.";
-    pdf.text(regText, W / 2, H - 6, { align: "center" });
+    pdf.text(`${cd?.name || branding.centerName} - Documento oficial`, W / 2, H - 6, { align: "center" });
 
     // QR Code (bottom right, discrete)
     try {
