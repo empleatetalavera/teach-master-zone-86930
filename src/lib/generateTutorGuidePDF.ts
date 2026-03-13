@@ -118,7 +118,7 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
   const contentWidth = pageWidth - margin * 2;
   let y = margin;
 
-  // Grupo Arma blue branding colors - hsl(227, 73%, 57%) and hsl(227, 73%, 47%)
+  // Default branding colors
   const primaryColor: [number, number, number] = params.primaryColor || [65, 100, 225];
   const secondaryColor: [number, number, number] = params.secondaryColor || [32, 70, 207];
   const darkColor: [number, number, number] = [33, 37, 41];
