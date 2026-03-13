@@ -11,7 +11,26 @@ const NS_IMPL = 'http://impl.ws.application.proveedorcentro.meyss.spee.es'
 const NS_SALIDA = 'http://salida.bean.domain.common.proveedorcentro.meyss.spee.es'
 const NS_ENTSAL = 'http://entsal.bean.domain.common.proveedorcentro.meyss.spee.es'
 
-const VALID_PASSWORD = '123456'
+const DEFAULT_VALID_PASSWORD = '123456'
+
+async function resolveCenterTrackingPassword(supabase: any, centerId?: string): Promise<string> {
+  if (!centerId) return DEFAULT_VALID_PASSWORD
+
+  const { data, error } = await supabase
+    .from('sionline_settings')
+    .select('credenciales_seguimiento, enabled')
+    .eq('training_center_id', centerId)
+    .eq('enabled', true)
+    .maybeSingle()
+
+  if (error) {
+    console.warn('Could not resolve center tracking credentials, using default password')
+    return DEFAULT_VALID_PASSWORD
+  }
+
+  const credential = data?.credenciales_seguimiento?.trim()
+  return credential || DEFAULT_VALID_PASSWORD
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
