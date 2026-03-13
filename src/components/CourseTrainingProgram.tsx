@@ -931,6 +931,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
               centerProvince: datosDelCentro.provincia,
               centerPostalCode: datosDelCentro.codigoPostal,
               centerCif: centerContact?.cif,
+              platformUrl: centerContact?.campus_url,
             })}
             className="gap-2"
             size="lg"
