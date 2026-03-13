@@ -11,7 +11,26 @@ const NS_IMPL = 'http://impl.ws.application.proveedorcentro.meyss.spee.es'
 const NS_SALIDA = 'http://salida.bean.domain.common.proveedorcentro.meyss.spee.es'
 const NS_ENTSAL = 'http://entsal.bean.domain.common.proveedorcentro.meyss.spee.es'
 
-const VALID_PASSWORD = '123456'
+const DEFAULT_VALID_PASSWORD = '123456'
+
+async function resolveCenterTrackingPassword(supabase: any, centerId?: string): Promise<string> {
+  if (!centerId) return DEFAULT_VALID_PASSWORD
+
+  const { data, error } = await supabase
+    .from('sionline_settings')
+    .select('credenciales_seguimiento, enabled')
+    .eq('training_center_id', centerId)
+    .eq('enabled', true)
+    .maybeSingle()
+
+  if (error) {
+    console.warn('Could not resolve center tracking credentials, using default password')
+    return DEFAULT_VALID_PASSWORD
+  }
+
+  const credential = data?.credenciales_seguimiento?.trim()
+  return credential || DEFAULT_VALID_PASSWORD
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -59,18 +78,20 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const expectedPassword = await resolveCenterTrackingPassword(supabase, center?.id)
+
     const body = await req.text()
     console.log('SOAP Body (1000):', body.substring(0, 1000))
 
     const creds = extractCredentials(body)
-    console.log('Creds:', creds?.username, '/', creds?.password)
+    console.log('Creds username:', creds?.username || 'N/A', '| password length:', creds?.password?.length || 0)
 
     const operation = detectOperation(body)
     console.log('Op:', operation)
 
     // PASSWORD VALIDATION
-    if (creds && creds.password !== VALID_PASSWORD) {
-      console.log('REJECTING wrong password:', creds.password)
+    if (creds && creds.password !== expectedPassword) {
+      console.log('REJECTING wrong password for CIF:', cif)
       const errorResponse = soapEnvelope(getPasswordErrorResponse(operation, creds.password))
       return new Response(errorResponse, {
         headers: { ...corsHeaders, 'Content-Type': 'text/xml; charset=utf-8' }
