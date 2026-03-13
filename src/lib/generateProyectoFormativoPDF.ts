@@ -789,7 +789,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   // f) Instrumentos de seguimiento
   checkPageBreak(15);
   subHeader("f) INSTRUMENTOS PARA EL SEGUIMIENTO DEL ALUMNADO");
-  paragraph("Siguiendo la normativa para el desarrollo del seguimiento, la plataforma de teleformación debe posibilitar la emisión de una serie de informes de seguimiento. La plataforma dispone de estos informes a los que se puede acceder a través de Menú/Administración/Informes. Al acceder a esta área se muestra la equivalencia entre los informes requeridos en la Orden ESS/1897/2013 y la denominación de estos informes en el Campus Grupo Arma Formación.");
+  paragraph(`Siguiendo la normativa para el desarrollo del seguimiento, la plataforma de teleformación debe posibilitar la emisión de una serie de informes de seguimiento. La plataforma dispone de estos informes a los que se puede acceder a través de Menú/Administración/Informes. Al acceder a esta área se muestra la equivalencia entre los informes requeridos en la Orden ESS/1897/2013 y la denominación de estos informes en el Campus ${params.centerName}.`);
 
   // Perfil de tutores
   checkPageBreak(30);
