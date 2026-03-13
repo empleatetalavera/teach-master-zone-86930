@@ -45,7 +45,7 @@ const faqs = [
   },
   {
     question: "¿Qué hago si tengo problemas técnicos?",
-    answer: "Contacta con el Centro de Atención al Usuario (CAU) llamando al teléfono de soporte o enviando un correo electrónico. El horario de atención es de 09:00 a 15:00 horas de lunes a viernes."
+    answer: "Contacta con el Centro de Atención al Usuario (CAU) llamando al teléfono de soporte o enviando un correo electrónico. El horario de atención es de 09:00 a 14:00 horas de lunes a viernes."
   },
   {
     question: "¿Cómo se registra mi tiempo de estudio?",
