@@ -105,6 +105,18 @@ const StudentCertificates = () => {
       const enrolls = (enrollmentData || []) as any[];
       setEnrollments(enrolls.map((e: any) => ({ ...e, enrollment_id: e.id })));
 
+      // Load center data for each unique training_center_id
+      const centerIds = [...new Set(enrolls.map((e: any) => e.courses?.training_center_id).filter(Boolean))] as string[];
+      if (centerIds.length > 0) {
+        const { data: centers } = await supabase
+          .from('training_centers')
+          .select('id, name, cif, address, city, contact_email, contact_phone, logo_url, representative_name, representative_position')
+          .in('id', centerIds);
+        const cMap: Record<string, any> = {};
+        (centers || []).forEach((c: any) => { cMap[c.id] = c; });
+        setCenterDataMap(cMap);
+      }
+
       // Check completion status for each enrollment
       const statusMap: Record<string, CompletionStatus> = {};
       for (const enrollment of enrolls) {
