@@ -1106,7 +1106,7 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
               </div>
               <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4" />
-                <span>Contacto: <strong>665 673 416</strong> (L-V 09:00-15:00) | formacion.empleate@gmail.com</span>
+                <span>Contacto: <strong>665 673 416</strong> (L-V 09:00-14:00) | formacion.empleate@gmail.com</span>
               </div>
             </div>
 
@@ -1238,7 +1238,7 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-primary" />
-                    <span>L-V: 09:00 - 15:00h</span>
+                    <span>L-V: 09:00 - 14:00h</span>
                   </div>
                 </div>
               </div>
@@ -1277,7 +1277,7 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />
-                  <span>Horario de atención: L-V 09:00-15:00</span>
+                  <span>Horario de atención: L-V 09:00-14:00</span>
                 </div>
               </div>
             </div>

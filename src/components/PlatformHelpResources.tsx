@@ -45,7 +45,7 @@ const faqs = [
   },
   {
     question: "¿Qué hago si tengo problemas técnicos?",
-    answer: "Contacta con el Centro de Atención al Usuario (CAU) llamando al teléfono de soporte o enviando un correo electrónico. El horario de atención es de 09:00 a 15:00 horas de lunes a viernes."
+    answer: "Contacta con el Centro de Atención al Usuario (CAU) llamando al teléfono de soporte o enviando un correo electrónico. El horario de atención es de 09:00 a 14:00 horas de lunes a viernes."
   },
   {
     question: "¿Cómo se registra mi tiempo de estudio?",
@@ -211,7 +211,7 @@ export const PlatformHelpResources: React.FC<PlatformHelpResourcesProps> = ({ ce
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>Lunes a Viernes: 09:00 - 15:00</span>
+                <span>Lunes a Viernes: 09:00 - 14:00</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4" />
