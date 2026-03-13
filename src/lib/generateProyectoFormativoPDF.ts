@@ -828,7 +828,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   doc.setFont("helvetica", "bold"); doc.setFontSize(8);
   doc.text("Recursos tecnológicos generales:", margin + 5, currentY); currentY += 5;
   bulletList([
-    "Plataforma de teleformación: Campus Grupo Arma Formación - Plataforma LMS.",
+    `Plataforma de teleformación: Campus ${params.centerName} - Plataforma LMS.`,
     "Herramientas de comunicación síncrona: Chat, Videoconferencia, Mensajería instantánea.",
     "Herramientas de comunicación asíncrona: Foros de debate, Correo electrónico interno, Tablón de anuncios.",
     "Herramientas de seguimiento y evaluación: Tests autoevaluables, Actividades evaluables, Informes de seguimiento, Registro de actividad.",
