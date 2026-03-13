@@ -60,6 +60,7 @@ interface CourseTrainingProgramProps {
     province?: string;
     postal_code?: string;
     cif?: string;
+    campus_url?: string;
   } | null;
   isEditable?: boolean;
 }
