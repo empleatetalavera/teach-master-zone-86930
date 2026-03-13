@@ -484,10 +484,10 @@ export function CourseCertificateDownload({
     pdf.setFontSize(6);
     pdf.setTextColor(30, 30, 30);
     pdf.setFont("helvetica", "bold");
-    pdf.text("Fdo: M.ª del Coral Gómez Corrochano", sigX + sigW / 2, sigY + 13, { align: "center" });
+    pdf.text(`Fdo: ${centerData?.representative_name || 'Responsable del Centro'}`, sigX + sigW / 2, sigY + 13, { align: "center" });
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(5.5);
-    pdf.text("Directora - Grupo Arma Formación S.L.", sigX + sigW / 2, sigY + 17, { align: "center" });
+    pdf.text(`${centerData?.representative_position || 'Director/a'} - ${centerData?.name || branding.centerName}`, sigX + sigW / 2, sigY + 17, { align: "center" });
     
     // Timestamp
     pdf.setFontSize(5);
