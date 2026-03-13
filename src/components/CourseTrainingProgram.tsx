@@ -60,6 +60,7 @@ interface CourseTrainingProgramProps {
     province?: string;
     postal_code?: string;
     cif?: string;
+    campus_url?: string;
   } | null;
   isEditable?: boolean;
 }
@@ -248,6 +249,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         centerProvince: datosDelCentro.provincia,
         centerPostalCode: datosDelCentro.codigoPostal,
         centerCif: datosDelCentro.cif,
+        platformUrl: centerContact?.campus_url,
       });
     } catch (error) {
       console.error('Error generating training program PDF:', error);
@@ -930,6 +932,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
               centerProvince: datosDelCentro.provincia,
               centerPostalCode: datosDelCentro.codigoPostal,
               centerCif: centerContact?.cif,
+              platformUrl: centerContact?.campus_url,
             })}
             className="gap-2"
             size="lg"

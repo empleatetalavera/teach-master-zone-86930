@@ -263,6 +263,7 @@ export default function CourseView() {
     province?: string;
     postal_code?: string;
     cif?: string;
+    campus_url?: string;
   }>({
     name: "",
     email: "", 
@@ -439,7 +440,7 @@ export default function CourseView() {
       if (centerIdToUse) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name, email, phone, whatsapp_phone, address, city, province, postal_code, cif, logo_url")
+          .select("slug, name, email, phone, whatsapp_phone, address, city, province, postal_code, cif, logo_url, campus_url, contact_email, contact_phone")
           .eq("id", centerIdToUse)
           .single();
         
@@ -452,14 +453,15 @@ export default function CourseView() {
         // Set center contact info for CAU and WorkPlan - use USER's center data
         setCenterContact({
           name: centerData?.name || "",
-          email: centerData?.email || "",
-          phone: centerData?.phone || "",
+          email: (centerData as any)?.contact_email || centerData?.email || "",
+          phone: (centerData as any)?.contact_phone || centerData?.phone || "",
           whatsapp_phone: (centerData as any)?.whatsapp_phone || "",
           address: centerData?.address || "",
           city: centerData?.city || "",
           province: centerData?.province || "",
           postal_code: centerData?.postal_code || "",
-          cif: centerData?.cif || ""
+          cif: centerData?.cif || "",
+          campus_url: (centerData as any)?.campus_url || ""
         });
       }
 
