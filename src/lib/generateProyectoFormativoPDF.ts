@@ -535,7 +535,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     currentY += 2;
   };
 
-  const platformUrl = params.platformUrl || "https://campus.grupoarmaformacion.com";
+  const platformUrl = params.platformUrl || `https://campus.${params.centerName.toLowerCase().replace(/\s+/g, '')}.com`;
   const fullAddress = `${params.centerAddress || ""}, ${params.centerPostalCode || ""} ${params.centerCity || ""} (${params.centerProvince || ""})`;
 
   // ===== PAGE 1: COVER =====
