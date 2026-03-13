@@ -249,6 +249,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         centerProvince: datosDelCentro.provincia,
         centerPostalCode: datosDelCentro.codigoPostal,
         centerCif: datosDelCentro.cif,
+        platformUrl: centerContact?.campus_url,
       });
     } catch (error) {
       console.error('Error generating training program PDF:', error);
