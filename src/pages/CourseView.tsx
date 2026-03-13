@@ -453,14 +453,15 @@ export default function CourseView() {
         // Set center contact info for CAU and WorkPlan - use USER's center data
         setCenterContact({
           name: centerData?.name || "",
-          email: centerData?.email || "",
-          phone: centerData?.phone || "",
+          email: (centerData as any)?.contact_email || centerData?.email || "",
+          phone: (centerData as any)?.contact_phone || centerData?.phone || "",
           whatsapp_phone: (centerData as any)?.whatsapp_phone || "",
           address: centerData?.address || "",
           city: centerData?.city || "",
           province: centerData?.province || "",
           postal_code: centerData?.postal_code || "",
-          cif: centerData?.cif || ""
+          cif: centerData?.cif || "",
+          campus_url: (centerData as any)?.campus_url || ""
         });
       }
 
