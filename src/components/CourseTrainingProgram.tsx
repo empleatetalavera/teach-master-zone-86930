@@ -394,20 +394,25 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
 
           <div className="border rounded-lg p-4">
             <h3 className="font-semibold text-primary mb-2">4.2 Objetivos Específicos</h3>
-            <ul className="space-y-2">
-              <li className="flex items-start gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Realizar e integrar operaciones de apoyo administrativo básico</span>
-              </li>
-              <li className="flex items-start gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Transmitir y recibir información operativa en gestiones rutinarias con agentes externos</span>
-              </li>
-              <li className="flex items-start gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Realizar operaciones auxiliares de reproducción y archivo en soporte convencional o informático</span>
-              </li>
-            </ul>
+            {course.specific_objectives && course.specific_objectives.length > 0 ? (
+              <ul className="space-y-2">
+                {course.specific_objectives.map((obj, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>{String(obj)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="space-y-2">
+                {modules.map((mod, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>Adquirir las competencias del módulo: {mod.title}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </section>
