@@ -432,7 +432,7 @@ export function CourseCertificateDownload({
     pdf.setTextColor(40, 40, 40);
     const issueDate = format(new Date(cert.issue_date), "dd 'de' MMMM 'de' yyyy", { locale: es });
     const p1 = `\u201C`;
-    const p2 = "Talavera de la Reina";
+    const p2 = centerData?.city || "Talavera de la Reina";
     const p3 = `\u201D, \u201C`;
     const p4 = issueDate;
     const p5 = `\u201D`;
