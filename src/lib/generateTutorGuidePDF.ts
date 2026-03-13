@@ -108,7 +108,7 @@ interface TutorGuidePDFParams {
 }
 
 export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) => {
-  const centerName = params.centerName || "Grupo Arma Formación";
+  const centerName = params.centerName || "Centro de Formación";
   const courseTitle = params.courseTitle || "Habilitación para la docencia en grados A, B y C del Sistema de Formación Profesional";
 
   const doc = new jsPDF("p", "mm", "a4");
