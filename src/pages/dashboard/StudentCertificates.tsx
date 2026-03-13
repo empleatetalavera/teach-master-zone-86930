@@ -338,8 +338,9 @@ const StudentCertificates = () => {
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, W, H, "F");
 
-    // Top-left logo (Grupo Arma / center logo)
-    const logoData = await loadImageAsDataUrl(branding.centerLogo);
+    // Top-left logo (center logo)
+    const logoSrc = cd?.logo_url || branding.centerLogo;
+    const logoData = await loadImageAsDataUrl(logoSrc);
     if (logoData) pdf.addImage(logoData, "PNG", 18, 15, 50, 25);
 
     // Top-right CFC/SNS logo (only for CFC courses)
