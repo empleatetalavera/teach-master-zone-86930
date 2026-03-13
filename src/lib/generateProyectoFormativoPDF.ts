@@ -1091,7 +1091,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
         { content: `${ra.ra}: ${ra.title}`, styles: { fontStyle: "bold", fontSize: 7 } },
         { content: cesText },
         { content: getMethodologyText(modCurr.code) },
-        { content: "Campus Grupo Arma Formación\n\nAula virtual síncrona (videoconferencia)\n\nPlataforma LMS con acceso 24h" },
+        { content: `Campus ${params.centerName}\n\nAula virtual sincrona (videoconferencia)\n\nPlataforma LMS con acceso 24h` },
         { content: modCurr.code === "1782" ? "X" : "", styles: { halign: "center" as const } }
       ]);
     });
