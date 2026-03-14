@@ -1452,7 +1452,7 @@ export const generateStudentGuidePDF = async (
   yPos += 5;
   
   const centerData: string[][] = [
-    [branding.centerName],
+    ['Centro de Formación Acreditado'],
   ];
   if (centerCIF) centerData.push([`CIF: ${centerCIF}`]);
   if (centerSepeReg) centerData.push([`Nº Registro SEPE: ${centerSepeReg}`]);

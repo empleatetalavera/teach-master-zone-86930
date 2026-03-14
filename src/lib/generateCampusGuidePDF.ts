@@ -967,6 +967,6 @@ export const generateCampusGuidePDF = async (
   doc.text('© 2026 - Todos los derechos reservados', pageWidth / 2, yPos + 8, { align: 'center' });
 
   // Guardar el PDF
-  const fileName = `Guia_Campus_Virtual_${branding.centerName?.replace(/\s+/g, '_') || 'Campus'}.pdf`;
+  const fileName = `Guia_Campus_Virtual.pdf`;
   doc.save(fileName);
 };

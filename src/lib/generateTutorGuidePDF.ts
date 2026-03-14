@@ -137,7 +137,7 @@ export const generateTutorGuidePDF = async (params: TutorGuidePDFParams = {}) =>
     d.setPage(pageNum);
     d.setFontSize(8);
     d.setTextColor(...grayColor);
-    d.text(`${centerName} — Guía del Tutor-Formador`, margin, pageHeight - 10);
+    d.text(`Centro Acreditado SEPE — Guía del Tutor-Formador`, margin, pageHeight - 10);
     d.text(`Página ${pageNum - 1}`, pageWidth - margin, pageHeight - 10, { align: "right" });
     // Blue line at bottom
     d.setDrawColor(...primaryColor);
