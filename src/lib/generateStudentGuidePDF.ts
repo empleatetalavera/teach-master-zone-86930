@@ -1490,20 +1490,7 @@ export const generateStudentGuidePDF = async (
   yPos += 5;
   addParagraph('Consulta MI AGENDA en el Campus Virtual para ver el calendario actualizado de todas las actividades programadas.');
 
-  // Footer con números de página
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(...BLACK);
-    doc.text(String(i), pageWidth / 2, pageHeight - 15, { align: 'center' });
-    
-    doc.setFontSize(8);
-    doc.setTextColor(...GRAY);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`${branding.centerName} - Centro Acreditado SEPE`, pageWidth / 2, pageHeight - 8, { align: 'center' });
-  }
+  // Sin pie de página en la guía (requisito de versión general)
 
   // Guardar PDF
   doc.save(`Guia_Alumno_${courseTitle.replace(/\s+/g, '_')}.pdf`);
