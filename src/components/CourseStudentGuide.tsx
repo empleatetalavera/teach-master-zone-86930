@@ -5,8 +5,7 @@ import {
   Download, Video, Headphones, Building2, Briefcase, Globe, ListChecks,
   UserCheck, ClipboardList, Lightbulb, Folder, Timer, FileDown
 } from "lucide-react";
-import { useCenterBranding } from "@/hooks/useCenterBranding";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { generateStudentGuidePDF } from "@/lib/generateStudentGuidePDF";
@@ -31,8 +30,7 @@ interface CourseStudentGuideProps {
   centerSlug?: string | null;
 }
 
-export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuideProps) {
-  const { branding } = useCenterBranding(centerSlug);
+export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     presentacion: true,
     aspectos: false,
@@ -111,58 +109,19 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
         }
       }
 
-      let contactEmail = '';
-      let contactPhone = '';
-      let centerAddress = '';
-      let centerCIF = '';
-      let centerSepeReg = '';
-      let resolvedCenterName = branding.centerName;
-
-      // PRIORIDAD: slug del centro activo (aislamiento multi-tenant) > centro del curso
-      if (centerSlug) {
-        const { data: centerBySlug } = await supabase
-          .from('training_centers')
-          .select('name, contact_email, contact_phone, address, cif, sepe_registry_number')
-          .eq('slug', centerSlug)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (centerBySlug) {
-          resolvedCenterName = centerBySlug.name || resolvedCenterName;
-          contactEmail = centerBySlug.contact_email || '';
-          contactPhone = centerBySlug.contact_phone || '';
-          centerAddress = centerBySlug.address || '';
-          centerCIF = centerBySlug.cif || '';
-          centerSepeReg = centerBySlug.sepe_registry_number || '';
-        }
-      } else if (course.training_center_id) {
-        const { data: centerById } = await supabase
-          .from('training_centers')
-          .select('name, contact_email, contact_phone, address, cif, sepe_registry_number')
-          .eq('id', course.training_center_id)
-          .maybeSingle();
-
-        if (centerById) {
-          resolvedCenterName = centerById.name || resolvedCenterName;
-          contactEmail = centerById.contact_email || '';
-          contactPhone = centerById.contact_phone || '';
-          centerAddress = centerById.address || '';
-          centerCIF = centerById.cif || '';
-          centerSepeReg = centerById.sepe_registry_number || '';
-        }
-      }
+      const contactEmail = course.support_email || 'formacion.empleate@gmail.com';
+      const contactPhone = course.support_phone || '665 673 416';
+      const genericCenterName = 'Centro de Formación Acreditado';
 
       await generateStudentGuidePDF(
         course.title,
         {
-          centerName: resolvedCenterName,
-          centerLogo: branding.centerLogo,
-          primaryColor: branding.primaryColor,
-          contactEmail: contactEmail || course.support_email || '',
-          contactPhone: contactPhone || course.support_phone || '',
-          address: centerAddress,
-          cif: centerCIF,
-          sepeRegistryNumber: centerSepeReg,
+          centerName: genericCenterName,
+          contactEmail,
+          contactPhone,
+          address: '',
+          cif: '',
+          sepeRegistryNumber: '',
         },
         {
           title: course.title,
@@ -172,8 +131,8 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
           durationHours: course.duration_hours,
           objectives: course.objectives,
           modules: modulesData,
-          supportEmail: contactEmail || course.support_email,
-          supportPhone: contactPhone || course.support_phone,
+          supportEmail: contactEmail,
+          supportPhone: contactPhone,
         }
       );
     } catch (error) {
@@ -192,8 +151,8 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
         <p className="text-lg text-muted-foreground font-medium">
           {course.title}
         </p>
-        <p className="text-sm mt-2" style={{ color: branding.secondaryColor }}>
-          {branding.centerName}
+        <p className="text-sm mt-2 text-muted-foreground">
+          Guía general para certificados de profesionalidad
         </p>
         {course.duration_hours && (
           <div className="mt-3 inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full">
@@ -1245,7 +1204,7 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
             </p>
 
             <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-5">
-              <h4 className="font-semibold mb-3">{branding.centerName}</h4>
+              <h4 className="font-semibold mb-3">Centro de Atención al Alumno</h4>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-primary" />
@@ -1268,15 +1227,12 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
       {/* Footer */}
       <div className="text-center pt-6 border-t bg-gradient-to-br from-gray-50 to-transparent p-6 rounded-xl">
         <div className="flex justify-center gap-4 mb-3">
-          {branding.centerLogo && (
-            <img src={branding.centerLogo} alt={branding.centerName} className="h-10 object-contain opacity-70" />
-          )}
           <img src="/branding/sepe-logo.png" alt="SEPE" className="h-8 object-contain opacity-70" />
         </div>
         <p className="text-sm text-muted-foreground">Documento conforme a los requisitos del</p>
         <p className="font-semibold text-primary">Servicio Público de Empleo Estatal (SEPE)</p>
         <p className="text-xs text-muted-foreground mt-2">
-          Versión 1.0 - {new Date().getFullYear()} | {branding.centerName}
+          Versión 1.0 - {new Date().getFullYear()} | Documento general
         </p>
       </div>
     </div>
