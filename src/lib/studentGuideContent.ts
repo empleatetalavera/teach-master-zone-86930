@@ -1,9 +1,11 @@
-// Contenido completo de la Guía del Alumno - Adaptado al Campus TalentCloudSolution
-// Mapeado de recursos del campus a la nomenclatura SEPE
+// Contenido genérico de la Guía del Alumno - Adaptado al Campus TalentCloudSolution
+// Neutralizado para soportar marca blanca: todos los datos específicos de centro/certificado
+// se inyectan dinámicamente desde generateStudentGuidePDF.ts usando courseData y branding.
+// Este archivo actúa como referencia de estructura, pero NO se importa en el generador PDF.
+
 export const studentGuideContent = {
   title: "GUÍA DEL ALUMNO",
-  subtitle: "Certificado de Profesionalidad de Operaciones Auxiliares de Servicios Administrativos y Generales",
-  code: "ADGG0408",
+  subtitle: "Certificado de Profesionalidad",
   
   // Mapeo de recursos del campus a terminología SEPE
   campusResourceMapping: {
@@ -121,80 +123,22 @@ Se trata de un trabajo en equipo, entre todos los que formamos parte de nuestro 
     {
       number: "2",
       title: "ASPECTOS GENERALES DEL CERTIFICADO DE PROFESIONALIDAD",
+      note: "Los datos de identificación, itinerario, objetivos y salidas laborales se generan dinámicamente desde los metadatos del curso (courseData).",
       subsections: [
         {
           number: "2.1",
           title: "IDENTIFICACIÓN",
-          content: `Este curso se corresponde con el certificado de profesionalidad:
-
-• DENOMINACIÓN: Operaciones auxiliares de servicios administrativos y generales (RD 645/2011 de 9 de mayo)
-• CÓDIGO: ADGG0408
-• FAMILIA PROFESIONAL: Administración y gestión
-• NIVEL DE CUALIFICACIÓN PROFESIONAL: 1
-
-CUALIFICACIÓN PROFESIONAL DE REFERENCIA:
-ADG305_1 Operaciones auxiliares de servicios administrativos y generales (RD 107/2008, de 1 de febrero).`
+          content: `Los datos de identificación del certificado (denominación, código, familia profesional y nivel de cualificación) se obtienen automáticamente de la ficha del curso.`
         },
         {
           number: "2.2",
           title: "ITINERARIO FORMATIVO",
-          content: `Se compone de los siguientes módulos y unidades formativas:
-
-MF0969_1 Técnicas administrativas básicas de oficina (150 horas)
-  • UF0517: Organización empresarial y de recursos humanos (30 horas)
-  • UF0518: Gestión auxiliar de la correspondencia y paquetería en la empresa (30 horas)
-  • UF0519: Gestión auxiliar de documentación económico-administrativa y comercial (90 horas)
-
-MF0970_1 Operaciones básicas de comunicación (120 horas)
-  • UF0520: Comunicación en las relaciones profesionales (50 horas)
-  • UF0521: Comunicación oral y escrita en la empresa (70 horas)
-
-MF0971_1 Reproducción y archivo (120 horas)
-  • UF0513: Gestión auxiliar de archivo en soporte convencional o informático (60 horas)
-  • UF0514: Gestión auxiliar de reproducción en soporte convencional o informático (60 horas)
-
-Además del módulo de prácticas:
-  • MP0112: Módulo de prácticas profesionales no laborales (40 horas)`
+          content: `La estructura de módulos y unidades formativas se genera automáticamente a partir de los módulos configurados en el curso.`
         },
         {
           number: "2.3",
           title: "OBJETIVOS GENERALES",
-          content: `Con este curso aprenderás a distribuir, reproducir y transmitir la información y documentación requeridas en las tareas administrativas y de gestión, internas y externas, así como realizar trámites elementales de verificación de datos y documentos a requerimiento de técnicos de nivel superior con eficacia, de acuerdo con instrucciones o procedimientos establecidos.
-
-A continuación podrás ver las capacidades que desarrollarás en cada módulo formativo/unidad formativa:
-
-UF0517: Organización empresarial y de recursos humanos
-• Representar las funciones básicas y los flujos de información fundamentales en estructuras organizativas públicas o privadas determinadas, a través de organigramas.
-• Identificar los criterios de actuación profesional que permiten la integración y cooperación de las actividades de apoyo administrativo en un grupo de trabajo o departamento.
-
-UF0518: Gestión auxiliar de la correspondencia y paquetería en la empresa
-• Aplicar técnicas básicas de recepción, clasificación y distribución de paquetería y de correo convencional y telemático.
-
-UF0519: Gestión auxiliar de documentación económico-administrativa y comercial
-• Aplicar las técnicas de registro y clasificación de la documentación administrativa básica.
-• Operar con medios de pago básicos, identificando los requisitos fundamentales de los justificantes de las operaciones.
-• Aplicar procedimientos de control de existencias de documentación, material y equipos de oficina.
-
-UF0520: Comunicación en las relaciones profesionales
-• Aplicar técnicas de comunicación efectiva, en situaciones de relaciones profesionales.
-• Aplicar pautas de comportamiento asertivo en procesos de comunicación en grupos de trabajo.
-• Aplicar pautas básicas de actuación para el tratamiento de situaciones de conflicto.
-
-UF0521: Comunicación oral y escrita en la empresa
-• Aplicar técnicas de comunicación escrita en la confección y cumplimentado de avisos, rótulos u otros documentos.
-• Utilizar técnicas básicas de comunicación presencial, transmitiendo información operativa.
-• Utilizar técnicas básicas de comunicación telefónica y telemática.
-
-UF0513: Gestión auxiliar de archivo en soporte convencional o informático
-• Utilizar las funciones básicas de los sistemas operativos habituales en la gestión y búsqueda de carpetas y archivos.
-• Aplicar técnicas de archivo y clasificación básicas y habituales.
-• Utilizar las técnicas básicas de acceso, entrega, transferencia y eliminación de documentos y archivos.
-• Utilizar las funciones básicas de bases de datos necesarias.
-
-UF0514: Gestión auxiliar de reproducción en soporte convencional o informático
-• Comprobar el funcionamiento básico de los equipos de reproducción, informáticos y de encuadernación funcional.
-• Utilizar útiles de reprografía, obteniendo copias en formato documental y/o digital.
-• Utilizar materiales y útiles de encuadernación funcional con precisión.`
+          content: `Los objetivos generales y específicos se obtienen de los metadatos del curso y de cada módulo/unidad formativa.`
         },
         {
           number: "2.4",
@@ -210,44 +154,25 @@ Este módulo es necesario para poder solicitar y recibir el certificado de profe
         {
           number: "2.5",
           title: "REQUISITOS DE ACCESO Y PRUEBA DE COMPETENCIA DIGITAL",
-          content: `Este curso está dirigido a todas aquellas personas que deseen desarrollar su actividad profesional en cualquier empresa o entidad del sector privado o público, principalmente en oficinas, despachos o departamentos de administración o servicios generales.
+          content: `Este curso está dirigido a todas aquellas personas que deseen desarrollar su actividad profesional en el ámbito correspondiente al certificado de profesionalidad.
 
-Para acceder a este curso, correspondiente a un certificado de profesionalidad de nivel 1, deberás cumplir alguno de los siguientes requisitos:
-
-CRITERIOS DE ACCESO: Poseer las competencias claves en materia lingüística, matemática y/o social que se determine en cada módulo del certificado de profesionalidad.
+Para acceder a este curso deberás cumplir los requisitos de acceso establecidos en la normativa reguladora del certificado de profesionalidad correspondiente.
 
 Nota: para poder desarrollar el certificado de profesionalidad en modalidad teleformación has debido superar la prueba de competencia tecnológica que se habrá realizado antes del inicio de la acción formativa.
 
 En esta prueba has debido de poner de manifiesto tu conocimiento sobre una serie de actividades básicas relativas a:
-• Descarga y envío de archivos.
-• Manejo del correo electrónico.
-• Participación en las herramientas de comunicación Campus.
+- Descarga y envío de archivos.
+- Manejo del correo electrónico.
+- Participación en las herramientas de comunicación Campus.
 
 De esta forma nos aseguramos que reúnes las competencias digitales requeridas para seguir con aprovechamiento la formación a través Campus Virtual.`
         },
         {
           number: "2.6",
           title: "SALIDAS LABORALES",
-          content: `Con este certificado de profesionalidad podrás acceder a los siguientes sectores y ocupaciones:
+          content: `Las salidas laborales asociadas a este certificado de profesionalidad se corresponden con las ocupaciones y puestos de trabajo recogidos en el Real Decreto que lo regula.
 
-Ámbito profesional:
-Este profesional desarrolla su actividad por cuenta ajena, en cualquier empresa o entidad del sector privado o público, principalmente en oficinas, despachos o departamentos de administración o servicios generales.
-
-Sectores productivos:
-Está presente en todos los sectores productivos, así como en la Administración Pública, destacando por su alto grado de transectorialidad.
-
-Ocupaciones o puestos de trabajo relacionados:
-• 4423.1013 Operadores/as de central telefónica.
-• 4424.1016 Teleoperadores/as.
-• 4412.1057 Recepcionistas-telefonistas en oficinas, en general.
-• 4446.1010 Empleados/as de ventanilla de correos.
-• 4221.1011 Clasificadores/as-repartidores/as de correspondencia.
-• 9431.1020 Ordenanzas.
-• 5500.1036 Taquilleros/as.
-• Auxiliar de servicios generales.
-• Auxiliar de oficina.
-• Auxiliar de archivo.
-• Auxiliar de información.`
+Tu tutor-formador te orientará sobre las principales salidas profesionales y los sectores productivos donde podrás desarrollar tu actividad.`
         }
       ]
     },
@@ -256,8 +181,8 @@ Ocupaciones o puestos de trabajo relacionados:
       title: "EL CAMPUS VIRTUAL Y LAS APLICACIONES INFORMÁTICAS NECESARIAS PARA LA FORMACIÓN",
       intro: `CONOCE EL CAMPUS VIRTUAL ANTES DE INICIAR TU CURSO…
 
-• Diez días antes de la fecha de inicio de tu curso te serán enviadas tus claves de acceso al Campus Virtual (usuario y contraseña) a través del correo electrónico que indicaste en la inscripción al curso.
-• Desde la fecha de recepción de tus contraseñas para acceder al Campus Virtual hasta el día antes de la fecha de inicio del curso deberás acceder al Campus para verificar que tus claves son correctas.`,
+- Diez días antes de la fecha de inicio de tu curso te serán enviadas tus claves de acceso al Campus Virtual (usuario y contraseña) a través del correo electrónico que indicaste en la inscripción al curso.
+- Desde la fecha de recepción de tus contraseñas para acceder al Campus Virtual hasta el día antes de la fecha de inicio del curso deberás acceder al Campus para verificar que tus claves son correctas.`,
       subsections: [
         {
           number: "3.1",
@@ -269,9 +194,9 @@ REQUISITOS TÉCNICOS DEL SISTEMA:
 CONEXIÓN A INTERNET: Se recomienda un ancho de banda mínimo de 1 Mbps.
 
 NAVEGADORES Y VERSIONES:
-• Google Chrome (recomendado), versión actualizada
-• Mozilla Firefox, versión actualizada
-• Microsoft Edge, versión actualizada
+- Google Chrome (recomendado), versión actualizada
+- Mozilla Firefox, versión actualizada
+- Microsoft Edge, versión actualizada
 
 RESOLUCIÓN MÍNIMA DE PANTALLA: Se aconseja una resolución mínima de pantalla de 1024 x 768 píxeles.
 
@@ -280,10 +205,10 @@ OFFICE: 2016 o superior / LibreOffice.
 ACROBAT READER: https://get.adobe.com/es/reader/
 
 Hardware mínimo:
-• Monitor (recomendado 17")
-• Teclado y ratón
-• Procesador Intel Core i3 o equivalente
-• Memoria (RAM) 4Gb
+- Monitor (recomendado 17")
+- Teclado y ratón
+- Procesador Intel Core i3 o equivalente
+- Memoria (RAM) 4Gb
 
 Se recomienda que el sistema siempre tenga instaladas todas las actualizaciones disponibles que provea el fabricante.`
         },
@@ -294,18 +219,18 @@ Se recomienda que el sistema siempre tenga instaladas todas las actualizaciones 
 
 La navegación principal del curso se estructura en el MENÚ LATERAL IZQUIERDO con las siguientes opciones:
 
-📋 INICIO - Bienvenida y objetivos del curso
-📚 GUÍA DEL ALUMNO - Este documento que estás leyendo
-📝 PROGRAMA FORMATIVO - Estructura y objetivos específicos
-📅 PLAN DE TRABAJO - Planificación didáctica y fechas
-📆 CRONOGRAMA - Línea temporal del curso
-📂 MÓDULOS - Contenido formativo organizado por unidades
-📊 CALIFICACIONES - Tu progreso y notas
-✅ EXÁMENES - Evaluaciones programadas
-👥 TUTORÍAS - Sesiones presenciales y virtuales
-📅 CALENDARIO - Agenda con todos los eventos
-💬 FORO - Debates y consultas
-⏱️ TIEMPOS INVERTIDOS - Registro de dedicación
+INICIO - Bienvenida y objetivos del curso
+GUÍA DEL ALUMNO - Este documento que estás leyendo
+PROGRAMA FORMATIVO - Estructura y objetivos específicos
+PLAN DE TRABAJO - Planificación didáctica y fechas
+CRONOGRAMA - Línea temporal del curso
+MÓDULOS - Contenido formativo organizado por unidades
+CALIFICACIONES - Tu progreso y notas
+EXÁMENES - Evaluaciones programadas
+TUTORÍAS - Sesiones presenciales y virtuales
+CALENDARIO - Agenda con todos los eventos
+FORO - Debates y consultas
+TIEMPOS INVERTIDOS - Registro de dedicación
 
 CÓMO ACCEDER A LOS CONTENIDOS:
 
@@ -313,17 +238,17 @@ CÓMO ACCEDER A LOS CONTENIDOS:
 2. Despliega el módulo formativo pulsando sobre él
 3. Dentro de cada módulo encontrarás las Unidades Formativas
 4. En cada Unidad Formativa dispones de:
-   • CONTENIDO INTERACTIVO (CIM) - El temario teórico con ejercicios
-   • VÍDEOS, AUDIOS Y DOCUMENTOS - Material complementario
-   • ACTIVIDADES - Casos prácticos y ejercicios evaluables
-   • TEST DE AUTOEVALUACIÓN - Pruebas de conocimiento
+   - CONTENIDO INTERACTIVO (CIM) - El temario teórico con ejercicios
+   - VÍDEOS, AUDIOS Y DOCUMENTOS - Material complementario
+   - ACTIVIDADES - Casos prácticos y ejercicios evaluables
+   - TEST DE AUTOEVALUACIÓN - Pruebas de conocimiento
 
 HERRAMIENTAS DE COMUNICACIÓN:
 
 Para contactar con tu tutor/a-formador/a dispones de:
-• Botón "CONTACTO" en la cabecera del curso → Mensajería interna
-• Botón "WHATSAPP DUDAS" → Chat directo con el centro
-• FORO del curso → Consultas públicas con otros alumnos`
+- Botón "CONTACTO" en la cabecera del curso - Mensajería interna
+- Botón "WHATSAPP DUDAS" - Chat directo con el centro
+- FORO del curso - Consultas públicas con otros alumnos`
         },
         {
           number: "3.3",
@@ -332,49 +257,43 @@ Para contactar con tu tutor/a-formador/a dispones de:
 
 ESTRUCTURA DEL VISOR INTERACTIVO:
 
-📑 ÍNDICE LATERAL IZQUIERDO
-• Muestra todos los puntos y subpuntos del temario
-• Un "tick verde" indica los apartados ya completados
-• Puedes navegar pulsando directamente sobre cualquier punto
+ÍNDICE LATERAL IZQUIERDO
+- Muestra todos los puntos y subpuntos del temario
+- Un "tick verde" indica los apartados ya completados
+- Puedes navegar pulsando directamente sobre cualquier punto
 
-📊 BARRA SUPERIOR
-• Glosario - Definiciones de términos clave
-• Descargas - PDFs del manual para imprimir
-• Ejercicios - Actividades prácticas integradas
-• Test - Cuestionarios de autoevaluación
+BARRA SUPERIOR
+- Glosario - Definiciones de términos clave
+- Descargas - PDFs del manual para imprimir
+- Ejercicios - Actividades prácticas integradas
+- Test - Cuestionarios de autoevaluación
 
-📖 ÁREA CENTRAL DE CONTENIDO
-• Texto teórico con explicaciones detalladas
-• Tablas y esquemas interactivos
-• Imágenes y gráficos explicativos
-• Vídeos y audios integrados
-• Ejercicios y tests con feedback inmediato
+ÁREA CENTRAL DE CONTENIDO
+- Texto teórico con explicaciones detalladas
+- Tablas y esquemas interactivos
+- Imágenes y gráficos explicativos
+- Vídeos y audios integrados
+- Ejercicios y tests con feedback inmediato
 
-🤖 ASISTENTE DE AYUDA
-• En la esquina inferior derecha encontrarás un asistente
-• Puedes consultarle dudas sobre el contenido
-• Te ayudará con la navegación por el temario
+ASISTENTE DE AYUDA
+- En la esquina inferior derecha encontrarás un asistente
+- Puedes consultarle dudas sobre el contenido
+- Te ayudará con la navegación por el temario
 
 RECURSOS COMPLEMENTARIOS DISPONIBLES:
 
 En el visor y en la sección de Descargas encontrarás:
-• 📄 Documentos de apoyo (PDFs del temario)
-• 🎥 Vídeos de apoyo y demostrativos
-• 🔊 Audios explicativos
-• 🔗 Enlaces a recursos externos`
+- Documentos de apoyo (PDFs del temario)
+- Vídeos de apoyo y demostrativos
+- Audios explicativos
+- Enlaces a recursos externos`
         },
         {
           number: "3.4",
           title: "APLICACIONES INFORMÁTICAS",
-          content: `Para este certificado de profesionalidad, vas a necesitar las siguientes aplicaciones informáticas:
+          content: `Las aplicaciones informáticas necesarias para este certificado de profesionalidad dependerán de los módulos y unidades formativas que lo componen.
 
-• UF0517: Organización empresarial y de recursos humanos - No se requiere software adicional.
-• UF0518: Gestión auxiliar de la correspondencia - No se requiere software adicional.
-• UF0519: Gestión auxiliar de documentación - No se requiere software adicional.
-• UF0520: Comunicación en las relaciones profesionales - No se requiere software adicional.
-• UF0521: Comunicación oral y escrita en la empresa - Procesador de textos: Microsoft Word o LibreOffice Writer
-• UF0513: Gestión auxiliar de archivo - Aplicaciones de ofimática: LibreOffice, Adobe Reader, Microsoft Excel
-• UF0514: Gestión auxiliar de reproducción - Microsoft Word, PowerPoint o LibreOffice Impress, Adobe Reader
+Tu tutor-formador te facilitará las instrucciones para descargar e instalar las aplicaciones necesarias en cada módulo.
 
 CÓMO ACCEDER A LAS APLICACIONES:
 Las instrucciones para descargar e instalar las aplicaciones necesarias las encontrarás en cada Unidad Formativa correspondiente, dentro del Contenido Interactivo Multimedia. Tu tutor-formador te facilitará también las instrucciones necesarias.`
@@ -388,9 +307,7 @@ Las instrucciones para descargar e instalar las aplicaciones necesarias las enco
 
 Deberás desarrollar cada módulo formativo/unidad formativa según el calendario establecido en el PLAN DE TRABAJO.
 
-DIRECCIÓN DEL CENTRO DE FORMACIÓN:
-Calle Marqués Mirasol 19
-Talavera de la Reina, Toledo.
+La dirección del centro de formación se indicará en la documentación proporcionada al inicio del curso.
 
 En el ANEXO I "CALENDARIO Y PLAN DE TRABAJO" podrás encontrar la planificación por semanas, así como la secuencia de las actividades y tareas programadas para realizar en cada unidad didáctica.`
     },
@@ -402,32 +319,32 @@ En el ANEXO I "CALENDARIO Y PLAN DE TRABAJO" podrás encontrar la planificación
           number: "5.1",
           title: "TAREAS/ACTIVIDADES",
           content: `A) INTRODUCCIÓN AL MÓDULO FORMATIVO O UNIDAD FORMATIVA
-• Visualiza el vídeo de presentación
-• Descarga los objetivos y contenidos que vas a estudiar
-• Acude a la videoconferencia de presentación con tu tutor formador
-• Realiza el cuestionario de conocimientos previos
+- Visualiza el vídeo de presentación
+- Descarga los objetivos y contenidos que vas a estudiar
+- Acude a la videoconferencia de presentación con tu tutor formador
+- Realiza el cuestionario de conocimientos previos
 
 B) DESARROLLA LA FORMACIÓN EN EL CAMPUS VIRTUAL
-1º) Estudia los contenidos de cada unidad didáctica:
-• Accede al Contenido Interactivo Multimedia
-• Realiza los ejercicios de autoevaluación
-• Completa los test de autoevaluación al finalizar cada unidad
+1) Estudia los contenidos de cada unidad didáctica:
+- Accede al Contenido Interactivo Multimedia
+- Realiza los ejercicios de autoevaluación
+- Completa los test de autoevaluación al finalizar cada unidad
 
-2º) Consulta el material didáctico complementario:
-• Documentos de apoyo
-• Vídeos de apoyo
-• Audios
+2) Consulta el material didáctico complementario:
+- Documentos de apoyo
+- Vídeos de apoyo
+- Audios
 
-3º) Realiza las actividades de aprendizaje propuestas:
-• Respeta las fechas indicadas en el PLAN DE TRABAJO
-• Las actividades pueden ser individuales o en grupo
-• La entrega se realiza a través del Campus Virtual
+3) Realiza las actividades de aprendizaje propuestas:
+- Respeta las fechas indicadas en el PLAN DE TRABAJO
+- Las actividades pueden ser individuales o en grupo
+- La entrega se realiza a través del Campus Virtual
 
-4º) Participa en los foros disponibles:
-• Foros de debate
-• Foro de consultas/dudas
-• Foro de programación/resolución de actividades
-• Foro de dudas técnicas
+4) Participa en los foros disponibles:
+- Foros de debate
+- Foro de consultas/dudas
+- Foro de programación/resolución de actividades
+- Foro de dudas técnicas
 
 C) DESARROLLA LA FORMACIÓN EN EL CENTRO DE FORMACIÓN
 En las fechas y lugar indicados en el PLAN DE TRABAJO, deberás asistir a las sesiones presenciales donde se trabajarán los conocimientos adquiridos en la plataforma.
@@ -436,9 +353,9 @@ D) PARTICIPA EN LAS TUTORÍAS VIRTUALES
 Las tutorías virtuales se realizarán a través de chat. Al menos tendrás una tutoría virtual de repaso al finalizar cada Unidad o Módulo Formativo.
 
 E) REALIZA LAS PRUEBAS DE EVALUACIÓN
-• TEST FINAL EN CAMPUS (CIM)
-• PRUEBA DE EVALUACIÓN FINAL PRESENCIAL
-• CUESTIONARIO DE SATISFACCIÓN`
+- TEST FINAL EN CAMPUS (CIM)
+- PRUEBA DE EVALUACIÓN FINAL PRESENCIAL
+- CUESTIONARIO DE SATISFACCIÓN`
         },
         {
           number: "5.2",
@@ -461,17 +378,17 @@ Tu tutor-formador te orientará sobre el tiempo recomendado de dedicación diari
           content: `Las tutorías virtuales son sesiones en directo con tu tutor-formador a través del Campus Virtual.
 
 Tipos de tutorías virtuales:
-• Tutorías grupales: Sesiones programadas con todo el grupo de alumnos.
-• Tutorías individuales: Puedes solicitarlas a través del correo electrónico del Campus.
+- Tutorías grupales: Sesiones programadas con todo el grupo de alumnos.
+- Tutorías individuales: Puedes solicitarlas a través del correo electrónico del Campus.
 
 Herramientas utilizadas:
-• Chat del Campus Virtual
-• Contacta en Directo (videollamada)
+- Chat del Campus Virtual
+- Contacta en Directo (videollamada)
 
 En estas sesiones podrás:
-• Plantear tus dudas
-• Repasar los principales contenidos
-• Recibir orientación sobre la prueba de evaluación final
+- Plantear tus dudas
+- Repasar los principales contenidos
+- Recibir orientación sobre la prueba de evaluación final
 
 Tu tutor-formador te informará con antelación de las fechas y horarios de las tutorías programadas.`
         },
@@ -481,14 +398,14 @@ Tu tutor-formador te informará con antelación de las fechas y horarios de las 
           content: `Las tutorías presenciales se desarrollan en el Centro de Formación según el calendario establecido.
 
 En estas sesiones:
-• Se desarrollarán actividades de aprendizaje prácticas
-• Se realizarán pruebas de evaluación
-• Contarás con un formador que te guiará en el desarrollo de las actividades
+- Se desarrollarán actividades de aprendizaje prácticas
+- Se realizarán pruebas de evaluación
+- Contarás con un formador que te guiará en el desarrollo de las actividades
 
 Toda la información relativa a las tutorías presenciales la encontrarás en:
-• El apartado TUTORÍA PRESENCIAL del Campus
-• El CUADERNO DEL ALUMNO
-• A través de comunicaciones de tu tutor-formador`
+- El apartado TUTORÍA PRESENCIAL del Campus
+- El CUADERNO DEL ALUMNO
+- A través de comunicaciones de tu tutor-formador`
         }
       ]
     },
@@ -502,20 +419,20 @@ Toda la información relativa a las tutorías presenciales la encontrarás en:
           content: `Para superar cada módulo formativo o unidad formativa deberás realizar las siguientes pruebas:
 
 1. TEST FINAL EN CAMPUS (CIM)
-• Dispones de un solo intento
-• Podrás conocer los resultados una vez lo hayas realizado
+- Dispones de un solo intento
+- Podrás conocer los resultados una vez lo hayas realizado
 
 2. PRUEBA DE EVALUACIÓN FINAL PRESENCIAL
 En el Centro de Formación, en la fecha y lugar indicados en el PLAN DE TRABAJO.
 
 Las pruebas de evaluación constan de varias partes:
-• Pruebas de evaluación de conocimiento: Pruebas objetivas (tipo test, respuestas cortas, etc.)
-• Pruebas de evaluación de destrezas: Pruebas prácticas en situaciones de trabajo simuladas
-• Pruebas de evaluación de actitudes: Observación de conductas y comportamientos
+- Pruebas de evaluación de conocimiento: Pruebas objetivas (tipo test, respuestas cortas, etc.)
+- Pruebas de evaluación de destrezas: Pruebas prácticas en situaciones de trabajo simuladas
+- Pruebas de evaluación de actitudes: Observación de conductas y comportamientos
 
 Criterios de evaluación:
-• Para superar el módulo formativo es necesario obtener una puntuación mínima de 5
-• En caso de no superarlo se considerará NO APTO
+- Para superar el módulo formativo es necesario obtener una puntuación mínima de 5
+- En caso de no superarlo se considerará NO APTO
 
 Segunda convocatoria:
 Si no superas la primera convocatoria o no asistes por causa justificada, podrás presentarte a la segunda convocatoria en la fecha que te indicará tu tutor-formador.
@@ -527,16 +444,12 @@ IMPORTANTE: Para poder presentarte a la prueba de evaluación final debes haber 
           title: "FECHA Y LUGAR DE LA PRUEBA DE EVALUACIÓN FINAL PRESENCIAL",
           content: `Las fechas de las pruebas de evaluación final presencial se encuentran en el documento PLAN DE TRABAJO y en MI AGENDA del Campus Virtual.
 
-El lugar de realización de las pruebas será el Centro de Formación:
-
-EMPLEATE TALAVERA FORMACIÓN
-Calle Marqués Mirasol 19
-45600 Talavera de la Reina, Toledo
+El lugar de realización de las pruebas será el Centro de Formación. Consulta la dirección exacta en la documentación proporcionada al inicio del curso o contacta con tu tutor-formador.
 
 IMPORTANTE:
-• Debes presentarte con tu DNI/NIE original
-• Llega con al menos 15 minutos de antelación
-• Lleva el material necesario según las indicaciones de tu tutor-formador`
+- Debes presentarte con tu DNI/NIE original
+- Llega con al menos 15 minutos de antelación
+- Lleva el material necesario según las indicaciones de tu tutor-formador`
         }
       ]
     },
@@ -544,12 +457,6 @@ IMPORTANTE:
       number: "8",
       title: "TITULACIÓN OBTENIDA",
       content: `Una vez superados todos los módulos formativos del certificado de profesionalidad, incluido el módulo de prácticas profesionales no laborales, podrás solicitar el CERTIFICADO DE PROFESIONALIDAD correspondiente ante la Administración competente.
-
-El certificado de profesionalidad que obtendrás es:
-
-ADGG0408 - OPERACIONES AUXILIARES DE SERVICIOS ADMINISTRATIVOS Y GENERALES
-Nivel de cualificación: 1
-Familia profesional: Administración y gestión
 
 Este certificado tiene carácter oficial y validez en todo el territorio nacional, acreditando las competencias profesionales adquiridas.
 
@@ -560,47 +467,34 @@ Para la solicitud del certificado deberás presentar la documentación requerida
       title: "CAU: CENTRO DE ATENCIÓN DE USUARIOS PARA DUDAS TÉCNICAS",
       content: `El Centro de Atención de Usuarios (CAU) es el servicio de soporte técnico para resolver incidencias relacionadas con el funcionamiento del Campus Virtual.
 
-HORARIO DE ATENCIÓN:
-Lunes a Viernes de 09:00 a 15:00 horas
-
-CONTACTO:
-• Teléfono: 665 673 416
-• Email: formacion.empleate@gmail.com
+Los datos de contacto del CAU (teléfono, email y horario) se proporcionan en la documentación de inicio del curso y están disponibles en el Campus Virtual.
 
 TIPOS DE INCIDENCIAS:
-• Problemas de acceso al Campus
-• Errores en la visualización de contenidos
-• Problemas con la entrega de actividades
-• Incidencias con las herramientas de comunicación
+- Problemas de acceso al Campus
+- Errores en la visualización de contenidos
+- Problemas con la entrega de actividades
+- Incidencias con las herramientas de comunicación
 
 Antes de contactar con el CAU:
-• Consulta los vídeos tutoriales disponibles en el Campus
-• Revisa las preguntas frecuentes (FAQ)
-• Verifica que tu equipo cumple con los requisitos técnicos`
+- Consulta los vídeos tutoriales disponibles en el Campus
+- Revisa las preguntas frecuentes (FAQ)
+- Verifica que tu equipo cumple con los requisitos técnicos`
     },
     {
       number: "10",
       title: "SERVICIO DE ATENCIÓN AL CLIENTE",
       content: `El Servicio de Atención al Cliente está a tu disposición para cualquier consulta o incidencia relacionada con tu formación que no sea de carácter técnico.
 
-CONTACTO:
-• Teléfono: 665 673 416
-• Email: formacion.empleate@gmail.com
-• Horario: Lunes a Viernes de 09:00 a 15:00 horas
+Los datos de contacto del centro (teléfono, email y horario) están disponibles en el Campus Virtual.
 
 TIPOS DE CONSULTAS:
-• Información sobre el curso y su contenido
-• Dudas sobre la planificación y calendario
-• Gestiones administrativas
-• Solicitud de certificados y diplomas
-• Reclamaciones y sugerencias
+- Información sobre el curso y su contenido
+- Dudas sobre la planificación y calendario
+- Gestiones administrativas
+- Solicitud de certificados y diplomas
+- Reclamaciones y sugerencias
 
-DATOS DEL CENTRO:
-EMPLEATE TALAVERA FORMACIÓN
-CIF: B45878253
-Nº Registro SEPE: 4500027071
-Calle Marqués Mirasol 19
-45600 Talavera de la Reina, Toledo`
+Los datos del centro de formación se muestran en la sección de contacto del Campus Virtual.`
     }
   ],
   
@@ -609,11 +503,11 @@ Calle Marqués Mirasol 19
     content: `El calendario y plan de trabajo específico de tu acción formativa te será proporcionado al inicio del curso.
 
 Este documento incluye:
-• Fechas de inicio y fin de cada módulo/unidad formativa
-• Calendario de tutorías presenciales
-• Fechas de entrega de actividades de aprendizaje
-• Fechas de pruebas de evaluación (1ª y 2ª convocatoria)
-• Programación semanal de contenidos y actividades
+- Fechas de inicio y fin de cada módulo/unidad formativa
+- Calendario de tutorías presenciales
+- Fechas de entrega de actividades de aprendizaje
+- Fechas de pruebas de evaluación (1ª y 2ª convocatoria)
+- Programación semanal de contenidos y actividades
 
 Consulta MI AGENDA en el Campus Virtual para ver el calendario actualizado de todas las actividades programadas.`
   }

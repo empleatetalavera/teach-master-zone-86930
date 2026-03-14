@@ -479,7 +479,7 @@ export const generateCampusGuidePDF = async (
   
   addBorderedBox('Paso 1: Acceder a la URL', [
     'Abra su navegador web y acceda a la dirección proporcionada por el centro de formación.',
-    'Ejemplo: https://campus.empleate.es'
+    'Ejemplo: https://campus.sucentro.es'
   ], 'A');
   
   addBorderedBox('Paso 2: Introducir credenciales', [
