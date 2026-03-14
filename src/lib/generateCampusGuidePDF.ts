@@ -963,7 +963,7 @@ export const generateCampusGuidePDF = async (
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...GRAY);
-  doc.text(`Documento generado por ${branding.centerName || 'Campus Virtual'}`, pageWidth / 2, yPos, { align: 'center' });
+  doc.text('Documento generado por Campus Virtual', pageWidth / 2, yPos, { align: 'center' });
   doc.text('© 2026 - Todos los derechos reservados', pageWidth / 2, yPos + 8, { align: 'center' });
 
   // Guardar el PDF
