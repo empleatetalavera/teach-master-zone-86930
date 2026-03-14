@@ -517,25 +517,42 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
         </div>
       )}
 
-      {/* Generate Questions Button */}
+      {/* Generate Content Buttons */}
       {manuals.length > 0 && formativeUnitId && courseId && (
-        <div className="pt-2 border-t">
+        <div className="pt-2 border-t space-y-3">
+          <Button
+            onClick={handleGenerateFullContent}
+            disabled={generatingFullContent || generatingQuestions}
+            variant="outline"
+            className="w-full gap-2 border-primary/40 hover:bg-primary/5 text-primary"
+          >
+            {generatingFullContent ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            {generatingFullContent 
+              ? "Generando contenido completo con IA (1-2 min)..." 
+              : "Generar contenido interactivo + actividades + tests"}
+          </Button>
+          <p className="text-xs text-muted-foreground text-center">
+            Genera automáticamente slides SCORM, actividades de desarrollo y preguntas de evaluación a partir del manual PDF
+          </p>
+
           <Button
             onClick={handleGenerateQuestions}
-            disabled={generatingQuestions}
+            disabled={generatingQuestions || generatingFullContent}
             variant="outline"
             className="w-full gap-2 border-amber-300 hover:bg-amber-50 text-amber-700"
+            size="sm"
           >
             {generatingQuestions ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {generatingQuestions ? "Generando 15 preguntas con IA..." : "Generar 15 preguntas de autoevaluación con IA"}
+            {generatingQuestions ? "Generando 15 preguntas con IA..." : "Solo generar 15 preguntas de autoevaluación"}
           </Button>
-          <p className="text-xs text-muted-foreground text-center mt-1">
-            Genera automáticamente un test de 15 preguntas basado en el contenido de esta unidad
-          </p>
         </div>
       )}
     </div>
