@@ -5,8 +5,7 @@ import {
   Download, Video, Headphones, Building2, Briefcase, Globe, ListChecks,
   UserCheck, ClipboardList, Lightbulb, Folder, Timer, FileDown
 } from "lucide-react";
-import { useCenterBranding } from "@/hooks/useCenterBranding";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { generateStudentGuidePDF } from "@/lib/generateStudentGuidePDF";
@@ -31,8 +30,7 @@ interface CourseStudentGuideProps {
   centerSlug?: string | null;
 }
 
-export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuideProps) {
-  const { branding } = useCenterBranding(centerSlug);
+export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     presentacion: true,
     aspectos: false,
