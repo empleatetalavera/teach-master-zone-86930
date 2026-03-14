@@ -361,7 +361,7 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
     }
   };
 
-
+  const resetForm = () => {
     setSelectedFile(null);
     setFormData({ title: "", description: "", embed_url: "", external_url: "" });
     if (fileInputRef.current) fileInputRef.current.value = "";
