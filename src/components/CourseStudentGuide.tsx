@@ -111,58 +111,20 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
         }
       }
 
-      let contactEmail = '';
-      let contactPhone = '';
-      let centerAddress = '';
-      let centerCIF = '';
-      let centerSepeReg = '';
-      let resolvedCenterName = branding.centerName;
-
-      // PRIORIDAD: slug del centro activo (aislamiento multi-tenant) > centro del curso
-      if (centerSlug) {
-        const { data: centerBySlug } = await supabase
-          .from('training_centers')
-          .select('name, contact_email, contact_phone, address, cif, sepe_registry_number')
-          .eq('slug', centerSlug)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (centerBySlug) {
-          resolvedCenterName = centerBySlug.name || resolvedCenterName;
-          contactEmail = centerBySlug.contact_email || '';
-          contactPhone = centerBySlug.contact_phone || '';
-          centerAddress = centerBySlug.address || '';
-          centerCIF = centerBySlug.cif || '';
-          centerSepeReg = centerBySlug.sepe_registry_number || '';
-        }
-      } else if (course.training_center_id) {
-        const { data: centerById } = await supabase
-          .from('training_centers')
-          .select('name, contact_email, contact_phone, address, cif, sepe_registry_number')
-          .eq('id', course.training_center_id)
-          .maybeSingle();
-
-        if (centerById) {
-          resolvedCenterName = centerById.name || resolvedCenterName;
-          contactEmail = centerById.contact_email || '';
-          contactPhone = centerById.contact_phone || '';
-          centerAddress = centerById.address || '';
-          centerCIF = centerById.cif || '';
-          centerSepeReg = centerById.sepe_registry_number || '';
-        }
-      }
+      const contactEmail = course.support_email || 'formacion.empleate@gmail.com';
+      const contactPhone = course.support_phone || '665 673 416';
+      const genericCenterName = 'Centro de Formación Acreditado';
 
       await generateStudentGuidePDF(
         course.title,
         {
-          centerName: resolvedCenterName,
-          centerLogo: branding.centerLogo,
+          centerName: genericCenterName,
           primaryColor: branding.primaryColor,
-          contactEmail: contactEmail || course.support_email || '',
-          contactPhone: contactPhone || course.support_phone || '',
-          address: centerAddress,
-          cif: centerCIF,
-          sepeRegistryNumber: centerSepeReg,
+          contactEmail,
+          contactPhone,
+          address: '',
+          cif: '',
+          sepeRegistryNumber: '',
         },
         {
           title: course.title,
@@ -172,8 +134,8 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
           durationHours: course.duration_hours,
           objectives: course.objectives,
           modules: modulesData,
-          supportEmail: contactEmail || course.support_email,
-          supportPhone: contactPhone || course.support_phone,
+          supportEmail: contactEmail,
+          supportPhone: contactPhone,
         }
       );
     } catch (error) {
