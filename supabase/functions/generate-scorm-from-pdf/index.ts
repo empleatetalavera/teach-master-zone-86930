@@ -309,15 +309,12 @@ Responde SOLO con JSON válido (sin markdown):
 
         const slidesToInsert = results.slides.map((slide: any, idx: number) => ({
           formative_unit_id: formativeUnitId,
-          course_id: courseId,
           order_index: idx + 1,
           slide_type: slide.slide_type || "content",
           title: slide.title || `Slide ${idx + 1}`,
           content: slide.content || "",
           key_terms: slide.key_terms || [],
           quiz_data: slide.quiz_data || null,
-          accordion_items: slide.accordion_items || null,
-          tabs_data: slide.tabs_data || null,
           is_active: true,
         }));
 
