@@ -43,6 +43,7 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewManualId, setPreviewManualId] = useState<string | null>(null);
   const [generatingQuestions, setGeneratingQuestions] = useState(false);
+  const [generatingFullContent, setGeneratingFullContent] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
