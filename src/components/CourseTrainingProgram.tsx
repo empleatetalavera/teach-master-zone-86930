@@ -899,26 +899,7 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
             recursos humanos y técnicos del aula virtual, y formación en PRL.
           </p>
           <Button 
-            onClick={() => generateProyectoFormativoPDF({
-              courseTitle: course.title,
-              courseCode: courseCode,
-              durationHours: course.duration_hours || 0,
-              startDate: course.start_date,
-              endDate: course.end_date,
-              objectives: course.objectives,
-              professionalFamily: course.professional_family || course.category,
-              qualificationLevel: course.qualification_level,
-              modules: modules,
-              centerName: datosDelCentro.nombre,
-              centerPhone: centerContact?.phone,
-              centerEmail: centerContact?.email,
-              centerAddress: datosDelCentro.direccion,
-              centerCity: datosDelCentro.localidad,
-              centerProvince: datosDelCentro.provincia,
-              centerPostalCode: datosDelCentro.codigoPostal,
-              centerCif: centerContact?.cif,
-              platformUrl: centerContact?.campus_url,
-            })}
+            onClick={handleDownloadPDF}
             className="gap-2"
             size="lg"
             variant="outline"
