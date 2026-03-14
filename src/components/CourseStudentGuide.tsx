@@ -117,7 +117,6 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
         course.title,
         {
           centerName: genericCenterName,
-          primaryColor: branding.primaryColor,
           contactEmail,
           contactPhone,
           address: '',
