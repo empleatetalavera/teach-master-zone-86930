@@ -154,8 +154,8 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
         <p className="text-lg text-muted-foreground font-medium">
           {course.title}
         </p>
-        <p className="text-sm mt-2" style={{ color: branding.secondaryColor }}>
-          {branding.centerName}
+        <p className="text-sm mt-2 text-muted-foreground">
+          Guía general para certificados de profesionalidad
         </p>
         {course.duration_hours && (
           <div className="mt-3 inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full">
