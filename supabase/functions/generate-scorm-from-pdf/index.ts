@@ -349,21 +349,20 @@ Responde SOLO con JSON válido (sin markdown):
 
       // Save questions to self_assessment_questions
       if (results.questions && results.questions.length > 0) {
-        const questionsToInsert = results.questions.map((q: any, idx: number) => ({
-          course_id: courseId,
-          formative_unit_id: formativeUnitId,
-          question_text: q.question,
-          option_a: q.options?.[0]?.text || "",
-          option_b: q.options?.[1]?.text || "",
-          option_c: q.options?.[2]?.text || "",
-          option_d: q.options?.[3]?.text || "",
-          correct_option: q.options?.findIndex((o: any) => o.isCorrect) === 0 ? "a" 
-            : q.options?.findIndex((o: any) => o.isCorrect) === 1 ? "b"
-            : q.options?.findIndex((o: any) => o.isCorrect) === 2 ? "c" : "d",
-          explanation: q.explanation || "",
-          order_index: idx + 1,
-          is_active: true,
-        }));
+        const questionsToInsert = results.questions.map((q: any, idx: number) => {
+          const correctIdx = q.options?.findIndex((o: any) => o.isCorrect) ?? 1;
+          const correctId = q.options?.[correctIdx]?.id || ["a","b","c","d"][correctIdx] || "a";
+          return {
+            course_id: courseId,
+            formative_unit_id: formativeUnitId,
+            question_text: q.question,
+            options: q.options?.map((o: any) => ({ id: o.id, text: o.text })) || [],
+            correct_option_id: correctId,
+            explanation: q.explanation || "",
+            order_index: idx + 1,
+            is_active: true,
+          };
+        });
 
         // Delete existing questions for this unit
         await supabase
