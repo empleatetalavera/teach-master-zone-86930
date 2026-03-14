@@ -76,107 +76,86 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
 
   const handleDownloadPDF = async () => {
     try {
-      if (course.student_guide_pdf_url) {
-        try {
-          let downloadUrl = course.student_guide_pdf_url;
-          
-          // Extract storage path from public URL to create signed URL
-          const storageMatch = downloadUrl.match(/\/storage\/v1\/object\/public\/([^?]+)/);
-          if (storageMatch) {
-            const fullPath = storageMatch[1];
-            const bucketAndPath = fullPath.split('/');
-            const bucket = bucketAndPath[0];
-            const filePath = bucketAndPath.slice(1).join('/');
-            
-            const { data: signedData } = await supabase.storage
-              .from(bucket)
-              .createSignedUrl(filePath, 300);
-            
-            if (signedData?.signedUrl) {
-              downloadUrl = signedData.signedUrl;
-            }
-          }
-          
-          const response = await fetch(downloadUrl);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = 'Guia_del_Alumno.pdf';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-        } catch (fetchErr) {
-          console.error('Error fetching uploaded PDF:', fetchErr);
-          // Fallback: direct link
-          const link = document.createElement('a');
-          link.href = course.student_guide_pdf_url;
-          link.download = 'Guia_del_Alumno.pdf';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      } else {
-        // Fetch modules and formative units from DB for dynamic PDF
-        let modulesData: any[] = [];
-        if (course.id) {
-          const { data: mods } = await supabase
-            .from('modules')
-            .select('id, title, description, duration_minutes, objectives, order_index')
-            .eq('course_id', course.id)
+      // Siempre generamos la guía dinámica para evitar PDFs antiguos con branding de otro centro
+      let modulesData: any[] = [];
+      if (course.id) {
+        const { data: mods } = await supabase
+          .from('modules')
+          .select('id, title, description, duration_minutes, objectives, order_index')
+          .eq('course_id', course.id)
+          .eq('is_active', true)
+          .order('order_index');
+
+        if (mods && mods.length > 0) {
+          const moduleIds = mods.map((m) => m.id);
+          const { data: ufs } = await supabase
+            .from('formative_units')
+            .select('id, module_id, title, description, duration_hours, objectives, order_index')
+            .in('module_id', moduleIds)
             .eq('is_active', true)
             .order('order_index');
-          
-          if (mods && mods.length > 0) {
-            const moduleIds = mods.map(m => m.id);
-            const { data: ufs } = await supabase
-              .from('formative_units')
-              .select('id, module_id, title, description, duration_hours, objectives, order_index')
-              .in('module_id', moduleIds)
-              .eq('is_active', true)
-              .order('order_index');
-            
-            modulesData = mods.map(mod => ({
-              title: mod.title,
-              durationMinutes: mod.duration_minutes,
-              description: mod.description,
-              objectives: mod.objectives,
-              formativeUnits: (ufs || [])
-                .filter(uf => uf.module_id === mod.id)
-                .map(uf => ({
-                  title: uf.title,
-                  durationHours: uf.duration_hours,
-                  objectives: uf.objectives,
-                })),
-            }));
-          }
-        }
 
-        let contactEmail = '';
-        let contactPhone = '';
-        let centerAddress = '';
-        let centerCIF = '';
-        let centerSepeReg = '';
-        
-        if (course.training_center_id) {
-          const { data: center } = await supabase
-            .from('training_centers')
-            .select('contact_email, contact_phone, address, cif, sepe_registry_number')
-            .eq('id', course.training_center_id)
-            .maybeSingle();
-          if (center) {
-            contactEmail = center.contact_email || '';
-            contactPhone = center.contact_phone || '';
-            centerAddress = center.address || '';
-            centerCIF = center.cif || '';
-            centerSepeReg = center.sepe_registry_number || '';
-          }
+          modulesData = mods.map((mod) => ({
+            title: mod.title,
+            durationMinutes: mod.duration_minutes,
+            description: mod.description,
+            objectives: mod.objectives,
+            formativeUnits: (ufs || [])
+              .filter((uf) => uf.module_id === mod.id)
+              .map((uf) => ({
+                title: uf.title,
+                durationHours: uf.duration_hours,
+                objectives: uf.objectives,
+              })),
+          }));
         }
+      }
 
-        await generateStudentGuidePDF(course.title, {
-          centerName: branding.centerName,
+      let contactEmail = '';
+      let contactPhone = '';
+      let centerAddress = '';
+      let centerCIF = '';
+      let centerSepeReg = '';
+      let resolvedCenterName = branding.centerName;
+
+      // PRIORIDAD: slug del centro activo (aislamiento multi-tenant) > centro del curso
+      if (centerSlug) {
+        const { data: centerBySlug } = await supabase
+          .from('training_centers')
+          .select('name, contact_email, contact_phone, address, cif, sepe_registry_number')
+          .eq('slug', centerSlug)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (centerBySlug) {
+          resolvedCenterName = centerBySlug.name || resolvedCenterName;
+          contactEmail = centerBySlug.contact_email || '';
+          contactPhone = centerBySlug.contact_phone || '';
+          centerAddress = centerBySlug.address || '';
+          centerCIF = centerBySlug.cif || '';
+          centerSepeReg = centerBySlug.sepe_registry_number || '';
+        }
+      } else if (course.training_center_id) {
+        const { data: centerById } = await supabase
+          .from('training_centers')
+          .select('name, contact_email, contact_phone, address, cif, sepe_registry_number')
+          .eq('id', course.training_center_id)
+          .maybeSingle();
+
+        if (centerById) {
+          resolvedCenterName = centerById.name || resolvedCenterName;
+          contactEmail = centerById.contact_email || '';
+          contactPhone = centerById.contact_phone || '';
+          centerAddress = centerById.address || '';
+          centerCIF = centerById.cif || '';
+          centerSepeReg = centerById.sepe_registry_number || '';
+        }
+      }
+
+      await generateStudentGuidePDF(
+        course.title,
+        {
+          centerName: resolvedCenterName,
           centerLogo: branding.centerLogo,
           primaryColor: branding.primaryColor,
           contactEmail: contactEmail || course.support_email || '',
@@ -184,7 +163,8 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
           address: centerAddress,
           cif: centerCIF,
           sepeRegistryNumber: centerSepeReg,
-        }, {
+        },
+        {
           title: course.title,
           code: course.course_code,
           professionalFamily: course.professional_family,
@@ -194,8 +174,8 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
           modules: modulesData,
           supportEmail: contactEmail || course.support_email,
           supportPhone: contactPhone || course.support_phone,
-        });
-      }
+        }
+      );
     } catch (error) {
       console.error('Error generating student guide PDF:', error);
       alert('Error al generar la Guía del Alumno. Inténtelo de nuevo.');
