@@ -285,7 +285,7 @@ export const generateCampusGuidePDF = async (
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text(branding.centerName || 'Campus Virtual', branding.centerLogo ? margin + 55 : margin, 30);
+  doc.text('Campus Virtual', branding.centerLogo ? margin + 55 : margin, 30);
 
   // Línea separadora
   doc.setDrawColor(...TEAL_COLOR);
@@ -314,7 +314,7 @@ export const generateCampusGuidePDF = async (
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text(branding.centerName || 'Centro de Formación', pageWidth / 2, 160, { align: 'center' });
+  doc.text('Centro de Formación Acreditado', pageWidth / 2, 160, { align: 'center' });
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
@@ -949,7 +949,7 @@ export const generateCampusGuidePDF = async (
   yPos = 60;
   
   addBorderedBox('Centro de Formación', [
-    branding.centerName || 'Centro de Formación',
+    'Centro de Formación Acreditado',
     'Consulte los datos de contacto en su campus virtual',
   ]);
 
@@ -963,10 +963,10 @@ export const generateCampusGuidePDF = async (
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...GRAY);
-  doc.text(`Documento generado por ${branding.centerName || 'Campus Virtual'}`, pageWidth / 2, yPos, { align: 'center' });
+  doc.text('Documento generado por Campus Virtual', pageWidth / 2, yPos, { align: 'center' });
   doc.text('© 2026 - Todos los derechos reservados', pageWidth / 2, yPos + 8, { align: 'center' });
 
   // Guardar el PDF
-  const fileName = `Guia_Campus_Virtual_${branding.centerName?.replace(/\s+/g, '_') || 'Campus'}.pdf`;
+  const fileName = `Guia_Campus_Virtual.pdf`;
   doc.save(fileName);
 };

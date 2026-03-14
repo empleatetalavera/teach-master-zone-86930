@@ -298,7 +298,7 @@ export const generateStudentGuidePDF = async (
     doc.setTextColor(...WHITE);
     doc.setFont('helvetica', 'bold');
     doc.text('← Volver', diagX + 3, diagY + 6);
-    doc.text(branding.centerName, diagX + diagW / 2, diagY + 6, { align: 'center' });
+    doc.text('Centro de Formación', diagX + diagW / 2, diagY + 6, { align: 'center' });
     
     // Course title area
     doc.setFillColor(245, 245, 245);
@@ -1206,10 +1206,10 @@ export const generateStudentGuidePDF = async (
   addInfoBox('DIRECCIÓN DEL CENTRO DE FORMACIÓN');
   yPos -= 5;
   if (centerAddress) {
-    addParagraph(`${branding.centerName}`);
+    addParagraph('Centro de Formación Acreditado');
     addParagraph(centerAddress);
   } else {
-    addParagraph(`Consulta con tu centro de formación (${branding.centerName}) la dirección exacta para las sesiones presenciales.`);
+    addParagraph('Consulta con tu centro de formación la dirección exacta para las sesiones presenciales.');
   }
   yPos += 10;
   
@@ -1452,7 +1452,7 @@ export const generateStudentGuidePDF = async (
   yPos += 5;
   
   const centerData: string[][] = [
-    [branding.centerName],
+    ['Centro de Formación Acreditado'],
   ];
   if (centerCIF) centerData.push([`CIF: ${centerCIF}`]);
   if (centerSepeReg) centerData.push([`Nº Registro SEPE: ${centerSepeReg}`]);
