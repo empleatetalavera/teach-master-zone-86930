@@ -596,7 +596,7 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
     margin: { left: margin + 30, right: margin + 30 },
     head: [["CLAVE ALUMNO", "CLAVE TUTOR-FORMADOR"]],
     body: [
-      ["Usuario: ALUMNOCERTIFICADOS\nContraseña: (A facilitar)", "Usuario: TUTORCERTIFICADOS\nContraseña: (A facilitar)"]
+      ["Usuario: ALUMNOCERTIFICADOS\nContraseña: d123456-A", "Usuario: TUTORCERTIFICADOS\nContraseña: d123456-T"]
     ],
     theme: "grid",
     headStyles: { fillColor: BLUE_HEADER, textColor: WHITE, fontSize: 9, halign: "center" as const },
