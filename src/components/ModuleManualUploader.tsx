@@ -282,7 +282,86 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
     }
   };
 
-  const resetForm = () => {
+  const handleGenerateFullContent = async () => {
+    if (!courseId || !formativeUnitId) {
+      toast({ title: "Error", description: "Faltan datos del curso o unidad", variant: "destructive" });
+      return;
+    }
+
+    // Find a PDF manual to extract text from
+    const pdfManual = manuals.find(m => m.content_type === "manual_pdf" && (m.file_path || m.external_url));
+    let pdfTextContent = "";
+
+    if (pdfManual) {
+      try {
+        const pdfUrl = pdfManual.file_path?.startsWith("http") 
+          ? pdfManual.file_path 
+          : pdfManual.external_url || "";
+        
+        if (pdfUrl) {
+          toast({ title: "Extrayendo texto del PDF...", description: "Esto puede tardar unos segundos" });
+          const pdfjsLib = await import('pdfjs-dist');
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+          
+          const response = await fetch(pdfUrl);
+          const arrayBuffer = await response.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map((item: any) => item.str).join(" ");
+            pdfTextContent += pageText + "\n\n";
+          }
+        }
+      } catch (e) {
+        console.error("Error extracting PDF text:", e);
+      }
+    }
+
+    setGeneratingFullContent(true);
+    try {
+      toast({ 
+        title: "Generando contenido completo con IA...", 
+        description: "Se están creando slides interactivas, actividades y tests. Esto puede tardar 1-2 minutos." 
+      });
+
+      const { data, error } = await supabase.functions.invoke("generate-scorm-from-pdf", {
+        body: {
+          unitTitle: moduleTitle,
+          formativeUnitId,
+          courseId,
+          pdfTextContent,
+          generateSlides: true,
+          generateActivities: true,
+          generateTests: true,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: "Error", description: data.error, variant: "destructive" });
+        return;
+      }
+
+      const parts = [];
+      if (data.slideCount > 0) parts.push(`${data.slideCount} slides interactivas`);
+      if (data.activityCount > 0) parts.push(`${data.activityCount} actividades de desarrollo`);
+      if (data.questionCount > 0) parts.push(`${data.questionCount} preguntas de test`);
+
+      toast({
+        title: "¡Contenido generado con éxito!",
+        description: `Se han creado: ${parts.join(", ")}.`,
+      });
+    } catch (error: any) {
+      console.error("Error generating full content:", error);
+      toast({ title: "Error", description: "Error al generar el contenido. Inténtalo de nuevo.", variant: "destructive" });
+    } finally {
+      setGeneratingFullContent(false);
+    }
+  };
+
+
     setSelectedFile(null);
     setFormData({ title: "", description: "", embed_url: "", external_url: "" });
     if (fileInputRef.current) fileInputRef.current.value = "";
