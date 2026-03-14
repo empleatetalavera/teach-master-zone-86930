@@ -285,7 +285,7 @@ export const generateCampusGuidePDF = async (
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text(branding.centerName || 'Campus Virtual', branding.centerLogo ? margin + 55 : margin, 30);
+  doc.text('Campus Virtual', branding.centerLogo ? margin + 55 : margin, 30);
 
   // Línea separadora
   doc.setDrawColor(...TEAL_COLOR);
