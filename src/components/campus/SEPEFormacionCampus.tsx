@@ -78,19 +78,42 @@ async function fetchAndOpenPDF(
   unitId: string,
   toast: any
 ) {
+  const openPdfViaBlob = async (url: string, filename = 'manual.pdf') => {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+  };
+
+  const isAbsoluteUrl = (value: string) => /^https?:\/\//i.test(value);
+
   let pdfData: any[] | null = null;
   const { data: exactMatch } = await (supabase as any)
     .from('module_content')
-    .select('file_path, title')
+    .select('file_path, file_name, title')
     .eq('module_id', moduleId)
     .eq('content_type', 'manual_pdf')
     .eq('formative_unit_id', unitId)
     .limit(1);
   pdfData = exactMatch;
+
   if (!pdfData || pdfData.length === 0) {
     const { data: fallback } = await (supabase as any)
       .from('module_content')
-      .select('file_path, title')
+      .select('file_path, file_name, title')
       .eq('module_id', moduleId)
       .eq('content_type', 'manual_pdf')
       .is('formative_unit_id', null)
@@ -98,17 +121,37 @@ async function fetchAndOpenPDF(
       .limit(1);
     pdfData = fallback;
   }
-  if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-    const { data: signedData } = await supabase.storage
-      .from('module-content')
-      .createSignedUrl(pdfData[0].file_path, 3600);
-    if (signedData?.signedUrl) {
-      window.open(signedData.signedUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      toast({ title: "Error", description: "No se pudo abrir el PDF", variant: "destructive" });
+
+  if (!pdfData || pdfData.length === 0 || !pdfData[0].file_path) {
+    toast({ title: 'Sin PDF', description: 'Aún no se ha subido el PDF de esta unidad.', variant: 'destructive' });
+    return;
+  }
+
+  try {
+    const filePath = pdfData[0].file_path as string;
+    const filename = pdfData[0].file_name || `${pdfData[0].title || 'manual'}.pdf`;
+
+    if (isAbsoluteUrl(filePath)) {
+      await openPdfViaBlob(filePath, filename);
+      return;
     }
-  } else {
-    toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
+
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from('module-content')
+      .createSignedUrl(filePath, 3600);
+
+    if (signedError) {
+      throw signedError;
+    }
+
+    if (!signedData?.signedUrl) {
+      throw new Error('signed-url-empty');
+    }
+
+    await openPdfViaBlob(signedData.signedUrl, filename);
+  } catch (error) {
+    console.error('Error opening unit PDF:', error);
+    toast({ title: 'Error', description: 'No se pudo abrir el PDF', variant: 'destructive' });
   }
 }
 
