@@ -83,8 +83,20 @@ export const generateStudentGuidePDF = async (
   const centerCIF = branding.cif || "";
   const centerSepeReg = branding.sepeRegistryNumber || "";
 
+  // Pie de página neutro para todos los centros
+  const footerText = 'Centro Acreditado SEPE';
+
+  // Helper para añadir footer en cada página
+  const addFooter = () => {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...GRAY);
+    doc.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+  };
+
   // Helper para añadir nueva página
   const addNewPage = () => {
+    addFooter(); // footer en la página que termina
     doc.addPage();
     currentPage++;
     yPos = 25;
@@ -104,6 +116,56 @@ export const generateStudentGuidePDF = async (
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(...TEAL_COLOR);
     doc.text('GUÍA DEL ALUMNO', pageWidth - margin, 15, { align: 'right' });
+  };
+
+  // ===== PORTADA =====
+  const addCoverPage = () => {
+    // Fondo teal en la parte superior
+    doc.setFillColor(...TEAL_COLOR);
+    doc.rect(0, 0, pageWidth, pageHeight * 0.45, 'F');
+
+    // Título principal
+    doc.setFontSize(36);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...WHITE);
+    doc.text('GUÍA DEL ALUMNO', pageWidth / 2, 60, { align: 'center' });
+
+    // Línea decorativa
+    doc.setDrawColor(...WHITE);
+    doc.setLineWidth(1);
+    doc.line(pageWidth * 0.25, 70, pageWidth * 0.75, 70);
+
+    // Título del curso
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...WHITE);
+    const titleLines = doc.splitTextToSize(courseTitle, contentWidth - 20);
+    titleLines.forEach((line: string, i: number) => {
+      doc.text(line, pageWidth / 2, 85 + i * 7, { align: 'center' });
+    });
+
+    // Código y duración
+    const infoY = 85 + titleLines.length * 7 + 10;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    if (code && code !== 'Sin código') {
+      doc.text(`Código: ${code}`, pageWidth / 2, infoY, { align: 'center' });
+    }
+    if (totalHours > 0) {
+      doc.text(`Duración: ${totalHours} horas`, pageWidth / 2, infoY + 8, { align: 'center' });
+    }
+
+    // Pie de portada neutro
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...TEAL_COLOR);
+    doc.text(footerText, pageWidth / 2, pageHeight - 30, { align: 'center' });
+
+    // Nueva página para empezar contenido
+    doc.addPage();
+    currentPage++;
+    yPos = 25;
+    addHeader();
   };
 
   const addMainSectionTitle = (number: string, title: string) => {
@@ -860,7 +922,8 @@ export const generateStudentGuidePDF = async (
 
   // ============ GENERAR EL PDF ============
   
-  addHeader();
+  // Portada
+  addCoverPage();
   
   // SECCIÓN 1: PRESENTACIÓN
   addMainSectionTitle('1', 'PRESENTACIÓN');
@@ -1490,7 +1553,8 @@ export const generateStudentGuidePDF = async (
   yPos += 5;
   addParagraph('Consulta MI AGENDA en el Campus Virtual para ver el calendario actualizado de todas las actividades programadas.');
 
-  // Sin pie de página en la guía (requisito de versión general)
+  // Añadir footer a la última página
+  addFooter();
 
   // Guardar PDF
   doc.save(`Guia_Alumno_${courseTitle.replace(/\s+/g, '_')}.pdf`);
