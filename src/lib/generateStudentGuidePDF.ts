@@ -1553,7 +1553,8 @@ export const generateStudentGuidePDF = async (
   yPos += 5;
   addParagraph('Consulta MI AGENDA en el Campus Virtual para ver el calendario actualizado de todas las actividades programadas.');
 
-  // Sin pie de página en la guía (requisito de versión general)
+  // Añadir footer a la última página
+  addFooter();
 
   // Guardar PDF
   doc.save(`Guia_Alumno_${courseTitle.replace(/\s+/g, '_')}.pdf`);
