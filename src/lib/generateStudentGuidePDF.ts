@@ -1361,7 +1361,7 @@ export const generateStudentGuidePDF = async (
   addParagraph('Toda la información relativa a las tutorías presenciales la encontrarás en el apartado "Tutorías" del Campus, el Cuaderno del Alumno y a través de comunicaciones de tu tutor-formador.');
 
   yPos += 5;
-  const horarioText = `HORARIO DE ATENCIÓN TUTORIAL:\nLunes a Viernes de 09:00 a 15:00 horas${supportPhone ? `\nTeléfono: ${supportPhone}` : ''}${supportEmail ? `\nEmail: ${supportEmail}` : ''}`;
+  const horarioText = `HORARIO DE ATENCIÓN TUTORIAL:\nLunes a Viernes de 09:00 a 14:00 horas${supportPhone ? `\nTeléfono: ${supportPhone}` : ''}${supportEmail ? `\nEmail: ${supportEmail}` : ''}`;
   addInfoBox(horarioText);
   
   // SECCIÓN 7: EVALUACIÓN
@@ -1410,7 +1410,7 @@ export const generateStudentGuidePDF = async (
   
   const cauData: string[][] = [];
   if (supportPhone) cauData.push(['Teléfono:', supportPhone]);
-  cauData.push(['Horario:', 'Lunes a Viernes de 09:00 a 15:00']);
+  cauData.push(['Horario:', 'Lunes a Viernes de 09:00 a 14:00']);
   if (supportEmail) cauData.push(['Email:', supportEmail]);
   
   autoTable(doc, {
