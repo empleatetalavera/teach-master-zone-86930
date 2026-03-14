@@ -4,6 +4,7 @@ import { generateProyectoFormativoPDF } from "@/lib/generateProyectoFormativoPDF
 import { Button } from "@/components/ui/button";
 import { CourseAnnexesUploader } from "./CourseAnnexesUploader";
 import { useCenterBranding } from "@/hooks/useCenterBranding";
+import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
