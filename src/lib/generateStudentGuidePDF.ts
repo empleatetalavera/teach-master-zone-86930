@@ -298,7 +298,7 @@ export const generateStudentGuidePDF = async (
     doc.setTextColor(...WHITE);
     doc.setFont('helvetica', 'bold');
     doc.text('← Volver', diagX + 3, diagY + 6);
-    doc.text(branding.centerName, diagX + diagW / 2, diagY + 6, { align: 'center' });
+    doc.text('Centro de Formación', diagX + diagW / 2, diagY + 6, { align: 'center' });
     
     // Course title area
     doc.setFillColor(245, 245, 245);
