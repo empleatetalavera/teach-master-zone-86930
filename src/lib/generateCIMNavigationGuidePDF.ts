@@ -363,7 +363,7 @@ export const generateCIMNavigationGuidePDF = async (
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text(branding.centerName || 'Centro de Formación', pageWidth / 2, 160, { align: 'center' });
+  doc.text('Centro de Formación Acreditado', pageWidth / 2, 160, { align: 'center' });
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
