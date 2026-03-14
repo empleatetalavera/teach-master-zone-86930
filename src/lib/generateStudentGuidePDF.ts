@@ -1206,10 +1206,10 @@ export const generateStudentGuidePDF = async (
   addInfoBox('DIRECCIÓN DEL CENTRO DE FORMACIÓN');
   yPos -= 5;
   if (centerAddress) {
-    addParagraph(`${branding.centerName}`);
+    addParagraph('Centro de Formación Acreditado');
     addParagraph(centerAddress);
   } else {
-    addParagraph(`Consulta con tu centro de formación (${branding.centerName}) la dirección exacta para las sesiones presenciales.`);
+    addParagraph('Consulta con tu centro de formación la dirección exacta para las sesiones presenciales.');
   }
   yPos += 10;
   
