@@ -922,7 +922,8 @@ export const generateStudentGuidePDF = async (
 
   // ============ GENERAR EL PDF ============
   
-  addHeader();
+  // Portada
+  addCoverPage();
   
   // SECCIÓN 1: PRESENTACIÓN
   addMainSectionTitle('1', 'PRESENTACIÓN');
