@@ -328,7 +328,7 @@ export const generateCIMNavigationGuidePDF = async (
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...TEAL_COLOR);
-  doc.text(branding.centerName || 'Campus Virtual', margin, 30);
+  doc.text('Campus Virtual', margin, 30);
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
