@@ -1207,7 +1207,7 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
             </p>
 
             <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-5">
-              <h4 className="font-semibold mb-3">{branding.centerName}</h4>
+              <h4 className="font-semibold mb-3">Centro de Atención al Alumno</h4>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-primary" />
@@ -1230,15 +1230,12 @@ export function CourseStudentGuide({ course, centerSlug }: CourseStudentGuidePro
       {/* Footer */}
       <div className="text-center pt-6 border-t bg-gradient-to-br from-gray-50 to-transparent p-6 rounded-xl">
         <div className="flex justify-center gap-4 mb-3">
-          {branding.centerLogo && (
-            <img src={branding.centerLogo} alt={branding.centerName} className="h-10 object-contain opacity-70" />
-          )}
           <img src="/branding/sepe-logo.png" alt="SEPE" className="h-8 object-contain opacity-70" />
         </div>
         <p className="text-sm text-muted-foreground">Documento conforme a los requisitos del</p>
         <p className="font-semibold text-primary">Servicio Público de Empleo Estatal (SEPE)</p>
         <p className="text-xs text-muted-foreground mt-2">
-          Versión 1.0 - {new Date().getFullYear()} | {branding.centerName}
+          Versión 1.0 - {new Date().getFullYear()} | Documento general
         </p>
       </div>
     </div>
