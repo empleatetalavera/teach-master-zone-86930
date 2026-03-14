@@ -1494,24 +1494,29 @@ export default function CourseView() {
               />
             )}
             
-            {course.student_guide_pdf_url ? (
+            <Card>
+              <CardContent className="p-6">
+                <CourseStudentGuide 
+                  course={course} 
+                  centerSlug={centerSlug} 
+                />
+              </CardContent>
+            </Card>
+
+            {course.student_guide_pdf_url && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookMarked className="h-5 w-5 text-primary" />
-                    Guía del Alumno (PDF)
+                    Versión PDF subida manualmente
                   </CardTitle>
-                  <CardDescription>Documento oficial de la guía del alumno para este curso</CardDescription>
+                  <CardDescription>
+                    Este archivo puede contener contenido personalizado antiguo.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <FileText className="h-16 w-16 text-primary mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">Guía del Alumno Disponible</h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Documento PDF con toda la información del curso
-                    </p>
-                  </div>
+                <CardContent>
                   <Button
+                    variant="outline"
                     className="w-full flex items-center gap-2"
                     onClick={() => openPdfWithFallback(
                       course.student_guide_pdf_url!,
@@ -1519,17 +1524,8 @@ export default function CourseView() {
                     )}
                   >
                     <FileDown className="h-4 w-4" />
-                    Descargar Guía del Alumno (PDF)
+                    Descargar PDF subido
                   </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="p-6">
-                  <CourseStudentGuide 
-                    course={course} 
-                    centerSlug={centerSlug} 
-                  />
                 </CardContent>
               </Card>
             )}
