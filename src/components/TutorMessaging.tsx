@@ -168,7 +168,7 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
             </div>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1">
             {supportEmail && (
               <div className="flex items-center gap-3 p-3 border rounded-lg">
                 <Mail className="h-5 w-5 text-muted-foreground" />
