@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.generate-unit-questions]
 verify_jwt = true
+
+[functions.generate-scorm-from-pdf]
+verify_jwt = true

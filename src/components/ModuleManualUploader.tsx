@@ -43,6 +43,7 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewManualId, setPreviewManualId] = useState<string | null>(null);
   const [generatingQuestions, setGeneratingQuestions] = useState(false);
+  const [generatingFullContent, setGeneratingFullContent] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -281,6 +282,85 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
     }
   };
 
+  const handleGenerateFullContent = async () => {
+    if (!courseId || !formativeUnitId) {
+      toast({ title: "Error", description: "Faltan datos del curso o unidad", variant: "destructive" });
+      return;
+    }
+
+    // Find a PDF manual to extract text from
+    const pdfManual = manuals.find(m => m.content_type === "manual_pdf" && (m.file_path || m.external_url));
+    let pdfTextContent = "";
+
+    if (pdfManual) {
+      try {
+        const pdfUrl = pdfManual.file_path?.startsWith("http") 
+          ? pdfManual.file_path 
+          : pdfManual.external_url || "";
+        
+        if (pdfUrl) {
+          toast({ title: "Extrayendo texto del PDF...", description: "Esto puede tardar unos segundos" });
+          const pdfjsLib = await import('pdfjs-dist');
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+          
+          const response = await fetch(pdfUrl);
+          const arrayBuffer = await response.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map((item: any) => item.str).join(" ");
+            pdfTextContent += pageText + "\n\n";
+          }
+        }
+      } catch (e) {
+        console.error("Error extracting PDF text:", e);
+      }
+    }
+
+    setGeneratingFullContent(true);
+    try {
+      toast({ 
+        title: "Generando contenido completo con IA...", 
+        description: "Se están creando slides interactivas, actividades y tests. Esto puede tardar 1-2 minutos." 
+      });
+
+      const { data, error } = await supabase.functions.invoke("generate-scorm-from-pdf", {
+        body: {
+          unitTitle: moduleTitle,
+          formativeUnitId,
+          courseId,
+          pdfTextContent,
+          generateSlides: true,
+          generateActivities: true,
+          generateTests: true,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: "Error", description: data.error, variant: "destructive" });
+        return;
+      }
+
+      const parts = [];
+      if (data.slideCount > 0) parts.push(`${data.slideCount} slides interactivas`);
+      if (data.activityCount > 0) parts.push(`${data.activityCount} actividades de desarrollo`);
+      if (data.questionCount > 0) parts.push(`${data.questionCount} preguntas de test`);
+
+      toast({
+        title: "¡Contenido generado con éxito!",
+        description: `Se han creado: ${parts.join(", ")}.`,
+      });
+    } catch (error: any) {
+      console.error("Error generating full content:", error);
+      toast({ title: "Error", description: "Error al generar el contenido. Inténtalo de nuevo.", variant: "destructive" });
+    } finally {
+      setGeneratingFullContent(false);
+    }
+  };
+
   const resetForm = () => {
     setSelectedFile(null);
     setFormData({ title: "", description: "", embed_url: "", external_url: "" });
@@ -437,25 +517,42 @@ export function ModuleManualUploader({ moduleId, moduleTitle, formativeUnitId, c
         </div>
       )}
 
-      {/* Generate Questions Button */}
+      {/* Generate Content Buttons */}
       {manuals.length > 0 && formativeUnitId && courseId && (
-        <div className="pt-2 border-t">
+        <div className="pt-2 border-t space-y-3">
+          <Button
+            onClick={handleGenerateFullContent}
+            disabled={generatingFullContent || generatingQuestions}
+            variant="outline"
+            className="w-full gap-2 border-primary/40 hover:bg-primary/5 text-primary"
+          >
+            {generatingFullContent ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            {generatingFullContent 
+              ? "Generando contenido completo con IA (1-2 min)..." 
+              : "Generar contenido interactivo + actividades + tests"}
+          </Button>
+          <p className="text-xs text-muted-foreground text-center">
+            Genera automáticamente slides SCORM, actividades de desarrollo y preguntas de evaluación a partir del manual PDF
+          </p>
+
           <Button
             onClick={handleGenerateQuestions}
-            disabled={generatingQuestions}
+            disabled={generatingQuestions || generatingFullContent}
             variant="outline"
             className="w-full gap-2 border-amber-300 hover:bg-amber-50 text-amber-700"
+            size="sm"
           >
             {generatingQuestions ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {generatingQuestions ? "Generando 15 preguntas con IA..." : "Generar 15 preguntas de autoevaluación con IA"}
+            {generatingQuestions ? "Generando 15 preguntas con IA..." : "Solo generar 15 preguntas de autoevaluación"}
           </Button>
-          <p className="text-xs text-muted-foreground text-center mt-1">
-            Genera automáticamente un test de 15 preguntas basado en el contenido de esta unidad
-          </p>
         </div>
       )}
     </div>
