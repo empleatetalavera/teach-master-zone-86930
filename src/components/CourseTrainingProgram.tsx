@@ -267,25 +267,10 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         
         {/* Download Button */}
         <div className="mt-4">
-          {course.training_program_pdf_url ? (
-            <Button
-              className="gap-2"
-              onClick={() =>
-                openUploadedPdfViaBlob(
-                  course.training_program_pdf_url!,
-                  `${course.title.replace(/\s+/g, '-').toLowerCase()}-programa-formativo.pdf`
-                )
-              }
-            >
-              <Download className="h-4 w-4" />
-              Descargar Proyecto Formativo (PDF)
-            </Button>
-          ) : (
-            <Button onClick={handleDownloadPDF} className="gap-2">
-              <Download className="h-4 w-4" />
-              Descargar Proyecto Formativo (PDF)
-            </Button>
-          )}
+          <Button onClick={handleDownloadPDF} className="gap-2">
+            <Download className="h-4 w-4" />
+            Descargar Proyecto Formativo (PDF)
+          </Button>
         </div>
       </div>
 
