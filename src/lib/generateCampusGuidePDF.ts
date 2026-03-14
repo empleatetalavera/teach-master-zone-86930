@@ -949,7 +949,7 @@ export const generateCampusGuidePDF = async (
   yPos = 60;
   
   addBorderedBox('Centro de Formación', [
-    branding.centerName || 'Centro de Formación',
+    'Centro de Formación Acreditado',
     'Consulte los datos de contacto en su campus virtual',
   ]);
 
