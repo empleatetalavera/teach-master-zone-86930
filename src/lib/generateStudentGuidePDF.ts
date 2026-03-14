@@ -1361,7 +1361,7 @@ export const generateStudentGuidePDF = async (
   addParagraph('Toda la información relativa a las tutorías presenciales la encontrarás en el apartado "Tutorías" del Campus, el Cuaderno del Alumno y a través de comunicaciones de tu tutor-formador.');
 
   yPos += 5;
-  const horarioText = `HORARIO DE ATENCIÓN TUTORIAL:\nLunes a Viernes de 09:00 a 15:00 horas${supportPhone ? `\nTeléfono: ${supportPhone}` : ''}${supportEmail ? `\nEmail: ${supportEmail}` : ''}`;
+  const horarioText = `HORARIO DE ATENCIÓN TUTORIAL:\nLunes a Viernes de 09:00 a 14:00 horas${supportPhone ? `\nTeléfono: ${supportPhone}` : ''}${supportEmail ? `\nEmail: ${supportEmail}` : ''}`;
   addInfoBox(horarioText);
   
   // SECCIÓN 7: EVALUACIÓN
@@ -1410,7 +1410,7 @@ export const generateStudentGuidePDF = async (
   
   const cauData: string[][] = [];
   if (supportPhone) cauData.push(['Teléfono:', supportPhone]);
-  cauData.push(['Horario:', 'Lunes a Viernes de 09:00 a 15:00']);
+  cauData.push(['Horario:', 'Lunes a Viernes de 09:00 a 14:00']);
   if (supportEmail) cauData.push(['Email:', supportEmail]);
   
   autoTable(doc, {
@@ -1490,20 +1490,7 @@ export const generateStudentGuidePDF = async (
   yPos += 5;
   addParagraph('Consulta MI AGENDA en el Campus Virtual para ver el calendario actualizado de todas las actividades programadas.');
 
-  // Footer con números de página
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(...BLACK);
-    doc.text(String(i), pageWidth / 2, pageHeight - 15, { align: 'center' });
-    
-    doc.setFontSize(8);
-    doc.setTextColor(...GRAY);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`${branding.centerName} - Centro Acreditado SEPE`, pageWidth / 2, pageHeight - 8, { align: 'center' });
-  }
+  // Sin pie de página en la guía (requisito de versión general)
 
   // Guardar PDF
   doc.save(`Guia_Alumno_${courseTitle.replace(/\s+/g, '_')}.pdf`);
