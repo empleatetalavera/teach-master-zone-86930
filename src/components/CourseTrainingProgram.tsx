@@ -170,30 +170,61 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
     };
   });
 
-  const openUploadedPdfViaBlob = async (pdfUrl: string, fileName: string) => {
-    try {
-      const response = await fetch(pdfUrl);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const resolveCenterDataForProgram = async () => {
+    const fallback = {
+      name: datosDelCentro.nombre,
+      cif: datosDelCentro.cif,
+      address: datosDelCentro.direccion,
+      city: datosDelCentro.localidad,
+      province: datosDelCentro.provincia,
+      postal_code: datosDelCentro.codigoPostal,
+      email: centerContact?.email || "",
+      phone: centerContact?.phone || "",
+      campus_url: centerContact?.campus_url || "",
+    };
 
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = fileName;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    const fetchCenter = async (column: "id" | "slug", value: string) => {
+      const { data, error } = await supabase
+        .from("training_centers")
+        .select("name, cif, address, city, province, postal_code, contact_email, email, contact_phone, phone, campus_url")
+        .eq(column, value)
+        .maybeSingle();
 
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-    } catch (error) {
-      console.error("Error opening uploaded training program PDF:", error);
+      if (error || !data) return null;
+
+      return {
+        name: data.name || fallback.name,
+        cif: data.cif || fallback.cif,
+        address: data.address || fallback.address,
+        city: data.city || fallback.city,
+        province: data.province || fallback.province,
+        postal_code: data.postal_code || fallback.postal_code,
+        email: (data as { contact_email?: string | null; email?: string | null }).contact_email ||
+          (data as { contact_email?: string | null; email?: string | null }).email ||
+          fallback.email,
+        phone: (data as { contact_phone?: string | null; phone?: string | null }).contact_phone ||
+          (data as { contact_phone?: string | null; phone?: string | null }).phone ||
+          fallback.phone,
+        campus_url: data.campus_url || fallback.campus_url,
+      };
+    };
+
+    if (course.training_center_id) {
+      const centerByCourse = await fetchCenter("id", course.training_center_id);
+      if (centerByCourse) return centerByCourse;
     }
+
+    if (centerSlug) {
+      const centerBySlug = await fetchCenter("slug", centerSlug);
+      if (centerBySlug) return centerBySlug;
+    }
+
+    return fallback;
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     try {
+      const center = await resolveCenterDataForProgram();
 
       generateProyectoFormativoPDF({
         courseTitle: course.title,
@@ -205,15 +236,15 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         professionalFamily: course.professional_family || course.category || "Servicios Socioculturales y a la Comunidad",
         qualificationLevel: course.qualification_level,
         modules: modules,
-        centerName: datosDelCentro.nombre,
-        centerPhone: centerContact?.phone,
-        centerEmail: centerContact?.email,
-        centerAddress: datosDelCentro.direccion,
-        centerCity: datosDelCentro.localidad,
-        centerProvince: datosDelCentro.provincia,
-        centerPostalCode: datosDelCentro.codigoPostal,
-        centerCif: datosDelCentro.cif,
-        platformUrl: centerContact?.campus_url,
+        centerName: center.name,
+        centerPhone: center.phone,
+        centerEmail: center.email,
+        centerAddress: center.address,
+        centerCity: center.city,
+        centerProvince: center.province,
+        centerPostalCode: center.postal_code,
+        centerCif: center.cif,
+        platformUrl: center.campus_url,
       });
     } catch (error) {
       console.error('Error generating training program PDF:', error);
