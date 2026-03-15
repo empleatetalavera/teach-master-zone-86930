@@ -111,7 +111,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       const contactEmail = course.support_email || 'formacion.empleate@gmail.com';
       const contactPhone = course.support_phone || '665 673 416';
-      const genericCenterName = 'Centro de Formación Acreditado';
+      const genericCenterName = 'Centro Acreditado SEPE';
 
       await generateStudentGuidePDF(
         course.title,

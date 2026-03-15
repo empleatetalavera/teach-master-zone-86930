@@ -1503,32 +1503,6 @@ export default function CourseView() {
               </CardContent>
             </Card>
 
-            {course.student_guide_pdf_url && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookMarked className="h-5 w-5 text-primary" />
-                    Versión PDF subida manualmente
-                  </CardTitle>
-                  <CardDescription>
-                    Este archivo puede contener contenido personalizado antiguo.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full flex items-center gap-2"
-                    onClick={() => openPdfWithFallback(
-                      course.student_guide_pdf_url!,
-                      `${course.title.replace(/\s+/g, '-').toLowerCase()}-guia-alumno.pdf`
-                    )}
-                  >
-                    <FileDown className="h-4 w-4" />
-                    Descargar PDF subido
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
 
           {/* Tutor Guide Tab - For teachers and admins */}
