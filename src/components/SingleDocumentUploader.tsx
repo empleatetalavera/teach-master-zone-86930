@@ -137,34 +137,47 @@ export const SingleDocumentUploader: React.FC<SingleDocumentUploaderProps> = ({
           <FileText className="h-4 w-4 text-primary" />
           <span className="text-sm flex-1 truncate">{documentLabel} subido</span>
           <Badge variant="secondary" className="text-xs">PDF</Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={async () => {
-              try {
-                const response = await fetch(documentUrl!);
-                const blob = await response.blob();
-                const blobUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.download = `${documentLabel}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-              } catch {
-                const link = document.createElement('a');
-                link.href = documentUrl!;
-                link.download = `${documentLabel}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }
-            }}
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Button>
+          {documentType === 'guide' ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => {
+                toast.info('La guía neutra se descarga desde el botón principal "Descargar Guía del Alumno (PDF)".');
+              }}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={async () => {
+                try {
+                  const response = await fetch(documentUrl!);
+                  const blob = await response.blob();
+                  const blobUrl = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = blobUrl;
+                  link.download = `${documentLabel}.pdf`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                } catch {
+                  const link = document.createElement('a');
+                  link.href = documentUrl!;
+                  link.download = `${documentLabel}.pdf`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }
+              }}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -200,7 +213,9 @@ export const SingleDocumentUploader: React.FC<SingleDocumentUploaderProps> = ({
         </>
       )}
       <p className="text-xs text-muted-foreground mt-2">
-        Este PDF reemplazará el contenido auto-generado para adaptarlo a tu certificado profesional.
+        {documentType === 'guide'
+          ? 'La descarga de alumnos usa siempre la guía neutra autogenerada.'
+          : 'Este PDF reemplazará el contenido auto-generado para adaptarlo a tu certificado profesional.'}
       </p>
     </div>
   );
