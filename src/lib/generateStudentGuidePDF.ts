@@ -1556,6 +1556,21 @@ export const generateStudentGuidePDF = async (
   // Añadir footer a la última página
   addFooter();
 
-  // Guardar PDF
-  doc.save(`Guia_Alumno_${courseTitle.replace(/\s+/g, '_')}.pdf`);
+  const fileName = `Guia_Alumno_${courseTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+
+  // Guardar PDF (estrategia robusta: Blob/ObjectURL con fallback a doc.save)
+  try {
+    const blob = doc.output('blob');
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+  } catch {
+    doc.save(fileName);
+  }
 };

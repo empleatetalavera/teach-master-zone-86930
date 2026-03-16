@@ -137,13 +137,17 @@ export const SingleDocumentUploader: React.FC<SingleDocumentUploaderProps> = ({
           <FileText className="h-4 w-4 text-primary" />
           <span className="text-sm flex-1 truncate">{documentLabel} subido</span>
           <Badge variant="secondary" className="text-xs">PDF</Badge>
-          {documentType === 'guide' ? (
+          {(documentType === 'guide' || documentType === 'program') ? (
             <Button
               variant="ghost"
               size="icon"
               className="h-7 w-7"
               onClick={() => {
-                toast.info('La guía neutra se descarga desde el botón principal "Descargar Guía del Alumno (PDF)".');
+                toast.info(
+                  documentType === 'guide'
+                    ? 'La guía neutra se descarga desde el botón principal "Descargar Guía del Alumno (PDF)".'
+                    : 'El programa formativo se descarga desde el botón principal "Descargar Proyecto Formativo (PDF)".'
+                );
               }}
             >
               <ExternalLink className="h-3.5 w-3.5" />

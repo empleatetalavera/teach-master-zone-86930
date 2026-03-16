@@ -172,12 +172,12 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
 
   const resolveCenterDataForProgram = async () => {
     const fallback = {
-      name: datosDelCentro.nombre,
-      cif: datosDelCentro.cif,
-      address: datosDelCentro.direccion,
-      city: datosDelCentro.localidad,
-      province: datosDelCentro.provincia,
-      postal_code: datosDelCentro.codigoPostal,
+      name: centerContact?.name || branding.centerName || datosDelCentro.nombre,
+      cif: centerContact?.cif || datosDelCentro.cif,
+      address: centerContact?.address || datosDelCentro.direccion,
+      city: centerContact?.city || datosDelCentro.localidad,
+      province: centerContact?.province || datosDelCentro.provincia,
+      postal_code: centerContact?.postal_code || datosDelCentro.codigoPostal,
       email: centerContact?.email || "",
       phone: centerContact?.phone || "",
       campus_url: centerContact?.campus_url || "",
@@ -199,24 +199,32 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
         city: data.city || fallback.city,
         province: data.province || fallback.province,
         postal_code: data.postal_code || fallback.postal_code,
-        email: (data as { contact_email?: string | null; email?: string | null }).contact_email ||
+        email:
+          (data as { contact_email?: string | null; email?: string | null }).contact_email ||
           (data as { contact_email?: string | null; email?: string | null }).email ||
           fallback.email,
-        phone: (data as { contact_phone?: string | null; phone?: string | null }).contact_phone ||
+        phone:
+          (data as { contact_phone?: string | null; phone?: string | null }).contact_phone ||
           (data as { contact_phone?: string | null; phone?: string | null }).phone ||
           fallback.phone,
         campus_url: data.campus_url || fallback.campus_url,
       };
     };
 
-    if (course.training_center_id) {
-      const centerByCourse = await fetchCenter("id", course.training_center_id);
-      if (centerByCourse) return centerByCourse;
-    }
-
+    // Prioridad multi-tenant: centro actual de la sesión/URL por encima del centro creador del curso
     if (centerSlug) {
       const centerBySlug = await fetchCenter("slug", centerSlug);
       if (centerBySlug) return centerBySlug;
+    }
+
+    // Si ya tenemos datos del centro actual en sesión, no sobreescribir con el centro creador del curso
+    if (centerContact?.name) {
+      return fallback;
+    }
+
+    if (course.training_center_id) {
+      const centerByCourse = await fetchCenter("id", course.training_center_id);
+      if (centerByCourse) return centerByCourse;
     }
 
     return fallback;
