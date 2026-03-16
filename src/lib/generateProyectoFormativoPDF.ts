@@ -1420,7 +1420,21 @@ export function generateProyectoFormativoPDF(params: ProyectoFormativoParams) {
   addPageNumber();
 
   const fileName = `Proyecto_Formativo_${params.courseCode.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-  doc.save(fileName);
+
+  try {
+    const blob = doc.output("blob");
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = fileName;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+  } catch {
+    doc.save(fileName);
+  }
 }
 
 function getMethodologyText(moduleCode: string): string {
