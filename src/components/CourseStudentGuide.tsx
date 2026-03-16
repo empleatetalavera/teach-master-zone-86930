@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { generateStudentGuidePDF } from "@/lib/generateStudentGuidePDF";
 import { supabase } from "@/integrations/supabase/client";
+import { PDFDocument, rgb } from "pdf-lib";
 
 interface CourseStudentGuideProps {
   course: {
@@ -76,7 +77,46 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
   const handleDownloadPDF = async () => {
     try {
-      // Siempre generar guía dinámica (sin pie de página con nombres de centros)
+      // Usar PDF personalizado y eliminar el pie de página
+      const customPdfUrl = '/documents/guia_alumno_custom.pdf';
+      try {
+        const response = await fetch(customPdfUrl);
+        if (response.ok) {
+          const pdfBytes = await response.arrayBuffer();
+          const pdfDoc = await PDFDocument.load(pdfBytes);
+          const pages = pdfDoc.getPages();
+          
+          // Cubrir el pie de página en todas las páginas con un rectángulo blanco
+          for (const page of pages) {
+            const { width } = page.getSize();
+            // Cubrir la franja inferior donde aparece el footer (últimos 30 puntos)
+            page.drawRectangle({
+              x: 0,
+              y: 0,
+              width: width,
+              height: 35,
+              color: rgb(1, 1, 1), // blanco
+            });
+          }
+          
+          const modifiedPdfBytes = await pdfDoc.save();
+          const blob = new Blob([modifiedPdfBytes as BlobPart], { type: 'application/pdf' });
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `Guia_Alumno_${course.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+          link.rel = 'noopener';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+          return;
+        }
+      } catch (fetchErr) {
+        console.warn('Error processing custom guide, falling back to generated PDF:', fetchErr);
+      }
+
+      // Fallback: generar guía dinámica (sin pie de página)
       let modulesData: any[] = [];
       if (course.id) {
         const { data: mods } = await supabase
