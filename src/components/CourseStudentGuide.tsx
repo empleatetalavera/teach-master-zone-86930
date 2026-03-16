@@ -87,16 +87,27 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
           const pages = pdfDoc.getPages();
           
           // Cubrir el pie de página en todas las páginas con un rectángulo blanco
-          for (const page of pages) {
-            const { width } = page.getSize();
-            // Cubrir la franja inferior donde aparece el footer (últimos 30 puntos)
+          for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
+            const { width, height: pageHeight } = page.getSize();
+            // Cubrir la franja inferior donde aparece el footer
             page.drawRectangle({
               x: 0,
               y: 0,
               width: width,
               height: 35,
-              color: rgb(1, 1, 1), // blanco
+              color: rgb(1, 1, 1),
             });
+            // En la última página, cubrir también la sección de firma (mitad inferior)
+            if (i === pages.length - 1) {
+              page.drawRectangle({
+                x: 0,
+                y: 0,
+                width: width,
+                height: pageHeight * 0.55,
+                color: rgb(1, 1, 1),
+              });
+            }
           }
           
           const modifiedPdfBytes = await pdfDoc.save();
