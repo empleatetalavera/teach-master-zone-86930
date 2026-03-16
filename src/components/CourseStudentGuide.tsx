@@ -76,27 +76,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
   const handleDownloadPDF = async () => {
     try {
-      // Si hay un PDF personalizado subido, descargarlo directamente
-      if (course.student_guide_pdf_url) {
-        try {
-          const response = await fetch(course.student_guide_pdf_url);
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = `Guia_Alumno_${course.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
-          link.rel = 'noopener';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
-          return;
-        } catch (fetchErr) {
-          console.warn('Error fetching custom guide, falling back to generated PDF:', fetchErr);
-        }
-      }
-
-      // Fallback: generar guía dinámica
+      // Siempre generar guía dinámica (sin pie de página con nombres de centros)
       let modulesData: any[] = [];
       if (course.id) {
         const { data: mods } = await supabase
