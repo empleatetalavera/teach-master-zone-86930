@@ -6,7 +6,7 @@ import {
   UserCheck, ClipboardList, Lightbulb, Folder, Timer, FileDown
 } from "lucide-react";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { generateStudentGuidePDF } from "@/lib/generateStudentGuidePDF";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,22 +48,25 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
   };
 
   const SectionHeader = ({ id, icon: Icon, number, title }: { id: string; icon: any; number: string; title: string }) => (
-    <CollapsibleTrigger 
+    <button
+      type="button"
+      onClick={() => toggleSection(id)}
       className="flex items-center gap-3 w-full p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-all cursor-pointer group"
+      aria-expanded={!!openSections[id]}
     >
-      <div className="p-2 bg-primary/20 rounded-lg group-hover:bg-primary/30 transition-colors">
+      <span className="p-2 bg-primary/20 rounded-lg group-hover:bg-primary/30 transition-colors">
         <Icon className="h-6 w-6 text-primary" />
-      </div>
+      </span>
       <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
         {number}
       </span>
-      <h2 className="text-lg font-bold flex-1 text-left">{title}</h2>
+      <span className="text-lg font-bold flex-1 text-left">{title}</span>
       {openSections[id] ? (
         <ChevronUp className="h-5 w-5 text-muted-foreground" />
       ) : (
         <ChevronDown className="h-5 w-5 text-muted-foreground" />
       )}
-    </CollapsibleTrigger>
+    </button>
   );
 
   // Get dynamic course data
