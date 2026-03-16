@@ -400,6 +400,21 @@ export default function CourseView() {
 
   const openPdfViaBlob = openPdfWithFallback;
 
+  // Helper: resolve file_path (absolute URL or relative storage path) to a downloadable URL
+  const resolveAndOpenPdf = async (filePath: string, fileName: string) => {
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      await openPdfViaBlob(filePath, fileName);
+    } else {
+      const { data: signedData } = await supabase.storage
+        .from('module-content').createSignedUrl(filePath, 3600);
+      if (signedData?.signedUrl) {
+        await openPdfViaBlob(signedData.signedUrl, fileName);
+      } else {
+        toast({ title: "Error", description: "No se pudo generar el enlace de descarga.", variant: "destructive" });
+      }
+    }
+  };
+
   useEffect(() => {
     if (courseId && user) {
       loadCourseData();
