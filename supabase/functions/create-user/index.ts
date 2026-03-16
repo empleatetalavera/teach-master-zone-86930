@@ -136,8 +136,9 @@ serve(async (req) => {
       }
     }
 
-    // If no email provided, generate one from username
-    const effectiveEmail = email || `${username.toLowerCase()}@internal.plataforma.local`;
+    // If no email provided, generate one from username + center ID to avoid collisions across centers
+    const centerSuffix = effectiveTrainingCenterId ? effectiveTrainingCenterId.substring(0, 8) : 'default';
+    const effectiveEmail = email || `${username.toLowerCase()}.${centerSuffix}@internal.plataforma.local`;
 
     // If username provided, check it doesn't already exist in the same center
     if (username && effectiveTrainingCenterId) {
