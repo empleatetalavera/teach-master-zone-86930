@@ -400,6 +400,21 @@ export default function CourseView() {
 
   const openPdfViaBlob = openPdfWithFallback;
 
+  // Helper: resolve file_path (absolute URL or relative storage path) to a downloadable URL
+  const resolveAndOpenPdf = async (filePath: string, fileName: string) => {
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      await openPdfViaBlob(filePath, fileName);
+    } else {
+      const { data: signedData } = await supabase.storage
+        .from('module-content').createSignedUrl(filePath, 3600);
+      if (signedData?.signedUrl) {
+        await openPdfViaBlob(signedData.signedUrl, fileName);
+      } else {
+        toast({ title: "Error", description: "No se pudo generar el enlace de descarga.", variant: "destructive" });
+      }
+    }
+  };
+
   useEffect(() => {
     if (courseId && user) {
       loadCourseData();
@@ -1786,15 +1801,7 @@ export default function CourseView() {
                                   .order('created_at', { ascending: false })
                                   .limit(1);
                                 if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                  const { data: signedData } = await supabase.storage
-                                    .from('module-content')
-                                    .createSignedUrl(pdfData[0].file_path, 3600);
-                                  if (signedData?.signedUrl) {
-                                    await openPdfViaBlob(
-                                      signedData.signedUrl,
-                                      `${module.title || 'temario-modulo'}.pdf`
-                                    );
-                                  }
+                                  await resolveAndOpenPdf(pdfData[0].file_path, `${module.title || 'temario-modulo'}.pdf`);
                                 } else {
                                   toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de este módulo.", variant: "destructive" });
                                 }
@@ -1874,11 +1881,7 @@ export default function CourseView() {
                                       pdfData = fallback;
                                     }
                                     if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                      const { data: signedData } = await supabase.storage
-                                        .from('module-content').createSignedUrl(pdfData[0].file_path, 3600);
-                                      if (signedData?.signedUrl) {
-                                        await openPdfViaBlob(signedData.signedUrl, `${unit.title || 'temario'}.pdf`);
-                                      }
+                                      await resolveAndOpenPdf(pdfData[0].file_path, `${unit.title || 'temario'}.pdf`);
                                     } else {
                                       toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
                                     }
@@ -1904,11 +1907,7 @@ export default function CourseView() {
                                         pdfData = fallback;
                                       }
                                       if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                        const { data: signedData } = await supabase.storage
-                                          .from('module-content').createSignedUrl(pdfData[0].file_path, 3600);
-                                        if (signedData?.signedUrl) {
-                                          await openPdfViaBlob(signedData.signedUrl, `${unit.title || 'temario'}.pdf`);
-                                        }
+                                        await resolveAndOpenPdf(pdfData[0].file_path, `${unit.title || 'temario'}.pdf`);
                                       } else {
                                         toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
                                       }

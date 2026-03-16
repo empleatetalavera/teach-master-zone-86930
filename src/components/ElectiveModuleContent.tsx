@@ -63,10 +63,15 @@ export function ElectiveModuleContent({
       pdfData = fallback;
     }
     if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-      const { data: signedData } = await supabase.storage
-        .from('module-content').createSignedUrl(pdfData[0].file_path, 3600);
-      if (signedData?.signedUrl) {
-        await openPdfViaBlob(signedData.signedUrl, `${unitTitle || 'temario'}.pdf`);
+      const filePath = pdfData[0].file_path;
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        await openPdfViaBlob(filePath, `${unitTitle || 'temario'}.pdf`);
+      } else {
+        const { data: signedData } = await supabase.storage
+          .from('module-content').createSignedUrl(filePath, 3600);
+        if (signedData?.signedUrl) {
+          await openPdfViaBlob(signedData.signedUrl, `${unitTitle || 'temario'}.pdf`);
+        }
       }
     } else {
       toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
