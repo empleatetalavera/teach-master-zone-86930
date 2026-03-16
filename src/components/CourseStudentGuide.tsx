@@ -429,7 +429,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
       </Collapsible>
 
       {/* Section 3: Campus Virtual */}
-      <Collapsible open={openSections.campus}>
+      <Collapsible open={openSections.campus} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, campus: open }))}>
         <SectionHeader id="campus" icon={Monitor} number="3" title="EL CAMPUS VIRTUAL Y LAS APLICACIONES INFORMÁTICAS" />
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
