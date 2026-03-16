@@ -44,25 +44,29 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
     atencion: false,
   });
 
-  const SectionHeader = ({ id, icon: Icon, number, title }: { id: string; icon: any; number: string; title: string }) => (
-    <button
-      type="button"
-      className="flex items-center gap-3 w-full p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-all cursor-pointer group"
-      aria-expanded={!!openSections[id]}
-    >
-      <span className="p-2 bg-primary/20 rounded-lg group-hover:bg-primary/30 transition-colors">
-        <Icon className="h-6 w-6 text-primary" />
-      </span>
-      <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
-        {number}
-      </span>
-      <span className="text-lg font-bold flex-1 text-left">{title}</span>
-      {openSections[id] ? (
-        <ChevronUp className="h-5 w-5 text-muted-foreground" />
-      ) : (
-        <ChevronDown className="h-5 w-5 text-muted-foreground" />
-      )}
-    </button>
+  const SectionHeader = React.forwardRef<HTMLButtonElement, { id: string; icon: any; number: string; title: string } & React.ButtonHTMLAttributes<HTMLButtonElement>>(
+    ({ id, icon: Icon, number, title, ...props }, ref) => (
+      <button
+        ref={ref}
+        type="button"
+        className="flex items-center gap-3 w-full p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-all cursor-pointer group"
+        aria-expanded={!!openSections[id]}
+        {...props}
+      >
+        <span className="p-2 bg-primary/20 rounded-lg group-hover:bg-primary/30 transition-colors">
+          <Icon className="h-6 w-6 text-primary" />
+        </span>
+        <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
+          {number}
+        </span>
+        <span className="text-lg font-bold flex-1 text-left">{title}</span>
+        {openSections[id] ? (
+          <ChevronUp className="h-5 w-5 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+        )}
+      </button>
+    )
   );
 
   // Get dynamic course data
