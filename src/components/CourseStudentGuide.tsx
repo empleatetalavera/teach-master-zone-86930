@@ -1087,7 +1087,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
       </Collapsible>
 
       {/* Section 7: Titulación */}
-      <Collapsible open={openSections.titulacion}>
+      <Collapsible open={openSections.titulacion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, titulacion: open }))}>
         <SectionHeader id="titulacion" icon={GraduationCap} number="7" title="TITULACIÓN OBTENIDA" />
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
