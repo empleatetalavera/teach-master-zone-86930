@@ -1177,9 +1177,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 8: CAU */}
       <Collapsible open={openSections.cau} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, cau: open }))}>
-        <CollapsibleTrigger asChild>
-          <SectionHeader id="cau" icon={HeadphonesIcon} number="8" title="CAU: CENTRO DE ATENCIÓN DE USUARIOS" />
-        </CollapsibleTrigger>
+        {renderSectionHeader("cau", HeadphonesIcon, "8", "CAU: CENTRO DE ATENCIÓN DE USUARIOS")}
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
             <p className="text-sm">
