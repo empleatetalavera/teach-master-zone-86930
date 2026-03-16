@@ -44,10 +44,6 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
     atencion: false,
   });
 
-  const toggleSection = (key: string) => {
-    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
   const SectionHeader = ({ id, icon: Icon, number, title }: { id: string; icon: any; number: string; title: string }) => (
     <button
       type="button"
