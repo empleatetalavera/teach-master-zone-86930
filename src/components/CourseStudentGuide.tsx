@@ -49,7 +49,6 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
   const SectionHeader = ({ id, icon: Icon, number, title }: { id: string; icon: any; number: string; title: string }) => (
     <CollapsibleTrigger 
-      onClick={() => toggleSection(id)}
       className="flex items-center gap-3 w-full p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-all cursor-pointer group"
     >
       <div className="p-2 bg-primary/20 rounded-lg group-hover:bg-primary/30 transition-colors">
