@@ -100,7 +100,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
           }
           
           const modifiedPdfBytes = await pdfDoc.save();
-          const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+          const blob = new Blob([modifiedPdfBytes as BlobPart], { type: 'application/pdf' });
           const blobUrl = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = blobUrl;
