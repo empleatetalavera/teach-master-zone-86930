@@ -3536,12 +3536,19 @@ export type Database = {
     }
     Functions: {
       clean_old_login_attempts: { Args: never; Returns: undefined }
-      get_email_by_username: {
-        Args: { p_username: string }
-        Returns: {
-          email: string
-        }[]
-      }
+      get_email_by_username:
+        | {
+            Args: { p_username: string }
+            Returns: {
+              email: string
+            }[]
+          }
+        | {
+            Args: { p_center_slug?: string; p_username: string }
+            Returns: {
+              email: string
+            }[]
+          }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
