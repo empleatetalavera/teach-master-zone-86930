@@ -257,7 +257,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
       </Collapsible>
 
       {/* Section 2: Aspectos Generales */}
-      <Collapsible open={openSections.aspectos}>
+      <Collapsible open={openSections.aspectos} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, aspectos: open }))}>
         <SectionHeader id="aspectos" icon={GraduationCap} number="2" title="ASPECTOS GENERALES DEL CERTIFICADO" />
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
