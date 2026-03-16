@@ -1881,11 +1881,7 @@ export default function CourseView() {
                                       pdfData = fallback;
                                     }
                                     if (pdfData && pdfData.length > 0 && pdfData[0].file_path) {
-                                      const { data: signedData } = await supabase.storage
-                                        .from('module-content').createSignedUrl(pdfData[0].file_path, 3600);
-                                      if (signedData?.signedUrl) {
-                                        await openPdfViaBlob(signedData.signedUrl, `${unit.title || 'temario'}.pdf`);
-                                      }
+                                      await resolveAndOpenPdf(pdfData[0].file_path, `${unit.title || 'temario'}.pdf`);
                                     } else {
                                       toast({ title: "Sin PDF", description: "Aún no se ha subido el PDF de esta unidad.", variant: "destructive" });
                                     }
