@@ -139,10 +139,14 @@ export default function Auth() {
     try {
       let emailToUse = loginEmail.toLowerCase().trim();
 
-      // If not an email, try to find user by username
+      // If not an email, try to find user by username (scoped to center if available)
       if (!isEmail(loginEmail)) {
+        const rpcParams: { p_username: string; p_center_slug?: string } = { p_username: loginEmail.trim() };
+        if (effectiveCenterSlug) {
+          rpcParams.p_center_slug = effectiveCenterSlug;
+        }
         const { data: userData, error: lookupError } = await supabase
-          .rpc('get_email_by_username', { p_username: loginEmail.trim() });
+          .rpc('get_email_by_username', rpcParams);
         
         if (lookupError || !userData || userData.length === 0) {
           toast({
