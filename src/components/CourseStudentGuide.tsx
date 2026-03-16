@@ -1130,7 +1130,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
       </Collapsible>
 
       {/* Section 8: CAU */}
-      <Collapsible open={openSections.cau}>
+      <Collapsible open={openSections.cau} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, cau: open }))}>
         <SectionHeader id="cau" icon={HeadphonesIcon} number="8" title="CAU: CENTRO DE ATENCIÓN DE USUARIOS" />
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
