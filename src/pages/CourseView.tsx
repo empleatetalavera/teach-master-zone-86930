@@ -1742,11 +1742,16 @@ export default function CourseView() {
           <TabsContent value="modules" className="space-y-4">
             {(isCFCCourse || isPropio) && (
               <>
-                <div>
-                  <h2 className="text-lg font-semibold">{isCFCCourse ? 'Contenido del Curso' : 'Temario del Curso'}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Haz clic en cada módulo para expandir y ver su contenido
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold">{isCFCCourse ? 'Contenido del Curso' : 'Temario del Curso'}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Haz clic en cada módulo para expandir y ver su contenido
+                    </p>
+                  </div>
+                  {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
+                    <BatchContentGenerator courseId={courseId!} />
+                  )}
                 </div>
 
                 {modules.length === 0 ? (
