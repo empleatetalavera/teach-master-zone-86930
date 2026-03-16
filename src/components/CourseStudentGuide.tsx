@@ -711,7 +711,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
       </Collapsible>
 
       {/* Section 4: Metodología de Estudio */}
-      <Collapsible open={openSections.metodologia}>
+      <Collapsible open={openSections.metodologia} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, metodologia: open }))}>
         <SectionHeader id="metodologia" icon={Target} number="4" title="METODOLOGÍA DE ESTUDIO" />
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
