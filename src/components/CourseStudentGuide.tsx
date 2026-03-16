@@ -1193,7 +1193,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
       </Collapsible>
 
       {/* Section 9: Servicio de Atención al Cliente */}
-      <Collapsible open={openSections.atencion}>
+      <Collapsible open={openSections.atencion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, atencion: open }))}>
         <SectionHeader id="atencion" icon={Phone} number="9" title="SERVICIO DE ATENCIÓN AL CLIENTE" />
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
