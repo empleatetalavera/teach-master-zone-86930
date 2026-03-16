@@ -76,8 +76,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
   const handleDownloadPDF = async () => {
     try {
-      // Usar PDF personalizado y eliminar el pie de página
-      const customPdfUrl = '/documents/guia_alumno_custom.pdf';
+      // Prioridad 1: PDF personalizado subido por el admin del centro
+      const customUploadedUrl = course.student_guide_pdf_url;
+      const customPdfUrl = customUploadedUrl || '/documents/guia_alumno_custom.pdf';
       try {
         const response = await fetch(customPdfUrl);
         if (response.ok) {
