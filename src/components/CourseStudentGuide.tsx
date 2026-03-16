@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { generateStudentGuidePDF } from "@/lib/generateStudentGuidePDF";
 import { supabase } from "@/integrations/supabase/client";
+import { PDFDocument, rgb } from "pdf-lib";
 
 interface CourseStudentGuideProps {
   course: {
