@@ -174,7 +174,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
       </div>
 
       {/* Section 1: Presentación */}
-      <Collapsible open={openSections.presentacion}>
+      <Collapsible open={openSections.presentacion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, presentacion: open }))}>
         <SectionHeader id="presentacion" icon={BookOpen} number="1" title="PRESENTACIÓN" />
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
