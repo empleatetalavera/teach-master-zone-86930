@@ -83,11 +83,12 @@ export const generateStudentGuidePDF = async (
   const centerCIF = branding.cif || "";
   const centerSepeReg = branding.sepeRegistryNumber || "";
 
-  // Pie de página neutro para todos los centros
-  const footerText = 'Centro Acreditado SEPE';
+  // Pie de página desactivado por solicitud (sin texto en el borde inferior)
+  const footerText = '';
 
   // Helper para añadir footer en cada página
   const addFooter = () => {
+    if (!footerText) return;
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...GRAY);
