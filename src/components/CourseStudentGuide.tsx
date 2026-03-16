@@ -51,7 +51,6 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
   const SectionHeader = ({ id, icon: Icon, number, title }: { id: string; icon: any; number: string; title: string }) => (
     <button
       type="button"
-      onClick={() => toggleSection(id)}
       className="flex items-center gap-3 w-full p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-all cursor-pointer group"
       aria-expanded={!!openSections[id]}
     >
