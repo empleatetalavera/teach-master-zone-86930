@@ -6,7 +6,7 @@ import {
   UserCheck, ClipboardList, Lightbulb, Folder, Timer, FileDown
 } from "lucide-react";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { generateStudentGuidePDF } from "@/lib/generateStudentGuidePDF";
 import { supabase } from "@/integrations/supabase/client";
