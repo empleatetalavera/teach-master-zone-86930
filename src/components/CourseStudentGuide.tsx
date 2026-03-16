@@ -6,7 +6,7 @@ import {
   UserCheck, ClipboardList, Lightbulb, Folder, Timer, FileDown
 } from "lucide-react";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { generateStudentGuidePDF } from "@/lib/generateStudentGuidePDF";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,14 +44,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
     atencion: false,
   });
 
-  const toggleSection = (key: string) => {
-    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
   const SectionHeader = ({ id, icon: Icon, number, title }: { id: string; icon: any; number: string; title: string }) => (
     <button
       type="button"
-      onClick={() => toggleSection(id)}
       className="flex items-center gap-3 w-full p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-all cursor-pointer group"
       aria-expanded={!!openSections[id]}
     >
@@ -229,7 +224,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 1: Presentación */}
       <Collapsible open={openSections.presentacion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, presentacion: open }))}>
-        <SectionHeader id="presentacion" icon={BookOpen} number="1" title="PRESENTACIÓN" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="presentacion" icon={BookOpen} number="1" title="PRESENTACIÓN" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-5 rounded-r-lg">
@@ -312,7 +309,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 2: Aspectos Generales */}
       <Collapsible open={openSections.aspectos} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, aspectos: open }))}>
-        <SectionHeader id="aspectos" icon={GraduationCap} number="2" title="ASPECTOS GENERALES DEL CERTIFICADO" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="aspectos" icon={GraduationCap} number="2" title="ASPECTOS GENERALES DEL CERTIFICADO" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
             {/* 2.1 Identificación */}
@@ -484,7 +483,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 3: Campus Virtual */}
       <Collapsible open={openSections.campus} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, campus: open }))}>
-        <SectionHeader id="campus" icon={Monitor} number="3" title="EL CAMPUS VIRTUAL Y LAS APLICACIONES INFORMÁTICAS" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="campus" icon={Monitor} number="3" title="EL CAMPUS VIRTUAL Y LAS APLICACIONES INFORMÁTICAS" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
             {/* Intro */}
@@ -766,7 +767,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 4: Metodología de Estudio */}
       <Collapsible open={openSections.metodologia} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, metodologia: open }))}>
-        <SectionHeader id="metodologia" icon={Target} number="4" title="METODOLOGÍA DE ESTUDIO" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="metodologia" icon={Target} number="4" title="METODOLOGÍA DE ESTUDIO" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
@@ -900,7 +903,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 5: Sistema de Tutorías */}
       <Collapsible open={openSections.tutorias} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, tutorias: open }))}>
-        <SectionHeader id="tutorias" icon={Users} number="5" title="SISTEMA DE TUTORÍAS" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="tutorias" icon={Users} number="5" title="SISTEMA DE TUTORÍAS" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
             <p className="text-sm text-muted-foreground">
@@ -989,7 +994,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 6: Sistema de Evaluación */}
       <Collapsible open={openSections.evaluacion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, evaluacion: open }))}>
-        <SectionHeader id="evaluacion" icon={Award} number="6" title="SISTEMA DE EVALUACIÓN" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="evaluacion" icon={Award} number="6" title="SISTEMA DE EVALUACIÓN" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
             {/* 6.1 Actividades y Pruebas */}
@@ -1142,7 +1149,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 7: Titulación */}
       <Collapsible open={openSections.titulacion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, titulacion: open }))}>
-        <SectionHeader id="titulacion" icon={GraduationCap} number="7" title="TITULACIÓN OBTENIDA" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="titulacion" icon={GraduationCap} number="7" title="TITULACIÓN OBTENIDA" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-5">
@@ -1185,7 +1194,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 8: CAU */}
       <Collapsible open={openSections.cau} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, cau: open }))}>
-        <SectionHeader id="cau" icon={HeadphonesIcon} number="8" title="CAU: CENTRO DE ATENCIÓN DE USUARIOS" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="cau" icon={HeadphonesIcon} number="8" title="CAU: CENTRO DE ATENCIÓN DE USUARIOS" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
             <p className="text-sm">
@@ -1248,7 +1259,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 9: Servicio de Atención al Cliente */}
       <Collapsible open={openSections.atencion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, atencion: open }))}>
-        <SectionHeader id="atencion" icon={Phone} number="9" title="SERVICIO DE ATENCIÓN AL CLIENTE" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="atencion" icon={Phone} number="9" title="SERVICIO DE ATENCIÓN AL CLIENTE" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
             <p className="text-sm">
