@@ -1134,9 +1134,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 7: Titulación */}
       <Collapsible open={openSections.titulacion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, titulacion: open }))}>
-        <CollapsibleTrigger asChild>
-          <SectionHeader id="titulacion" icon={GraduationCap} number="7" title="TITULACIÓN OBTENIDA" />
-        </CollapsibleTrigger>
+        {renderSectionHeader("titulacion", GraduationCap, "7", "TITULACIÓN OBTENIDA")}
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-4">
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-5">
