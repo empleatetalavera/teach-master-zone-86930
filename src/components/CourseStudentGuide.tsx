@@ -981,9 +981,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 6: Sistema de Evaluación */}
       <Collapsible open={openSections.evaluacion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, evaluacion: open }))}>
-        <CollapsibleTrigger asChild>
-          <SectionHeader id="evaluacion" icon={Award} number="6" title="SISTEMA DE EVALUACIÓN" />
-        </CollapsibleTrigger>
+        {renderSectionHeader("evaluacion", Award, "6", "SISTEMA DE EVALUACIÓN")}
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
             {/* 6.1 Actividades y Pruebas */}
