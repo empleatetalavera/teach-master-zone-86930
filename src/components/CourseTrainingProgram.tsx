@@ -217,6 +217,11 @@ export function CourseTrainingProgram({ course, modules, centerSlug, centerConta
       if (centerBySlug) return centerBySlug;
     }
 
+    // Si ya tenemos datos del centro actual en sesión, no sobreescribir con el centro creador del curso
+    if (centerContact?.name) {
+      return fallback;
+    }
+
     if (course.training_center_id) {
       const centerByCourse = await fetchCenter("id", course.training_center_id);
       if (centerByCourse) return centerByCourse;
