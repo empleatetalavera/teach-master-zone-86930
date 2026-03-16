@@ -934,7 +934,7 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
       </Collapsible>
 
       {/* Section 6: Sistema de Evaluación */}
-      <Collapsible open={openSections.evaluacion}>
+      <Collapsible open={openSections.evaluacion} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, evaluacion: open }))}>
         <SectionHeader id="evaluacion" icon={Award} number="6" title="SISTEMA DE EVALUACIÓN" />
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
