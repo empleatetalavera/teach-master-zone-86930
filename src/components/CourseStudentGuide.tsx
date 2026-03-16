@@ -907,7 +907,9 @@ export function CourseStudentGuide({ course }: CourseStudentGuideProps) {
 
       {/* Section 5: Sistema de Tutorías */}
       <Collapsible open={openSections.tutorias} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, tutorias: open }))}>
-        <SectionHeader id="tutorias" icon={Users} number="5" title="SISTEMA DE TUTORÍAS" />
+        <CollapsibleTrigger asChild>
+          <SectionHeader id="tutorias" icon={Users} number="5" title="SISTEMA DE TUTORÍAS" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="p-6 border border-t-0 rounded-b-lg space-y-6">
             <p className="text-sm text-muted-foreground">
