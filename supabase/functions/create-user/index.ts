@@ -139,17 +139,18 @@ serve(async (req) => {
     // If no email provided, generate one from username
     const effectiveEmail = email || `${username.toLowerCase()}@internal.plataforma.local`;
 
-    // If username provided, check it doesn't already exist
-    if (username) {
+    // If username provided, check it doesn't already exist in the same center
+    if (username && effectiveTrainingCenterId) {
       const { data: existingUser } = await supabaseAdmin
         .from("profiles")
         .select("id")
         .ilike("username", username)
+        .eq("training_center_id", effectiveTrainingCenterId)
         .maybeSingle();
 
       if (existingUser) {
         return new Response(
-          JSON.stringify({ success: false, error: "Ya existe un usuario con este nombre de usuario." }),
+          JSON.stringify({ success: false, error: "Ya existe un usuario con este nombre de usuario en este centro." }),
           {
             status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
