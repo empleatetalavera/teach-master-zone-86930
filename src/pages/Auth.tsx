@@ -22,6 +22,14 @@ const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 c
 // Helper to check if string is an email
 const isEmail = (value: string) => value.includes('@');
 
+const normalizeDomain = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .split("/")[0];
+
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<'login' | 'reset'>('login');
