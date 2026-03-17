@@ -22,6 +22,8 @@ const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 c
 // Helper to check if string is an email
 const isEmail = (value: string) => value.includes('@');
 
+const isCIFIdentifier = (value: string) => /^[A-Z][0-9]{7,8}[A-Z0-9]?$/i.test(value.trim());
+
 const normalizeDomain = (value: string) =>
   value
     .trim()
