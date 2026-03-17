@@ -22,6 +22,8 @@ const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 c
 // Helper to check if string is an email
 const isEmail = (value: string) => value.includes('@');
 
+const isCIFIdentifier = (value: string) => /^[A-Z][0-9]{7,8}[A-Z0-9]?$/i.test(value.trim());
+
 const normalizeDomain = (value: string) =>
   value
     .trim()
@@ -149,7 +151,22 @@ export default function Auth() {
 
       // If not an email, resolve username to email
       if (!isEmail(loginEmail)) {
-        let centerSlugForLookup = effectiveCenterSlug ?? null;
+        let centerSlugForLookup = (effectiveCenterSlug ?? branding.slug ?? null)?.trim() || null;
+
+        // Compatibilidad: algunos enlaces antiguos envían CIF en ?center=
+        // Convertimos CIF -> slug para la RPC que espera slug de centro
+        if (centerSlugForLookup && isCIFIdentifier(centerSlugForLookup)) {
+          const { data: centerByCif } = await supabase
+            .from("training_centers")
+            .select("slug")
+            .eq("cif", centerSlugForLookup.toUpperCase())
+            .eq("is_active", true)
+            .maybeSingle();
+
+          if (centerByCif?.slug) {
+            centerSlugForLookup = centerByCif.slug;
+          }
+        }
 
         // Fallback: infer center from current domain when URL has no ?center=
         if (!centerSlugForLookup) {
