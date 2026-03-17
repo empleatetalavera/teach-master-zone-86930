@@ -147,16 +147,44 @@ export default function Auth() {
     try {
       let emailToUse = loginEmail.toLowerCase().trim();
 
-      // If not an email, resolve username to email (always pass p_center_slug to avoid RPC overload ambiguity)
+      // If not an email, resolve username to email
       if (!isEmail(loginEmail)) {
-        const rpcParams: { p_username: string; p_center_slug: string | null } = {
-          p_username: loginEmail.trim(),
-          p_center_slug: effectiveCenterSlug ?? null,
+        let centerSlugForLookup = effectiveCenterSlug ?? null;
+
+        // Fallback: infer center from current domain when URL has no ?center=
+        if (!centerSlugForLookup) {
+          const currentHost = normalizeDomain(window.location.origin);
+          const { data: centersByDomain } = await supabase
+            .from("training_centers")
+            .select("slug, custom_domain, campus_url")
+            .eq("is_active", true)
+            .not("slug", "is", null);
+
+          const matchedCenter = centersByDomain?.find((center) => {
+            const customDomain = center.custom_domain ? normalizeDomain(center.custom_domain) : null;
+            const campusDomain = center.campus_url ? normalizeDomain(center.campus_url) : null;
+            return customDomain === currentHost || campusDomain === currentHost;
+          });
+
+          centerSlugForLookup = matchedCenter?.slug ?? null;
+        }
+
+        const runLookup = async (centerSlug: string | null) => {
+          return supabase.rpc("get_email_by_username", {
+            p_username: loginEmail.trim(),
+            p_center_slug: centerSlug,
+          });
         };
 
-        const { data: userData, error: lookupError } = await supabase
-          .rpc('get_email_by_username', rpcParams);
-        
+        let { data: userData, error: lookupError } = await runLookup(centerSlugForLookup);
+
+        // Fallback retry without center filter if center-scoped lookup returns nothing
+        if ((lookupError || !userData || userData.length === 0) && centerSlugForLookup) {
+          const retry = await runLookup(null);
+          userData = retry.data;
+          lookupError = retry.error;
+        }
+
         if (lookupError || !userData || userData.length === 0) {
           toast({
             title: "Usuario no encontrado",
@@ -166,7 +194,7 @@ export default function Auth() {
           setIsLoading(false);
           return;
         }
-        
+
         emailToUse = userData[0].email;
       }
 
