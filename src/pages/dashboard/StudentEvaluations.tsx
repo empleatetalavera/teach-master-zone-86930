@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import ScormResultsSection from "@/components/scorm/ScormResultsSection";
 import { 
   FileText, 
   Clock, 
@@ -341,6 +342,10 @@ const StudentEvaluations = () => {
           })
         )}
       </div>
+
+      {user?.id && (
+        <ScormResultsSection userId={user.id} title="Evaluaciones SCORM" />
+      )}
     </div>
   );
 };

@@ -16,6 +16,7 @@ import { Loader2, Upload, User, FileText, Briefcase, GraduationCap, CheckCircle,
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import { UserPreferencesPanel } from "@/components/UserPreferencesPanel";
+import ScormResultsSection from "@/components/scorm/ScormResultsSection";
 
 interface Profile {
   id: string;
@@ -1175,6 +1176,12 @@ export default function Profile() {
             </Tabs>
           </CardContent>
         </Card>
+
+        {user?.id && (
+          <div className="mt-6">
+            <ScormResultsSection userId={user.id} title="Mis evaluaciones" />
+          </div>
+        )}
       </div>
     </div>
   );
