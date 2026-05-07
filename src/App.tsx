@@ -168,6 +168,7 @@ function AppRoutes() {
           <Route path="student/evaluations" element={<StudentEvaluations />} />
           <Route path="student/certificates" element={<StudentCertificates />} />
           <Route path="student/support" element={<StudentSupport />} />
+          <Route path="guias" element={<StudentGuides />} />
           <Route path="auditor" element={<AuditorDashboard />} />
           <Route path="auditor/courses" element={<AuditorCourses />} />
           <Route path="auditor/traceability" element={<AdminTraceability />} />
