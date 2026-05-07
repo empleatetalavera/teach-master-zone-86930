@@ -183,7 +183,19 @@ export default function ScormProfessionalViewer({
   const [completedSlides, setCompletedSlides] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('content');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(typeof window === 'undefined' ? true : window.innerWidth >= 1024);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1024);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) setSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   const [selectedTheme, setSelectedTheme] = useState(CONTENT_THEMES[6]); // Default: iSpring Teal
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
