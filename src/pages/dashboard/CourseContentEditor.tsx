@@ -54,6 +54,7 @@ import { Progress } from "@/components/ui/progress";
 import { ModuleManualUploader } from "@/components/ModuleManualUploader";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ScormAuthorModal } from "@/components/scorm-author";
+import { UnitScormManager } from "@/components/scorm/UnitScormManager";
 
 interface Course {
   id: string;
