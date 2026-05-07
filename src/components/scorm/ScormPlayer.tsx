@@ -358,13 +358,20 @@ export default function ScormPlayer({
                 )}
               </div>
 
-              {/* Inline player — only renders once API is attached to window */}
+              {/* Inline player — only renders once API is attached AND the SW served the package */}
               {isActive && (
                 <div className="aspect-video bg-black rounded-lg overflow-hidden border">
-                  {apiReady ? (
+                  {runtimeError ? (
+                    <div className="w-full h-full flex items-center justify-center text-white text-center px-4">
+                      <div>
+                        <AlertCircle className="h-6 w-6 mx-auto mb-2 text-red-400" />
+                        <p className="text-sm">{runtimeError}</p>
+                      </div>
+                    </div>
+                  ) : iframeSrc && apiReady ? (
                     <iframe
                       ref={iframeRef}
-                      src={buildScoSrc(activePackage!.filePath)}
+                      src={iframeSrc}
                       className="w-full h-full"
                       title={`SCORM: ${activePackage!.title}`}
                       sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
