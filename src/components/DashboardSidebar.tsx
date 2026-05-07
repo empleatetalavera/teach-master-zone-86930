@@ -26,7 +26,8 @@ import {
   DollarSign,
   Layers,
   FileSignature,
-  Globe
+  Globe,
+  LifeBuoy
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
