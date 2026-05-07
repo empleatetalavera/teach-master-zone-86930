@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Upload, User, FileText, Briefcase, GraduationCap, CheckCircle, XCircle, Clock, ArrowRight, ArrowLeft, FileDown, Calendar, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
+import { UserPreferencesPanel } from "@/components/UserPreferencesPanel";
 
 interface Profile {
   id: string;
