@@ -1681,6 +1681,7 @@ export type Database = {
       module_scorm_content: {
         Row: {
           created_at: string | null
+          formative_unit_id: string | null
           id: string
           is_required: boolean | null
           module_id: string
@@ -1689,6 +1690,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          formative_unit_id?: string | null
           id?: string
           is_required?: boolean | null
           module_id: string
@@ -1697,6 +1699,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          formative_unit_id?: string | null
           id?: string
           is_required?: boolean | null
           module_id?: string
@@ -1704,6 +1707,13 @@ export type Database = {
           scorm_package_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "module_scorm_content_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "module_scorm_content_module_id_fkey"
             columns: ["module_id"]
