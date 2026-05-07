@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import { HeroSection } from "@/components/HeroSection";
 import { FeaturesSection } from "@/components/FeaturesSection";
 import { TechnicalFeaturesSection } from "@/components/TechnicalFeaturesSection";
