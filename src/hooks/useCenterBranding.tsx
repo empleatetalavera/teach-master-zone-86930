@@ -33,9 +33,63 @@ export function useCenterBranding(centerIdentifier?: string | null) {
   useEffect(() => {
     const loadCenterBranding = async () => {
       console.log('[useCenterBranding] Starting load with identifier:', centerIdentifier);
-      
+
+      // Fallback: if no explicit identifier, try resolving by current hostname (custom domain)
       if (!centerIdentifier) {
-        console.log('[useCenterBranding] No identifier provided, using default branding');
+        const host = typeof window !== 'undefined' ? window.location.hostname : '';
+        const isMatrixDomain =
+          host === 'talentcloudsolution.es' ||
+          host === 'www.talentcloudsolution.es' ||
+          host === 'localhost' ||
+          host === '127.0.0.1' ||
+          host.includes('lovable.app') ||
+          host.includes('lovableproject.com');
+
+        if (isMatrixDomain || !host) {
+          console.log('[useCenterBranding] Matrix/dev host, using default branding');
+          setBranding(defaultBranding);
+          setLoading(false);
+          return;
+        }
+
+        try {
+          const cleanHost = host.replace(/^www\./, '');
+          const { data: centers } = await supabase
+            .from('training_centers')
+            .select('*')
+            .eq('is_active', true);
+
+          const matched = (centers || []).find((c: any) => {
+            if (!c.custom_domain) return false;
+            const d = String(c.custom_domain)
+              .replace(/^https?:\/\//, '')
+              .replace(/^www\./, '')
+              .split('/')[0]
+              .toLowerCase();
+            return d === cleanHost.toLowerCase();
+          });
+
+          if (matched) {
+            const centerBranding: CenterBrandingConfig = {
+              centerName: matched.name,
+              centerLogo: matched.logo_url || defaultBranding.centerLogo,
+              primaryColor: matched.primary_color,
+              secondaryColor: matched.secondary_color,
+              officialBadge: matched.official_badge || undefined,
+              footerText: matched.footer_text || `${matched.name} - Todos los derechos reservados`,
+              slug: matched.slug,
+            };
+            console.log('[useCenterBranding] Resolved by domain:', cleanHost, centerBranding);
+            setBranding(centerBranding);
+            setLoading(false);
+            return;
+          }
+
+          console.warn('[useCenterBranding] No center matches host:', cleanHost);
+        } catch (e) {
+          console.error('[useCenterBranding] Domain lookup error:', e);
+        }
+
         setBranding(defaultBranding);
         setLoading(false);
         return;
