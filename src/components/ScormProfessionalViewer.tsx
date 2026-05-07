@@ -21,6 +21,7 @@ import {
   Palette, Sparkles, Edit2
 } from "lucide-react";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
+import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ContentSlide, IndexItem, QuizQuestion, ExtendedContentSlide } from "./scorm/types";
 
@@ -30,6 +31,7 @@ interface ScormProfessionalViewerProps {
   unitId: string;
   unitTitle: string;
   enrollmentId?: string;
+  courseId?: string;
 }
 
 // Types imported from ./scorm/types - no local duplicates needed
