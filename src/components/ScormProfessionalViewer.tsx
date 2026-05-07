@@ -167,7 +167,8 @@ export default function ScormProfessionalViewer({
   onOpenChange,
   unitId,
   unitTitle,
-  enrollmentId
+  enrollmentId,
+  courseId,
 }: ScormProfessionalViewerProps) {
   const { user, userRole } = useAuth();
   const { toast } = useToast();
