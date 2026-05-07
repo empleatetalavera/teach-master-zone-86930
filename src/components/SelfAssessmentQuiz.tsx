@@ -313,8 +313,8 @@ export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTit
             Anterior
           </Button>
           {currentIndex === questions.length - 1 ? (
-            <Button size="sm" onClick={() => setShowResult(true)} disabled={Object.keys(answers).length < questions.length}>
-              Ver Resultado
+            <Button size="sm" onClick={async () => { const { correct, total, percentage } = calculateScore(); await saveAttempt(correct, total, percentage); setShowResult(true); }} disabled={Object.keys(answers).length < questions.length || savingAttempt}>
+              {savingAttempt ? "Guardando..." : "Ver Resultado"}
             </Button>
           ) : (
             <Button size="sm" onClick={() => setCurrentIndex(i => i + 1)}>
