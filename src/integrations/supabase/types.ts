@@ -3617,6 +3617,7 @@ export type Database = {
           email: string
         }[]
       }
+      get_user_center_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3632,6 +3633,12 @@ export type Database = {
         }[]
       }
       no_roles_exist: { Args: never; Returns: boolean }
+      user_can_access_course: { Args: { _course_id: string }; Returns: boolean }
+      user_can_access_enrollment: {
+        Args: { _enrollment_id: string }
+        Returns: boolean
+      }
+      user_can_access_module: { Args: { _module_id: string }; Returns: boolean }
       verify_certificate: {
         Args: { p_code: string }
         Returns: {
