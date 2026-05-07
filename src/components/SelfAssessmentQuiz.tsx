@@ -40,7 +40,64 @@ export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTit
   const [savingAttempt, setSavingAttempt] = useState(false);
   const [showExplanation, setShowExplanation] = useState<Record<string, boolean>>({});
 
-  useEffect(() => { loadQuestions(); }, [courseId, formativeUnitId]);
+  useEffect(() => { loadQuestions(); loadLastAttempt(); }, [courseId, formativeUnitId, user?.id]);
+
+  const loadLastAttempt = async () => {
+    if (!user) return;
+    try {
+      const { data } = await (supabase as any)
+        .from("self_assessment_attempts")
+        .select("score, correct_count, total_count, completed_at")
+        .eq("user_id", user.id)
+        .eq("formative_unit_id", formativeUnitId)
+        .order("completed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setSavedAttempt({
+          score: Number(data.score),
+          correct: data.correct_count,
+          total: data.total_count,
+          completed_at: data.completed_at,
+        });
+      }
+    } catch (e) {
+      console.error("Error loading last attempt:", e);
+    }
+  };
+
+  const saveAttempt = async (correct: number, total: number, percentage: number) => {
+    if (!user) return;
+    setSavingAttempt(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("self_assessment_attempts")
+        .insert({
+          user_id: user.id,
+          course_id: courseId,
+          formative_unit_id: formativeUnitId,
+          score: percentage,
+          correct_count: correct,
+          total_count: total,
+          answers,
+          status: "completed",
+        });
+      if (error) throw error;
+      setSavedAttempt({
+        score: percentage,
+        correct,
+        total,
+        completed_at: new Date().toISOString(),
+      });
+      toast({ title: "✅ Calificación registrada", description: `Has obtenido un ${percentage}%` });
+    } catch (e: any) {
+      console.error("Error saving attempt:", e);
+      toast({ title: "Error al guardar", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingAttempt(false);
+    }
+  };
+
 
   const loadQuestions = async () => {
     setLoading(true);
