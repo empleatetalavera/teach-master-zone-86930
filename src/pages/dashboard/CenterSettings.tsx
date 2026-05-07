@@ -41,6 +41,7 @@ export default function CenterSettings() {
   const [sepeRegistryNumber, setSepeRegistryNumber] = useState("");
   const [censusCode, setCensusCode] = useState("");
   const [campusUrl, setCampusUrl] = useState("");
+  const [navigationGuideUrl, setNavigationGuideUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadCenterData();
