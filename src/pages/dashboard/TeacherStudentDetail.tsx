@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Printer, Clock, Eye, Activity, BookOpen, ExternalLink } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentReportGenerator } from "@/components/StudentReportGenerator";
+import ScormResultsSection from "@/components/scorm/ScormResultsSection";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
