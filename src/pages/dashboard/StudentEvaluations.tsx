@@ -342,6 +342,10 @@ const StudentEvaluations = () => {
           })
         )}
       </div>
+
+      {user?.id && (
+        <ScormResultsSection userId={user.id} title="Evaluaciones SCORM" />
+      )}
     </div>
   );
 };
