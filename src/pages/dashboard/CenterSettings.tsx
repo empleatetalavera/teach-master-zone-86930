@@ -783,6 +783,31 @@ export default function CenterSettings() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Compass className="h-5 w-5" />
+                Guía de Navegación del Centro
+              </CardTitle>
+              <CardDescription>
+                PDF que se ofrecerá al alumno como Guía de Navegación. Si no subes ninguno, se generará automáticamente con los datos del centro.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {centerId && (
+                <CenterDocumentUploader
+                  centerId={centerId}
+                  documentUrl={navigationGuideUrl}
+                  dbField="navigation_guide_pdf_url"
+                  bucket="course-documents"
+                  label="Guía de Navegación"
+                  fileNamePrefix="guia-navegacion"
+                  onUpdate={loadCenterData}
+                />
+              )}
+            </CardContent>
+          </Card>
+
           <div className="flex justify-end gap-4">
             <Button
               type="button"
