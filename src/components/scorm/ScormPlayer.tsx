@@ -1,35 +1,94 @@
-import { useEffect, useState, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  CheckCircle, 
+import {
+  Play,
+  RotateCcw,
+  CheckCircle,
   XCircle,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  createScorm12API,
+  attachScorm12ToWindow,
+  type CmiData,
+} from "@/lib/scorm/scorm12-api";
+import {
+  loadScormProgress,
+  saveScormProgress,
+} from "@/lib/scorm/scorm-persistence";
 
 interface ScormPlayerProps {
   moduleId: string;
   enrollmentId: string;
+  /** Optional: if not provided, resolved from supabase.auth */
+  userId?: string;
+  /** Optional: if not provided, resolved from profiles.full_name */
+  studentName?: string;
 }
 
-export default function ScormPlayer({ moduleId, enrollmentId }: ScormPlayerProps) {
+type ActivePackage = {
+  id: string;
+  title: string;
+  filePath: string;
+  scormVersion: string;
+};
+
+/**
+ * Build the same-origin URL for the SCO entry point.
+ * In dev: `/scorm-content/...` is proxied by vite to Supabase Storage public bucket.
+ * In prod (Lovable static hosting), the same path needs a host-side rewrite.
+ */
+function buildScoSrc(filePath: string): string {
+  // file_path stored in scorm_packages typically points to <folder>/index.html
+  // (or just the entry HTML). We strip any leading slash.
+  const clean = filePath.replace(/^\/+/, "");
+  return `/scorm-content/${clean}`;
+}
+
+export default function ScormPlayer({
+  moduleId,
+  enrollmentId,
+  userId: userIdProp,
+  studentName: studentNameProp,
+}: ScormPlayerProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState<string>("not attempted");
+  const cleanupRef = useRef<(() => void) | null>(null);
 
-  // Fetch SCORM content for this module
+  const [activePackage, setActivePackage] = useState<ActivePackage | null>(null);
+  const [apiReady, setApiReady] = useState(false);
+
+  // Resolve identity if not passed by parent
+  const { data: identity } = useQuery({
+    queryKey: ["scorm-identity", userIdProp],
+    queryFn: async () => {
+      if (userIdProp && studentNameProp) {
+        return { userId: userIdProp, studentName: studentNameProp };
+      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      return {
+        userId: user.id,
+        studentName: studentNameProp || profile?.full_name || user.email || "Student",
+      };
+    },
+  });
+
+  // SCORM packages bound to this module
   const { data: scormContent, isLoading } = useQuery({
     queryKey: ["module-scorm", moduleId],
     queryFn: async () => {
@@ -47,85 +106,127 @@ export default function ScormPlayer({ moduleId, enrollmentId }: ScormPlayerProps
         `)
         .eq("module_id", moduleId)
         .order("order_index");
-      
       if (error) throw error;
       return data;
-    }
+    },
   });
 
-  // Fetch user's SCORM progress
+  // User progress for these packages
   const { data: userProgress } = useQuery({
-    queryKey: ["scorm-progress", moduleId, enrollmentId],
+    queryKey: ["scorm-progress", moduleId, enrollmentId, identity?.userId],
     queryFn: async () => {
-      if (!scormContent || scormContent.length === 0) return [];
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const packageIds = scormContent.map((sc: any) => sc.scorm_packages.id);
-      
+      if (!scormContent || scormContent.length === 0 || !identity) return [];
+      const packageIds = scormContent
+        .map((sc: any) => sc.scorm_packages?.id)
+        .filter(Boolean);
       const { data, error } = await supabase
         .from("scorm_progress")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", identity.userId)
         .eq("enrollment_id", enrollmentId)
         .in("scorm_package_id", packageIds);
-      
       if (error) throw error;
       return data;
     },
-    enabled: !!scormContent && scormContent.length > 0
+    enabled: !!scormContent && scormContent.length > 0 && !!identity,
   });
 
-  // Save SCORM progress mutation
-  const saveProgressMutation = useMutation({
-    mutationFn: async ({ 
-      packageId, 
-      cmiData, 
-      lessonStatus 
-    }: { 
-      packageId: string; 
-      cmiData: any; 
-      lessonStatus: string;
-    }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+  // Mount/unmount window.API around the active package
+  useEffect(() => {
+    if (!activePackage || !identity) return;
 
-      const { error } = await supabase
-        .from("scorm_progress")
-        .upsert({
-          user_id: user.id,
-          enrollment_id: enrollmentId,
-          scorm_package_id: packageId,
-          module_id: moduleId,
-          cmi_data: cmiData,
-          lesson_status: lessonStatus,
-          last_accessed_at: new Date().toISOString()
-        }, {
-          onConflict: "user_id,scorm_package_id,enrollment_id"
-        });
+    let cancelled = false;
 
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["scorm-progress", moduleId, enrollmentId] });
-    }
-  });
+    (async () => {
+      const prev = await loadScormProgress({
+        userId: identity.userId,
+        enrollmentId,
+        scormPackageId: activePackage.id,
+        moduleId,
+      });
+      if (cancelled) return;
+
+      const key = {
+        userId: identity.userId,
+        enrollmentId,
+        scormPackageId: activePackage.id,
+        moduleId,
+      };
+
+      const api = createScorm12API({
+        studentId: identity.userId,
+        studentName: identity.studentName,
+        previousCmi: (prev?.cmi_data as CmiData | null) ?? null,
+        previousTotalTime: prev?.total_time ?? null,
+        callbacks: {
+          onCommit: async (cmi) => {
+            try {
+              await saveScormProgress(key, cmi);
+              queryClient.invalidateQueries({
+                queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
+              });
+            } catch (e) {
+              console.error("[SCORM] commit failed:", e);
+            }
+          },
+          onFinish: async (cmi) => {
+            try {
+              await saveScormProgress(key, cmi);
+              queryClient.invalidateQueries({
+                queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
+              });
+            } catch (e) {
+              console.error("[SCORM] finish failed:", e);
+            }
+          },
+        },
+      });
+
+      const cleanup = attachScorm12ToWindow(api);
+      cleanupRef.current = cleanup;
+      setApiReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+      setApiReady(false);
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+    };
+  }, [activePackage, identity, enrollmentId, moduleId, queryClient]);
 
   const handlePlay = (scormPackage: any) => {
-    setIsPlaying(true);
-    // Here you would implement the SCORM player logic
-    // For now, we'll show a simple message
-    toast({
-      title: "Reproduciendo SCORM",
-      description: `Iniciando: ${scormPackage.title}`,
+    setActivePackage({
+      id: scormPackage.id,
+      title: scormPackage.title,
+      filePath: scormPackage.file_path,
+      scormVersion: scormPackage.scorm_version,
     });
   };
 
-  const handleReset = () => {
-    setIsPlaying(false);
-    setProgress(0);
-    setStatus("not attempted");
+  const handleClose = () => {
+    setActivePackage(null);
+  };
+
+  const handleReset = async (packageId: string) => {
+    if (!identity) return;
+    if (!confirm("¿Reiniciar el progreso de este SCORM?")) return;
+    const { error } = await supabase
+      .from("scorm_progress")
+      .delete()
+      .eq("user_id", identity.userId)
+      .eq("enrollment_id", enrollmentId)
+      .eq("scorm_package_id", packageId)
+      .eq("module_id", moduleId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    queryClient.invalidateQueries({
+      queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
+    });
   };
 
   const getStatusIcon = (status: string) => {
@@ -136,7 +237,7 @@ export default function ScormPlayer({ moduleId, enrollmentId }: ScormPlayerProps
       case "failed":
         return <XCircle className="h-4 w-4 text-red-600" />;
       case "incomplete":
-        return <Loader2 className="h-4 w-4 text-yellow-600 animate-spin" />;
+        return <Loader2 className="h-4 w-4 text-yellow-600" />;
       default:
         return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }
@@ -144,13 +245,12 @@ export default function ScormPlayer({ moduleId, enrollmentId }: ScormPlayerProps
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-      "completed": { label: "Completado", variant: "default" },
-      "passed": { label: "Aprobado", variant: "default" },
-      "failed": { label: "No aprobado", variant: "destructive" },
-      "incomplete": { label: "En progreso", variant: "secondary" },
-      "not attempted": { label: "No iniciado", variant: "outline" }
+      completed: { label: "Completado", variant: "default" },
+      passed: { label: "Aprobado", variant: "default" },
+      failed: { label: "No aprobado", variant: "destructive" },
+      incomplete: { label: "En progreso", variant: "secondary" },
+      "not attempted": { label: "No iniciado", variant: "outline" },
     };
-    
     const config = variants[status] || variants["not attempted"];
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
@@ -181,9 +281,11 @@ export default function ScormPlayer({ moduleId, enrollmentId }: ScormPlayerProps
     <div className="space-y-4">
       {scormContent.map((content: any) => {
         const scormPackage = content.scorm_packages;
+        if (!scormPackage) return null;
         const packageProgress = userProgress?.find((p: any) => p.scorm_package_id === scormPackage.id);
         const currentStatus = packageProgress?.lesson_status || "not attempted";
-        const currentProgress = packageProgress?.score_raw || 0;
+        const currentScore = packageProgress?.score_raw || 0;
+        const isActive = activePackage?.id === scormPackage.id;
 
         return (
           <Card key={content.id}>
@@ -194,52 +296,69 @@ export default function ScormPlayer({ moduleId, enrollmentId }: ScormPlayerProps
                     {getStatusIcon(currentStatus)}
                     {scormPackage.title}
                   </CardTitle>
-                  <CardDescription>
-                    {scormPackage.description}
-                  </CardDescription>
-                  <div className="flex items-center gap-2">
+                  <CardDescription>{scormPackage.description}</CardDescription>
+                  <div className="flex items-center gap-2 flex-wrap">
                     {getStatusBadge(currentStatus)}
                     <Badge variant="outline">SCORM {scormPackage.scorm_version}</Badge>
-                    {content.is_required && (
-                      <Badge variant="secondary">Obligatorio</Badge>
+                    {content.is_required && <Badge variant="secondary">Obligatorio</Badge>}
+                    {currentScore > 0 && (
+                      <Badge variant="outline">Nota: {currentScore}</Badge>
                     )}
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Progress */}
-              {currentProgress > 0 && (
+              {currentScore > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Progreso</span>
-                    <span className="font-medium">{currentProgress}%</span>
+                    <span className="text-muted-foreground">Puntuación</span>
+                    <span className="font-medium">{currentScore}%</span>
                   </div>
-                  <Progress value={currentProgress} />
+                  <Progress value={currentScore} />
                 </div>
               )}
 
-              {/* Actions */}
               <div className="flex gap-2">
-                <Button
-                  onClick={() => handlePlay(scormPackage)}
-                  className="flex-1"
-                >
-                  <Play className="mr-2 h-4 w-4" />
-                  {currentStatus === "not attempted" ? "Iniciar" : "Continuar"}
-                </Button>
+                {isActive ? (
+                  <Button variant="outline" onClick={handleClose} className="flex-1">
+                    <X className="mr-2 h-4 w-4" />
+                    Cerrar reproductor
+                  </Button>
+                ) : (
+                  <Button onClick={() => handlePlay(scormPackage)} className="flex-1">
+                    <Play className="mr-2 h-4 w-4" />
+                    {currentStatus === "not attempted" ? "Iniciar" : "Continuar"}
+                  </Button>
+                )}
                 {currentStatus !== "not attempted" && (
-                  <Button
-                    variant="outline"
-                    onClick={handleReset}
-                  >
+                  <Button variant="outline" onClick={() => handleReset(scormPackage.id)}>
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Reiniciar
                   </Button>
                 )}
               </div>
 
-              {/* Last accessed */}
+              {/* Inline player — only renders once API is attached to window */}
+              {isActive && (
+                <div className="aspect-video bg-black rounded-lg overflow-hidden border">
+                  {apiReady ? (
+                    <iframe
+                      ref={iframeRef}
+                      src={buildScoSrc(activePackage!.filePath)}
+                      className="w-full h-full"
+                      title={`SCORM: ${activePackage!.title}`}
+                      sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white">
+                      <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                      Inicializando SCORM…
+                    </div>
+                  )}
+                </div>
+              )}
+
               {packageProgress?.last_accessed_at && (
                 <p className="text-xs text-muted-foreground">
                   Último acceso: {new Date(packageProgress.last_accessed_at).toLocaleString("es-ES")}
@@ -249,22 +368,6 @@ export default function ScormPlayer({ moduleId, enrollmentId }: ScormPlayerProps
           </Card>
         );
       })}
-
-      {/* SCORM Player Frame (hidden by default) */}
-      {isPlaying && (
-        <Card>
-          <CardContent className="p-0">
-            <div className="aspect-video bg-black rounded-lg overflow-hidden">
-              <iframe
-                ref={iframeRef}
-                className="w-full h-full"
-                title="SCORM Player"
-                sandbox="allow-same-origin allow-scripts allow-forms"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
