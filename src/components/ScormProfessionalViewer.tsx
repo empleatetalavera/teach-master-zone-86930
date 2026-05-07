@@ -475,17 +475,37 @@ export default function ScormProfessionalViewer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="w-screen h-[100dvh] max-w-none sm:max-w-[95vw] sm:h-[95vh] flex flex-col p-0 gap-0 overflow-hidden rounded-none sm:rounded-lg">
         {/* Top header bar with theme */}
         <div className={`${selectedTheme.headerBg} text-white`}>
           {/* Unit title bar with theme selector */}
-          <div className="px-4 py-2 flex items-center justify-between border-b border-white/20">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-medium">{unitTitle}</span>
+          <div className="px-3 sm:px-4 py-2 flex items-center justify-between border-b border-white/20 gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 lg:hidden bg-white/20 hover:bg-white/30 text-white shrink-0"
+                onClick={() => setSidebarOpen(o => !o)}
+                aria-label="Abrir menú"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+              <Sparkles className="h-4 w-4 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium truncate">{unitTitle}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {/* Edit button for admins/teachers */}
+              {isTeacherOrAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 bg-white/20 hover:bg-white/30 text-white border-white/30 border hidden sm:inline-flex"
+                  onClick={() => setSyllabusEditorOpen(true)}
+                >
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  Editar
+                </Button>
+              )}
               {isTeacherOrAdmin && (
                 <Button
                   variant="ghost"
