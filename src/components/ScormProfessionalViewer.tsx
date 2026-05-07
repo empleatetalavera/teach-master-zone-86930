@@ -18,7 +18,7 @@ import {
   ClipboardList, Play, Headphones, Video, Send, X, MessageCircle,
   BarChart3, BookMarked, HelpCircle, Check, Building2, Users, 
   Briefcase, FileSpreadsheet, Mail, Package, Calculator, CreditCard,
-  Palette, Sparkles, Edit2, Menu
+  Palette, Sparkles, Edit2, Menu, Printer, ChevronRight as ChevronRightIcon
 } from "lucide-react";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
@@ -477,7 +477,7 @@ export default function ScormProfessionalViewer({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-screen h-[100dvh] max-w-none sm:max-w-[95vw] sm:h-[95vh] flex flex-col p-0 gap-0 overflow-hidden rounded-none sm:rounded-lg">
         {/* Top header bar with theme */}
-        <div className={`${selectedTheme.headerBg} text-white`}>
+        <div className={`${selectedTheme.headerBg} text-white no-print`}>
           {/* Unit title bar with theme selector */}
           <div className="px-3 sm:px-4 py-2 flex items-center justify-between border-b border-white/20 gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -555,7 +555,7 @@ export default function ScormProfessionalViewer({
             />
           )}
           {/* Left Sidebar - overlay on mobile, push on desktop */}
-          <div className={`${sidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} ${isMobile ? 'absolute inset-y-0 left-0 z-30 w-72' : 'relative'} transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 border-r border-border flex flex-col`}>
+          <div className={`${sidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} ${isMobile ? 'absolute inset-y-0 left-0 z-30 w-72' : 'relative'} transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 border-r border-border flex flex-col no-print`}>
             {/* Sidebar header with home icon */}
             <div className="p-4 border-b flex items-center gap-3">
               <button 
@@ -640,22 +640,59 @@ export default function ScormProfessionalViewer({
           {/* Main content area */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Content header */}
-            <div className="bg-white dark:bg-slate-800 border-b px-6 py-4">
-              <div className="flex items-center gap-2 text-primary text-sm font-medium mb-2">
-                {currentSlide?.type === 'quiz' ? (
-                  <FileQuestion className="h-4 w-4" />
-                ) : currentSlide?.type === 'checklist' ? (
-                  <ClipboardList className="h-4 w-4" />
-                ) : currentSlide?.type === 'table' ? (
-                  <FileSpreadsheet className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
+            <div className="bg-white dark:bg-slate-800 border-b px-6 py-4 no-print">
+              {/* Breadcrumb de contexto SEPE: el alumno sabe en todo momento dónde está */}
+              <nav aria-label="Mapa de navegación" className="flex items-center flex-wrap gap-1 text-xs text-muted-foreground mb-2">
+                <Home className="h-3 w-3" />
+                <button onClick={() => setActiveTab('content')} className="hover:text-primary transition-colors">
+                  Curso
+                </button>
+                <ChevronRightIcon className="h-3 w-3" />
+                <span className="hover:text-primary truncate max-w-[180px]">{unitTitle}</span>
+                {currentSlide?.section && (
+                  <>
+                    <ChevronRightIcon className="h-3 w-3" />
+                    <span className="truncate max-w-[180px]">{currentSlide.section}</span>
+                  </>
                 )}
-                <span>{currentSlide?.section || 'Contenido'}</span>
+                <ChevronRightIcon className="h-3 w-3" />
+                <span className="text-foreground font-medium truncate max-w-[200px]">
+                  {currentSlide?.title || 'Contenido'}
+                </span>
+                <span className="ml-auto text-[10px] tabular-nums">
+                  {currentSlideIndex + 1} / {slides.length}
+                </span>
+              </nav>
+
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-primary text-sm font-medium mb-1">
+                    {currentSlide?.type === 'quiz' ? (
+                      <FileQuestion className="h-4 w-4" />
+                    ) : currentSlide?.type === 'checklist' ? (
+                      <ClipboardList className="h-4 w-4" />
+                    ) : currentSlide?.type === 'table' ? (
+                      <FileSpreadsheet className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                    <span>{currentSlide?.section || 'Contenido'}</span>
+                  </div>
+                  <h1 className="text-xl font-bold text-foreground truncate">
+                    {currentSlide?.title || 'Contenido del Curso'}
+                  </h1>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.print()}
+                  className="shrink-0"
+                  title="Imprimir contenido"
+                >
+                  <Printer className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Imprimir</span>
+                </Button>
               </div>
-              <h1 className="text-xl font-bold text-foreground">
-                {currentSlide?.title || 'Contenido del Curso'}
-              </h1>
               <div className="flex items-center gap-4 mt-2">
                 <Progress value={progress} className="flex-1 h-2" />
                 <span className="text-sm font-medium text-muted-foreground">

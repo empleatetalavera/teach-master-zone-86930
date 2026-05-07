@@ -6,11 +6,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { BrandingProvider } from "@/hooks/useBranding";
 import { CartProvider } from "@/hooks/useCart";
+import { PreferencesProvider } from "@/hooks/useUserPreferences";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { AIAssistant } from "@/components/AIAssistant";
 import { GradeNotificationToast } from "@/components/GradeNotificationToast";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
+import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import Platform from "./pages/Platform";
@@ -86,6 +88,7 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   useSessionTracker();
+  useIdleTimeout();
   return (
     <>
       <Routes>
@@ -190,9 +193,11 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <BrandingProvider>
-            <CartProvider>
-              <AppRoutes />
-            </CartProvider>
+            <PreferencesProvider>
+              <CartProvider>
+                <AppRoutes />
+              </CartProvider>
+            </PreferencesProvider>
           </BrandingProvider>
         </AuthProvider>
       </BrowserRouter>

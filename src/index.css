@@ -115,9 +115,9 @@ All colors MUST be HSL.
   }
 }
 
-/* Print Styles for SEPE Course Detail */
+/* Print Styles - SEPE compliance: el alumno puede imprimir el contenido */
 @media print {
-  .no-print {
+  .no-print, [data-radix-popper-content-wrapper] {
     display: none !important;
   }
   
@@ -125,12 +125,26 @@ All colors MUST be HSL.
     display: block !important;
   }
   
-  body {
+  body, html {
     background: white !important;
+    color: black !important;
   }
   
+  /* Force dialog to render fullscreen for printing */
+  [role="dialog"] {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  
+  h1, h2, h3 { page-break-after: avoid; }
+  table, pre, blockquote { page-break-inside: avoid; }
+  
   @page {
-    margin: 2cm;
+    margin: 1.8cm;
   }
 }
 
