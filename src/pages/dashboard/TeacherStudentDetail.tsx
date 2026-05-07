@@ -346,6 +346,10 @@ export default function TeacherStudentDetail() {
           </div>
         </CardContent>
       </Card>
+
+      {studentId && (
+        <ScormResultsSection userId={studentId} title="Evaluaciones del alumno" />
+      )}
     </div>
   );
 }
