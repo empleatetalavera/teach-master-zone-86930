@@ -506,18 +506,7 @@ export default function ScormProfessionalViewer({
                   Editar
                 </Button>
               )}
-              {isTeacherOrAdmin && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 bg-white/20 hover:bg-white/30 text-white border-white/30 border"
-                  onClick={() => setSyllabusEditorOpen(true)}
-                >
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  Editar
-                </Button>
-              )}
-              <Palette className="h-4 w-4" />
+              <Palette className="h-4 w-4 hidden sm:block" />
               <Select 
                 value={selectedTheme.id} 
                 onValueChange={(value) => {
@@ -525,8 +514,8 @@ export default function ScormProfessionalViewer({
                   if (theme) setSelectedTheme(theme);
                 }}
               >
-                <SelectTrigger className="h-8 w-[180px] bg-white/20 border-white/30 text-white text-xs">
-                  <SelectValue placeholder="Seleccionar tema" />
+                <SelectTrigger className="h-8 w-[140px] sm:w-[180px] bg-white/20 border-white/30 text-white text-xs">
+                  <SelectValue placeholder="Tema" />
                 </SelectTrigger>
                 <SelectContent>
                   {CONTENT_THEMES.map((theme) => (
@@ -539,13 +528,13 @@ export default function ScormProfessionalViewer({
             </div>
           </div>
           
-          {/* Tabs navigation */}
-          <div className="flex items-center justify-center gap-8 py-2">
+          {/* Tabs navigation - scrollable horizontally on small screens */}
+          <div className="flex items-center justify-start sm:justify-center gap-4 sm:gap-8 py-2 px-3 overflow-x-auto">
             {TOP_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`text-sm font-medium transition-all hover:opacity-100 ${
+                className={`text-sm font-medium transition-all hover:opacity-100 whitespace-nowrap ${
                   activeTab === tab.id ? 'opacity-100 border-b-2 border-white pb-1' : 'opacity-70'
                 }`}
               >
