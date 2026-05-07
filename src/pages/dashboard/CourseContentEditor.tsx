@@ -1643,6 +1643,14 @@ export default function CourseContentEditor() {
                                           </div>
                                         </div>
 
+
+                                        {/* Paquetes SCORM por unidad */}
+                                        <UnitScormManager
+                                          moduleId={module.id}
+                                          unitId={unit.id}
+                                          unitTitle={unit.title}
+                                        />
+
                                         {/* Actividades de aprendizaje evaluables - Only for non-propio courses */}
                                         {course?.course_type !== 'propio' && (
                                         <div className="flex items-start gap-3">
