@@ -54,6 +54,7 @@ import { Progress } from "@/components/ui/progress";
 import { ModuleManualUploader } from "@/components/ModuleManualUploader";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ScormAuthorModal } from "@/components/scorm-author";
+import { UnitScormManager } from "@/components/scorm/UnitScormManager";
 
 interface Course {
   id: string;
@@ -1641,6 +1642,14 @@ export default function CourseContentEditor() {
                                             </div>
                                           </div>
                                         </div>
+
+
+                                        {/* Paquetes SCORM por unidad */}
+                                        <UnitScormManager
+                                          moduleId={module.id}
+                                          unitId={unit.id}
+                                          unitTitle={unit.title}
+                                        />
 
                                         {/* Actividades de aprendizaje evaluables - Only for non-propio courses */}
                                         {course?.course_type !== 'propio' && (
