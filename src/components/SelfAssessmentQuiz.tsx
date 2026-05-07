@@ -29,12 +29,15 @@ interface SelfAssessmentQuizProps {
 
 export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTitle }: SelfAssessmentQuizProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<SelfAssessmentQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showResult, setShowResult] = useState(false);
+  const [savedAttempt, setSavedAttempt] = useState<{ score: number; correct: number; total: number; completed_at: string } | null>(null);
+  const [savingAttempt, setSavingAttempt] = useState(false);
   const [showExplanation, setShowExplanation] = useState<Record<string, boolean>>({});
 
   useEffect(() => { loadQuestions(); }, [courseId, formativeUnitId]);
