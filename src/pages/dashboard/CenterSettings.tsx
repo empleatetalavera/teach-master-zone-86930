@@ -11,6 +11,8 @@ import { Loader2, Upload, Palette, Eye, Building2, MapPin, Phone, Mail, Link2 } 
 import { useBranding } from "@/hooks/useBranding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { CenterDocumentUploader } from "@/components/CenterDocumentUploader";
+import { Compass } from "lucide-react";
 
 export default function CenterSettings() {
   const { user } = useAuth();
