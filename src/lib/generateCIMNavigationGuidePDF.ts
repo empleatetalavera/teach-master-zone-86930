@@ -846,7 +846,20 @@ export const generateCIMNavigationGuidePDF = async (
   yPos += 8;
   doc.text('Certificados de Profesionalidad · Teleformación', pageWidth / 2, yPos, { align: 'center' });
 
-  // Guardar PDF
+  // Guardar PDF (Blob + ObjectURL para evitar bloqueos del navegador)
   const fileName = `Guia_Navegacion_CIM_${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(fileName);
+  try {
+    const blob = doc.output('blob');
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+  } catch {
+    doc.save(fileName);
+  }
 };

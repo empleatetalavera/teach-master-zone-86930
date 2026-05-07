@@ -966,7 +966,20 @@ export const generateCampusGuidePDF = async (
   doc.text('Documento generado por Campus Virtual', pageWidth / 2, yPos, { align: 'center' });
   doc.text('© 2026 - Todos los derechos reservados', pageWidth / 2, yPos + 8, { align: 'center' });
 
-  // Guardar el PDF
+  // Guardar el PDF (Blob + ObjectURL para evitar bloqueos del navegador)
   const fileName = `Guia_Campus_Virtual.pdf`;
-  doc.save(fileName);
+  try {
+    const blob = doc.output('blob');
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+  } catch {
+    doc.save(fileName);
+  }
 };
