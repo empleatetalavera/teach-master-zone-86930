@@ -24,6 +24,10 @@ import {
   loadScormProgress,
   saveScormProgress,
 } from "@/lib/scorm/scorm-persistence";
+import {
+  loadScormPackage,
+  type ScormRuntimeHandle,
+} from "@/lib/scorm/scorm-runtime";
 
 interface ScormPlayerProps {
   moduleId: string;
@@ -40,18 +44,6 @@ type ActivePackage = {
   filePath: string;
   scormVersion: string;
 };
-
-/**
- * Build the same-origin URL for the SCO entry point.
- * In dev: `/scorm-content/...` is proxied by vite to Supabase Storage public bucket.
- * In prod (Lovable static hosting), the same path needs a host-side rewrite.
- */
-function buildScoSrc(filePath: string): string {
-  // file_path stored in scorm_packages typically points to <folder>/index.html
-  // (or just the entry HTML). We strip any leading slash.
-  const clean = filePath.replace(/^\/+/, "");
-  return `/scorm-content/${clean}`;
-}
 
 export default function ScormPlayer({
   moduleId,
