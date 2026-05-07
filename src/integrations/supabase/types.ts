@@ -3486,6 +3486,36 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          accent_color: string
+          created_at: string
+          font_scale: number
+          id: string
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent_color?: string
+          created_at?: string
+          font_scale?: number
+          id?: string
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent_color?: string
+          created_at?: string
+          font_scale?: number
+          id?: string
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
