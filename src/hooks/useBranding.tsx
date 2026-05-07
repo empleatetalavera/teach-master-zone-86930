@@ -67,9 +67,9 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
       if (!domainError && centersByDomain && centersByDomain.length > 0) {
         // Buscar el centro cuyo dominio personalizado coincida con el dominio actual
         const matchedCenter = centersByDomain.find(center => {
-          if (!center.dominio_personalizado) return false;
+          if (!center.custom_domain) return false;
           // Comparar sin protocolo para mayor flexibilidad
-          const centerDomain = center.dominio_personalizado
+          const centerDomain = center.custom_domain
             .replace('https://', '')
             .replace('http://', '')
             .replace('www.', '');
