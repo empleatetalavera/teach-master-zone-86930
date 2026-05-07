@@ -37,6 +37,67 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
   const [initialized, setInitialized] = useState(false);
 
   const loadBranding = async () => {
+    // NUEVO: Detectar dominio actual PRIMERO
+    const currentDomain = window.location.hostname;
+    
+    // Si es un dominio de desarrollo o la matriz, usar branding por defecto
+    const isMatrixDomain = 
+      currentDomain === 'talentcloudsolution.es' || 
+      currentDomain === 'www.talentcloudsolution.es' || 
+      currentDomain === 'localhost' || 
+      currentDomain === '127.0.0.1' ||
+      currentDomain.includes('lovable.app');
+
+    if (isMatrixDomain) {
+      // Es la matriz, usar branding por defecto
+      setBranding(defaultBranding);
+      applyBrandingToDOM(defaultBranding);
+      setLoading(false);
+      setInitialized(true);
+      return;
+    }
+
+    // NUEVO: Si NO es la matriz, buscar el centro por el dominio personalizado
+    try {
+      const { data: centersByDomain, error: domainError } = await supabase
+        .from('training_centers')
+        .select('*')
+        .eq('is_active', true);
+
+      if (!domainError && centersByDomain && centersByDomain.length > 0) {
+        // Buscar el centro cuyo dominio personalizado coincida con el dominio actual
+        const matchedCenter = centersByDomain.find(center => {
+          if (!center.dominio_personalizado) return false;
+          // Comparar sin protocolo para mayor flexibilidad
+          const centerDomain = center.dominio_personalizado
+            .replace('https://', '')
+            .replace('http://', '')
+            .replace('www.', '');
+          const currentCleanDomain = currentDomain.replace('www.', '');
+          return centerDomain === currentCleanDomain;
+        });
+
+        if (matchedCenter) {
+          const centerBranding: BrandingConfig = {
+            centerName: matchedCenter.name,
+            centerLogo: matchedCenter.logo_url || defaultBranding.centerLogo,
+            primaryColor: matchedCenter.primary_color,
+            secondaryColor: matchedCenter.secondary_color,
+            officialBadge: matchedCenter.official_badge || undefined,
+            footerText: matchedCenter.footer_text || `${matchedCenter.name} - Todos los derechos reservados`,
+          };
+          setBranding(centerBranding);
+          applyBrandingToDOM(centerBranding);
+          setLoading(false);
+          setInitialized(true);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading center branding by domain:', error);
+    }
+
+    // FIN NUEVO - resto de la lógica igual que antes
     if (!user) {
       setBranding(defaultBranding);
       applyBrandingToDOM(defaultBranding);
