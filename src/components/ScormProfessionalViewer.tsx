@@ -545,9 +545,17 @@ export default function ScormProfessionalViewer({
         </div>
 
         {/* Main content area with theme */}
-        <div className={`flex-1 flex overflow-hidden ${selectedTheme.contentBg} dark:from-slate-900 dark:to-slate-800`}>
-          {/* Left Sidebar */}
-          <div className={`${sidebarOpen ? 'w-72' : 'w-0'} transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 border-r border-border flex flex-col`}>
+        <div className={`flex-1 flex overflow-hidden relative ${selectedTheme.contentBg} dark:from-slate-900 dark:to-slate-800`}>
+          {/* Mobile overlay backdrop */}
+          {sidebarOpen && isMobile && (
+            <div
+              className="absolute inset-0 bg-black/40 z-20 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+          {/* Left Sidebar - overlay on mobile, push on desktop */}
+          <div className={`${sidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} ${isMobile ? 'absolute inset-y-0 left-0 z-30 w-72' : 'relative'} transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 border-r border-border flex flex-col`}>
             {/* Sidebar header with home icon */}
             <div className="p-4 border-b flex items-center gap-3">
               <button 
