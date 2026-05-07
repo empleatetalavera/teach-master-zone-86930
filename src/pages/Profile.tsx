@@ -634,6 +634,11 @@ export default function Profile() {
           </Button>
         </div>
 
+        {/* Personalización del entorno (subsanación SEPE) */}
+        <div className="mb-6">
+          <UserPreferencesPanel />
+        </div>
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
