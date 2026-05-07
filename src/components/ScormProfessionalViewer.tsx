@@ -642,7 +642,33 @@ export default function ScormProfessionalViewer({
                   <div className="flex items-center justify-center h-64">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : activeTab === 'content' || activeTab === 'test' ? (
+                ) : activeTab === 'test' ? (
+                  /* TEST FINAL DE LA UNIDAD - Subsanación SEPE: evaluación accesible y con calificación persistente */
+                  <div className="space-y-4">
+                    <Card className="border-2 border-primary/30 bg-primary/5">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <FileQuestion className="h-6 w-6 text-primary" />
+                          Test Final de la Unidad
+                        </CardTitle>
+                        <CardDescription>
+                          Realiza el test de evaluación de esta unidad formativa. Tu calificación quedará registrada y podrás consultarla, así como tu tutor y el centro.
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                    {courseId ? (
+                      <SelfAssessmentQuiz
+                        courseId={courseId}
+                        formativeUnitId={unitId}
+                        formativeUnitTitle={unitTitle}
+                      />
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground text-sm">
+                        No se ha podido cargar el contexto del curso. Recarga la página e inténtalo de nuevo.
+                      </div>
+                    )}
+                  </div>
+                ) : activeTab === 'content' ? (
                   <>
                     {/* QUIZ SLIDE */}
                     {currentSlide?.type === 'quiz' && currentSlide.quiz ? (
