@@ -173,14 +173,13 @@ export default function Auth() {
           const currentHost = normalizeDomain(window.location.origin);
           const { data: centersByDomain } = await supabase
             .from("training_centers")
-            .select("slug, custom_domain, campus_url")
+            .select("slug, dominio_personalizado")
             .eq("is_active", true)
             .not("slug", "is", null);
 
           const matchedCenter = centersByDomain?.find((center) => {
-            const customDomain = center.custom_domain ? normalizeDomain(center.custom_domain) : null;
-            const campusDomain = center.campus_url ? normalizeDomain(center.campus_url) : null;
-            return customDomain === currentHost || campusDomain === currentHost;
+            const customDomain = center.dominio_personalizado ? normalizeDomain(center.dominio_personalizado) : null;
+            return customDomain === currentHost;
           });
 
           centerSlugForLookup = matchedCenter?.slug ?? null;
