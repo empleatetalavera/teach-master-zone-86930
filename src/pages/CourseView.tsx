@@ -2782,6 +2782,7 @@ export default function CourseView() {
         unitId={selectedUnitId}
         unitTitle={selectedUnitTitle}
         enrollmentId={enrollment?.id}
+        courseId={courseId}
       />
 
       {/* Syllabus Editor Dialog */}

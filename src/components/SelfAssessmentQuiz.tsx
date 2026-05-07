@@ -29,15 +29,75 @@ interface SelfAssessmentQuizProps {
 
 export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTitle }: SelfAssessmentQuizProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<SelfAssessmentQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showResult, setShowResult] = useState(false);
+  const [savedAttempt, setSavedAttempt] = useState<{ score: number; correct: number; total: number; completed_at: string } | null>(null);
+  const [savingAttempt, setSavingAttempt] = useState(false);
   const [showExplanation, setShowExplanation] = useState<Record<string, boolean>>({});
 
-  useEffect(() => { loadQuestions(); }, [courseId, formativeUnitId]);
+  useEffect(() => { loadQuestions(); loadLastAttempt(); }, [courseId, formativeUnitId, user?.id]);
+
+  const loadLastAttempt = async () => {
+    if (!user) return;
+    try {
+      const { data } = await (supabase as any)
+        .from("self_assessment_attempts")
+        .select("score, correct_count, total_count, completed_at")
+        .eq("user_id", user.id)
+        .eq("formative_unit_id", formativeUnitId)
+        .order("completed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setSavedAttempt({
+          score: Number(data.score),
+          correct: data.correct_count,
+          total: data.total_count,
+          completed_at: data.completed_at,
+        });
+      }
+    } catch (e) {
+      console.error("Error loading last attempt:", e);
+    }
+  };
+
+  const saveAttempt = async (correct: number, total: number, percentage: number) => {
+    if (!user) return;
+    setSavingAttempt(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("self_assessment_attempts")
+        .insert({
+          user_id: user.id,
+          course_id: courseId,
+          formative_unit_id: formativeUnitId,
+          score: percentage,
+          correct_count: correct,
+          total_count: total,
+          answers,
+          status: "completed",
+        });
+      if (error) throw error;
+      setSavedAttempt({
+        score: percentage,
+        correct,
+        total,
+        completed_at: new Date().toISOString(),
+      });
+      toast({ title: "✅ Calificación registrada", description: `Has obtenido un ${percentage}%` });
+    } catch (e: any) {
+      console.error("Error saving attempt:", e);
+      toast({ title: "Error al guardar", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingAttempt(false);
+    }
+  };
+
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -126,9 +186,20 @@ export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTit
               Sirve para comprobar tu nivel de comprensión de la unidad.
             </AlertDescription>
           </Alert>
+          {savedAttempt && (
+            <div className="mb-4 p-3 rounded-lg border-2 border-primary/30 bg-primary/5">
+              <p className="text-xs font-semibold text-primary mb-1">Tu última calificación</p>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-primary">{savedAttempt.score}%</span>
+                <span className="text-xs text-muted-foreground">
+                  {savedAttempt.correct} / {savedAttempt.total} aciertos · {new Date(savedAttempt.completed_at).toLocaleDateString('es-ES')}
+                </span>
+              </div>
+            </div>
+          )}
           <Button onClick={() => setStarted(true)} className="w-full gap-2">
             <FileQuestion className="h-4 w-4" />
-            Comenzar Autoevaluación
+            {savedAttempt ? "Repetir Autoevaluación" : "Comenzar Autoevaluación"}
           </Button>
         </CardContent>
       </Card>
@@ -242,8 +313,8 @@ export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTit
             Anterior
           </Button>
           {currentIndex === questions.length - 1 ? (
-            <Button size="sm" onClick={() => setShowResult(true)} disabled={Object.keys(answers).length < questions.length}>
-              Ver Resultado
+            <Button size="sm" onClick={async () => { const { correct, total, percentage } = calculateScore(); await saveAttempt(correct, total, percentage); setShowResult(true); }} disabled={Object.keys(answers).length < questions.length || savingAttempt}>
+              {savingAttempt ? "Guardando..." : "Ver Resultado"}
             </Button>
           ) : (
             <Button size="sm" onClick={() => setCurrentIndex(i => i + 1)}>

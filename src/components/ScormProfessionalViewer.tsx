@@ -18,9 +18,10 @@ import {
   ClipboardList, Play, Headphones, Video, Send, X, MessageCircle,
   BarChart3, BookMarked, HelpCircle, Check, Building2, Users, 
   Briefcase, FileSpreadsheet, Mail, Package, Calculator, CreditCard,
-  Palette, Sparkles, Edit2
+  Palette, Sparkles, Edit2, Menu
 } from "lucide-react";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
+import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ContentSlide, IndexItem, QuizQuestion, ExtendedContentSlide } from "./scorm/types";
 
@@ -30,6 +31,7 @@ interface ScormProfessionalViewerProps {
   unitId: string;
   unitTitle: string;
   enrollmentId?: string;
+  courseId?: string;
 }
 
 // Types imported from ./scorm/types - no local duplicates needed
@@ -165,7 +167,8 @@ export default function ScormProfessionalViewer({
   onOpenChange,
   unitId,
   unitTitle,
-  enrollmentId
+  enrollmentId,
+  courseId,
 }: ScormProfessionalViewerProps) {
   const { user, userRole } = useAuth();
   const { toast } = useToast();
@@ -180,7 +183,19 @@ export default function ScormProfessionalViewer({
   const [completedSlides, setCompletedSlides] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('content');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(typeof window === 'undefined' ? true : window.innerWidth >= 1024);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1024);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) setSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   const [selectedTheme, setSelectedTheme] = useState(CONTENT_THEMES[6]); // Default: iSpring Teal
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
@@ -460,29 +475,38 @@ export default function ScormProfessionalViewer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="w-screen h-[100dvh] max-w-none sm:max-w-[95vw] sm:h-[95vh] flex flex-col p-0 gap-0 overflow-hidden rounded-none sm:rounded-lg">
         {/* Top header bar with theme */}
         <div className={`${selectedTheme.headerBg} text-white`}>
           {/* Unit title bar with theme selector */}
-          <div className="px-4 py-2 flex items-center justify-between border-b border-white/20">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-medium">{unitTitle}</span>
+          <div className="px-3 sm:px-4 py-2 flex items-center justify-between border-b border-white/20 gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 lg:hidden bg-white/20 hover:bg-white/30 text-white shrink-0"
+                onClick={() => setSidebarOpen(o => !o)}
+                aria-label="Abrir menú"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+              <Sparkles className="h-4 w-4 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium truncate">{unitTitle}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {/* Edit button for admins/teachers */}
               {isTeacherOrAdmin && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 bg-white/20 hover:bg-white/30 text-white border-white/30 border"
+                  className="h-8 bg-white/20 hover:bg-white/30 text-white border-white/30 border hidden sm:inline-flex"
                   onClick={() => setSyllabusEditorOpen(true)}
                 >
                   <Edit2 className="h-4 w-4 mr-1" />
                   Editar
                 </Button>
               )}
-              <Palette className="h-4 w-4" />
+              <Palette className="h-4 w-4 hidden sm:block" />
               <Select 
                 value={selectedTheme.id} 
                 onValueChange={(value) => {
@@ -490,8 +514,8 @@ export default function ScormProfessionalViewer({
                   if (theme) setSelectedTheme(theme);
                 }}
               >
-                <SelectTrigger className="h-8 w-[180px] bg-white/20 border-white/30 text-white text-xs">
-                  <SelectValue placeholder="Seleccionar tema" />
+                <SelectTrigger className="h-8 w-[140px] sm:w-[180px] bg-white/20 border-white/30 text-white text-xs">
+                  <SelectValue placeholder="Tema" />
                 </SelectTrigger>
                 <SelectContent>
                   {CONTENT_THEMES.map((theme) => (
@@ -504,13 +528,13 @@ export default function ScormProfessionalViewer({
             </div>
           </div>
           
-          {/* Tabs navigation */}
-          <div className="flex items-center justify-center gap-8 py-2">
+          {/* Tabs navigation - scrollable horizontally on small screens */}
+          <div className="flex items-center justify-start sm:justify-center gap-4 sm:gap-8 py-2 px-3 overflow-x-auto">
             {TOP_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`text-sm font-medium transition-all hover:opacity-100 ${
+                className={`text-sm font-medium transition-all hover:opacity-100 whitespace-nowrap ${
                   activeTab === tab.id ? 'opacity-100 border-b-2 border-white pb-1' : 'opacity-70'
                 }`}
               >
@@ -521,9 +545,17 @@ export default function ScormProfessionalViewer({
         </div>
 
         {/* Main content area with theme */}
-        <div className={`flex-1 flex overflow-hidden ${selectedTheme.contentBg} dark:from-slate-900 dark:to-slate-800`}>
-          {/* Left Sidebar */}
-          <div className={`${sidebarOpen ? 'w-72' : 'w-0'} transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 border-r border-border flex flex-col`}>
+        <div className={`flex-1 flex overflow-hidden relative ${selectedTheme.contentBg} dark:from-slate-900 dark:to-slate-800`}>
+          {/* Mobile overlay backdrop */}
+          {sidebarOpen && isMobile && (
+            <div
+              className="absolute inset-0 bg-black/40 z-20 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+          {/* Left Sidebar - overlay on mobile, push on desktop */}
+          <div className={`${sidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} ${isMobile ? 'absolute inset-y-0 left-0 z-30 w-72' : 'relative'} transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 border-r border-border flex flex-col`}>
             {/* Sidebar header with home icon */}
             <div className="p-4 border-b flex items-center gap-3">
               <button 
@@ -639,7 +671,33 @@ export default function ScormProfessionalViewer({
                   <div className="flex items-center justify-center h-64">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : activeTab === 'content' || activeTab === 'test' ? (
+                ) : activeTab === 'test' ? (
+                  /* TEST FINAL DE LA UNIDAD - Subsanación SEPE: evaluación accesible y con calificación persistente */
+                  <div className="space-y-4">
+                    <Card className="border-2 border-primary/30 bg-primary/5">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <FileQuestion className="h-6 w-6 text-primary" />
+                          Test Final de la Unidad
+                        </CardTitle>
+                        <CardDescription>
+                          Realiza el test de evaluación de esta unidad formativa. Tu calificación quedará registrada y podrás consultarla, así como tu tutor y el centro.
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                    {courseId ? (
+                      <SelfAssessmentQuiz
+                        courseId={courseId}
+                        formativeUnitId={unitId}
+                        formativeUnitTitle={unitTitle}
+                      />
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground text-sm">
+                        No se ha podido cargar el contexto del curso. Recarga la página e inténtalo de nuevo.
+                      </div>
+                    )}
+                  </div>
+                ) : activeTab === 'content' ? (
                   <>
                     {/* QUIZ SLIDE */}
                     {currentSlide?.type === 'quiz' && currentSlide.quiz ? (
