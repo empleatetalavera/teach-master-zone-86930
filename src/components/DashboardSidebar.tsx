@@ -26,7 +26,8 @@ import {
   DollarSign,
   Layers,
   FileSignature,
-  Globe
+  Globe,
+  LifeBuoy
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -146,12 +147,15 @@ export function DashboardSidebar() {
   // Determine which menu items to show
   // super_admin gets platform management menu
   // admin gets center management menu
-  const items = 
+  const baseItems = 
     userRole === "super_admin" ? superAdminItems :
     userRole === "admin" ? adminItems : 
     userRole === "teacher" ? teacherItems : 
     userRole === "auditor" ? auditorItems :
     studentItems;
+
+  const guidesItem = { title: "Guías y ayuda", url: "/dashboard/guias", icon: LifeBuoy };
+  const items = [...baseItems, guidesItem];
   
   const roleLabel = 
     userRole === "super_admin" ? "Super Administrador" :

@@ -11,6 +11,8 @@ import { Loader2, Upload, Palette, Eye, Building2, MapPin, Phone, Mail, Link2 } 
 import { useBranding } from "@/hooks/useBranding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { CenterDocumentUploader } from "@/components/CenterDocumentUploader";
+import { Compass } from "lucide-react";
 
 export default function CenterSettings() {
   const { user } = useAuth();
@@ -39,6 +41,7 @@ export default function CenterSettings() {
   const [sepeRegistryNumber, setSepeRegistryNumber] = useState("");
   const [censusCode, setCensusCode] = useState("");
   const [campusUrl, setCampusUrl] = useState("");
+  const [navigationGuideUrl, setNavigationGuideUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadCenterData();
@@ -102,6 +105,7 @@ export default function CenterSettings() {
       setSepeRegistryNumber(center.sepe_registry_number || "");
       setCensusCode(center.census_code || "");
       setCampusUrl(center.campus_url || "");
+      setNavigationGuideUrl(center.navigation_guide_pdf_url || null);
     } catch (error) {
       console.error("Error loading center data:", error);
       toast.error("Error al cargar los datos del centro");
@@ -776,6 +780,31 @@ export default function CenterSettings() {
                   URL completa de tu campus virtual con dominio propio (ej: https://campusarmaformacion.es)
                 </p>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Compass className="h-5 w-5" />
+                Guía de Navegación del Centro
+              </CardTitle>
+              <CardDescription>
+                PDF que se ofrecerá al alumno como Guía de Navegación. Si no subes ninguno, se generará automáticamente con los datos del centro.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {centerId && (
+                <CenterDocumentUploader
+                  centerId={centerId}
+                  documentUrl={navigationGuideUrl}
+                  dbField="navigation_guide_pdf_url"
+                  bucket="course-documents"
+                  label="Guía de Navegación"
+                  fileNamePrefix="guia-navegacion"
+                  onUpdate={loadCenterData}
+                />
+              )}
             </CardContent>
           </Card>
 

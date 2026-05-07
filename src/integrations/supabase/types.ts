@@ -3118,6 +3118,7 @@ export type Database = {
           logo_url: string | null
           mercantile_registry: string | null
           name: string
+          navigation_guide_pdf_url: string | null
           official_badge: string | null
           phone: string | null
           postal_code: string | null
@@ -3150,6 +3151,7 @@ export type Database = {
           logo_url?: string | null
           mercantile_registry?: string | null
           name: string
+          navigation_guide_pdf_url?: string | null
           official_badge?: string | null
           phone?: string | null
           postal_code?: string | null
@@ -3182,6 +3184,7 @@ export type Database = {
           logo_url?: string | null
           mercantile_registry?: string | null
           name?: string
+          navigation_guide_pdf_url?: string | null
           official_badge?: string | null
           phone?: string | null
           postal_code?: string | null
