@@ -24,6 +24,10 @@ import {
   loadScormProgress,
   saveScormProgress,
 } from "@/lib/scorm/scorm-persistence";
+import {
+  loadScormPackage,
+  type ScormRuntimeHandle,
+} from "@/lib/scorm/scorm-runtime";
 
 interface ScormPlayerProps {
   moduleId: string;
@@ -41,18 +45,6 @@ type ActivePackage = {
   scormVersion: string;
 };
 
-/**
- * Build the same-origin URL for the SCO entry point.
- * In dev: `/scorm-content/...` is proxied by vite to Supabase Storage public bucket.
- * In prod (Lovable static hosting), the same path needs a host-side rewrite.
- */
-function buildScoSrc(filePath: string): string {
-  // file_path stored in scorm_packages typically points to <folder>/index.html
-  // (or just the entry HTML). We strip any leading slash.
-  const clean = filePath.replace(/^\/+/, "");
-  return `/scorm-content/${clean}`;
-}
-
 export default function ScormPlayer({
   moduleId,
   enrollmentId,
@@ -63,9 +55,12 @@ export default function ScormPlayer({
   const queryClient = useQueryClient();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
+  const handleRef = useRef<ScormRuntimeHandle | null>(null);
 
   const [activePackage, setActivePackage] = useState<ActivePackage | null>(null);
   const [apiReady, setApiReady] = useState(false);
+  const [iframeSrc, setIframeSrc] = useState<string | null>(null);
+  const [runtimeError, setRuntimeError] = useState<string | null>(null);
 
   // Resolve identity if not passed by parent
   const { data: identity } = useQuery({
@@ -131,68 +126,92 @@ export default function ScormPlayer({
     enabled: !!scormContent && scormContent.length > 0 && !!identity,
   });
 
-  // Mount/unmount window.API around the active package
+  // Mount/unmount window.API + load SCORM package via Service Worker runtime
   useEffect(() => {
     if (!activePackage || !identity) return;
 
     let cancelled = false;
+    setRuntimeError(null);
 
     (async () => {
-      const prev = await loadScormProgress({
-        userId: identity.userId,
-        enrollmentId,
-        scormPackageId: activePackage.id,
-        moduleId,
-      });
-      if (cancelled) return;
+      try {
+        const prev = await loadScormProgress({
+          userId: identity.userId,
+          enrollmentId,
+          scormPackageId: activePackage.id,
+          moduleId,
+        });
+        if (cancelled) return;
 
-      const key = {
-        userId: identity.userId,
-        enrollmentId,
-        scormPackageId: activePackage.id,
-        moduleId,
-      };
+        const key = {
+          userId: identity.userId,
+          enrollmentId,
+          scormPackageId: activePackage.id,
+          moduleId,
+        };
 
-      const api = createScorm12API({
-        studentId: identity.userId,
-        studentName: identity.studentName,
-        previousCmi: (prev?.cmi_data as CmiData | null) ?? null,
-        previousTotalTime: prev?.total_time ?? null,
-        callbacks: {
-          onCommit: async (cmi) => {
-            try {
-              await saveScormProgress(key, cmi);
-              queryClient.invalidateQueries({
-                queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
-              });
-            } catch (e) {
-              console.error("[SCORM] commit failed:", e);
-            }
+        const api = createScorm12API({
+          studentId: identity.userId,
+          studentName: identity.studentName,
+          previousCmi: (prev?.cmi_data as CmiData | null) ?? null,
+          previousTotalTime: prev?.total_time ?? null,
+          callbacks: {
+            onCommit: async (cmi) => {
+              try {
+                await saveScormProgress(key, cmi);
+                queryClient.invalidateQueries({
+                  queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
+                });
+              } catch (e) {
+                console.error("[SCORM] commit failed:", e);
+              }
+            },
+            onFinish: async (cmi) => {
+              try {
+                await saveScormProgress(key, cmi);
+                queryClient.invalidateQueries({
+                  queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
+                });
+              } catch (e) {
+                console.error("[SCORM] finish failed:", e);
+              }
+            },
           },
-          onFinish: async (cmi) => {
-            try {
-              await saveScormProgress(key, cmi);
-              queryClient.invalidateQueries({
-                queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
-              });
-            } catch (e) {
-              console.error("[SCORM] finish failed:", e);
-            }
-          },
-        },
-      });
+        });
 
-      const cleanup = attachScorm12ToWindow(api);
-      cleanupRef.current = cleanup;
-      setApiReady(true);
+        // Attach window.API BEFORE the iframe loads, so the SCO finds it on first call.
+        const cleanup = attachScorm12ToWindow(api);
+        cleanupRef.current = cleanup;
+        setApiReady(true);
+
+        // Load + register the SCORM package in the Service Worker (same-origin).
+        const handle = await loadScormPackage({
+          packageId: activePackage.id,
+          filePath: activePackage.filePath,
+        });
+        if (cancelled) {
+          handle.dispose();
+          return;
+        }
+        handleRef.current = handle;
+        setIframeSrc(handle.iframeSrc);
+      } catch (e: any) {
+        console.error("[SCORM] runtime error:", e);
+        if (!cancelled) setRuntimeError(e?.message || "Error cargando el paquete SCORM");
+      }
     })();
 
     return () => {
       cancelled = true;
       setApiReady(false);
+      setIframeSrc(null);
       if (cleanupRef.current) {
         cleanupRef.current();
         cleanupRef.current = null;
+      }
+      if (handleRef.current) {
+        handleRef.current.dispose();
+        handleRef.current = null;
       }
     };
   }, [activePackage, identity, enrollmentId, moduleId, queryClient]);
@@ -339,13 +358,20 @@ export default function ScormPlayer({
                 )}
               </div>
 
-              {/* Inline player — only renders once API is attached to window */}
+              {/* Inline player — only renders once API is attached AND the SW served the package */}
               {isActive && (
                 <div className="aspect-video bg-black rounded-lg overflow-hidden border">
-                  {apiReady ? (
+                  {runtimeError ? (
+                    <div className="w-full h-full flex items-center justify-center text-white text-center px-4">
+                      <div>
+                        <AlertCircle className="h-6 w-6 mx-auto mb-2 text-red-400" />
+                        <p className="text-sm">{runtimeError}</p>
+                      </div>
+                    </div>
+                  ) : iframeSrc && apiReady ? (
                     <iframe
                       ref={iframeRef}
-                      src={buildScoSrc(activePackage!.filePath)}
+                      src={iframeSrc}
                       className="w-full h-full"
                       title={`SCORM: ${activePackage!.title}`}
                       sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
