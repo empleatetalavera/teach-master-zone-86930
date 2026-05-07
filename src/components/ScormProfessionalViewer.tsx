@@ -477,7 +477,7 @@ export default function ScormProfessionalViewer({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-screen h-[100dvh] max-w-none sm:max-w-[95vw] sm:h-[95vh] flex flex-col p-0 gap-0 overflow-hidden rounded-none sm:rounded-lg">
         {/* Top header bar with theme */}
-        <div className={`${selectedTheme.headerBg} text-white`}>
+        <div className={`${selectedTheme.headerBg} text-white no-print`}>
           {/* Unit title bar with theme selector */}
           <div className="px-3 sm:px-4 py-2 flex items-center justify-between border-b border-white/20 gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -555,7 +555,7 @@ export default function ScormProfessionalViewer({
             />
           )}
           {/* Left Sidebar - overlay on mobile, push on desktop */}
-          <div className={`${sidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} ${isMobile ? 'absolute inset-y-0 left-0 z-30 w-72' : 'relative'} transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 border-r border-border flex flex-col`}>
+          <div className={`${sidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'} ${isMobile ? 'absolute inset-y-0 left-0 z-30 w-72' : 'relative'} transition-all duration-300 overflow-hidden bg-white dark:bg-slate-800 border-r border-border flex flex-col no-print`}>
             {/* Sidebar header with home icon */}
             <div className="p-4 border-b flex items-center gap-3">
               <button 
