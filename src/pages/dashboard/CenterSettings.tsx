@@ -105,6 +105,7 @@ export default function CenterSettings() {
       setSepeRegistryNumber(center.sepe_registry_number || "");
       setCensusCode(center.census_code || "");
       setCampusUrl(center.campus_url || "");
+      setNavigationGuideUrl(center.navigation_guide_pdf_url || null);
     } catch (error) {
       console.error("Error loading center data:", error);
       toast.error("Error al cargar los datos del centro");
