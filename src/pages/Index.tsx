@@ -19,6 +19,21 @@ const DEFAULT_PRIMARY = "174 62% 47%";
 const DEFAULT_SECONDARY = "174 50% 38%";
 
 const Index = () => {
+  // Tenant domains (custom centers) should NOT see the TalentCloud landing.
+  // Redirect them straight to the campus login.
+  const host = typeof window !== "undefined" ? window.location.hostname : "";
+  const isMatrixDomain =
+    host === "talentcloudsolution.es" ||
+    host === "www.talentcloudsolution.es" ||
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.includes("lovable.app") ||
+    host.includes("lovableproject.com");
+
+  if (!isMatrixDomain) {
+    return <Navigate to="/auth" replace />;
+  }
+
   // Reset colors to TalentCloud defaults when visiting the public homepage
   useEffect(() => {
     const root = document.documentElement;
