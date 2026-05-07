@@ -640,22 +640,59 @@ export default function ScormProfessionalViewer({
           {/* Main content area */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Content header */}
-            <div className="bg-white dark:bg-slate-800 border-b px-6 py-4">
-              <div className="flex items-center gap-2 text-primary text-sm font-medium mb-2">
-                {currentSlide?.type === 'quiz' ? (
-                  <FileQuestion className="h-4 w-4" />
-                ) : currentSlide?.type === 'checklist' ? (
-                  <ClipboardList className="h-4 w-4" />
-                ) : currentSlide?.type === 'table' ? (
-                  <FileSpreadsheet className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
+            <div className="bg-white dark:bg-slate-800 border-b px-6 py-4 no-print">
+              {/* Breadcrumb de contexto SEPE: el alumno sabe en todo momento dónde está */}
+              <nav aria-label="Mapa de navegación" className="flex items-center flex-wrap gap-1 text-xs text-muted-foreground mb-2">
+                <Home className="h-3 w-3" />
+                <button onClick={() => setActiveTab('content')} className="hover:text-primary transition-colors">
+                  Curso
+                </button>
+                <ChevronRightIcon className="h-3 w-3" />
+                <span className="hover:text-primary truncate max-w-[180px]">{unitTitle}</span>
+                {currentSlide?.section && (
+                  <>
+                    <ChevronRightIcon className="h-3 w-3" />
+                    <span className="truncate max-w-[180px]">{currentSlide.section}</span>
+                  </>
                 )}
-                <span>{currentSlide?.section || 'Contenido'}</span>
+                <ChevronRightIcon className="h-3 w-3" />
+                <span className="text-foreground font-medium truncate max-w-[200px]">
+                  {currentSlide?.title || 'Contenido'}
+                </span>
+                <span className="ml-auto text-[10px] tabular-nums">
+                  {currentSlideIndex + 1} / {slides.length}
+                </span>
+              </nav>
+
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-primary text-sm font-medium mb-1">
+                    {currentSlide?.type === 'quiz' ? (
+                      <FileQuestion className="h-4 w-4" />
+                    ) : currentSlide?.type === 'checklist' ? (
+                      <ClipboardList className="h-4 w-4" />
+                    ) : currentSlide?.type === 'table' ? (
+                      <FileSpreadsheet className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                    <span>{currentSlide?.section || 'Contenido'}</span>
+                  </div>
+                  <h1 className="text-xl font-bold text-foreground truncate">
+                    {currentSlide?.title || 'Contenido del Curso'}
+                  </h1>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.print()}
+                  className="shrink-0"
+                  title="Imprimir contenido"
+                >
+                  <Printer className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Imprimir</span>
+                </Button>
               </div>
-              <h1 className="text-xl font-bold text-foreground">
-                {currentSlide?.title || 'Contenido del Curso'}
-              </h1>
               <div className="flex items-center gap-4 mt-2">
                 <Progress value={progress} className="flex-1 h-2" />
                 <span className="text-sm font-medium text-muted-foreground">
