@@ -1176,6 +1176,12 @@ export default function Profile() {
             </Tabs>
           </CardContent>
         </Card>
+
+        {user?.id && (
+          <div className="mt-6">
+            <ScormResultsSection userId={user.id} title="Mis evaluaciones" />
+          </div>
+        )}
       </div>
     </div>
   );
