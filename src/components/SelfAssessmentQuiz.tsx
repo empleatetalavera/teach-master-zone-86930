@@ -186,9 +186,20 @@ export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTit
               Sirve para comprobar tu nivel de comprensión de la unidad.
             </AlertDescription>
           </Alert>
+          {savedAttempt && (
+            <div className="mb-4 p-3 rounded-lg border-2 border-primary/30 bg-primary/5">
+              <p className="text-xs font-semibold text-primary mb-1">Tu última calificación</p>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-primary">{savedAttempt.score}%</span>
+                <span className="text-xs text-muted-foreground">
+                  {savedAttempt.correct} / {savedAttempt.total} aciertos · {new Date(savedAttempt.completed_at).toLocaleDateString('es-ES')}
+                </span>
+              </div>
+            </div>
+          )}
           <Button onClick={() => setStarted(true)} className="w-full gap-2">
             <FileQuestion className="h-4 w-4" />
-            Comenzar Autoevaluación
+            {savedAttempt ? "Repetir Autoevaluación" : "Comenzar Autoevaluación"}
           </Button>
         </CardContent>
       </Card>
