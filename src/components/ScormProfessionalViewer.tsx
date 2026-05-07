@@ -18,7 +18,7 @@ import {
   ClipboardList, Play, Headphones, Video, Send, X, MessageCircle,
   BarChart3, BookMarked, HelpCircle, Check, Building2, Users, 
   Briefcase, FileSpreadsheet, Mail, Package, Calculator, CreditCard,
-  Palette, Sparkles, Edit2, Menu
+  Palette, Sparkles, Edit2, Menu, Printer, ChevronRight as ChevronRightIcon
 } from "lucide-react";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
