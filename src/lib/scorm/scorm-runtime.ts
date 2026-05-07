@@ -8,8 +8,10 @@
  *   1) Ensure the SCORM service worker is registered and active.
  *   2) Sign + download the ZIP from Supabase Storage.
  *   3) Unzip in memory with JSZip.
- *   4) Post the file map to the SW (one MessageChannel round-trip per package).
- *   5) Return a same-origin iframe URL like /scorm-runtime/<packageId>/index.html.
+ *   4) Parse imsmanifest.xml to determine the launch path (defaults to
+ *      index.html if the manifest is absent or malformed).
+ *   5) Post the file map to the SW (one MessageChannel round-trip per package).
+ *   6) Return a same-origin iframe URL like /scorm-runtime/<packageId>/<launchPath>.
  *
  * The SW serves the iframe's fetches from the in-memory map, so the iframe is
  * same-origin with the parent and `window.parent.API` works for SCORM RTE.
@@ -35,8 +37,6 @@ async function ensureServiceWorker(): Promise<ServiceWorkerRegistration> {
     const reg = await navigator.serviceWorker.register(SW_PATH, { scope: SW_SCOPE });
     await navigator.serviceWorker.ready;
 
-    // On first install, the SW is active but may not yet control this page.
-    // Wait for it to claim, with a timeout fallback.
     if (!navigator.serviceWorker.controller) {
       await new Promise<void>((resolve) => {
         const onChange = () => {
@@ -59,6 +59,8 @@ async function ensureServiceWorker(): Promise<ServiceWorkerRegistration> {
 export type ScormRuntimeHandle = {
   /** Same-origin URL to use as the iframe `src`. */
   iframeSrc: string;
+  /** Launch path detected from the manifest (or provided explicitly). */
+  launchPath: string;
   /** Removes the package from SW memory. Call on player unmount. */
   dispose: () => void;
 };
@@ -70,24 +72,91 @@ export type LoadScormPackageOptions = {
   filePath: string;
   /** Storage bucket name. Defaults to 'scorm-packages'. */
   storageBucket?: string;
-  /** Launch file inside the ZIP. Defaults to 'index.html'. */
+  /**
+   * Override the launch file. If omitted, the runtime parses imsmanifest.xml
+   * and uses the resource[default].href. Falls back to 'index.html'.
+   */
   launchPath?: string;
   /** Signed URL TTL in seconds. Defaults to 1h. */
   signedUrlExpiresIn?: number;
 };
+
+/**
+ * Parse imsmanifest.xml and return the launch href of the default
+ * organization's first SCO resource. Returns null if the manifest is missing
+ * or unparseable — the caller falls back to 'index.html'.
+ */
+async function detectLaunchPath(files: Map<string, Blob>): Promise<string | null> {
+  const manifestKey =
+    findKeyCaseInsensitive(files, 'imsmanifest.xml') ||
+    findKeyCaseInsensitive(files, 'imsManifest.xml');
+  if (!manifestKey) return null;
+
+  const blob = files.get(manifestKey);
+  if (!blob) return null;
+
+  const xmlText = await blob.text();
+
+  let doc: Document;
+  try {
+    doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  } catch {
+    return null;
+  }
+  if (doc.getElementsByTagName('parsererror').length > 0) return null;
+
+  // Find default organization's first <item> referencing a resource.
+  const orgs = doc.getElementsByTagName('organizations')[0];
+  const defaultOrgId = orgs?.getAttribute('default');
+  let firstItemRef: string | null = null;
+
+  if (defaultOrgId) {
+    const allOrgs = doc.getElementsByTagName('organization');
+    for (let i = 0; i < allOrgs.length; i++) {
+      if (allOrgs[i].getAttribute('identifier') === defaultOrgId) {
+        const item = allOrgs[i].getElementsByTagName('item')[0];
+        firstItemRef = item?.getAttribute('identifierref') ?? null;
+        break;
+      }
+    }
+  }
+  if (!firstItemRef) {
+    const item = doc.getElementsByTagName('item')[0];
+    firstItemRef = item?.getAttribute('identifierref') ?? null;
+  }
+
+  // Find the resource with that identifier and return its href.
+  const resources = doc.getElementsByTagName('resource');
+  for (let i = 0; i < resources.length; i++) {
+    const r = resources[i];
+    if (!firstItemRef || r.getAttribute('identifier') === firstItemRef) {
+      const href = r.getAttribute('href');
+      if (href) return href.replace(/^[./]+/, '');
+    }
+  }
+  return null;
+}
+
+function findKeyCaseInsensitive(map: Map<string, unknown>, target: string): string | null {
+  const lower = target.toLowerCase();
+  for (const k of map.keys()) {
+    if (k.toLowerCase() === lower) return k;
+  }
+  return null;
+}
 
 export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<ScormRuntimeHandle> {
   const {
     packageId,
     filePath,
     storageBucket = 'scorm-packages',
-    launchPath = 'index.html',
+    launchPath: explicitLaunchPath,
     signedUrlExpiresIn = 3600,
   } = opts;
 
   await ensureServiceWorker();
 
-  // 1) Get a signed URL for the private bucket.
+  // 1) Sign URL for the private bucket.
   const { data: signed, error: signErr } = await supabase
     .storage
     .from(storageBucket)
@@ -114,21 +183,33 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
       files.set(normalised, content);
     })
   );
-
   if (files.size === 0) {
     throw new Error('El paquete SCORM está vacío.');
   }
 
-  // 4) Send the map to the SW and wait for ack.
+  // 4) Launch path: explicit > manifest > index.html.
+  let launchPath: string;
+  if (explicitLaunchPath) {
+    launchPath = explicitLaunchPath;
+  } else {
+    launchPath = (await detectLaunchPath(files)) ?? 'index.html';
+  }
+
+  // Validate that the file exists (case-insensitive) in the package.
+  if (!files.has(launchPath) && !findKeyCaseInsensitive(files, launchPath)) {
+    throw new Error(`El archivo de arranque "${launchPath}" no está en el paquete SCORM.`);
+  }
+
+  // 5) Send to SW.
   await postToSW({ type: 'REGISTER_PACKAGE', packageId, files }, 'PACKAGE_REGISTERED');
 
-  // 5) Return same-origin iframe URL.
+  // 6) Same-origin URL.
   const iframeSrc = `${SW_SCOPE}${encodeURIComponent(packageId)}/${launchPath}`;
 
   return {
     iframeSrc,
+    launchPath,
     dispose: () => {
-      // Best-effort cleanup; ignore errors.
       postToSW({ type: 'UNREGISTER_PACKAGE', packageId }, 'PACKAGE_UNREGISTERED').catch(() => {});
     },
   };
