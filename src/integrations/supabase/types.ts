@@ -2434,6 +2434,51 @@ export type Database = {
           },
         ]
       }
+      self_assessment_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string
+          correct_count: number
+          course_id: string
+          created_at: string
+          formative_unit_id: string
+          id: string
+          score: number
+          status: string
+          total_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string
+          correct_count?: number
+          course_id: string
+          created_at?: string
+          formative_unit_id: string
+          id?: string
+          score?: number
+          status?: string
+          total_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          correct_count?: number
+          course_id?: string
+          created_at?: string
+          formative_unit_id?: string
+          id?: string
+          score?: number
+          status?: string
+          total_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       self_assessment_questions: {
         Row: {
           case_study: string | null
