@@ -126,68 +126,92 @@ export default function ScormPlayer({
     enabled: !!scormContent && scormContent.length > 0 && !!identity,
   });
 
-  // Mount/unmount window.API around the active package
+  // Mount/unmount window.API + load SCORM package via Service Worker runtime
   useEffect(() => {
     if (!activePackage || !identity) return;
 
     let cancelled = false;
+    setRuntimeError(null);
 
     (async () => {
-      const prev = await loadScormProgress({
-        userId: identity.userId,
-        enrollmentId,
-        scormPackageId: activePackage.id,
-        moduleId,
-      });
-      if (cancelled) return;
+      try {
+        const prev = await loadScormProgress({
+          userId: identity.userId,
+          enrollmentId,
+          scormPackageId: activePackage.id,
+          moduleId,
+        });
+        if (cancelled) return;
 
-      const key = {
-        userId: identity.userId,
-        enrollmentId,
-        scormPackageId: activePackage.id,
-        moduleId,
-      };
+        const key = {
+          userId: identity.userId,
+          enrollmentId,
+          scormPackageId: activePackage.id,
+          moduleId,
+        };
 
-      const api = createScorm12API({
-        studentId: identity.userId,
-        studentName: identity.studentName,
-        previousCmi: (prev?.cmi_data as CmiData | null) ?? null,
-        previousTotalTime: prev?.total_time ?? null,
-        callbacks: {
-          onCommit: async (cmi) => {
-            try {
-              await saveScormProgress(key, cmi);
-              queryClient.invalidateQueries({
-                queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
-              });
-            } catch (e) {
-              console.error("[SCORM] commit failed:", e);
-            }
+        const api = createScorm12API({
+          studentId: identity.userId,
+          studentName: identity.studentName,
+          previousCmi: (prev?.cmi_data as CmiData | null) ?? null,
+          previousTotalTime: prev?.total_time ?? null,
+          callbacks: {
+            onCommit: async (cmi) => {
+              try {
+                await saveScormProgress(key, cmi);
+                queryClient.invalidateQueries({
+                  queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
+                });
+              } catch (e) {
+                console.error("[SCORM] commit failed:", e);
+              }
+            },
+            onFinish: async (cmi) => {
+              try {
+                await saveScormProgress(key, cmi);
+                queryClient.invalidateQueries({
+                  queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
+                });
+              } catch (e) {
+                console.error("[SCORM] finish failed:", e);
+              }
+            },
           },
-          onFinish: async (cmi) => {
-            try {
-              await saveScormProgress(key, cmi);
-              queryClient.invalidateQueries({
-                queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
-              });
-            } catch (e) {
-              console.error("[SCORM] finish failed:", e);
-            }
-          },
-        },
-      });
+        });
 
-      const cleanup = attachScorm12ToWindow(api);
-      cleanupRef.current = cleanup;
-      setApiReady(true);
+        // Attach window.API BEFORE the iframe loads, so the SCO finds it on first call.
+        const cleanup = attachScorm12ToWindow(api);
+        cleanupRef.current = cleanup;
+        setApiReady(true);
+
+        // Load + register the SCORM package in the Service Worker (same-origin).
+        const handle = await loadScormPackage({
+          packageId: activePackage.id,
+          filePath: activePackage.filePath,
+        });
+        if (cancelled) {
+          handle.dispose();
+          return;
+        }
+        handleRef.current = handle;
+        setIframeSrc(handle.iframeSrc);
+      } catch (e: any) {
+        console.error("[SCORM] runtime error:", e);
+        if (!cancelled) setRuntimeError(e?.message || "Error cargando el paquete SCORM");
+      }
     })();
 
     return () => {
       cancelled = true;
       setApiReady(false);
+      setIframeSrc(null);
       if (cleanupRef.current) {
         cleanupRef.current();
         cleanupRef.current = null;
+      }
+      if (handleRef.current) {
+        handleRef.current.dispose();
+        handleRef.current = null;
       }
     };
   }, [activePackage, identity, enrollmentId, moduleId, queryClient]);
