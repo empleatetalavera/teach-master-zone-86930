@@ -67,6 +67,7 @@ import { SEPEFormacionCampus } from "@/components/campus/SEPEFormacionCampus";
 import TeacherTutorGuide from "@/pages/dashboard/TeacherTutorGuide";
 import { ElectiveModuleContent } from "@/components/ElectiveModuleContent";
 import { BatchContentGenerator } from "@/components/BatchContentGenerator";
+import ScormPlayer from "@/components/scorm/ScormPlayer";
 
 interface Course {
   id: string;
@@ -297,6 +298,7 @@ export default function CourseView() {
 
   // SCORM content viewer state
   const [scormViewerOpen, setScormViewerOpen] = useState(false);
+  const [selectedScormModuleId, setSelectedScormModuleId] = useState<string>("");
 
   // Syllabus editor state
   const [syllabusEditorOpen, setSyllabusEditorOpen] = useState(false);
