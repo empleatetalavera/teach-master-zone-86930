@@ -108,7 +108,7 @@ export default function StudentGrades() {
           status,
           attempts: attempts.length,
           date: best.completed_at ?? best.started_at,
-          link: ev.course_id ? `/dashboard/student/evaluations` : undefined,
+          link: ev.course_id ? `/course/${ev.course_id}/evaluation/${ev.id}` : undefined,
         });
       });
 
