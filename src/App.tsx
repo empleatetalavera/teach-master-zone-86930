@@ -76,6 +76,7 @@ import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import StudentSupport from "./pages/dashboard/StudentSupport";
 import StudentClassroom from "./pages/dashboard/StudentClassroom";
 import StudentEvaluations from "./pages/dashboard/StudentEvaluations";
+import StudentGrades from "./pages/dashboard/StudentGrades";
 import StudentCertificates from "./pages/dashboard/StudentCertificates";
 import StudentGuides from "./pages/dashboard/StudentGuides";
 import AuditorDashboard from "./pages/dashboard/AuditorDashboard";
@@ -166,6 +167,7 @@ function AppRoutes() {
           <Route path="student/courses" element={<StudentCourses />} />
           <Route path="student/classroom" element={<StudentClassroom />} />
           <Route path="student/evaluations" element={<StudentEvaluations />} />
+          <Route path="student/grades" element={<StudentGrades />} />
           <Route path="student/certificates" element={<StudentCertificates />} />
           <Route path="student/support" element={<StudentSupport />} />
           <Route path="guias" element={<StudentGuides />} />

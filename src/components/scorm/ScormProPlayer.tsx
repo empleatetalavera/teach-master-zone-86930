@@ -32,11 +32,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import type { CmiData } from "@/lib/scorm/scorm12-api";
 import {
-  createScorm12API,
-  attachScorm12ToWindow,
-  type CmiData,
-} from "@/lib/scorm/scorm12-api";
+  attachScormBridge,
+  secondsToScorm12Time,
+  secondsToScorm2004Time,
+  type ScormBridgeHandle,
+} from "@/lib/scorm/scorm-again-bridge";
 import {
   loadScormProgress,
   saveScormProgress,
@@ -46,6 +48,7 @@ import {
   type ScormRuntimeHandle,
   type ScormTreeItem,
 } from "@/lib/scorm/scorm-runtime";
+import { useResourceTracker } from "@/hooks/useResourceTracker";
 
 type Props = {
   packageId: string;
@@ -95,7 +98,7 @@ export default function ScormProPlayer({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const handleRef = useRef<ScormRuntimeHandle | null>(null);
-  const apiRef = useRef<ReturnType<typeof createScorm12API> | null>(null);
+  const bridgeRef = useRef<ScormBridgeHandle | null>(null);
 
   const [identity, setIdentity] = useState<{ userId: string; studentName: string } | null>(null);
   const [tree, setTree] = useState<ScormTreeItem[]>([]);
@@ -154,7 +157,7 @@ export default function ScormProPlayer({
 
         const key = { userId: identity.userId, enrollmentId, scormPackageId: packageId, moduleId };
 
-        const api = createScorm12API({
+        const bridge = attachScormBridge({
           studentId: identity.userId,
           studentName: identity.studentName,
           previousCmi: (prev?.cmi_data as CmiData | null) ?? null,
@@ -166,20 +169,17 @@ export default function ScormProPlayer({
                 queryClient.invalidateQueries({
                   queryKey: ["scorm-progress", moduleId, enrollmentId, identity.userId],
                 });
+                const loc = cmi["cmi.core.lesson_location"] || cmi["cmi.location"];
+                if (loc) setVisited((s) => new Set(s).add(loc));
               } catch (e) { console.error("[SCORM] commit failed:", e); }
             },
             onFinish: async (cmi) => {
               try { await saveScormProgress(key, cmi); } catch (e) { console.error(e); }
             },
-            onSetValue: (el, val) => {
-              if (el === "cmi.core.lesson_location" && val) {
-                setVisited((s) => new Set(s).add(val));
-              }
-            },
           },
         });
-        apiRef.current = api;
-        cleanupRef.current = attachScorm12ToWindow(api);
+        bridgeRef.current = bridge;
+        cleanupRef.current = bridge.detach;
 
         const handle = await loadScormPackage({ packageId, filePath });
         if (cancelled) { handle.dispose(); return; }
@@ -204,7 +204,7 @@ export default function ScormProPlayer({
       cleanupRef.current = null;
       handleRef.current?.dispose();
       handleRef.current = null;
-      apiRef.current = null;
+      bridgeRef.current = null;
     };
   }, [identity, packageId, filePath, enrollmentId, moduleId, queryClient]);
 
@@ -223,11 +223,13 @@ export default function ScormProPlayer({
     }, 1000);
 
     const commit = window.setInterval(() => {
-      const api = apiRef.current;
-      if (!api) return;
+      const bridge = bridgeRef.current;
+      if (!bridge) return;
       try {
-        api.LMSSetValue("cmi.core.session_time", secondsToScormTime(activeSecondsRef.current));
-        api.LMSCommit("");
+        bridge.commitSessionTime(
+          secondsToScorm12Time(activeSecondsRef.current),
+          secondsToScorm2004Time(activeSecondsRef.current),
+        );
       } catch (e) { console.error("[SCORM] heartbeat commit error:", e); }
     }, 60_000);
 
@@ -261,15 +263,26 @@ export default function ScormProPlayer({
 
   const handleExit = () => {
     try {
-      const api = apiRef.current;
-      if (api) {
-        api.LMSSetValue("cmi.core.session_time", secondsToScormTime(activeSecondsRef.current));
-        api.LMSSetValue("cmi.core.exit", "suspend");
-        api.LMSFinish("");
+      const bridge = bridgeRef.current;
+      if (bridge) {
+        bridge.commitSessionTime(
+          secondsToScorm12Time(activeSecondsRef.current),
+          secondsToScorm2004Time(activeSecondsRef.current),
+        );
+        bridge.finish();
       }
     } catch (e) { console.error(e); }
     onExit();
   };
+
+  // SEPE: trazabilidad del recurso (tiempo de permanencia en el SCORM)
+  useResourceTracker({
+    resourceType: "scorm",
+    resourceId: packageId,
+    resourceLabel: packageTitle,
+    enrollmentId,
+    moduleId,
+  });
 
   const renderTree = (items: ScormTreeItem[], depth = 0) => (
     <ul className={cn("space-y-1", depth === 0 ? "" : "ml-4 mt-1 border-l border-border pl-2")}>

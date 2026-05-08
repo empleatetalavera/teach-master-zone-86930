@@ -16,11 +16,11 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { CmiData } from "@/lib/scorm/scorm12-api";
 import {
-  createScorm12API,
-  attachScorm12ToWindow,
-  type CmiData,
-} from "@/lib/scorm/scorm12-api";
+  attachScormBridge,
+  type ScormBridgeHandle,
+} from "@/lib/scorm/scorm-again-bridge";
 import {
   loadScormProgress,
   saveScormProgress,
@@ -30,6 +30,7 @@ import {
   type ScormRuntimeHandle,
 } from "@/lib/scorm/scorm-runtime";
 import ScormProPlayer from "./ScormProPlayer";
+import { useResourceTracker } from "@/hooks/useResourceTracker";
 
 interface ScormPlayerProps {
   moduleId: string;
@@ -70,6 +71,16 @@ export default function ScormPlayer({
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const [proPlayer, setProPlayer] = useState<ActivePackage | null>(null);
+
+  // SEPE: trazabilidad de tiempo en el reproductor SCORM (recurso activo)
+  useResourceTracker({
+    enabled: !!activePackage,
+    resourceType: "scorm",
+    resourceId: activePackage?.id,
+    resourceLabel: activePackage?.title,
+    enrollmentId,
+    moduleId,
+  });
 
   // Resolve identity if not passed by parent
   const { data: identity } = useQuery({
@@ -179,7 +190,7 @@ export default function ScormPlayer({
           moduleId,
         };
 
-        const api = createScorm12API({
+        const bridge = attachScormBridge({
           studentId: identity.userId,
           studentName: identity.studentName,
           previousCmi: (prev?.cmi_data as CmiData | null) ?? null,
@@ -208,9 +219,7 @@ export default function ScormPlayer({
           },
         });
 
-        // Attach window.API BEFORE the iframe loads, so the SCO finds it on first call.
-        const cleanup = attachScorm12ToWindow(api);
-        cleanupRef.current = cleanup;
+        cleanupRef.current = bridge.detach;
         setApiReady(true);
 
         // Load + register the SCORM package in the Service Worker (same-origin).

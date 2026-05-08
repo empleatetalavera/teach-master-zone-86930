@@ -2314,6 +2314,63 @@ export type Database = {
           },
         ]
       }
+      resource_access_log: {
+        Row: {
+          active_seconds: number
+          course_id: string | null
+          created_at: string
+          enrollment_id: string | null
+          entered_at: string
+          id: string
+          ip_address: string | null
+          left_at: string | null
+          module_id: string | null
+          resource_id: string | null
+          resource_label: string | null
+          resource_type: string
+          unit_id: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          active_seconds?: number
+          course_id?: string | null
+          created_at?: string
+          enrollment_id?: string | null
+          entered_at?: string
+          id?: string
+          ip_address?: string | null
+          left_at?: string | null
+          module_id?: string | null
+          resource_id?: string | null
+          resource_label?: string | null
+          resource_type: string
+          unit_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          active_seconds?: number
+          course_id?: string | null
+          created_at?: string
+          enrollment_id?: string | null
+          entered_at?: string
+          id?: string
+          ip_address?: string | null
+          left_at?: string | null
+          module_id?: string | null
+          resource_id?: string | null
+          resource_label?: string | null
+          resource_type?: string
+          unit_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       scorm_packages: {
         Row: {
           created_at: string | null
