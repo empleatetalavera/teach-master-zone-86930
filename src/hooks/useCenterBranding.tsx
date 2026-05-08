@@ -54,10 +54,9 @@ export function useCenterBranding(centerIdentifier?: string | null) {
 
         try {
           const cleanHost = host.replace(/^www\./, '');
-          const { data: centers } = await supabase
-            .from('training_centers')
-            .select('*')
-            .eq('is_active', true);
+          const { data: centers } = await (supabase as any)
+            .from('centers_public_branding')
+            .select('*');
 
           const matched = (centers || []).find((c: any) => {
             if (!c.custom_domain) return false;

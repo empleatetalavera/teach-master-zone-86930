@@ -56,10 +56,9 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     if (!isMatrixDomain) {
       // Buscar centro por dominio personalizado
       try {
-        const { data: centersByDomain, error: domainError } = await supabase
-          .from('training_centers')
-          .select('*')
-          .eq('is_active', true);
+        const { data: centersByDomain, error: domainError } = await (supabase as any)
+          .from('centers_public_branding')
+          .select('*');
 
         if (domainError) {
           console.error('[useBranding] Error fetching centers:', domainError);
