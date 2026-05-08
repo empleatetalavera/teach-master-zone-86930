@@ -65,7 +65,7 @@ interface SEPEFormacionCampusProps {
   courseTitle: string;
   userRole: string | null;
   getUnitProgress: (unitId: string) => UnitProgressData;
-  onOpenScormViewer: (unitId: string, unitTitle: string) => void;
+  onOpenScormViewer: (unitId: string, unitTitle: string, moduleId?: string) => void;
   onOpenActivityManager: (unitId: string, unitTitle: string) => void;
   onOpenManualUploader: (moduleId: string, unitTitle: string, unitId: string) => void;
   onOpenScormAuthor: (moduleId: string, unitId: string, unitTitle: string) => void;
@@ -485,7 +485,7 @@ export function SEPEFormacionCampus({
                                         iconColor="text-primary"
                                         title="Contenido Interactivo"
                                         subtitle="Material multimedia e interactivo de la unidad"
-                                        onClick={() => onOpenScormViewer(unit.id, unit.title)}
+                                        onClick={() => onOpenScormViewer(unit.id, unit.title, module.id)}
                                         actions={
                                           isAdmin ? (
                                             <Button
