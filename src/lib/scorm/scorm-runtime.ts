@@ -257,14 +257,15 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
     throw new Error('El paquete SCORM está vacío.');
   }
 
-  // 4) Launch path: explicit > manifest > index.html.
+  // 4) Parse manifest (tree + launch path + course title).
+  const manifest = await parseManifest(files);
   let launchPath: string;
   if (explicitLaunchPath) {
     launchPath = explicitLaunchPath;
   } else {
-    launchPath = (await detectLaunchPath(files)) ?? 'index.html';
+    launchPath = manifest.launchPath ?? 'index.html';
   }
-  console.log('[SCORM] Launch path:', launchPath);
+  console.log('[SCORM] Launch path:', launchPath, 'tree items:', manifest.tree.length);
 
   // Validate that the file exists (case-insensitive) in the package.
   if (!files.has(launchPath) && !findKeyCaseInsensitive(files, launchPath)) {
@@ -277,11 +278,15 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
   console.log('[SCORM] Package registered in SW');
 
   // 6) Same-origin URL.
-  const iframeSrc = `${SW_SCOPE}${encodeURIComponent(packageId)}/${launchPath}`;
+  const baseSrc = `${SW_SCOPE}${encodeURIComponent(packageId)}/`;
+  const iframeSrc = `${baseSrc}${launchPath}`;
 
   return {
     iframeSrc,
     launchPath,
+    baseSrc,
+    courseTitle: manifest.courseTitle,
+    tree: manifest.tree,
     dispose: () => {
       postToSW(reg, { type: 'UNREGISTER_PACKAGE', packageId }, 'PACKAGE_UNREGISTERED').catch(() => {});
     },
