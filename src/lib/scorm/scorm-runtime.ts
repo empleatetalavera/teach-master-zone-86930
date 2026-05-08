@@ -34,23 +34,12 @@ async function ensureServiceWorker(): Promise<ServiceWorkerRegistration> {
   if (swReadyPromise) return swReadyPromise;
 
   swReadyPromise = (async () => {
+    console.log('[SCORM] Registering service worker at', SW_PATH);
     const reg = await navigator.serviceWorker.register(SW_PATH, { scope: SW_SCOPE });
-    await navigator.serviceWorker.ready;
-
-    if (!navigator.serviceWorker.controller) {
-      await new Promise<void>((resolve) => {
-        const onChange = () => {
-          navigator.serviceWorker.removeEventListener('controllerchange', onChange);
-          resolve();
-        };
-        navigator.serviceWorker.addEventListener('controllerchange', onChange);
-        setTimeout(() => {
-          navigator.serviceWorker.removeEventListener('controllerchange', onChange);
-          resolve();
-        }, 1500);
-      });
-    }
-    return reg;
+    // Wait until there is an active worker (installed + activated).
+    const ready = await navigator.serviceWorker.ready;
+    console.log('[SCORM] Service worker ready, active:', !!ready.active);
+    return ready;
   })();
 
   return swReadyPromise;
