@@ -60,9 +60,12 @@ export default function StudentCourses() {
 
       if (error) throw error;
 
+      // Filter out enrollments where course is null (cross-center / RLS-blocked)
+      const validEnrollments = (enrollments || []).filter((e: any) => e.course);
+
       // Process each enrollment to get progress details
       const coursesWithProgress = await Promise.all(
-        enrollments.map(async (enrollment: any) => {
+        validEnrollments.map(async (enrollment: any) => {
           const course = enrollment.course;
 
           // Get total modules
