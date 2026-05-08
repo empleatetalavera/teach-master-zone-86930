@@ -211,10 +211,12 @@ export default function ScormPlayer({
         setApiReady(true);
 
         // Load + register the SCORM package in the Service Worker (same-origin).
+        console.log('[SCORM] Calling loadScormPackage...');
         const handle = await loadScormPackage({
           packageId: activePackage.id,
           filePath: activePackage.filePath,
         });
+        console.log('[SCORM] loadScormPackage resolved. iframeSrc:', handle.iframeSrc);
         if (cancelled) {
           handle.dispose();
           return;
