@@ -152,12 +152,21 @@ export default function ScormPlayer({
 
     (async () => {
       try {
-        const prev = await loadScormProgress({
-          userId: identity.userId,
-          enrollmentId,
-          scormPackageId: activePackage.id,
-          moduleId,
-        });
+        console.log('[SCORM] Effect start. activePackage:', activePackage.id, 'identity:', identity.userId);
+        // Don't let scorm_progress hang the player. 5s is generous.
+        const prev = await Promise.race([
+          loadScormProgress({
+            userId: identity.userId,
+            enrollmentId,
+            scormPackageId: activePackage.id,
+            moduleId,
+          }),
+          new Promise<null>((resolve) => setTimeout(() => {
+            console.warn('[SCORM] loadScormProgress timeout (5s) — continuing without prior state');
+            resolve(null);
+          }, 5000)),
+        ]);
+        console.log('[SCORM] Prior progress loaded:', !!prev);
         if (cancelled) return;
 
         const key = {
@@ -202,10 +211,12 @@ export default function ScormPlayer({
         setApiReady(true);
 
         // Load + register the SCORM package in the Service Worker (same-origin).
+        console.log('[SCORM] Calling loadScormPackage...');
         const handle = await loadScormPackage({
           packageId: activePackage.id,
           filePath: activePackage.filePath,
         });
+        console.log('[SCORM] loadScormPackage resolved. iframeSrc:', handle.iframeSrc);
         if (cancelled) {
           handle.dispose();
           return;

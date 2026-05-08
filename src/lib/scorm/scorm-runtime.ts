@@ -35,9 +35,14 @@ async function ensureServiceWorker(): Promise<ServiceWorkerRegistration> {
 
   swReadyPromise = (async () => {
     console.log('[SCORM] Registering service worker at', SW_PATH);
-    const reg = await navigator.serviceWorker.register(SW_PATH, { scope: SW_SCOPE });
+    const reg = await navigator.serviceWorker.register(SW_PATH, {
+      scope: SW_SCOPE,
+      updateViaCache: 'none',
+    });
+    // Force update so an older cached SW doesn't keep serving stale logic.
+    try { await reg.update(); } catch {}
     const ready = await waitForActiveRegistration(reg);
-    console.log('[SCORM] Service worker registration active:', !!ready.active);
+    console.log('[SCORM] Service worker registration active:', !!ready.active, 'state:', ready.active?.state);
     return ready;
   })();
 
