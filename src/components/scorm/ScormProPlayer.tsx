@@ -32,11 +32,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import type { CmiData } from "@/lib/scorm/scorm12-api";
 import {
-  createScorm12API,
-  attachScorm12ToWindow,
-  type CmiData,
-} from "@/lib/scorm/scorm12-api";
+  attachScormBridge,
+  secondsToScorm12Time,
+  secondsToScorm2004Time,
+  type ScormBridgeHandle,
+} from "@/lib/scorm/scorm-again-bridge";
 import {
   loadScormProgress,
   saveScormProgress,
@@ -46,6 +48,7 @@ import {
   type ScormRuntimeHandle,
   type ScormTreeItem,
 } from "@/lib/scorm/scorm-runtime";
+import { useResourceTracker } from "@/hooks/useResourceTracker";
 
 type Props = {
   packageId: string;
