@@ -263,15 +263,26 @@ export default function ScormProPlayer({
 
   const handleExit = () => {
     try {
-      const api = apiRef.current;
-      if (api) {
-        api.LMSSetValue("cmi.core.session_time", secondsToScormTime(activeSecondsRef.current));
-        api.LMSSetValue("cmi.core.exit", "suspend");
-        api.LMSFinish("");
+      const bridge = bridgeRef.current;
+      if (bridge) {
+        bridge.commitSessionTime(
+          secondsToScorm12Time(activeSecondsRef.current),
+          secondsToScorm2004Time(activeSecondsRef.current),
+        );
+        bridge.finish();
       }
     } catch (e) { console.error(e); }
     onExit();
   };
+
+  // SEPE: trazabilidad del recurso (tiempo de permanencia en el SCORM)
+  useResourceTracker({
+    resourceType: "scorm",
+    resourceId: packageId,
+    resourceLabel: packageTitle,
+    enrollmentId,
+    moduleId,
+  });
 
   const renderTree = (items: ScormTreeItem[], depth = 0) => (
     <ul className={cn("space-y-1", depth === 0 ? "" : "ml-4 mt-1 border-l border-border pl-2")}>
