@@ -1285,6 +1285,7 @@ export type Database = {
           id: string
           is_locked: boolean | null
           is_pinned: boolean | null
+          is_tutor_only: boolean
           module_id: string | null
           title: string
           updated_at: string | null
@@ -1298,6 +1299,7 @@ export type Database = {
           id?: string
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          is_tutor_only?: boolean
           module_id?: string | null
           title: string
           updated_at?: string | null
@@ -1311,6 +1313,7 @@ export type Database = {
           id?: string
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          is_tutor_only?: boolean
           module_id?: string | null
           title?: string
           updated_at?: string | null
