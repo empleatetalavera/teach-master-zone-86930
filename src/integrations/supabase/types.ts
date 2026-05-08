@@ -277,6 +277,13 @@ export type Database = {
             foreignKeyName: "center_contracts_training_center_id_fkey"
             columns: ["training_center_id"]
             isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "center_contracts_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
             referencedRelation: "training_centers"
             referencedColumns: ["id"]
           },
@@ -516,6 +523,13 @@ export type Database = {
             foreignKeyName: "content_orders_training_center_id_fkey"
             columns: ["training_center_id"]
             isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_orders_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
             referencedRelation: "training_centers"
             referencedColumns: ["id"]
           },
@@ -599,6 +613,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_center_assignments_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "centers_public_branding"
             referencedColumns: ["id"]
           },
           {
@@ -794,6 +815,13 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "courses_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "courses_training_center_id_fkey"
             columns: ["training_center_id"]
@@ -1401,6 +1429,13 @@ export type Database = {
             foreignKeyName: "invoice_templates_training_center_id_fkey"
             columns: ["training_center_id"]
             isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_templates_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
             referencedRelation: "training_centers"
             referencedColumns: ["id"]
           },
@@ -1473,6 +1508,13 @@ export type Database = {
             foreignKeyName: "invoices_training_center_id_fkey"
             columns: ["training_center_id"]
             isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
             referencedRelation: "training_centers"
             referencedColumns: ["id"]
           },
@@ -1525,6 +1567,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "licenses_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "licenses_training_center_id_fkey"
             columns: ["training_center_id"]
@@ -2043,6 +2092,13 @@ export type Database = {
             foreignKeyName: "payment_history_training_center_id_fkey"
             columns: ["training_center_id"]
             isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_history_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
             referencedRelation: "training_centers"
             referencedColumns: ["id"]
           },
@@ -2272,6 +2328,13 @@ export type Database = {
           visibility?: Database["public"]["Enums"]["profile_visibility"] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_training_center_id_fkey"
             columns: ["training_center_id"]
@@ -2824,6 +2887,13 @@ export type Database = {
             foreignKeyName: "sionline_settings_training_center_id_fkey"
             columns: ["training_center_id"]
             isOneToOne: true
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sionline_settings_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: true
             referencedRelation: "training_centers"
             referencedColumns: ["id"]
           },
@@ -3121,6 +3191,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tax_configurations_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tax_configurations_training_center_id_fkey"
             columns: ["training_center_id"]
@@ -3666,6 +3743,13 @@ export type Database = {
             foreignKeyName: "user_roles_training_center_id_fkey"
             columns: ["training_center_id"]
             isOneToOne: false
+            referencedRelation: "centers_public_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_training_center_id_fkey"
+            columns: ["training_center_id"]
+            isOneToOne: false
             referencedRelation: "training_centers"
             referencedColumns: ["id"]
           },
@@ -3730,7 +3814,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      centers_public_branding: {
+        Row: {
+          custom_domain: string | null
+          footer_text: string | null
+          id: string | null
+          logo_url: string | null
+          name: string | null
+          official_badge: string | null
+          primary_color: string | null
+          secondary_color: string | null
+        }
+        Insert: {
+          custom_domain?: string | null
+          footer_text?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          official_badge?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+        }
+        Update: {
+          custom_domain?: string | null
+          footer_text?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          official_badge?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       clean_old_login_attempts: { Args: never; Returns: undefined }
