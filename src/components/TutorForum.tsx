@@ -73,6 +73,7 @@ export function TutorForum({ courseId, moduleId, courseTitle }: TutorForumProps)
         .from("forum_topics")
         .select("*")
         .eq("course_id", courseId)
+        .eq("is_tutor_only", true)
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false });
 
@@ -168,8 +169,9 @@ export function TutorForum({ courseId, moduleId, courseTitle }: TutorForumProps)
         module_id: activeTab === 'module' ? moduleId : null,
         title: newTopicTitle.trim(),
         content: newTopicContent.trim(),
-        created_by: user.id
-      });
+        created_by: user.id,
+        is_tutor_only: true
+      } as any);
 
       if (error) throw error;
 
