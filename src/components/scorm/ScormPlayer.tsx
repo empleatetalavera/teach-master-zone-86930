@@ -438,6 +438,19 @@ export default function ScormPlayer({
           </Card>
         );
       })}
+
+      {proPlayer && identity && (
+        <ScormProPlayer
+          packageId={proPlayer.id}
+          filePath={proPlayer.filePath}
+          packageTitle={proPlayer.title}
+          enrollmentId={enrollmentId}
+          moduleId={moduleId}
+          userId={identity.userId}
+          studentName={identity.studentName}
+          onExit={() => setProPlayer(null)}
+        />
+      )}
     </div>
   );
 }
