@@ -118,6 +118,7 @@ function AppRoutes() {
         <Route path="/course/:courseId/module/:moduleId" element={<ProtectedRoute><ModuleView /></ProtectedRoute>} />
         <Route path="/course/:courseId/evaluation/:evaluationId" element={<ProtectedRoute><EvaluationView /></ProtectedRoute>} />
         <Route path="/course/:courseId/evaluation/:evaluationId/take/:attemptId" element={<ProtectedRoute><TakeEvaluation /></ProtectedRoute>} />
+        <Route path="/course/:courseId/evaluation/:evaluationId/review/:attemptId" element={<ProtectedRoute><ReviewAttempt /></ProtectedRoute>} />
         <Route path="/course/:courseId/activity/:activityId" element={<ProtectedRoute><ActivityView /></ProtectedRoute>} />
         <Route path="/scorm/:enrollmentId/:moduleId" element={<ProtectedRoute><ScormFullscreen /></ProtectedRoute>} />
         <Route path="/campus-guide" element={<CampusGuide />} />
