@@ -36,13 +36,40 @@ async function ensureServiceWorker(): Promise<ServiceWorkerRegistration> {
   swReadyPromise = (async () => {
     console.log('[SCORM] Registering service worker at', SW_PATH);
     const reg = await navigator.serviceWorker.register(SW_PATH, { scope: SW_SCOPE });
-    // Wait until there is an active worker (installed + activated).
-    const ready = await navigator.serviceWorker.ready;
-    console.log('[SCORM] Service worker ready, active:', !!ready.active);
+    const ready = await waitForActiveRegistration(reg);
+    console.log('[SCORM] Service worker registration active:', !!ready.active);
     return ready;
   })();
 
   return swReadyPromise;
+}
+
+function waitForActiveRegistration(
+  reg: ServiceWorkerRegistration,
+  timeoutMs = 10000,
+): Promise<ServiceWorkerRegistration> {
+  if (reg.active) return Promise.resolve(reg);
+
+  const worker = reg.installing || reg.waiting;
+  if (!worker) return Promise.resolve(reg.update().then((updated) => waitForActiveRegistration(updated, timeoutMs)));
+
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      worker.removeEventListener('statechange', onStateChange);
+      reject(new Error('El reproductor SCORM no pudo activar el Service Worker. Recarga la página e inténtalo de nuevo.'));
+    }, timeoutMs);
+
+    const onStateChange = () => {
+      if (worker.state === 'activated' || reg.active) {
+        window.clearTimeout(timeout);
+        worker.removeEventListener('statechange', onStateChange);
+        resolve(reg);
+      }
+    };
+
+    worker.addEventListener('statechange', onStateChange);
+    onStateChange();
+  });
 }
 
 export type ScormRuntimeHandle = {
