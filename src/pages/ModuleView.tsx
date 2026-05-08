@@ -230,7 +230,7 @@ export default function ModuleView() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className="mx-auto w-full max-w-[1400px] px-3 sm:px-4 py-4 sm:py-6">
+      <div className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
         {/* Top bar with back + mobile menu */}
         <div className="mb-4 flex items-center justify-between gap-2">
           <Button variant="ghost" onClick={() => navigate(`/course/${courseId}`)}>
