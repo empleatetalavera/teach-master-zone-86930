@@ -29,6 +29,7 @@ import {
   loadScormPackage,
   type ScormRuntimeHandle,
 } from "@/lib/scorm/scorm-runtime";
+import ScormProPlayer from "./ScormProPlayer";
 
 interface ScormPlayerProps {
   moduleId: string;
