@@ -17,7 +17,7 @@ interface BrandingContextType {
   refreshBranding: () => Promise<void>;
 }
 
-// Default TalentCloud branding
+// Default TalentCloud branding (matrix)
 const defaultBranding: BrandingConfig = {
   centerName: "TalentCloudSolution",
   centerLogo: "/branding/talentcloud-logo.png",
@@ -37,9 +37,16 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
   const [initialized, setInitialized] = useState(false);
 
   const loadBranding = async () => {
-    // PRIORIDAD ABSOLUTA: resolver por dominio personalizado.
-    // Si estás en un dominio de centro, se muestra SIEMPRE su branding,
-    // incluso si el usuario es super_admin o aún no ha iniciado sesión.
+    // ============================================================
+    // MODELO A: Branding fijo por dominio
+    // ============================================================
+    // - Dominio matriz (talentcloudsolution.es / lovable preview / dev)
+    //   → SIEMPRE branding TalentCloudSolution, sin importar el usuario
+    // - Dominio personalizado de un centro (custom_domain configurado)
+    //   → SIEMPRE branding de ese centro
+    // - Cada centro = su propia identidad visual = su propio dominio.
+    // ============================================================
+
     const rawHost = (typeof window !== 'undefined' ? window.location.hostname : '') || '';
     const currentDomain = rawHost.toLowerCase();
     const currentCleanDomain = currentDomain.replace(/^www\./, '');
@@ -53,56 +60,10 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
     console.log('[useBranding] host:', currentDomain, 'isMatrix:', isMatrixDomain);
 
-    if (!isMatrixDomain) {
-      // Buscar centro por dominio personalizado
-      try {
-        const { data: centersByDomain, error: domainError } = await (supabase as any)
-          .from('centers_public_branding')
-          .select('*');
-
-        if (domainError) {
-          console.error('[useBranding] Error fetching centers:', domainError);
-        }
-
-        if (centersByDomain && centersByDomain.length > 0) {
-          const matchedCenter = centersByDomain.find((center: any) => {
-            if (!center.custom_domain) return false;
-            const centerDomain = String(center.custom_domain)
-              .toLowerCase()
-              .replace(/^https?:\/\//, '')
-              .replace(/^www\./, '')
-              .split('/')[0]
-              .trim();
-            return centerDomain === currentCleanDomain;
-          });
-
-          if (matchedCenter) {
-            const centerBranding: BrandingConfig = {
-              centerName: matchedCenter.name,
-              centerLogo: matchedCenter.logo_url || defaultBranding.centerLogo,
-              primaryColor: matchedCenter.primary_color,
-              secondaryColor: matchedCenter.secondary_color,
-              officialBadge: matchedCenter.official_badge || undefined,
-              footerText: matchedCenter.footer_text || `${matchedCenter.name} - Todos los derechos reservados`,
-            };
-            console.log('[useBranding] Resolved by domain ->', matchedCenter.name);
-            setBranding(centerBranding);
-            applyBrandingToDOM(centerBranding);
-            setLoading(false);
-            setInitialized(true);
-            return;
-          }
-
-          console.warn('[useBranding] No center matches host:', currentCleanDomain,
-            'available domains:', centersByDomain.map((c: any) => c.custom_domain));
-        }
-      } catch (error) {
-        console.error('[useBranding] Domain lookup exception:', error);
-      }
-
-      // Estamos en un dominio NO-matriz pero ningún centro lo reclama:
-      // mejor mantener default que arriesgar mezcla, pero avisamos.
-      console.warn('[useBranding] Custom-looking host without matching center, falling back to default');
+    // ----- DOMINIO MATRIZ -----
+    // SIEMPRE branding matriz, sea quien sea el usuario.
+    if (isMatrixDomain) {
+      console.log('[useBranding] Matrix domain → applying TalentCloudSolution branding (fixed)');
       setBranding(defaultBranding);
       applyBrandingToDOM(defaultBranding);
       setLoading(false);
@@ -110,78 +71,60 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // A partir de aquí: SOLO dominios matriz (talentcloudsolution.es / dev / preview)
-
-    // FIN NUEVO - resto de la lógica igual que antes
-    if (!user) {
-      setBranding(defaultBranding);
-      applyBrandingToDOM(defaultBranding);
-      setLoading(false);
-      setInitialized(true);
-      return;
-    }
-
-    // Super admins always see TalentCloudSolution branding
-    if (userRole === 'super_admin') {
-      setBranding(defaultBranding);
-      applyBrandingToDOM(defaultBranding);
-      setLoading(false);
-      setInitialized(true);
-      return;
-    }
-
+    // ----- DOMINIO DE CENTRO -----
+    // Buscar qué centro reclama este dominio.
     try {
-      // Get user's training center
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('training_center_id')
-        .eq('id', user.id)
-        .single();
+      const { data: centersByDomain, error: domainError } = await (supabase as any)
+        .from('centers_public_branding')
+        .select('*');
 
-      if (profileError || !profile?.training_center_id) {
-        setBranding(defaultBranding);
-        applyBrandingToDOM(defaultBranding);
-        setLoading(false);
-        setInitialized(true);
-        return;
+      if (domainError) {
+        console.error('[useBranding] Error fetching centers:', domainError);
       }
 
-      // Get center branding
-      const { data: center, error: centerError } = await supabase
-        .from('training_centers')
-        .select('*')
-        .eq('id', profile.training_center_id)
-        .eq('is_active', true)
-        .single();
+      if (centersByDomain && centersByDomain.length > 0) {
+        const matchedCenter = centersByDomain.find((center: any) => {
+          if (!center.custom_domain) return false;
+          const centerDomain = String(center.custom_domain)
+            .toLowerCase()
+            .replace(/^https?:\/\//, '')
+            .replace(/^www\./, '')
+            .split('/')[0]
+            .trim();
+          return centerDomain === currentCleanDomain;
+        });
 
-      if (centerError || !center) {
-        setBranding(defaultBranding);
-        applyBrandingToDOM(defaultBranding);
-        setLoading(false);
-        setInitialized(true);
-        return;
+        if (matchedCenter) {
+          const centerBranding: BrandingConfig = {
+            centerName: matchedCenter.name,
+            centerLogo: matchedCenter.logo_url || defaultBranding.centerLogo,
+            primaryColor: matchedCenter.primary_color,
+            secondaryColor: matchedCenter.secondary_color,
+            officialBadge: matchedCenter.official_badge || undefined,
+            footerText: matchedCenter.footer_text || `${matchedCenter.name} - Todos los derechos reservados`,
+          };
+          console.log('[useBranding] Resolved by domain →', matchedCenter.name);
+          setBranding(centerBranding);
+          applyBrandingToDOM(centerBranding);
+          setLoading(false);
+          setInitialized(true);
+          return;
+        }
+
+        console.warn('[useBranding] No center matches host:', currentCleanDomain,
+          'available domains:', centersByDomain.map((c: any) => c.custom_domain));
       }
-
-      // Apply center branding
-      const centerBranding: BrandingConfig = {
-        centerName: center.name,
-        centerLogo: center.logo_url || defaultBranding.centerLogo,
-        primaryColor: center.primary_color,
-        secondaryColor: center.secondary_color,
-        officialBadge: center.official_badge || undefined,
-        footerText: center.footer_text || `${center.name} - Todos los derechos reservados`,
-      };
-
-      setBranding(centerBranding);
-      applyBrandingToDOM(centerBranding);
     } catch (error) {
-      console.error('Error loading branding:', error);
-      setBranding(defaultBranding);
-      applyBrandingToDOM(defaultBranding);
-    } finally {
-      setLoading(false);
-      setInitialized(true);
+      console.error('[useBranding] Domain lookup exception:', error);
     }
+
+    // Estamos en un dominio NO-matriz pero ningún centro lo reclama:
+    // fallback al branding por defecto, pero avisamos en consola.
+    console.warn('[useBranding] Custom-looking host without matching center, falling back to default');
+    setBranding(defaultBranding);
+    applyBrandingToDOM(defaultBranding);
+    setLoading(false);
+    setInitialized(true);
   };
 
   const applyBrandingToDOM = (config: BrandingConfig) => {
@@ -233,11 +176,12 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Wait for auth to finish loading before loading branding
-    if (!authLoading) {
+    // En Modelo A el branding NO depende del usuario logueado en dominios matriz.
+    // Solo recargamos si todavía no está inicializado, o si refreshBranding() se llama explícitamente.
+    if (!initialized) {
       loadBranding();
     }
-  }, [user, userRole, authLoading]);
+  }, [authLoading, initialized]);
 
   // Don't render children until branding is initialized to prevent flash
   if (!initialized || branding === null) {
