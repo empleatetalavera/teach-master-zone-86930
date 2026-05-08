@@ -94,7 +94,6 @@ const studentItems = [
   { title: "Dashboard", url: "/dashboard/student", icon: LayoutDashboard },
   { title: "Mis Cursos", url: "/dashboard/student/courses", icon: BookMarked },
   { title: "Aula Virtual", url: "/dashboard/student/classroom", icon: Video },
-  { title: "Evaluaciones", url: "/dashboard/student/evaluations", icon: FileText },
   { title: "Mis calificaciones", url: "/dashboard/student/grades", icon: GraduationCap },
   { title: "Certificados", url: "/dashboard/student/certificates", icon: Award },
   { title: "Atención", url: "/dashboard/student/support", icon: Headphones },
