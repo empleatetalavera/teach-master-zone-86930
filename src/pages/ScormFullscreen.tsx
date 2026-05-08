@@ -1,24 +1,55 @@
+import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import ScormPlayer from "@/components/scorm/ScormPlayer";
+import { supabase } from "@/integrations/supabase/client";
+import ScormProPlayer from "@/components/scorm/ScormProPlayer";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Maximize2 } from "lucide-react";
 
 export default function ScormFullscreen() {
   const { enrollmentId, moduleId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const unitId = searchParams.get("unitId") || undefined;
-  const title = searchParams.get("title") || "Contenido Interactivo";
+  const titleParam = searchParams.get("title") || "Contenido Interactivo";
+
+  const [loading, setLoading] = useState(true);
+  const [pkg, setPkg] = useState<{ id: string; title: string; file_path: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = title;
-  }, [title]);
+    document.title = titleParam;
+  }, [titleParam]);
 
-  const requestFullscreen = () => {
-    const el = document.documentElement;
-    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!moduleId) return;
+      try {
+        let q = supabase
+          .from("module_scorm_content")
+          .select("scorm_packages(id, title, file_path)")
+          .eq("module_id", moduleId);
+        if (unitId) q = q.eq("formative_unit_id", unitId);
+        const { data, error } = await q.limit(1).maybeSingle();
+        if (error) throw error;
+        const sp: any = (data as any)?.scorm_packages;
+        if (!sp) {
+          setError("No hay contenido SCORM disponible para esta unidad.");
+        } else if (!cancelled) {
+          setPkg({ id: sp.id, title: sp.title, file_path: sp.file_path });
+        }
+      } catch (e: any) {
+        if (!cancelled) setError(e.message || "Error cargando contenido");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [moduleId, unitId]);
+
+  const exit = () => (window.history.length > 1 ? navigate(-1) : window.close());
 
   if (!enrollmentId || !moduleId) {
     return (
@@ -28,29 +59,32 @@ export default function ScormFullscreen() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !pkg) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-background p-6 text-center">
+        <AlertCircle className="h-10 w-10 text-muted-foreground" />
+        <p className="text-muted-foreground max-w-md">{error || "Sin contenido"}</p>
+        <Button onClick={exit}>Volver</Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 flex flex-col bg-background z-50">
-      <header className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-card shrink-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <Button variant="ghost" size="sm" onClick={() => (window.history.length > 1 ? navigate(-1) : window.close())}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> Volver
-          </Button>
-          <h1 className="text-sm sm:text-base font-semibold truncate">{title}</h1>
-        </div>
-        <Button variant="outline" size="sm" onClick={requestFullscreen}>
-          <Maximize2 className="h-4 w-4 mr-1" /> Pantalla completa
-        </Button>
-      </header>
-      <main className="flex-1 overflow-auto">
-        <div className="h-full w-full p-2 sm:p-4">
-          <ScormPlayer
-            moduleId={moduleId}
-            enrollmentId={enrollmentId}
-            formativeUnitId={unitId}
-            autoStart
-          />
-        </div>
-      </main>
-    </div>
+    <ScormProPlayer
+      packageId={pkg.id}
+      filePath={pkg.file_path}
+      packageTitle={titleParam || pkg.title}
+      enrollmentId={enrollmentId}
+      moduleId={moduleId}
+      onExit={exit}
+    />
   );
 }
