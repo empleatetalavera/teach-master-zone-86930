@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useContractCheck } from "@/hooks/useContractCheck";
 import ContractSigningModal from "@/components/ContractSigningModal";
+import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 
 export function DashboardLayout() {
   const { user, userRole } = useAuth();
@@ -60,6 +61,9 @@ export function DashboardLayout() {
     trainingCenterId,
     userRole
   );
+
+  // SEPE: caducidad de sesión por inactividad (25min aviso / 30min cierre)
+  useIdleTimeout({ warnAfterMs: 25 * 60 * 1000, logoutAfterMs: 30 * 60 * 1000 });
 
   const handleSkipContract = () => {
     setContractSkipped(true);
