@@ -26,7 +26,6 @@ import CourseScheduleManager from "@/components/CourseScheduleManager";
 import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { SEPEGradesSection } from "@/components/SEPEGradesSection";
-import ScormProfessionalViewer from "@/components/ScormProfessionalViewer";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
