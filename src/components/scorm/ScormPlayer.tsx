@@ -137,6 +137,12 @@ export default function ScormPlayer({
     enabled: !!scormContent && scormContent.length > 0 && !!identity,
   });
 
+  useEffect(() => {
+    if (!autoStart || activePackage || !scormContent || scormContent.length === 0) return;
+    const firstPackage = scormContent.find((content: any) => content.scorm_packages)?.scorm_packages;
+    if (firstPackage) handlePlay(firstPackage);
+  }, [autoStart, activePackage, scormContent]);
+
   // Mount/unmount window.API + load SCORM package via Service Worker runtime
   useEffect(() => {
     if (!activePackage || !identity) return;
