@@ -77,11 +77,25 @@ function waitForActiveRegistration(
   });
 }
 
+export type ScormTreeItem = {
+  id: string;
+  title: string;
+  /** Same-origin URL relative to the SW scope. Null for branches without resource. */
+  href: string | null;
+  children: ScormTreeItem[];
+};
+
 export type ScormRuntimeHandle = {
   /** Same-origin URL to use as the iframe `src`. */
   iframeSrc: string;
   /** Launch path detected from the manifest (or provided explicitly). */
   launchPath: string;
+  /** Same-origin URL prefix for this package: `${SW_SCOPE}${packageId}/`. */
+  baseSrc: string;
+  /** Course title from manifest organization (if any). */
+  courseTitle: string | null;
+  /** Hierarchical lesson tree (default organization). Empty if no manifest. */
+  tree: ScormTreeItem[];
   /** Removes the package from SW memory. Call on player unmount. */
   dispose: () => void;
 };
@@ -107,55 +121,86 @@ export type LoadScormPackageOptions = {
  * organization's first SCO resource. Returns null if the manifest is missing
  * or unparseable — the caller falls back to 'index.html'.
  */
-async function detectLaunchPath(files: Map<string, Blob>): Promise<string | null> {
+async function parseManifest(files: Map<string, Blob>): Promise<{
+  launchPath: string | null;
+  courseTitle: string | null;
+  tree: ScormTreeItem[];
+}> {
+  const empty = { launchPath: null, courseTitle: null, tree: [] as ScormTreeItem[] };
   const manifestKey =
     findKeyCaseInsensitive(files, 'imsmanifest.xml') ||
     findKeyCaseInsensitive(files, 'imsManifest.xml');
-  if (!manifestKey) return null;
+  if (!manifestKey) return empty;
 
   const blob = files.get(manifestKey);
-  if (!blob) return null;
+  if (!blob) return empty;
 
   const xmlText = await blob.text();
-
   let doc: Document;
   try {
     doc = new DOMParser().parseFromString(xmlText, 'application/xml');
   } catch {
-    return null;
+    return empty;
   }
-  if (doc.getElementsByTagName('parsererror').length > 0) return null;
+  if (doc.getElementsByTagName('parsererror').length > 0) return empty;
 
-  // Find default organization's first <item> referencing a resource.
-  const orgs = doc.getElementsByTagName('organizations')[0];
-  const defaultOrgId = orgs?.getAttribute('default');
-  let firstItemRef: string | null = null;
-
-  if (defaultOrgId) {
-    const allOrgs = doc.getElementsByTagName('organization');
-    for (let i = 0; i < allOrgs.length; i++) {
-      if (allOrgs[i].getAttribute('identifier') === defaultOrgId) {
-        const item = allOrgs[i].getElementsByTagName('item')[0];
-        firstItemRef = item?.getAttribute('identifierref') ?? null;
-        break;
-      }
-    }
-  }
-  if (!firstItemRef) {
-    const item = doc.getElementsByTagName('item')[0];
-    firstItemRef = item?.getAttribute('identifierref') ?? null;
-  }
-
-  // Find the resource with that identifier and return its href.
+  // Build resource map: identifier -> href
+  const resourceMap = new Map<string, string>();
   const resources = doc.getElementsByTagName('resource');
   for (let i = 0; i < resources.length; i++) {
     const r = resources[i];
-    if (!firstItemRef || r.getAttribute('identifier') === firstItemRef) {
-      const href = r.getAttribute('href');
-      if (href) return href.replace(/^[./]+/, '');
+    const id = r.getAttribute('identifier');
+    const href = r.getAttribute('href');
+    if (id && href) resourceMap.set(id, href.replace(/^[./]+/, ''));
+  }
+
+  // Find default organization
+  const orgs = doc.getElementsByTagName('organizations')[0];
+  const defaultOrgId = orgs?.getAttribute('default');
+  let defaultOrg: Element | null = null;
+  const allOrgs = doc.getElementsByTagName('organization');
+  for (let i = 0; i < allOrgs.length; i++) {
+    if (!defaultOrgId || allOrgs[i].getAttribute('identifier') === defaultOrgId) {
+      defaultOrg = allOrgs[i];
+      break;
     }
   }
-  return null;
+  if (!defaultOrg && allOrgs.length > 0) defaultOrg = allOrgs[0];
+
+  const courseTitle = defaultOrg?.getElementsByTagName('title')[0]?.textContent?.trim() || null;
+
+  const buildItem = (el: Element): ScormTreeItem => {
+    const id = el.getAttribute('identifier') || crypto.randomUUID();
+    const refId = el.getAttribute('identifierref');
+    const title = el.getElementsByTagName('title')[0]?.textContent?.trim() || 'Sin título';
+    const href = refId ? resourceMap.get(refId) ?? null : null;
+    const children: ScormTreeItem[] = [];
+    for (let i = 0; i < el.children.length; i++) {
+      const c = el.children[i];
+      if (c.tagName.toLowerCase() === 'item') children.push(buildItem(c));
+    }
+    return { id, title, href, children };
+  };
+
+  const tree: ScormTreeItem[] = [];
+  if (defaultOrg) {
+    for (let i = 0; i < defaultOrg.children.length; i++) {
+      const c = defaultOrg.children[i];
+      if (c.tagName.toLowerCase() === 'item') tree.push(buildItem(c));
+    }
+  }
+
+  // Determine launch path = first item with href (depth-first)
+  const firstHref = (items: ScormTreeItem[]): string | null => {
+    for (const it of items) {
+      if (it.href) return it.href;
+      const c = firstHref(it.children);
+      if (c) return c;
+    }
+    return null;
+  };
+
+  return { launchPath: firstHref(tree), courseTitle, tree };
 }
 
 function findKeyCaseInsensitive(map: Map<string, unknown>, target: string): string | null {
@@ -212,14 +257,15 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
     throw new Error('El paquete SCORM está vacío.');
   }
 
-  // 4) Launch path: explicit > manifest > index.html.
+  // 4) Parse manifest (tree + launch path + course title).
+  const manifest = await parseManifest(files);
   let launchPath: string;
   if (explicitLaunchPath) {
     launchPath = explicitLaunchPath;
   } else {
-    launchPath = (await detectLaunchPath(files)) ?? 'index.html';
+    launchPath = manifest.launchPath ?? 'index.html';
   }
-  console.log('[SCORM] Launch path:', launchPath);
+  console.log('[SCORM] Launch path:', launchPath, 'tree items:', manifest.tree.length);
 
   // Validate that the file exists (case-insensitive) in the package.
   if (!files.has(launchPath) && !findKeyCaseInsensitive(files, launchPath)) {
@@ -232,11 +278,15 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
   console.log('[SCORM] Package registered in SW');
 
   // 6) Same-origin URL.
-  const iframeSrc = `${SW_SCOPE}${encodeURIComponent(packageId)}/${launchPath}`;
+  const baseSrc = `${SW_SCOPE}${encodeURIComponent(packageId)}/`;
+  const iframeSrc = `${baseSrc}${launchPath}`;
 
   return {
     iframeSrc,
     launchPath,
+    baseSrc,
+    courseTitle: manifest.courseTitle,
+    tree: manifest.tree,
     dispose: () => {
       postToSW(reg, { type: 'UNREGISTER_PACKAGE', packageId }, 'PACKAGE_UNREGISTERED').catch(() => {});
     },

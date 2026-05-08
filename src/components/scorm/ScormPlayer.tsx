@@ -12,6 +12,7 @@ import {
   Loader2,
   AlertCircle,
   X,
+  Maximize2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +29,7 @@ import {
   loadScormPackage,
   type ScormRuntimeHandle,
 } from "@/lib/scorm/scorm-runtime";
+import ScormProPlayer from "./ScormProPlayer";
 
 interface ScormPlayerProps {
   moduleId: string;
@@ -67,6 +69,7 @@ export default function ScormPlayer({
   const [apiReady, setApiReady] = useState(false);
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
+  const [proPlayer, setProPlayer] = useState<ActivePackage | null>(null);
 
   // Resolve identity if not passed by parent
   const { data: identity } = useQuery({
@@ -378,6 +381,19 @@ export default function ScormPlayer({
                     {currentStatus === "not attempted" ? "Iniciar" : "Continuar"}
                   </Button>
                 )}
+                <Button
+                  variant="secondary"
+                  onClick={() => setProPlayer({
+                    id: scormPackage.id,
+                    title: scormPackage.title,
+                    filePath: scormPackage.file_path,
+                    scormVersion: scormPackage.scorm_version,
+                  })}
+                  title="Abrir reproductor a pantalla completa"
+                >
+                  <Maximize2 className="mr-2 h-4 w-4" />
+                  Pantalla completa
+                </Button>
                 {currentStatus !== "not attempted" && (
                   <Button variant="outline" onClick={() => handleReset(scormPackage.id)}>
                     <RotateCcw className="mr-2 h-4 w-4" />
@@ -422,6 +438,19 @@ export default function ScormPlayer({
           </Card>
         );
       })}
+
+      {proPlayer && identity && (
+        <ScormProPlayer
+          packageId={proPlayer.id}
+          filePath={proPlayer.filePath}
+          packageTitle={proPlayer.title}
+          enrollmentId={enrollmentId}
+          moduleId={moduleId}
+          userId={identity.userId}
+          studentName={identity.studentName}
+          onExit={() => setProPlayer(null)}
+        />
+      )}
     </div>
   );
 }
