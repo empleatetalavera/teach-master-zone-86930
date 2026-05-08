@@ -6,11 +6,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useContentTracker } from "@/hooks/useContentTracker";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, BookOpen, Lightbulb, FileText, MessageSquare } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, BookOpen, Lightbulb, FileText, MessageSquare, Menu, ListChecks } from "lucide-react";
 import ScormPlayer from "@/components/scorm/ScormPlayer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModuleChat } from "@/components/ModuleChat";
 import { InteractiveContent } from "@/components/InteractiveContent";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import ModuleProgressBar from "@/components/courses/ModuleProgressBar";
+import { cn } from "@/lib/utils";
 import DOMPurify from "dompurify";
 
 interface Module {
