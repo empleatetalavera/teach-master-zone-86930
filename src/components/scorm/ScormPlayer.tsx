@@ -12,6 +12,7 @@ import {
   Loader2,
   AlertCircle,
   X,
+  Maximize2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
