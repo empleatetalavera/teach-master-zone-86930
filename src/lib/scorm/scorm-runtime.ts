@@ -206,16 +206,21 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
     iframeSrc,
     launchPath,
     dispose: () => {
-      postToSW({ type: 'UNREGISTER_PACKAGE', packageId }, 'PACKAGE_UNREGISTERED').catch(() => {});
+      postToSW(reg, { type: 'UNREGISTER_PACKAGE', packageId }, 'PACKAGE_UNREGISTERED').catch(() => {});
     },
   };
 }
 
-function postToSW(message: unknown, expectedReply: string, timeoutMs = 8000): Promise<void> {
+function postToSW(
+  reg: ServiceWorkerRegistration,
+  message: unknown,
+  expectedReply: string,
+  timeoutMs = 15000,
+): Promise<void> {
   return new Promise((resolve, reject) => {
-    const controller = navigator.serviceWorker.controller;
-    if (!controller) {
-      reject(new Error('Service Worker no controla la página todavía. Recarga e inténtalo otra vez.'));
+    const target = reg.active || reg.waiting || reg.installing || navigator.serviceWorker.controller;
+    if (!target) {
+      reject(new Error('Service Worker no está activo todavía. Recarga la página e inténtalo otra vez.'));
       return;
     }
     const channel = new MessageChannel();
@@ -228,6 +233,6 @@ function postToSW(message: unknown, expectedReply: string, timeoutMs = 8000): Pr
         resolve();
       }
     };
-    controller.postMessage(message, [channel.port2]);
+    target.postMessage(message, [channel.port2]);
   });
 }
