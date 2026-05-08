@@ -143,9 +143,10 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
     signedUrlExpiresIn = 3600,
   } = opts;
 
-  await ensureServiceWorker();
+  const reg = await ensureServiceWorker();
 
   // 1) Sign URL for the private bucket.
+  console.log('[SCORM] Signing URL for', filePath);
   const { data: signed, error: signErr } = await supabase
     .storage
     .from(storageBucket)
@@ -155,11 +156,13 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
   }
 
   // 2) Download.
+  console.log('[SCORM] Downloading ZIP...');
   const resp = await fetch(signed.signedUrl);
   if (!resp.ok) {
     throw new Error(`Error descargando el ZIP del paquete (${resp.status}).`);
   }
   const buf = await resp.arrayBuffer();
+  console.log('[SCORM] Downloaded', buf.byteLength, 'bytes');
 
   // 3) Unzip in memory.
   const zip = await JSZip.loadAsync(buf);
@@ -172,6 +175,7 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
       files.set(normalised, content);
     })
   );
+  console.log('[SCORM] Unzipped', files.size, 'files');
   if (files.size === 0) {
     throw new Error('El paquete SCORM está vacío.');
   }
@@ -183,14 +187,17 @@ export async function loadScormPackage(opts: LoadScormPackageOptions): Promise<S
   } else {
     launchPath = (await detectLaunchPath(files)) ?? 'index.html';
   }
+  console.log('[SCORM] Launch path:', launchPath);
 
   // Validate that the file exists (case-insensitive) in the package.
   if (!files.has(launchPath) && !findKeyCaseInsensitive(files, launchPath)) {
     throw new Error(`El archivo de arranque "${launchPath}" no está en el paquete SCORM.`);
   }
 
-  // 5) Send to SW.
-  await postToSW({ type: 'REGISTER_PACKAGE', packageId, files }, 'PACKAGE_REGISTERED');
+  // 5) Send to SW (use registration.active so we don't depend on the parent
+  //    being controlled by the SW — the iframe becomes a client by itself).
+  await postToSW(reg, { type: 'REGISTER_PACKAGE', packageId, files }, 'PACKAGE_REGISTERED');
+  console.log('[SCORM] Package registered in SW');
 
   // 6) Same-origin URL.
   const iframeSrc = `${SW_SCOPE}${encodeURIComponent(packageId)}/${launchPath}`;
