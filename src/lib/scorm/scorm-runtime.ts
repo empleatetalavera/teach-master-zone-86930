@@ -77,11 +77,25 @@ function waitForActiveRegistration(
   });
 }
 
+export type ScormTreeItem = {
+  id: string;
+  title: string;
+  /** Same-origin URL relative to the SW scope. Null for branches without resource. */
+  href: string | null;
+  children: ScormTreeItem[];
+};
+
 export type ScormRuntimeHandle = {
   /** Same-origin URL to use as the iframe `src`. */
   iframeSrc: string;
   /** Launch path detected from the manifest (or provided explicitly). */
   launchPath: string;
+  /** Same-origin URL prefix for this package: `${SW_SCOPE}${packageId}/`. */
+  baseSrc: string;
+  /** Course title from manifest organization (if any). */
+  courseTitle: string | null;
+  /** Hierarchical lesson tree (default organization). Empty if no manifest. */
+  tree: ScormTreeItem[];
   /** Removes the package from SW memory. Call on player unmount. */
   dispose: () => void;
 };
