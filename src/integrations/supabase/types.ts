@@ -986,6 +986,59 @@ export type Database = {
           },
         ]
       }
+      evaluation_questions: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          evaluation_id: string
+          explanation: string | null
+          id: string
+          is_active: boolean
+          options: Json
+          order_index: number
+          points: number
+          question_text: string
+          question_type: string
+          updated_at: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          evaluation_id: string
+          explanation?: string | null
+          id?: string
+          is_active?: boolean
+          options?: Json
+          order_index?: number
+          points?: number
+          question_text: string
+          question_type?: string
+          updated_at?: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          evaluation_id?: string
+          explanation?: string | null
+          id?: string
+          is_active?: boolean
+          options?: Json
+          order_index?: number
+          points?: number
+          question_text?: string
+          question_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_questions_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evaluations: {
         Row: {
           course_id: string
