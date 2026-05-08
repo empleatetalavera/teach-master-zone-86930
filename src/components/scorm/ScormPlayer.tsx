@@ -72,6 +72,16 @@ export default function ScormPlayer({
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const [proPlayer, setProPlayer] = useState<ActivePackage | null>(null);
 
+  // SEPE: trazabilidad de tiempo en el reproductor SCORM (recurso activo)
+  useResourceTracker({
+    enabled: !!activePackage,
+    resourceType: "scorm",
+    resourceId: activePackage?.id,
+    resourceLabel: activePackage?.title,
+    enrollmentId,
+    moduleId,
+  });
+
   // Resolve identity if not passed by parent
   const { data: identity } = useQuery({
     queryKey: ["scorm-identity", userIdProp],
