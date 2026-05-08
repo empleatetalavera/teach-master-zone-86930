@@ -69,6 +69,7 @@ export default function ScormPlayer({
   const [apiReady, setApiReady] = useState(false);
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
+  const [proPlayer, setProPlayer] = useState<ActivePackage | null>(null);
 
   // Resolve identity if not passed by parent
   const { data: identity } = useQuery({
