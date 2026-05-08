@@ -99,6 +99,7 @@ export function CourseForum({ courseId, isAdmin = false, isEditable = false }: C
         .from("forum_topics")
         .select("*")
         .eq("course_id", courseId)
+        .eq("is_tutor_only", false)
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false });
 
