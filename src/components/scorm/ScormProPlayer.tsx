@@ -98,7 +98,7 @@ export default function ScormProPlayer({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const handleRef = useRef<ScormRuntimeHandle | null>(null);
-  const apiRef = useRef<ReturnType<typeof createScorm12API> | null>(null);
+  const bridgeRef = useRef<ScormBridgeHandle | null>(null);
 
   const [identity, setIdentity] = useState<{ userId: string; studentName: string } | null>(null);
   const [tree, setTree] = useState<ScormTreeItem[]>([]);
