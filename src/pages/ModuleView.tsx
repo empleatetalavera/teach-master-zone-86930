@@ -6,13 +6,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useContentTracker } from "@/hooks/useContentTracker";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, BookOpen, Lightbulb, FileText, MessageSquare, Menu, ListChecks } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, BookOpen, Lightbulb, FileText, MessageSquare, Menu, ListChecks, Download, Users, Library } from "lucide-react";
 import ScormPlayer from "@/components/scorm/ScormPlayer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModuleChat } from "@/components/ModuleChat";
 import { InteractiveContent } from "@/components/InteractiveContent";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import ModuleProgressBar from "@/components/courses/ModuleProgressBar";
+import ModuleDownloads from "@/components/courses/ModuleDownloads";
+import { CourseForum } from "@/components/CourseForum";
+import { CourseGlossary } from "@/components/CourseGlossary";
 import { cn } from "@/lib/utils";
 import DOMPurify from "dompurify";
 
@@ -288,22 +291,34 @@ export default function ModuleView() {
 
               <CardContent className="space-y-6">
                 <Tabs defaultValue="content" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
-                    <TabsTrigger value="content" className="flex items-center gap-2">
+                  <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 gap-1 h-auto">
+                    <TabsTrigger value="content" className="flex items-center gap-1.5 py-2">
                       <BookOpen className="h-4 w-4" />
-                      <span className="hidden sm:inline">Contenido</span>
+                      <span className="hidden sm:inline text-xs">Contenido</span>
                     </TabsTrigger>
-                    <TabsTrigger value="interactive" className="flex items-center gap-2">
+                    <TabsTrigger value="interactive" className="flex items-center gap-1.5 py-2">
                       <Lightbulb className="h-4 w-4" />
-                      <span className="hidden sm:inline">Interactivo</span>
+                      <span className="hidden sm:inline text-xs">Interactivo</span>
                     </TabsTrigger>
-                    <TabsTrigger value="activities" className="flex items-center gap-2">
+                    <TabsTrigger value="activities" className="flex items-center gap-1.5 py-2">
                       <FileText className="h-4 w-4" />
-                      <span className="hidden sm:inline">Actividades</span>
+                      <span className="hidden sm:inline text-xs">Actividades</span>
                     </TabsTrigger>
-                    <TabsTrigger value="chat" className="flex items-center gap-2">
+                    <TabsTrigger value="downloads" className="flex items-center gap-1.5 py-2">
+                      <Download className="h-4 w-4" />
+                      <span className="hidden sm:inline text-xs">Descargas</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="forum" className="flex items-center gap-1.5 py-2">
+                      <Users className="h-4 w-4" />
+                      <span className="hidden sm:inline text-xs">Foro</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="glossary" className="flex items-center gap-1.5 py-2">
+                      <Library className="h-4 w-4" />
+                      <span className="hidden sm:inline text-xs">Glosario</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="chat" className="flex items-center gap-1.5 py-2">
                       <MessageSquare className="h-4 w-4" />
-                      <span className="hidden sm:inline">Chat</span>
+                      <span className="hidden sm:inline text-xs">Chat</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -344,6 +359,22 @@ export default function ModuleView() {
                         </div>
                       </CardContent>
                     </Card>
+                  </TabsContent>
+
+                  <TabsContent value="downloads" className="mt-6">
+                    <ModuleDownloads
+                      moduleId={moduleId!}
+                      enrollmentId={enrollmentId ?? undefined}
+                      courseId={courseId}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="forum" className="mt-6">
+                    <CourseForum courseId={courseId!} />
+                  </TabsContent>
+
+                  <TabsContent value="glossary" className="mt-6">
+                    <CourseGlossary courseId={courseId!} />
                   </TabsContent>
 
                   <TabsContent value="chat" className="mt-6">
