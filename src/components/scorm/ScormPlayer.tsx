@@ -381,6 +381,19 @@ export default function ScormPlayer({
                     {currentStatus === "not attempted" ? "Iniciar" : "Continuar"}
                   </Button>
                 )}
+                <Button
+                  variant="secondary"
+                  onClick={() => setProPlayer({
+                    id: scormPackage.id,
+                    title: scormPackage.title,
+                    filePath: scormPackage.file_path,
+                    scormVersion: scormPackage.scorm_version,
+                  })}
+                  title="Abrir reproductor a pantalla completa"
+                >
+                  <Maximize2 className="mr-2 h-4 w-4" />
+                  Pantalla completa
+                </Button>
                 {currentStatus !== "not attempted" && (
                   <Button variant="outline" onClick={() => handleReset(scormPackage.id)}>
                     <RotateCcw className="mr-2 h-4 w-4" />
