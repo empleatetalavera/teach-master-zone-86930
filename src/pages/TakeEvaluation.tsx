@@ -125,7 +125,7 @@ export default function TakeEvaluation() {
       }
 
       setEvaluation(evalResult.data);
-      setQuestions(questionsResult.data as Question[]);
+      setQuestions(questionsResult.data as unknown as Question[]);
     } catch (error: any) {
       console.error("Error loading evaluation:", error);
       toast({
