@@ -1069,14 +1069,6 @@ export default function CourseView() {
                   </button>
                   {showSEPEFeatures && (
                     <button
-                      onClick={() => setActiveTab("exams")}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "exams" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                    >
-                      Exámenes
-                    </button>
-                  )}
-                  {showSEPEFeatures && (
-                    <button
                       onClick={() => setActiveTab("tutorials")}
                       className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "tutorials" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                     >
@@ -1181,7 +1173,7 @@ export default function CourseView() {
                   {showSEPEFeatures && <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>}
                   <TabsTrigger value="modules" className="text-xs px-2 py-1.5">{isCFCCourse ? 'Contenido' : isPropio ? 'Temario' : 'Formación'}</TabsTrigger>
                   <TabsTrigger value="grades" className="text-xs px-2 py-1.5">{userRole === 'teacher' ? 'Actividades' : 'Calificaciones'}</TabsTrigger>
-                  {showSEPEFeatures && <TabsTrigger value="exams" className="text-xs px-2 py-1.5">Exámenes</TabsTrigger>}
+                  
                   {showSEPEFeatures && <TabsTrigger value="tutorials" className="text-xs px-2 py-1.5">Tutorías</TabsTrigger>}
                   <TabsTrigger value="calendar" className="text-xs px-2 py-1.5">Calendario</TabsTrigger>
                   <TabsTrigger value="forum" className="text-xs px-2 py-1.5">Foro</TabsTrigger>
