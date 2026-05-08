@@ -344,7 +344,15 @@ export default function CourseView() {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
     setSelectedScormModuleId(moduleId || "");
-    setScormViewerOpen(true);
+    if (moduleId && enrollment?.id) {
+      const params = new URLSearchParams();
+      if (unitId) params.set("unitId", unitId);
+      if (unitTitle) params.set("title", unitTitle);
+      const url = `/scorm/${enrollment.id}/${moduleId}?${params.toString()}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      setScormViewerOpen(true);
+    }
   };
 
   const openSyllabusEditor = (unitId: string, unitTitle: string) => {
