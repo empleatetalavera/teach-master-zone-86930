@@ -344,7 +344,15 @@ export default function CourseView() {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
     setSelectedScormModuleId(moduleId || "");
-    setScormViewerOpen(true);
+    if (moduleId && enrollment?.id) {
+      const params = new URLSearchParams();
+      if (unitId) params.set("unitId", unitId);
+      if (unitTitle) params.set("title", unitTitle);
+      const url = `/scorm/${enrollment.id}/${moduleId}?${params.toString()}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      setScormViewerOpen(true);
+    }
   };
 
   const openSyllabusEditor = (unitId: string, unitTitle: string) => {
@@ -725,7 +733,7 @@ export default function CourseView() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className="container max-w-7xl mx-auto py-8 px-4">
+      <div className="w-full mx-auto py-6 px-3 sm:px-4 lg:px-6 2xl:px-10">
         <Button
           variant="ghost"
           onClick={() => {

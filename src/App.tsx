@@ -34,6 +34,7 @@ import CourseView from "./pages/CourseView";
 import ModuleView from "./pages/ModuleView";
 import EvaluationView from "./pages/EvaluationView";
 import ActivityView from "./pages/ActivityView";
+import ScormFullscreen from "./pages/ScormFullscreen";
 import CampusGuide from "./pages/CampusGuide";
 import AdminShopOrders from "./pages/dashboard/AdminShopOrders";
 import AdminPaymentSettings from "./pages/dashboard/AdminPaymentSettings";
@@ -115,6 +116,7 @@ function AppRoutes() {
         <Route path="/course/:courseId/module/:moduleId" element={<ProtectedRoute><ModuleView /></ProtectedRoute>} />
         <Route path="/course/:courseId/evaluation/:evaluationId" element={<ProtectedRoute><EvaluationView /></ProtectedRoute>} />
         <Route path="/course/:courseId/activity/:activityId" element={<ProtectedRoute><ActivityView /></ProtectedRoute>} />
+        <Route path="/scorm/:enrollmentId/:moduleId" element={<ProtectedRoute><ScormFullscreen /></ProtectedRoute>} />
         <Route path="/campus-guide" element={<CampusGuide />} />
         <Route path="/seguimiento-sepe" element={<SeguimientoSEPE />} />
         <Route path="/verificar-diploma/:code" element={<VerifyCertificate />} />
