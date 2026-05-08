@@ -180,7 +180,7 @@ export default function ScormPlayer({
           moduleId,
         };
 
-        const api = createScorm12API({
+        const bridge = attachScormBridge({
           studentId: identity.userId,
           studentName: identity.studentName,
           previousCmi: (prev?.cmi_data as CmiData | null) ?? null,
@@ -209,9 +209,7 @@ export default function ScormPlayer({
           },
         });
 
-        // Attach window.API BEFORE the iframe loads, so the SCO finds it on first call.
-        const cleanup = attachScorm12ToWindow(api);
-        cleanupRef.current = cleanup;
+        cleanupRef.current = bridge.detach;
         setApiReady(true);
 
         // Load + register the SCORM package in the Service Worker (same-origin).
