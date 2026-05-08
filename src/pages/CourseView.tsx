@@ -2777,15 +2777,24 @@ export default function CourseView() {
         courseId={courseId || ""}
       />
 
-      {/* SCORM Content Viewer Dialog - Professional Format */}
-      <ScormProfessionalViewer
-        open={scormViewerOpen}
-        onOpenChange={setScormViewerOpen}
-        unitId={selectedUnitId}
-        unitTitle={selectedUnitTitle}
-        enrollmentId={enrollment?.id}
-        courseId={courseId}
-      />
+      {/* SCORM Package Player Dialog */}
+      <Dialog open={scormViewerOpen} onOpenChange={setScormViewerOpen}>
+        <DialogContent className="w-screen h-[100dvh] max-w-none sm:max-w-6xl sm:h-[92vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedUnitTitle || "Contenido Interactivo"}</DialogTitle>
+          </DialogHeader>
+          {selectedScormModuleId && enrollment?.id ? (
+            <ScormPlayer
+              moduleId={selectedScormModuleId}
+              formativeUnitId={selectedUnitId}
+              enrollmentId={enrollment.id}
+              autoStart
+            />
+          ) : (
+            <div className="py-12 text-center text-muted-foreground">No se pudo inicializar el reproductor SCORM.</div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Syllabus Editor Dialog */}
       <SyllabusEditor
