@@ -341,9 +341,10 @@ export default function CourseView() {
     setActivityManagerOpen(true);
   };
 
-  const openScormViewer = (unitId: string, unitTitle: string) => {
+  const openScormViewer = (unitId: string, unitTitle: string, moduleId?: string) => {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
+    setSelectedScormModuleId(moduleId || "");
     setScormViewerOpen(true);
   };
 
