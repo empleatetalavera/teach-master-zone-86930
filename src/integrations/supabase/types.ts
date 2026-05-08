@@ -3652,6 +3652,7 @@ export type Database = {
         Returns: boolean
       }
       user_can_access_module: { Args: { _module_id: string }; Returns: boolean }
+      user_can_view_course: { Args: { _course_id: string }; Returns: boolean }
       verify_certificate: {
         Args: { p_code: string }
         Returns: {
