@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Clock, CheckCircle2, AlertCircle, Play } from "lucide-react";
+import { Loader2, ArrowLeft, Clock, CheckCircle2, AlertCircle, Play, Eye } from "lucide-react";
 
 interface Evaluation {
   id: string;
@@ -149,7 +149,6 @@ export default function EvaluationView() {
         });
       }
 
-      // 🎯 NAVEGACIÓN AL COMPONENTE QUE EJECUTA LA EVALUACIÓN
       navigate(`/course/${courseId}/evaluation/${evaluationId}/take/${attemptIdToUse}`);
     } catch (error: any) {
       toast({
@@ -348,13 +347,23 @@ export default function EvaluationView() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       {attempt.score !== null ? (
                         <>
                           <Progress value={attempt.score} className="w-20 sm:w-24" />
                           <span className={`font-bold ${attempt.score >= evaluation.passing_score ? 'text-green-500' : 'text-red-500'}`}>
                             {attempt.score}%
                           </span>
+                          {attempt.status === 'completed' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/course/${courseId}/evaluation/${evaluationId}/review/${attempt.id}`)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Revisar
+                            </Button>
+                          )}
                         </>
                       ) : (
                         <Badge variant="outline">
