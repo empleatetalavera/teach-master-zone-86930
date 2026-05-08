@@ -34,6 +34,7 @@ import CourseView from "./pages/CourseView";
 import ModuleView from "./pages/ModuleView";
 import EvaluationView from "./pages/EvaluationView";
 import TakeEvaluation from "./pages/TakeEvaluation";
+import ReviewAttempt from "./pages/ReviewAttempt";
 import ActivityView from "./pages/ActivityView";
 import ScormFullscreen from "./pages/ScormFullscreen";
 import CampusGuide from "./pages/CampusGuide";
