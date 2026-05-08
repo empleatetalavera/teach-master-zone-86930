@@ -191,128 +191,210 @@ export default function ModuleView() {
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < allModules.length - 1;
 
+  const ModuleIndex = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <nav className="space-y-1">
+      <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        Módulos del curso
+      </p>
+      {allModules.map((m, i) => {
+        const isCurrent = m.id === moduleId;
+        return (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => {
+              onNavigate?.();
+              navigate(`/course/${courseId}/module/${m.id}`);
+            }}
+            className={cn(
+              "w-full text-left rounded-md px-2 py-2 text-sm transition-colors flex items-start gap-2",
+              "hover:bg-muted",
+              isCurrent && "bg-primary/10 text-primary font-medium"
+            )}
+          >
+            <span className={cn(
+              "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+              isCurrent ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            )}>
+              {i + 1}
+            </span>
+            <span className="line-clamp-2">{m.title}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className="container max-w-4xl mx-auto py-8 px-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(`/course/${courseId}`)}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver al curso
-        </Button>
+      <div className="mx-auto w-full max-w-[1400px] px-3 sm:px-4 py-4 sm:py-6">
+        {/* Top bar with back + mobile menu */}
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <Button variant="ghost" onClick={() => navigate(`/course/${courseId}`)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Volver al curso</span>
+            <span className="sm:hidden">Curso</span>
+          </Button>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="text-sm text-muted-foreground mb-2">
-                  Módulo {module.order_index}
-                </div>
-                <CardTitle className="text-3xl mb-2">{module.title}</CardTitle>
-                <CardDescription>{module.description}</CardDescription>
-              </div>
-              {progress?.completed && (
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
-              )}
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            <Tabs defaultValue="content" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="content" className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Contenido
-                </TabsTrigger>
-                <TabsTrigger value="interactive" className="flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4" />
-                  Interactivo
-                </TabsTrigger>
-                <TabsTrigger value="activities" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Actividades
-                </TabsTrigger>
-                <TabsTrigger value="chat" className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Chat
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="content" className="space-y-6 mt-6">
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <div
-                    dangerouslySetInnerHTML={{ 
-                      __html: DOMPurify.sanitize(module.content || "", {
-                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
-                        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
-                      }) 
-                    }}
-                  />
-                </div>
-
-                {/* SCORM Content */}
+          {/* Mobile-only menu trigger */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="lg:hidden">
+                <Menu className="h-4 w-4 mr-2" /> Índice
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] sm:w-[340px] p-0 flex flex-col">
+              <SheetHeader className="px-4 py-3 border-b">
+                <SheetTitle className="flex items-center gap-2 text-base">
+                  <ListChecks className="h-4 w-4" /> Índice del curso
+                </SheetTitle>
+              </SheetHeader>
+              <div className="p-3 overflow-auto">
                 {enrollmentId && (
-                  <div className="pt-6 border-t">
-                    <ScormPlayer moduleId={moduleId!} enrollmentId={enrollmentId} />
+                  <div className="mb-3 px-2">
+                    <ModuleProgressBar moduleId={moduleId!} enrollmentId={enrollmentId} />
                   </div>
                 )}
-              </TabsContent>
+                <ModuleIndex onNavigate={() => {/* sheet auto-closes via overlay */}} />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
 
-              <TabsContent value="interactive" className="mt-6">
-                <InteractiveContent moduleId={moduleId!} />
-              </TabsContent>
-
-              <TabsContent value="activities" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Actividades del Módulo</CardTitle>
-                    <CardDescription>
-                      Completa las actividades para reforzar tu aprendizaje
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No hay actividades asignadas para este módulo</p>
+        {/* 80/20 layout */}
+        <div className="grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+          {/* Main content (80%) */}
+          <main className="min-w-0 order-2 lg:order-1">
+            <Card>
+              <CardHeader>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Módulo {module.order_index}
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                    <CardTitle className="text-2xl sm:text-3xl mb-2 break-words">{module.title}</CardTitle>
+                    <CardDescription>{module.description}</CardDescription>
+                  </div>
+                  {progress?.completed && (
+                    <CheckCircle2 className="h-8 w-8 text-green-500 shrink-0" />
+                  )}
+                </div>
+                {enrollmentId && (
+                  <div className="mt-4 lg:hidden">
+                    <ModuleProgressBar moduleId={moduleId!} enrollmentId={enrollmentId} />
+                  </div>
+                )}
+              </CardHeader>
 
-              <TabsContent value="chat" className="mt-6">
-                <ModuleChat moduleId={moduleId!} courseId={courseId!} />
-              </TabsContent>
-            </Tabs>
+              <CardContent className="space-y-6">
+                <Tabs defaultValue="content" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+                    <TabsTrigger value="content" className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      <span className="hidden sm:inline">Contenido</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="interactive" className="flex items-center gap-2">
+                      <Lightbulb className="h-4 w-4" />
+                      <span className="hidden sm:inline">Interactivo</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="activities" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      <span className="hidden sm:inline">Actividades</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="chat" className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      <span className="hidden sm:inline">Chat</span>
+                    </TabsTrigger>
+                  </TabsList>
 
-            <div className="flex items-center justify-between pt-6 border-t">
-              <Button
-                variant="outline"
-                onClick={() => navigateToModule("prev")}
-                disabled={!hasPrev}
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Módulo anterior
-              </Button>
+                  <TabsContent value="content" className="space-y-6 mt-6">
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(module.content || "", {
+                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+                            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
+                          })
+                        }}
+                      />
+                    </div>
 
-              {!progress?.completed && (
-                <Button onClick={markAsComplete}>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Marcar como completado
-                </Button>
-              )}
+                    {enrollmentId && (
+                      <div className="pt-6 border-t">
+                        <ScormPlayer moduleId={moduleId!} enrollmentId={enrollmentId} />
+                      </div>
+                    )}
+                  </TabsContent>
 
-              <Button
-                variant="outline"
-                onClick={() => navigateToModule("next")}
-                disabled={!hasNext}
-              >
-                Siguiente módulo
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
+                  <TabsContent value="interactive" className="mt-6">
+                    <InteractiveContent moduleId={moduleId!} />
+                  </TabsContent>
+
+                  <TabsContent value="activities" className="mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Actividades del Módulo</CardTitle>
+                        <CardDescription>
+                          Completa las actividades para reforzar tu aprendizaje
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="text-center py-8 text-muted-foreground">
+                          <p>No hay actividades asignadas para este módulo</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="chat" className="mt-6">
+                    <ModuleChat moduleId={moduleId!} courseId={courseId!} />
+                  </TabsContent>
+                </Tabs>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-6 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigateToModule("prev")}
+                    disabled={!hasPrev}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Módulo anterior
+                  </Button>
+
+                  {!progress?.completed && (
+                    <Button onClick={markAsComplete}>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Marcar como completado
+                    </Button>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    onClick={() => navigateToModule("next")}
+                    disabled={!hasNext}
+                  >
+                    Siguiente módulo
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </main>
+
+          {/* Desktop sidebar (20%) — sticky */}
+          <aside className="hidden lg:block order-1 lg:order-2">
+            <div className="sticky top-4 space-y-4">
+              <Card className="p-3">
+                {enrollmentId && (
+                  <div className="px-1 pb-2 mb-2 border-b">
+                    <ModuleProgressBar moduleId={moduleId!} enrollmentId={enrollmentId} />
+                  </div>
+                )}
+                <ModuleIndex />
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+          </aside>
+        </div>
       </div>
     </div>
   );
