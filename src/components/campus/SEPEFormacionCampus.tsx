@@ -560,7 +560,7 @@ export function SEPEFormacionCampus({
                                         iconColor="text-purple-600"
                                         title="Test Final de la Unidad"
                                         subtitle={hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de preguntas para verificar el aprendizaje'}
-                                        onClick={hasTest ? () => navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`) : undefined}
+                                        onClick={hasTest ? () => navigate(`/course/${courseId}/evaluation/${unitEvals[0].id}`) : undefined}
                                         actions={
                                           <>
                                             {hasTest && (
@@ -568,7 +568,7 @@ export function SEPEFormacionCampus({
                                                 variant="default"
                                                 size="sm"
                                                 className="h-7 text-xs gap-1 bg-purple-600 hover:bg-purple-700"
-                                                onClick={() => navigate(`/evaluation/${unitEvals[0].id}?courseId=${courseId}`)}
+                                                onClick={() => navigate(`/course/${courseId}/evaluation/${unitEvals[0].id}`)}
                                               >
                                                 <PlayCircle className="h-3 w-3" />Realizar
                                               </Button>
