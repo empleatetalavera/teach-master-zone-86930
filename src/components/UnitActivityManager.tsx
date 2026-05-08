@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  ClipboardList, Plus, Loader2, Trash2, X, Calendar, FileText, Pencil, Save
+  ClipboardList, Plus, Loader2, Trash2, X, Calendar, FileText, Pencil, Save, ArrowRight, PenTool
 } from "lucide-react";
 
 interface UnitActivityManagerProps {
@@ -42,6 +43,7 @@ export function UnitActivityManager({
 }: UnitActivityManagerProps) {
   const { user, userRole } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -536,6 +538,23 @@ export function UnitActivityManager({
                         </div>
                       )}
                     </div>
+
+                    {/* Botón "Realizar actividad" para alumnos */}
+                    {!isTeacherOrAdmin && activity.is_active !== false && (
+                      <div className="mt-3 pt-3 border-t">
+                        <Button
+                          onClick={() => {
+                            onOpenChange(false);
+                            navigate(`/course/${courseId}/activity/${activity.id}`);
+                          }}
+                          className="w-full"
+                        >
+                          <PenTool className="h-4 w-4 mr-2" />
+                          Realizar actividad
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
