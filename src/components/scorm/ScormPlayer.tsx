@@ -32,6 +32,10 @@ import {
 interface ScormPlayerProps {
   moduleId: string;
   enrollmentId: string;
+  /** Optional: restrict playback to a specific formative unit package. */
+  formativeUnitId?: string;
+  /** Optional: start the first available package automatically. */
+  autoStart?: boolean;
   /** Optional: if not provided, resolved from supabase.auth */
   userId?: string;
   /** Optional: if not provided, resolved from profiles.full_name */
@@ -48,6 +52,8 @@ type ActivePackage = {
 export default function ScormPlayer({
   moduleId,
   enrollmentId,
+  formativeUnitId,
+  autoStart = false,
   userId: userIdProp,
   studentName: studentNameProp,
 }: ScormPlayerProps) {
@@ -85,9 +91,9 @@ export default function ScormPlayer({
 
   // SCORM packages bound to this module
   const { data: scormContent, isLoading } = useQuery({
-    queryKey: ["module-scorm", moduleId],
+    queryKey: ["module-scorm", moduleId, formativeUnitId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query: any = supabase
         .from("module_scorm_content")
         .select(`
           *,
@@ -99,8 +105,13 @@ export default function ScormPlayer({
             scorm_version
           )
         `)
-        .eq("module_id", moduleId)
-        .order("order_index");
+        .eq("module_id", moduleId);
+
+      if (formativeUnitId) {
+        query = query.eq("formative_unit_id", formativeUnitId);
+      }
+
+      const { data, error } = await query.order("order_index");
       if (error) throw error;
       return data;
     },
@@ -125,6 +136,12 @@ export default function ScormPlayer({
     },
     enabled: !!scormContent && scormContent.length > 0 && !!identity,
   });
+
+  useEffect(() => {
+    if (!autoStart || activePackage || !scormContent || scormContent.length === 0) return;
+    const firstPackage = scormContent.find((content: any) => content.scorm_packages)?.scorm_packages;
+    if (firstPackage) handlePlay(firstPackage);
+  }, [autoStart, activePackage, scormContent]);
 
   // Mount/unmount window.API + load SCORM package via Service Worker runtime
   useEffect(() => {

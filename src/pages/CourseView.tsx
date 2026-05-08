@@ -26,7 +26,6 @@ import CourseScheduleManager from "@/components/CourseScheduleManager";
 import { CourseCalendar } from "@/components/CourseCalendar";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { SEPEGradesSection } from "@/components/SEPEGradesSection";
-import ScormProfessionalViewer from "@/components/ScormProfessionalViewer";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -67,6 +66,7 @@ import { SEPEFormacionCampus } from "@/components/campus/SEPEFormacionCampus";
 import TeacherTutorGuide from "@/pages/dashboard/TeacherTutorGuide";
 import { ElectiveModuleContent } from "@/components/ElectiveModuleContent";
 import { BatchContentGenerator } from "@/components/BatchContentGenerator";
+import ScormPlayer from "@/components/scorm/ScormPlayer";
 
 interface Course {
   id: string;
@@ -297,6 +297,7 @@ export default function CourseView() {
 
   // SCORM content viewer state
   const [scormViewerOpen, setScormViewerOpen] = useState(false);
+  const [selectedScormModuleId, setSelectedScormModuleId] = useState<string>("");
 
   // Syllabus editor state
   const [syllabusEditorOpen, setSyllabusEditorOpen] = useState(false);
@@ -339,9 +340,10 @@ export default function CourseView() {
     setActivityManagerOpen(true);
   };
 
-  const openScormViewer = (unitId: string, unitTitle: string) => {
+  const openScormViewer = (unitId: string, unitTitle: string, moduleId?: string) => {
     setSelectedUnitId(unitId);
     setSelectedUnitTitle(unitTitle);
+    setSelectedScormModuleId(moduleId || "");
     setScormViewerOpen(true);
   };
 
@@ -2775,15 +2777,24 @@ export default function CourseView() {
         courseId={courseId || ""}
       />
 
-      {/* SCORM Content Viewer Dialog - Professional Format */}
-      <ScormProfessionalViewer
-        open={scormViewerOpen}
-        onOpenChange={setScormViewerOpen}
-        unitId={selectedUnitId}
-        unitTitle={selectedUnitTitle}
-        enrollmentId={enrollment?.id}
-        courseId={courseId}
-      />
+      {/* SCORM Package Player Dialog */}
+      <Dialog open={scormViewerOpen} onOpenChange={setScormViewerOpen}>
+        <DialogContent className="w-screen h-[100dvh] max-w-none sm:max-w-6xl sm:h-[92vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedUnitTitle || "Contenido Interactivo"}</DialogTitle>
+          </DialogHeader>
+          {selectedScormModuleId && enrollment?.id ? (
+            <ScormPlayer
+              moduleId={selectedScormModuleId}
+              formativeUnitId={selectedUnitId}
+              enrollmentId={enrollment.id}
+              autoStart
+            />
+          ) : (
+            <div className="py-12 text-center text-muted-foreground">No se pudo inicializar el reproductor SCORM.</div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Syllabus Editor Dialog */}
       <SyllabusEditor
