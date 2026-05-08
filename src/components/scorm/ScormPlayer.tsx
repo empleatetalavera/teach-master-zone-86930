@@ -16,11 +16,11 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { CmiData } from "@/lib/scorm/scorm12-api";
 import {
-  createScorm12API,
-  attachScorm12ToWindow,
-  type CmiData,
-} from "@/lib/scorm/scorm12-api";
+  attachScormBridge,
+  type ScormBridgeHandle,
+} from "@/lib/scorm/scorm-again-bridge";
 import {
   loadScormProgress,
   saveScormProgress,
@@ -30,6 +30,7 @@ import {
   type ScormRuntimeHandle,
 } from "@/lib/scorm/scorm-runtime";
 import ScormProPlayer from "./ScormProPlayer";
+import { useResourceTracker } from "@/hooks/useResourceTracker";
 
 interface ScormPlayerProps {
   moduleId: string;
