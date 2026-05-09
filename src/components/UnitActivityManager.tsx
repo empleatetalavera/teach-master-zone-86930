@@ -56,6 +56,8 @@ export function UnitActivityManager({
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newInstructions, setNewInstructions] = useState("");
+  const [newEvaluationCriteria, setNewEvaluationCriteria] = useState("");
+  const [newSubmissionInstructions, setNewSubmissionInstructions] = useState("");
   const [newMaxScore, setNewMaxScore] = useState("100");
   const [newDueDate, setNewDueDate] = useState("");
   const [newSubmissionType, setNewSubmissionType] = useState<"text" | "file" | "url" | "both">("text");
