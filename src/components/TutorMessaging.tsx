@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Send, MessageSquare, Phone, Mail } from "lucide-react";
+import { Loader2, Send, MessageSquare, Phone, Mail, Paperclip, X, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -27,6 +27,8 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
   const [messages, setMessages] = useState<any[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [tutorProfile, setTutorProfile] = useState<any>(null);
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024; // 25MB
 
   useEffect(() => {
     if (tutorId) {
@@ -98,8 +100,32 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
       return;
     }
 
+    if (attachment && attachment.size > MAX_ATTACHMENT_BYTES) {
+      toast({ title: "Archivo demasiado grande", description: "Máximo 25 MB", variant: "destructive" });
+      return;
+    }
+
     setSending(true);
     try {
+      let metadata: Record<string, any> | null = null;
+
+      if (attachment) {
+        const safeName = attachment.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${user!.id}/communications/${Date.now()}_${safeName}`;
+        const { error: upErr } = await supabase.storage
+          .from("student-documents")
+          .upload(path, attachment, { upsert: false, contentType: attachment.type });
+        if (upErr) throw upErr;
+        metadata = {
+          attachment: {
+            path,
+            name: attachment.name,
+            size: attachment.size,
+            type: attachment.type,
+          },
+        };
+      }
+
       const { error } = await supabase
         .from("communications")
         .insert({
@@ -109,6 +135,7 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
           communication_type: "message",
           subject,
           message,
+          metadata,
         });
 
       if (error) throw error;
@@ -120,6 +147,7 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
 
       setSubject("");
       setMessage("");
+      setAttachment(null);
       loadMessages();
     } catch (error: any) {
       console.error("Error sending message:", error);
@@ -130,6 +158,26 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
       });
     } finally {
       setSending(false);
+    }
+  };
+
+  const openAttachment = async (path: string, name: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("student-documents")
+        .createSignedUrl(path, 3600);
+      if (error) throw error;
+      const blob = await (await fetch(data.signedUrl)).blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e: any) {
+      toast({ title: "Error abriendo adjunto", description: e?.message, variant: "destructive" });
     }
   };
 
@@ -240,6 +288,38 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
               />
             </div>
 
+            <div>
+              <Label htmlFor="attachment" className="flex items-center gap-2">
+                <Paperclip className="h-4 w-4" />
+                Adjuntar archivo (opcional)
+              </Label>
+              <Input
+                id="attachment"
+                type="file"
+                accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+                onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
+                disabled={sending}
+                className="cursor-pointer"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Adjunta evidencias o documentos relacionados con tu consulta. Máx. 25 MB.
+              </p>
+              {attachment && (
+                <div className="mt-2 flex items-center justify-between gap-2 p-2 border rounded-md bg-muted/40">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm truncate">{attachment.name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {(attachment.size / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setAttachment(null)} disabled={sending}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <Button type="submit" disabled={sending} className="w-full">
               {sending ? (
                 <>
@@ -292,6 +372,18 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                       {msg.message}
                     </p>
+                    {msg.metadata?.attachment && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 gap-2"
+                        onClick={() => openAttachment(msg.metadata.attachment.path, msg.metadata.attachment.name)}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        <span className="truncate max-w-[220px]">{msg.metadata.attachment.name}</span>
+                      </Button>
+                    )}
                   </Card>
                 ))}
               </div>
