@@ -127,34 +127,53 @@ export function CAUSupportForm({ courseId, courseTitle, supportEmail, supportPho
 
   return (
     <div className="max-h-[80vh] overflow-y-auto">
-      <div className="p-4 border-b bg-gradient-to-r from-red-500/10 to-red-500/5">
-        <h4 className="font-semibold flex items-center gap-2">
-          <HelpCircle className="h-5 w-5 text-red-600" />
-          Centro de Atención al Usuario
-        </h4>
-        <p className="text-xs text-muted-foreground mt-1">
-          Soporte técnico del Campus Virtual
-        </p>
+      <div className="p-4 border-b bg-gradient-to-r from-red-500/10 to-red-500/5 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h4 className="font-semibold flex items-center gap-2 text-red-600 text-lg">
+            <HelpCircle className="h-6 w-6 text-red-600" />
+            Centro de atención al usuario
+          </h4>
+          <p className="text-xs text-muted-foreground mt-1">
+            Soporte técnico del Campus Virtual
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="border-red-500 text-red-600 hover:bg-red-50" onClick={() => window.open("/campus-guide", "_blank")}>
+            VISITA VIRTUAL
+          </Button>
+          <Button variant="outline" size="sm" className="border-red-500 text-red-600 hover:bg-red-50" onClick={() => window.open("/faq", "_blank")}>
+            FAQ
+          </Button>
+        </div>
       </div>
 
       <div className="p-4 space-y-4">
         <div className="rounded-md border bg-muted/30 p-3 space-y-2 text-xs">
-          <div className="font-semibold text-foreground">VÍA FORMULARIO WEB:</div>
-          <div className="text-muted-foreground">Rellena los siguientes campos y envía tu consulta o incidencia.</div>
+          <p className="text-muted-foreground">
+            Antes de plantear tu consulta o incidencia técnica, puedes encontrar información sobre el funcionamiento del Campus accediendo a la{" "}
+            <a href="/campus-guide" target="_blank" className="text-primary underline">visita virtual</a> y consultando las{" "}
+            <a href="/faq" target="_blank" className="text-primary underline">preguntas frecuentes</a>.
+          </p>
+          <p className="text-muted-foreground">Si tras consultarlo no has conseguido solventar tu duda o incidencia, puedes contactar con nosotros a través de los siguientes medios:</p>
+
+          <div className="font-semibold text-foreground pt-1">VÍA FORMULARIO WEB:</div>
+          <div className="text-muted-foreground">Rellena los siguientes campos del formulario y envía tu consulta o incidencia.</div>
+
           {supportPhone && (
             <>
-              <div className="font-semibold text-foreground pt-1">VÍA TELEFÓNICA:</div>
+              <div className="font-semibold text-foreground pt-1">VÍA TELEFÓNICA (*):</div>
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="h-3.5 w-3.5" /> {supportPhone}
+                <Phone className="h-3.5 w-3.5" /> Teléfono: {supportPhone}
               </div>
+              <div className="text-muted-foreground pl-5">Horario de contacto: De lunes a jueves de 9:00 a 18:30 horas y viernes de 9:00 a 14:00 horas</div>
             </>
           )}
           {supportEmail ? (
             <>
-              <div className="font-semibold text-foreground pt-1">VÍA CORREO ELECTRÓNICO:</div>
+              <div className="font-semibold text-foreground pt-1">VÍA CORREO ELECTRÓNICO (*):</div>
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 text-primary" />
-                <a href={`mailto:${supportEmail}`} className="text-primary hover:underline">{supportEmail}</a>
+                <span>Correo electrónico: <a href={`mailto:${supportEmail}`} className="text-primary hover:underline">{supportEmail}</a></span>
               </div>
             </>
           ) : (
@@ -163,9 +182,15 @@ export function CAUSupportForm({ courseId, courseTitle, supportEmail, supportPho
               <span>El centro aún no ha configurado un email de soporte. Tu mensaje quedará registrado en la plataforma.</span>
             </div>
           )}
-          <div className="pt-2 text-muted-foreground">
-            <span className="font-semibold text-foreground">ATENCIÓN:</span> El plazo de resolución de consultas o
-            incidencias oscila entre las 0 y 48 horas.
+
+          <p className="text-muted-foreground pt-2">
+            <span className="font-semibold">(*)</span> Recuerda si utilizas la vía telefónica o el correo electrónico deberás facilitar tus datos personales, el curso que estás realizando, así como aportar toda aquella información/documentación en relación al objeto de la consulta realizada o la incidencia que nos comuniques.
+          </p>
+          <p className="text-muted-foreground">
+            Para tu comodidad intentaremos responderte utilizando, siempre que sea posible, el mismo canal que utilizaste para hacernos llegar tu consulta, o el que nos comuniques en la misma, con objeto de agilizar el proceso de resolución de tu duda o consulta.
+          </p>
+          <div className="pt-1 text-muted-foreground">
+            <span className="font-semibold text-foreground">ATENCIÓN:</span> El plazo de resolución de consultas y/o incidencias oscila entre las 0 y 48 horas.
           </div>
         </div>
 
