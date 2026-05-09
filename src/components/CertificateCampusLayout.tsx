@@ -312,10 +312,7 @@ export function CampusChrome({
                 );
               })}
               <button
-                onClick={() => {
-                  onSelectModule("");
-                  setActiveTab("modules");
-                }}
+                onClick={() => setVerTodoOpen(true)}
                 className="px-3 py-2 rounded text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 whitespace-nowrap"
               >
                 Ver Todo
