@@ -23,6 +23,7 @@ interface AddResourceDialogProps {
   trigger: React.ReactNode;
   contentType: ResourceContentType;
   moduleId: string;
+  courseId?: string;
   formativeUnitId?: string | null;
   defaultTitle?: string;
   acceptFile?: string;
@@ -47,6 +48,7 @@ export function AddResourceDialog({
   trigger,
   contentType,
   moduleId,
+  courseId,
   formativeUnitId,
   defaultTitle,
   acceptFile,
@@ -75,6 +77,30 @@ export function AddResourceDialog({
     setFile(null);
   };
 
+  const getUploadBasePath = async () => {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) throw authError || new Error("Debes iniciar sesión para subir archivos.");
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("training_center_id")
+      .eq("id", authData.user.id)
+      .single();
+    if (profileError) throw profileError;
+    if (!profile?.training_center_id) throw new Error("Tu usuario no tiene centro formativo asignado.");
+
+    if (courseId) return `${profile.training_center_id}/${courseId}/${moduleId}`;
+
+    const { data: moduleData, error: moduleError } = await supabase
+      .from("modules")
+      .select("course_id")
+      .eq("id", moduleId)
+      .single();
+    if (moduleError) throw moduleError;
+
+    return `${profile.training_center_id}/${moduleData.course_id}/${moduleId}`;
+  };
+
   const save = async (mode: "file" | "link") => {
     if (!title.trim()) {
       toast({ title: "Falta título", variant: "destructive" });
@@ -90,7 +116,8 @@ export function AddResourceDialog({
       if (mode === "file") {
         if (!file) { toast({ title: "Selecciona un archivo", variant: "destructive" }); setBusy(false); return; }
         const ext = file.name.split(".").pop();
-        const path = `${moduleId}/${contentType}/${Date.now()}.${ext}`;
+        const basePath = await getUploadBasePath();
+        const path = `${basePath}/${contentType}/${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("module-content")
           .upload(path, file, { upsert: false, contentType: file.type });
