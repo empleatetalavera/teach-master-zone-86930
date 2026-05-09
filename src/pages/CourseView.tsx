@@ -1739,6 +1739,58 @@ export default function CourseView() {
 
 
           <TabsContent value="grades" className="space-y-4">
+            <section className="rounded-lg border bg-card p-5 space-y-3 text-sm">
+              <h2 className="text-lg font-semibold text-primary">Sistema de evaluación</h2>
+              <h3 className="font-semibold">7.1 Actividades y pruebas evaluables</h3>
+              <p className="text-muted-foreground">
+                Durante toda la formación se va a llevar a cabo una evaluación sistemática y continua, es decir, tendrás que ir realizando diferentes pruebas de evaluación para que tu tutor-formador pueda ir comprobando que vas adquiriendo las capacidades y competencias propias del certificado de profesionalidad que estás estudiando.
+              </p>
+              <p className="text-muted-foreground">A continuación te recordamos las actividades y pruebas que servirán para evaluar tu progreso en cada módulo formativo/unidad formativa:</p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li>
+                  Al inicio del módulo formativo/unidad formativa, deberás realizar el <strong>"Cuestionario de conocimientos previos"</strong>. Este cuestionario no influye en la nota final, sólo sirve para que tu tutor-formador pueda ayudarte mejor a alcanzar los objetivos del módulo formativo/unidad formativa.
+                </li>
+                <li>
+                  Durante el desarrollo del módulo/unidad formativa en el Campus Virtual tendrás que realizar en cada unidad didáctica las siguientes actividades y pruebas de evaluación:
+                  <ul className="list-disc pl-6 mt-2 space-y-2">
+                    <li><strong>Test de autoevaluación</strong> de cada unidad didáctica integrado en el Contenido Interactivo Multimedia (CIM), cuyo resultado podrás conocer al finalizar dicho test.</li>
+                    <li>
+                      <strong>Actividades de aprendizaje:</strong>
+                      <ul className="list-[circle] pl-6 mt-2 space-y-2">
+                        <li><em>Individuales:</em> entregar la respuesta a través del Campus Virtual y cuya valoración y puntuación obtenida en cada una de ellas, tu tutor-formador te facilitará a través de correo electrónico.</li>
+                        <li><em>Grupales:</em> tu tutor-formador creará distintos grupos de trabajo y te indicará a qué grupo perteneces, así como los miembros que lo forman. Posteriormente, creará un foro de actividad grupal para cada grupo en la plataforma. Este foro servirá para que organicéis y distribuyáis tareas, elaboréis el material, etc. Una vez finalicéis la actividad, elegiréis un coordinador/a que se encargará de adjuntar el archivo final con la solución al espacio que el tutor-formador habilite para ello. Tu tutor-formador evaluará tanto el documento entregado como la participación en el foro.</li>
+                      </ul>
+                    </li>
+                    <li>Además, también se tendrá en cuenta el <strong>número y calidad de las aportaciones</strong> que realices en los foros de debate planteados en cada unidad didáctica.</li>
+                  </ul>
+                </li>
+                <li>
+                  Durante el desarrollo del módulo/unidad formativa en las <strong>tutorías presenciales</strong> en el Centro de Formación tendrás que realizar también actividades (prácticas y/o realizaciones prácticas) cuyo resultado también se te comunicará a través del Campus Virtual, y además tu formador irá comentando los resultados en el momento mismo en que se vayan desarrollando las prácticas.
+                </li>
+                <li>
+                  Al finalizar la formación del módulo formativo/unidad formativa deberás realizar las siguientes pruebas de evaluación:
+                  <ul className="list-disc pl-6 mt-2 space-y-2">
+                    <li><strong>Test de evaluación</strong> en el Campus Virtual, para cada unidad formativa, a través de una prueba tipo test con varias opciones de respuesta y una única correcta, que se corrige automáticamente, por lo que puedes conocer tu puntuación una vez lo hayas realizado.</li>
+                    <li><strong>Prueba de evaluación final presencial</strong> en el Centro de Formación al finalizar el módulo formativo, en la que deberás obtener, al menos, una puntuación de <strong>5 sobre 10</strong> para poder superar el curso, y cuya valoración te informará tu tutor-formador a través del Campus Virtual.</li>
+                  </ul>
+                </li>
+              </ul>
+              <p className="text-muted-foreground">
+                Además, una vez finalizada la formación, deberás cumplimentar el <strong>"Cuestionario de evaluación de la calidad de la formación"</strong>, en el que valorarás cada uno de los aspectos del curso con objeto de poder mejorar la formación.
+              </p>
+              <div className="rounded-md border-l-4 border-primary bg-primary/5 p-3">
+                <p className="font-semibold mb-2">En resumen, para superar el curso deberás:</p>
+                <ul className="list-disc pl-6 space-y-1">
+                  <li>Realizar y participar en todas las actividades de aprendizaje planteadas a lo largo del curso en el Campus Virtual (casos prácticos, foros, documentos, vídeos, etc.), así como realizar las pruebas de evaluación.</li>
+                  <li>Asistir a las tutorías presenciales y realizar las actividades de aprendizaje evaluables que se lleven a cabo en estas sesiones.</li>
+                  <li>Obtener en la prueba de evaluación final del módulo formativo una puntuación mínima de <strong>5</strong>.</li>
+                </ul>
+              </div>
+              <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200 dark:border-amber-800">
+                <strong>IMPORTANTE:</strong> Para superar la formación con evaluación positiva también se tendrán en cuenta los <strong>tiempos de acceso al Campus Virtual</strong>.
+              </div>
+            </section>
+
             {showSEPEFeatures && (
               <section className="space-y-3">
                 <div className="border-b pb-3">
