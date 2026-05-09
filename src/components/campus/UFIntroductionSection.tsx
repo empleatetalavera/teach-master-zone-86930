@@ -9,10 +9,11 @@ import { useNavigate } from "react-router-dom";
 
 interface Props {
   moduleId: string;
-  formativeUnitId: string;
-  formativeUnitTitle: string;
+  formativeUnitId?: string | null;
+  formativeUnitTitle?: string;
   courseId: string;
   isAdmin: boolean;
+  scope?: "unit" | "module";
 }
 
 interface ContentRow {
@@ -30,28 +31,37 @@ interface EvalRow {
   evaluation_type: string;
 }
 
-export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnitTitle, courseId, isAdmin }: Props) {
+export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnitTitle, courseId, isAdmin, scope = "unit" }: Props) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [contents, setContents] = useState<ContentRow[]>([]);
   const [evals, setEvals] = useState<EvalRow[]>([]);
+  const isModuleScope = scope === "module" || !formativeUnitId;
 
   const load = useCallback(async () => {
-    const { data: c } = await (supabase as any)
+    let cQuery = (supabase as any)
       .from("module_content")
       .select("id,title,description,file_path,external_url,content_type")
-      .eq("formative_unit_id", formativeUnitId)
       .in("content_type", ["intro_video", "objectives_pdf"]);
-    setContents((c ?? []) as ContentRow[]);
-
-    const { data: e } = await (supabase as any)
+    let eQuery = (supabase as any)
       .from("evaluations")
       .select("id,title,evaluation_type")
-      .eq("formative_unit_id", formativeUnitId)
       .eq("evaluation_type", "diagnostic")
       .eq("is_active", true);
+
+    if (isModuleScope) {
+      cQuery = cQuery.eq("module_id", moduleId).is("formative_unit_id", null);
+      eQuery = eQuery.eq("module_id", moduleId).is("formative_unit_id", null);
+    } else {
+      cQuery = cQuery.eq("formative_unit_id", formativeUnitId);
+      eQuery = eQuery.eq("formative_unit_id", formativeUnitId);
+    }
+
+    const { data: c } = await cQuery;
+    setContents((c ?? []) as ContentRow[]);
+    const { data: e } = await eQuery;
     setEvals((e ?? []) as EvalRow[]);
-  }, [formativeUnitId]);
+  }, [moduleId, formativeUnitId, isModuleScope]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -104,7 +114,7 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
             trigger={<Button variant="outline" size="sm" className="h-7 text-xs gap-1"><Plus className="h-3 w-3" />{action ? "Editar" : "Subir"}</Button>}
             contentType={addType}
             moduleId={moduleId}
-            formativeUnitId={formativeUnitId}
+            formativeUnitId={isModuleScope ? null : formativeUnitId}
             defaultTitle={title}
             acceptFile={accept}
             onCreated={load}
@@ -117,7 +127,7 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
   return (
     <div className="border border-blue-200/60 dark:border-blue-900/40 rounded-xl overflow-hidden">
       <div className="bg-gradient-to-r from-[#1e5fa8] to-[#2873c7] text-white px-4 py-2.5 font-semibold text-xs uppercase tracking-wider flex items-center justify-between">
-        <span>A) INTRODUCCIÓN A LA UNIDAD FORMATIVA</span>
+        <span>{isModuleScope ? "A) INTRODUCCIÓN AL MÓDULO FORMATIVO" : "A) INTRODUCCIÓN A LA UNIDAD FORMATIVA"}</span>
         <Badge className="bg-white/15 text-white border-0 text-[10px]">Cuestionario previo y objetivos</Badge>
       </div>
       <div className="p-3 space-y-2 bg-blue-50/30 dark:bg-blue-950/10">
