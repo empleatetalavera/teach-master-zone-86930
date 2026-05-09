@@ -2068,130 +2068,6 @@ export default function CourseView() {
 
 
           <TabsContent value="exams" className="space-y-4">
-            <section className="rounded-lg border bg-card p-5 space-y-4 text-sm">
-              <h2 className="text-lg font-semibold text-primary">¿Cómo se puntúa en tu curso?</h2>
-              <p className="text-muted-foreground">
-                La nota final de cada módulo formativo/unidad formativa se calculará del siguiente modo:
-              </p>
-              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                <li>
-                  Un <strong>30%</strong> de la nota final corresponde al promedio de notas obtenidas en las actividades de aprendizaje, valoración de la participación en los foros de debate y pruebas de evaluación realizadas tanto en el Campus Virtual como en las Tutorías Presenciales en el Centro de Formación.
-                </li>
-                <li>
-                  Un <strong>70%</strong> de la nota final corresponderá a la nota obtenida en la prueba de evaluación final presencial desarrollada en el Centro de Formación, en la que deberás obtener, al menos, una puntuación de <strong>5</strong> como te hemos comentado anteriormente.
-                </li>
-              </ul>
-              <p className="text-muted-foreground">
-                El valor de cada una de estas actividades de aprendizaje y pruebas de evaluación se muestra en la siguiente tabla:
-              </p>
-              <img
-                src={tablaPuntuacionCurso}
-                alt="Tabla de puntuación del curso: actividades en campus virtual (30%) y prueba presencial final (70%)"
-                className="w-full rounded-md border"
-              />
-            </section>
-
-            {/* EVALUACIÓN Section - SEPE Style */}
-            <Accordion type="single" collapsible defaultValue="evaluacion">
-              <AccordionItem value="evaluacion" className="border-0">
-                <AccordionTrigger className="bg-primary text-white px-4 py-3 rounded-t-lg hover:no-underline data-[state=open]:rounded-b-none">
-                  <span className="font-bold text-lg">EVALUACIÓN</span>
-                </AccordionTrigger>
-                <AccordionContent className="border border-t-0 rounded-b-lg p-4 bg-white">
-                  {/* Lista de pruebas de evaluación */}
-                  <div className="space-y-2 mb-6">
-                    {modules.flatMap(m => m.formative_units || []).map((unit: any) => (
-                      <div key={`eval-${unit.id}`} className="flex items-center justify-between p-2 bg-blue-50 rounded border-l-4 border-l-primary">
-                        <div className="flex items-center gap-3">
-                          <div className="p-1 bg-primary/10 rounded">
-                            <FileText className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="text-sm">{unit.title} - Test Final</span>
-                        </div>
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                      </div>
-                    ))}
-                    <div className="flex items-center justify-between p-2 bg-orange-50 rounded border-l-4 border-l-orange-500">
-                      <div className="flex items-center gap-3">
-                        <div className="p-1 bg-orange-100 rounded">
-                          <AlertCircle className="h-4 w-4 text-orange-500" />
-                        </div>
-                        <span className="text-sm">Prueba de evaluación Final</span>
-                      </div>
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-purple-50 rounded border-l-4 border-l-purple-500">
-                      <div className="flex items-center gap-3">
-                        <div className="p-1 bg-purple-100 rounded">
-                          <Star className="h-4 w-4 text-purple-500" />
-                        </div>
-                        <span className="text-sm">Evaluación de la calidad de la formación</span>
-                      </div>
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    </div>
-                  </div>
-
-                  {/* Texto explicativo */}
-                  <div className="border-l-4 border-l-slate-300 pl-4 py-2 mb-6 bg-slate-50 rounded-r">
-                    <p className="text-sm text-slate-700">Las pruebas de evaluación que deberás realizar son las siguientes:</p>
-                  </div>
-
-                  {/* TEST FINAL EN CAMPUS (CIM) */}
-                  <div className="border border-primary rounded-lg overflow-hidden mb-6">
-                    <div className="bg-primary/10 px-4 py-3 flex items-center gap-3 border-b border-primary/20">
-                      <div className="p-2 bg-primary rounded">
-                        <FileText className="h-5 w-5 text-white" />
-                      </div>
-                      <h4 className="font-bold text-primary text-lg">
-                        <span className="bg-yellow-200 px-2 py-0.5">TEST FINAL EN CAMPUS (CIM)</span>
-                      </h4>
-                    </div>
-                    <div className="p-4 bg-white">
-                      <p className="text-sm text-slate-700">
-                        El <strong>TEST FINAL</strong> de evaluación desarrollado en el Campus Virtual. Para realizar este TEST FINAL 
-                        dispondrás de un solo intento y podrás conocer los resultados una vez lo hayas realizado.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* PRUEBA DE EVALUACIÓN FINAL PRESENCIAL */}
-                  <div className="border border-orange-400 rounded-lg overflow-hidden mb-6">
-                    <div className="bg-orange-50 px-4 py-3 flex items-center gap-3 border-b border-orange-200">
-                      <div className="p-2 bg-orange-500 rounded">
-                        <AlertCircle className="h-5 w-5 text-white" />
-                      </div>
-                      <h4 className="font-bold text-orange-700 text-lg">
-                        <span className="bg-yellow-200 px-2 py-0.5">PRUEBA DE EVALUACIÓN FINAL PRESENCIAL</span>
-                      </h4>
-                    </div>
-                    <div className="p-4 bg-white">
-                      <p className="text-sm text-slate-700">
-                        La <strong>PRUEBA DE EVALUACIÓN FINAL PRESENCIAL</strong> en el Centro de Formación. En la fecha y lugar que 
-                        se te indican en el documento PLAN DE TRABAJO, y a través de MI AGENDA, deberás realizar la/s 
-                        prueba/s de evaluación. Puedes encontrar en este apartado información sobre los criterios de 
-                        evaluación que se aplicarán en esta prueba, así como algunas orientaciones sobre su contenido.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* RECUERDA */}
-                  <div className="border-2 border-slate-400 rounded-lg overflow-hidden">
-                    <div className="bg-slate-100 px-4 py-2 border-b border-slate-300">
-                      <h4 className="font-bold text-slate-700">
-                        <span className="bg-yellow-200 px-2 py-0.5">RECUERDA</span>
-                      </h4>
-                    </div>
-                    <div className="p-4 bg-white">
-                      <p className="text-sm text-slate-700">
-                        Para poder presentarte a la prueba de evaluación final debes haber realizado el total de las actividades de 
-                        aprendizaje establecidas en el Campus Virtual, así como haber participado en los foros programados.
-                      </p>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
             {/* EVALUACIÓN SOBRE EL PROCESO FORMATIVO - SEPE Compliance */}
             <Accordion type="single" collapsible defaultValue="proceso">
               <AccordionItem value="proceso" className="border-0">
@@ -2284,6 +2160,29 @@ export default function CourseView() {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+
+            <section className="rounded-lg border bg-card p-5 space-y-4 text-sm">
+              <h2 className="text-lg font-semibold text-primary">¿Cómo se puntúa en tu curso?</h2>
+              <p className="text-muted-foreground">
+                La nota final de cada módulo formativo/unidad formativa se calculará del siguiente modo:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li>
+                  Un <strong>30%</strong> de la nota final corresponde al promedio de notas obtenidas en las actividades de aprendizaje, valoración de la participación en los foros de debate y pruebas de evaluación realizadas tanto en el Campus Virtual como en las Tutorías Presenciales en el Centro de Formación.
+                </li>
+                <li>
+                  Un <strong>70%</strong> de la nota final corresponderá a la nota obtenida en la prueba de evaluación final presencial desarrollada en el Centro de Formación, en la que deberás obtener, al menos, una puntuación de <strong>5</strong> como te hemos comentado anteriormente.
+                </li>
+              </ul>
+              <p className="text-muted-foreground">
+                El valor de cada una de estas actividades de aprendizaje y pruebas de evaluación se muestra en la siguiente tabla:
+              </p>
+              <img
+                src={tablaPuntuacionCurso}
+                alt="Tabla de puntuación del curso: actividades en campus virtual (30%) y prueba presencial final (70%)"
+                className="w-full rounded-md border"
+              />
+            </section>
 
             {/* Info Banner sobre fechas y obligatoriedad */}
             <Card className="bg-primary/5 border-primary/20">
