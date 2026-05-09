@@ -1080,6 +1080,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           evaluation_criteria: string | null
+          evaluation_type: string
           formative_unit_id: string | null
           id: string
           instructions: string | null
@@ -1097,6 +1098,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           evaluation_criteria?: string | null
+          evaluation_type?: string
           formative_unit_id?: string | null
           id?: string
           instructions?: string | null
@@ -1114,6 +1116,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           evaluation_criteria?: string | null
+          evaluation_type?: string
           formative_unit_id?: string | null
           id?: string
           instructions?: string | null
@@ -1293,10 +1296,12 @@ export type Database = {
       }
       forum_topics: {
         Row: {
+          category: string
           content: string
           course_id: string
           created_at: string | null
           created_by: string
+          formative_unit_id: string | null
           id: string
           is_locked: boolean | null
           is_pinned: boolean | null
@@ -1307,10 +1312,12 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          category?: string
           content: string
           course_id: string
           created_at?: string | null
           created_by: string
+          formative_unit_id?: string | null
           id?: string
           is_locked?: boolean | null
           is_pinned?: boolean | null
@@ -1321,10 +1328,12 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          category?: string
           content?: string
           course_id?: string
           created_at?: string | null
           created_by?: string
+          formative_unit_id?: string | null
           id?: string
           is_locked?: boolean | null
           is_pinned?: boolean | null
@@ -1340,6 +1349,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_topics_formative_unit_id_fkey"
+            columns: ["formative_unit_id"]
+            isOneToOne: false
+            referencedRelation: "formative_units"
             referencedColumns: ["id"]
           },
           {
