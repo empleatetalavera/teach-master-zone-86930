@@ -16,6 +16,8 @@ interface Activity {
   title: string;
   description: string;
   instructions: string | null;
+  evaluation_criteria: string | null;
+  submission_instructions: string | null;
   max_score: number | null;
   due_date: string | null;
   submission_type: string | null;
