@@ -743,7 +743,7 @@ export default function CourseView() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className={`w-full mx-auto py-6 ${useCampusLayout ? 'px-3 sm:px-4 xl:pl-[130px] xl:pr-[130px] 2xl:pl-[140px] 2xl:pr-[140px]' : 'px-3 sm:px-4 lg:px-6 2xl:px-10'}`}>
+      <div className={`w-full mx-auto py-6 ${useCampusLayout ? (campusEditMode ? 'px-3 sm:px-4 lg:px-6 2xl:px-10' : 'px-3 sm:px-4 xl:pl-[130px] xl:pr-[130px] 2xl:pl-[140px] 2xl:pr-[140px]') : 'px-3 sm:px-4 lg:px-6 2xl:px-10'}`}>
         {!useCampusLayout && (
           <Button
             variant="ghost"
