@@ -812,6 +812,56 @@ export default function CenterSettings() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Compass className="h-5 w-5" />
+                Guía del Alumno (propia del centro)
+              </CardTitle>
+              <CardDescription>
+                PDF que se mostrará a los alumnos de TODOS los cursos de tu centro como Guía del Alumno. Sustituye a la guía por defecto del curso.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {centerId && (
+                <CenterDocumentUploader
+                  centerId={centerId}
+                  documentUrl={studentGuideUrl}
+                  dbField="student_guide_pdf_url"
+                  bucket="course-documents"
+                  label="Guía del Alumno"
+                  fileNamePrefix="guia-alumno-centro"
+                  onUpdate={loadCenterData}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Compass className="h-5 w-5" />
+                Guía del Tutor (propia del centro)
+              </CardTitle>
+              <CardDescription>
+                PDF que se mostrará a los tutores de TODOS los cursos de tu centro como Guía del Tutor. Sustituye a la guía por defecto del curso.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {centerId && (
+                <CenterDocumentUploader
+                  centerId={centerId}
+                  documentUrl={tutorGuideUrl}
+                  dbField="tutor_guide_pdf_url"
+                  bucket="course-documents"
+                  label="Guía del Tutor"
+                  fileNamePrefix="guia-tutor-centro"
+                  onUpdate={loadCenterData}
+                />
+              )}
+            </CardContent>
+          </Card>
+
           <div className="flex justify-end gap-4">
             <Button
               type="button"
