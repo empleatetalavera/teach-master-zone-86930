@@ -906,26 +906,60 @@ export default function CourseView() {
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="relative">
                     <Inbox className="h-4 w-4 mr-2" />
-                    Mensajes Pendientes
+                    Correo
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[380px] p-0" align="start">
+                <PopoverContent className="w-[440px] p-0" align="start">
                   <div className="p-4 border-b bg-gradient-to-r from-amber-500/10 to-amber-500/5">
                     <h4 className="font-semibold flex items-center gap-2">
-                      <Inbox className="h-5 w-5 text-amber-600" />
-                      Mensajes Pendientes
+                      <Mail className="h-5 w-5 text-amber-600" />
+                      Correo electrónico interno
                     </h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Correo interno y foros sin leer
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Comunícate con tu tutor/a-formador/a desde el Campus Virtual
                     </p>
                   </div>
-                  <div className="p-4">
-                    <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-dashed">
-                      <Bell className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-muted-foreground">
-                        Aquí te aparecerán los temas que tienes pendientes directamente relacionados con el correo electrónico interno o temas del foro sin leer.
+                  <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
+                    <p className="text-sm text-foreground leading-relaxed">
+                      Puedes enviar un mensaje a tu tutor/a-formador/a a través del correo
+                      electrónico interno del Campus Virtual planteándole tu consulta y
+                      recibirás un correo con la respuesta.
+                    </p>
+                    <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Formato del mensaje
+                      </p>
+                      <ul className="text-sm space-y-1.5 list-disc pl-4">
+                        <li>
+                          <span className="font-medium">Asunto:</span> indica el curso que
+                          estás realizando.
+                        </li>
+                        <li>
+                          <span className="font-medium">Cuerpo:</span> tus datos personales
+                          (nombre y apellidos) y la consulta indicando el módulo / unidad
+                          formativa o tema.
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/40 p-3 flex items-start gap-2">
+                      <Clock className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-amber-900 dark:text-amber-200">
+                        Tiempo máximo de respuesta: <span className="font-semibold">48 horas</span> (días laborables).
                       </p>
                     </div>
+                    <Button
+                      className="w-full"
+                      size="sm"
+                      onClick={() => {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("tab", "tutorias");
+                        window.history.pushState({}, "", url.toString());
+                        window.dispatchEvent(new PopStateEvent("popstate"));
+                      }}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Escribir a mi tutor/a
+                    </Button>
                   </div>
                 </PopoverContent>
               </Popover>
