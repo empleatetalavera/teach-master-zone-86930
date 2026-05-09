@@ -590,6 +590,7 @@ export function SEPEFormacionCampus({
                                           <SelfAssessmentQuiz courseId={courseId} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
                                         </div>
                                       </div>
+                                    </div>
                                   </AccordionContent>
                                 </AccordionItem>
                               </Accordion>
