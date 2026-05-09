@@ -1133,17 +1133,9 @@ export default function CourseView() {
               <div className="lg:hidden overflow-x-auto pb-2">
                 <TabsList className="w-max min-w-full flex h-auto p-1 gap-1">
                   <TabsTrigger value="intro" className="text-xs px-2 py-1.5">Inicio</TabsTrigger>
-                  {showSEPEFeatures && (
-                    (userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') ? (
-                      <>
-                        <TabsTrigger value="tutor-guide" className="text-xs px-2 py-1.5">Guía Tutor</TabsTrigger>
-                        <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
-                      </>
-                    ) : (
-                      <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
-                    )
+                  {showSEPEFeatures && (userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') && (
+                    <TabsTrigger value="tutor-guide" className="text-xs px-2 py-1.5">Guía Tutor</TabsTrigger>
                   )}
-                  <TabsTrigger value="course-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>
                   {showSEPEFeatures && <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>}
                   {showSEPEFeatures && <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>}
                   <TabsTrigger value="modules" className="text-xs px-2 py-1.5">{isCFCCourse ? 'Contenido' : isPropio ? 'Temario' : 'Formación'}</TabsTrigger>
