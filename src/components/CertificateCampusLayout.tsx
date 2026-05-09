@@ -339,7 +339,7 @@ export function CampusChrome({
 
       {/* LEFT RAIL — Organizarme + Recursos */}
       {!editMode && (
-      <aside className="hidden lg:flex fixed left-2 top-40 flex-col w-[120px] z-20 max-h-[calc(100vh-10rem)] overflow-y-auto">
+      <aside className="hidden lg:flex fixed left-1 xl:left-2 top-40 flex-col w-[100px] xl:w-[110px] 2xl:w-[120px] z-20 max-h-[calc(100vh-10rem)] overflow-y-auto">
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Organizarme
         </div>
@@ -401,7 +401,7 @@ export function CampusChrome({
 
       {/* RIGHT RAIL — Comunicarme */}
       {!editMode && (
-      <aside className="hidden lg:flex fixed right-2 top-40 flex-col w-[120px] z-20">
+      <aside className="hidden lg:flex fixed right-1 xl:right-2 top-40 flex-col w-[100px] xl:w-[110px] 2xl:w-[120px] z-20">
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Comunicarme
         </div>
