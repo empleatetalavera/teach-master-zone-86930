@@ -81,7 +81,7 @@ const RECURSOS_TABS = [
   { label: "Formación en campus", tab: "modules", Icon: GraduationCap },
   { label: "Tutorías", tab: "tutorials", Icon: Briefcase },
   { label: "Plan de trabajo", tab: "work-plan", Icon: ClipboardList },
-  { label: "Evaluación", tab: "grades", Icon: ListChecks },
+  { label: "Evaluación", tab: "exams", Icon: ListChecks },
 ];
 
 const ORGANIZARME_ITEMS = [
