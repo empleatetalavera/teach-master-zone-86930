@@ -339,7 +339,10 @@ export function CampusChrome({
 
       {/* LEFT RAIL — Organizarme + Recursos */}
       {!editMode && (
-      <aside className="hidden lg:flex fixed left-1 xl:left-2 top-40 flex-col w-[150px] xl:w-[170px] 2xl:w-[190px] z-20 max-h-[calc(100vh-10rem)] overflow-y-auto">
+      <aside
+        className="hidden lg:flex fixed top-40 flex-col w-[150px] xl:w-[170px] 2xl:w-[190px] z-20 max-h-[calc(100vh-10rem)] overflow-y-auto"
+        style={{ left: "max(0.5rem, calc((100vw - 1800px) / 2 + 0.5rem))" }}
+      >
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Organizarme
         </div>
@@ -401,7 +404,10 @@ export function CampusChrome({
 
       {/* RIGHT RAIL — Comunicarme */}
       {!editMode && (
-      <aside className="hidden lg:flex fixed right-1 xl:right-2 top-40 flex-col w-[150px] xl:w-[170px] 2xl:w-[190px] z-20">
+      <aside
+        className="hidden lg:flex fixed top-40 flex-col w-[150px] xl:w-[170px] 2xl:w-[190px] z-20"
+        style={{ right: "max(0.5rem, calc((100vw - 1800px) / 2 + 0.5rem))" }}
+      >
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Comunicarme
         </div>
