@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AddResourceDialog, ResourceContentType } from "./AddResourceDialog";
-import { PlayCircle, FileText, MessageSquare, FileQuestion, Plus, ExternalLink, Pencil } from "lucide-react";
+import { ResourcePreviewDialog } from "./ResourcePreviewDialog";
+import { PlayCircle, FileText, MessageSquare, FileQuestion, Plus, Eye, Pencil, Network } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
@@ -36,13 +37,14 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
   const navigate = useNavigate();
   const [contents, setContents] = useState<ContentRow[]>([]);
   const [evals, setEvals] = useState<EvalRow[]>([]);
+  const [preview, setPreview] = useState<{ row: ContentRow; kind: "video" | "pdf" } | null>(null);
   const isModuleScope = scope === "module" || !formativeUnitId;
 
   const load = useCallback(async () => {
     let cQuery = (supabase as any)
       .from("module_content")
       .select("id,title,description,file_path,external_url,content_type")
-      .in("content_type", ["intro_video", "objectives_pdf"]);
+      .in("content_type", ["intro_video", "objectives_pdf", "concept_map"]);
     let eQuery = (supabase as any)
       .from("evaluations")
       .select("id,title,evaluation_type")
@@ -67,29 +69,11 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
 
   const introVideo = contents.find(c => c.content_type === "intro_video");
   const objectivesPdf = contents.find(c => c.content_type === "objectives_pdf");
+  const conceptMap = contents.find(c => c.content_type === "concept_map");
   const diagnostic = evals[0];
 
-  const openResource = async (row: ContentRow) => {
-    try {
-      if (row.external_url) {
-        window.open(row.external_url, "_blank", "noopener,noreferrer");
-        return;
-      }
-      if (!row.file_path) {
-        toast({ title: "Sin contenido" });
-        return;
-      }
-      const { data, error } = await supabase.storage.from("module-content").createSignedUrl(row.file_path, 3600);
-      if (error) throw error;
-      const blob = await (await fetch(data.signedUrl)).blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (e: any) {
-      toast({ title: "Error abriendo recurso", description: e?.message, variant: "destructive" });
-    }
+  const previewResource = (row: ContentRow, kind: "video" | "pdf") => {
+    setPreview({ row, kind });
   };
 
   const Item = ({
@@ -137,7 +121,7 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
           title={introVideo?.title || "Vídeo de presentación"}
           subtitle={introVideo ? "Presentación de la UF" : "Pendiente de configurar"}
           action={introVideo ? (
-            <Button variant="default" size="sm" className="h-7 text-xs gap-1" onClick={() => openResource(introVideo)}>
+            <Button variant="default" size="sm" className="h-7 text-xs gap-1" onClick={() => previewResource(introVideo, "video")}>
               <PlayCircle className="h-3 w-3" />Reproducir
             </Button>
           ) : undefined}
@@ -147,14 +131,27 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
         <Item
           icon={<FileText className="h-4 w-4" />}
           iconBg="bg-blue-100 dark:bg-blue-900/30" iconColor="text-blue-600"
-          title={objectivesPdf?.title || "Objetivos y Contenidos (PDF)"}
+          title={objectivesPdf?.title || "Objetivos"}
           subtitle={objectivesPdf ? "Documento descargable" : "Pendiente de configurar"}
           action={objectivesPdf ? (
-            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => openResource(objectivesPdf)}>
-              <ExternalLink className="h-3 w-3" />Abrir
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => previewResource(objectivesPdf, "pdf")}>
+              <Eye className="h-3 w-3" />Ver
             </Button>
           ) : undefined}
           addType="objectives_pdf"
+          accept="application/pdf"
+        />
+        <Item
+          icon={<Network className="h-4 w-4" />}
+          iconBg="bg-emerald-100 dark:bg-emerald-900/30" iconColor="text-emerald-600"
+          title={conceptMap?.title || "Mapa conceptual"}
+          subtitle={conceptMap ? "Documento descargable" : "Pendiente de configurar"}
+          action={conceptMap ? (
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => previewResource(conceptMap, "pdf")}>
+              <Eye className="h-3 w-3" />Ver
+            </Button>
+          ) : undefined}
+          addType="concept_map"
           accept="application/pdf"
         />
         <Item
