@@ -674,12 +674,9 @@ export function SEPEFormacionCampus({
 
                         {/* D) Tutoría virtual */}
                         <ModuleSectionBar title="D) Tutoría Virtual">
-                          <div className="space-y-2">
-                            <p className="text-sm text-muted-foreground">
-                              Foro del módulo, mensajería con el tutor y sesiones online.
-                            </p>
-                            <UFForumsList courseId={courseId} moduleId={module.id} formativeUnitId={null as any} isAdmin={isAdmin} />
-                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Foro del módulo, mensajería con el tutor y consultas online. Accede desde la sección "Tutoría virtual" del curso.
+                          </p>
                         </ModuleSectionBar>
 
                         {/* E) Evaluación del módulo */}
