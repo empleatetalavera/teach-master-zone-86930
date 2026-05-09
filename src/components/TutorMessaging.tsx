@@ -288,6 +288,38 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
               />
             </div>
 
+            <div>
+              <Label htmlFor="attachment" className="flex items-center gap-2">
+                <Paperclip className="h-4 w-4" />
+                Adjuntar archivo (opcional)
+              </Label>
+              <Input
+                id="attachment"
+                type="file"
+                accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+                onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
+                disabled={sending}
+                className="cursor-pointer"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Adjunta evidencias o documentos relacionados con tu consulta. Máx. 25 MB.
+              </p>
+              {attachment && (
+                <div className="mt-2 flex items-center justify-between gap-2 p-2 border rounded-md bg-muted/40">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm truncate">{attachment.name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {(attachment.size / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setAttachment(null)} disabled={sending}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <Button type="submit" disabled={sending} className="w-full">
               {sending ? (
                 <>
@@ -340,6 +372,18 @@ export function TutorMessaging({ courseId, tutorId, supportEmail, supportPhone }
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                       {msg.message}
                     </p>
+                    {msg.metadata?.attachment && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 gap-2"
+                        onClick={() => openAttachment(msg.metadata.attachment.path, msg.metadata.attachment.name)}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        <span className="truncate max-w-[220px]">{msg.metadata.attachment.name}</span>
+                      </Button>
+                    )}
                   </Card>
                 ))}
               </div>
