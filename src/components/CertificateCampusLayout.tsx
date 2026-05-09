@@ -31,6 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { CAUSupportForm } from "@/components/campus/CAUSupportForm";
 
 interface UnitLite {
   id: string;
@@ -109,6 +110,7 @@ export function CampusChrome({
 }: Props) {
   const navigate = useNavigate();
   const [verTodoOpen, setVerTodoOpen] = useState(false);
+  const [cauOpen, setCauOpen] = useState(false);
   const [unitsOpen, setUnitsOpen] = useState(true);
 
   const goToUnit = (moduleId: string, unitId?: string) => {
@@ -158,7 +160,7 @@ export function CampusChrome({
       label: "CAU",
       Icon: HelpCircle,
       highlight: true,
-      action: () => navigate("/campus-guide"),
+      action: () => setCauOpen(true),
     },
   ];
 
@@ -516,6 +518,20 @@ export function CampusChrome({
               })
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={cauOpen} onOpenChange={setCauOpen}>
+        <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Centro de Atención al Usuario</DialogTitle>
+          </DialogHeader>
+          <CAUSupportForm
+            courseId={course.id || ""}
+            courseTitle={course.title}
+            supportEmail={centerContact.email || undefined}
+            supportPhone={centerContact.phone || undefined}
+          />
         </DialogContent>
       </Dialog>
     </>
