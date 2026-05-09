@@ -489,7 +489,9 @@ export default function CourseView() {
           province: centerData?.province || "",
           postal_code: centerData?.postal_code || "",
           cif: centerData?.cif || "",
-          campus_url: (centerData as any)?.campus_url || ""
+          campus_url: (centerData as any)?.campus_url || "",
+          student_guide_pdf_url: (centerData as any)?.student_guide_pdf_url || null,
+          tutor_guide_pdf_url: (centerData as any)?.tutor_guide_pdf_url || null
         });
       }
 
