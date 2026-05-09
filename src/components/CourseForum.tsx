@@ -24,7 +24,8 @@ import {
   PinOff,
   Unlock,
   User,
-  Clock
+  Clock,
+  Search
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -83,6 +84,7 @@ export function CourseForum({ courseId, isAdmin = false, isEditable = false }: C
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [newTopicContent, setNewTopicContent] = useState("");
   const [creating, setCreating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Reply form
   const [newReplyContent, setNewReplyContent] = useState("");
@@ -641,20 +643,38 @@ export function CourseForum({ courseId, isAdmin = false, isEditable = false }: C
           </Dialog>
         </div>
       </CardHeader>
-      <CardContent>
-        {topics.length === 0 ? (
+      <CardContent className="space-y-3">
+        <div className="relative">
+          <Search className="h-4 w-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="pl-8"
+            placeholder="Buscar por tema, palabra clave o autor…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        {(() => {
+          const s = searchQuery.trim().toLowerCase();
+          const visibleTopics = !s ? topics : topics.filter((t: any) =>
+            t.title?.toLowerCase().includes(s) ||
+            t.content?.toLowerCase().includes(s) ||
+            t.author_name?.toLowerCase().includes(s)
+          );
+          return visibleTopics.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="font-medium">No hay temas en el foro</p>
-            <p className="text-sm mt-1">Sé el primero en crear un tema de discusión</p>
-            <Button className="mt-4" onClick={() => setNewTopicOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Crear primer tema
-            </Button>
+            <p className="font-medium">{s ? "Sin resultados" : "No hay temas en el foro"}</p>
+            <p className="text-sm mt-1">{s ? "Prueba con otra palabra clave" : "Sé el primero en crear un tema de discusión"}</p>
+            {!s && (
+              <Button className="mt-4" onClick={() => setNewTopicOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Crear primer tema
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
-            {topics.map((topic) => (
+            {visibleTopics.map((topic) => (
               <div 
                 key={topic.id} 
                 className="p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors group"
@@ -731,7 +751,8 @@ export function CourseForum({ courseId, isAdmin = false, isEditable = false }: C
               </div>
             ))}
           </div>
-        )}
+        );
+        })()}
       </CardContent>
     </Card>
   );

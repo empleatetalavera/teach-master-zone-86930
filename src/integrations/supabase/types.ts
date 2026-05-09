@@ -1699,6 +1699,7 @@ export type Database = {
       }
       module_content: {
         Row: {
+          comment: string | null
           content_type: string
           created_at: string
           description: string | null
@@ -1712,10 +1713,12 @@ export type Database = {
           is_active: boolean | null
           module_id: string
           order_index: number | null
+          study_time_minutes: number | null
           title: string
           updated_at: string
         }
         Insert: {
+          comment?: string | null
           content_type: string
           created_at?: string
           description?: string | null
@@ -1729,10 +1732,12 @@ export type Database = {
           is_active?: boolean | null
           module_id: string
           order_index?: number | null
+          study_time_minutes?: number | null
           title: string
           updated_at?: string
         }
         Update: {
+          comment?: string | null
           content_type?: string
           created_at?: string
           description?: string | null
@@ -1746,6 +1751,7 @@ export type Database = {
           is_active?: boolean | null
           module_id?: string
           order_index?: number | null
+          study_time_minutes?: number | null
           title?: string
           updated_at?: string
         }
