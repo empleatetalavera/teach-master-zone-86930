@@ -210,6 +210,7 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
           ) : undefined}
           addType="intro_video"
           accept="video/*"
+          inputRef={introVideoInputRef}
         />
         <Item
           icon={<FileText className="h-4 w-4" />}
@@ -223,6 +224,7 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
           ) : undefined}
           addType="objectives_pdf"
           accept="application/pdf"
+          inputRef={objectivesInputRef}
         />
         <Item
           icon={<Network className="h-4 w-4" />}
@@ -236,6 +238,7 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
           ) : undefined}
           addType="concept_map"
           accept="application/pdf"
+          inputRef={conceptMapInputRef}
         />
         <Item
           icon={<MessageSquare className="h-4 w-4" />}
