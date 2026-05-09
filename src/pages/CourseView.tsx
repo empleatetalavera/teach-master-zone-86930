@@ -2778,12 +2778,21 @@ export default function CourseView() {
                     Mi Progreso
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-primary">{enrollment?.progress_percentage || 0}%</p>
-                    <p className="text-xs text-muted-foreground">completado</p>
-                  </div>
-                  <Progress value={enrollment?.progress_percentage || 0} className="h-2" />
+                 <CardContent className="space-y-3">
+                   <div className="text-center">
+                     <p className="text-3xl font-bold text-primary">{enrollment?.progress_percentage || 0}%</p>
+                     <p className="text-xs text-muted-foreground">completado</p>
+                   </div>
+                   <Progress value={enrollment?.progress_percentage || 0} className="h-2" />
+                   <div className="rounded-md border bg-muted/30 p-3 text-[11px] leading-relaxed text-muted-foreground space-y-2">
+                     <p className="font-semibold text-foreground text-xs">Mis Progresos</p>
+                     <p>
+                       A lo largo del curso, podrás ir conociendo el resultado de cada una de las actividades y pruebas de evaluación que se vayan planteando. De esta forma conocerás tus progresos en cualquier momento del desarrollo del curso.
+                     </p>
+                     <p>
+                       Puedes consultar por módulo y/o unidad formativa tus principales datos de acceso a los diferentes espacios del Campus, así como tus calificaciones de las actividades que vayas entregando al tutor-formador y otras pruebas de evaluación, y la valoración de tu participación en las herramientas de comunicación (foros, chats, etc.).
+                     </p>
+                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs text-center">
                     <div className="p-2 bg-muted/50 rounded">
                       <p className="font-medium">{modules.length}</p>
