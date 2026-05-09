@@ -28,6 +28,7 @@ import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { SEPEGradesSection } from "@/components/SEPEGradesSection";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { CampusChrome } from "@/components/CertificateCampusLayout";
 
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
