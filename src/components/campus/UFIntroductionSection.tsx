@@ -9,10 +9,11 @@ import { useNavigate } from "react-router-dom";
 
 interface Props {
   moduleId: string;
-  formativeUnitId: string;
-  formativeUnitTitle: string;
+  formativeUnitId?: string | null;
+  formativeUnitTitle?: string;
   courseId: string;
   isAdmin: boolean;
+  scope?: "unit" | "module";
 }
 
 interface ContentRow {
