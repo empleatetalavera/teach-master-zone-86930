@@ -68,6 +68,32 @@ export function useUnitProgress({ enrollmentId, formativeUnitIds }: UseUnitProgr
     loadProgress();
   }, [loadProgress]);
 
+  // Realtime: refresh when unit_progress or scorm_progress changes for this enrollment
+  useEffect(() => {
+    if (!enrollmentId) return;
+    const channel = supabase
+      .channel(`unit-progress-${enrollmentId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'unit_progress', filter: `enrollment_id=eq.${enrollmentId}` },
+        () => loadProgress(),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'scorm_progress', filter: `enrollment_id=eq.${enrollmentId}` },
+        () => loadProgress(),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'activity_submissions', filter: `enrollment_id=eq.${enrollmentId}` },
+        () => loadProgress(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [enrollmentId, loadProgress]);
+
   const updateContentProgress = useCallback(async (formativeUnitId: string, progress: number) => {
     if (!user || !enrollmentId) return;
 
