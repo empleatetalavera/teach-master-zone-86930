@@ -1765,8 +1765,19 @@ export default function CourseView() {
             )}
             {(isCFCCourse || isPropio) && modules.length > 0 ? (
               /* ===== CFC SIMPLIFIED MODULE VIEW ===== */
-              <Accordion type="multiple" className="space-y-3">
-                {modules.map((module, index) => {
+              <>
+                {useCampusLayout && selectedModuleId && (
+                  <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 mb-2">
+                    <span className="text-xs text-muted-foreground">
+                      Mostrando solo el módulo seleccionado en la barra superior
+                    </span>
+                    <Button size="sm" variant="ghost" onClick={() => setSelectedModuleId(null)}>
+                      Ver todos los módulos
+                    </Button>
+                  </div>
+                )}
+              <Accordion type="multiple" defaultValue={useCampusLayout && selectedModuleId ? [selectedModuleId] : []} className="space-y-3">
+                {modules.filter(m => !useCampusLayout || !selectedModuleId || m.id === selectedModuleId).map((module, index) => {
                   const moduleUnits = module.formative_units || [];
                   return (
                     <AccordionItem key={module.id} value={module.id} className="border rounded-lg overflow-hidden">
