@@ -87,6 +87,7 @@ const RECURSOS_TABS = [
 const ORGANIZARME_ITEMS = [
   { id: "student-guide", label: "Cómo hacer mi curso", Icon: BookOpen },
   { id: "calendar", label: "Mi agenda", Icon: CalendarIcon },
+  { id: "schedule", label: "Cronograma", Icon: ClipboardList },
   { id: "forum", label: "Mensajes pendientes", Icon: Inbox },
   { id: "time-tracking", label: "Mis progresos", Icon: BarChart3 },
   { id: "grades", label: "Mis calificaciones", Icon: Award },
@@ -165,6 +166,7 @@ export function CampusChrome({
       },
     },
     { id: "chat", label: "Chat", Icon: MessageSquare, action: () => goToTab("cafeteria") },
+    { id: "chat-tutor", label: "Chat con el tutor", Icon: MessageSquare, action: () => goToTab("forum") },
     {
       id: "phone",
       label: "Contacta en directo",
