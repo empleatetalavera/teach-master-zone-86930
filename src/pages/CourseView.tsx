@@ -468,7 +468,7 @@ export default function CourseView() {
       if (centerIdToUse) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name, email, phone, whatsapp_phone, address, city, province, postal_code, cif, logo_url, campus_url, contact_email, contact_phone")
+          .select("slug, name, email, phone, whatsapp_phone, address, city, province, postal_code, cif, logo_url, campus_url, contact_email, contact_phone, student_guide_pdf_url, tutor_guide_pdf_url")
           .eq("id", centerIdToUse)
           .single();
         
