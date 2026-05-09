@@ -83,6 +83,7 @@ export function CourseForum({ courseId, isAdmin = false, isEditable = false }: C
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [newTopicContent, setNewTopicContent] = useState("");
   const [creating, setCreating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Reply form
   const [newReplyContent, setNewReplyContent] = useState("");
