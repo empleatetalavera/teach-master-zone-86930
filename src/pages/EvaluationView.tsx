@@ -13,6 +13,9 @@ interface Evaluation {
   id: string;
   title: string;
   description: string | null;
+  instructions: string | null;
+  evaluation_criteria: string | null;
+  due_date: string | null;
   passing_score: number;
   max_attempts: number | null;
   time_limit_minutes: number | null;
