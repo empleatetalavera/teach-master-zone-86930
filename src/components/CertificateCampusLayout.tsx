@@ -167,6 +167,7 @@ export function CampusChrome({
     },
     { id: "chat", label: "Chat", Icon: MessageSquare, action: () => goToTab("cafeteria") },
     { id: "chat-tutor", label: "Chat con el tutor", Icon: MessageSquare, action: () => goToTab("forum") },
+    { id: "pending-messages", label: "Mensajes pendientes", Icon: Inbox, action: () => goToTab("forum") },
     {
       id: "phone",
       label: "Contacta en directo",
