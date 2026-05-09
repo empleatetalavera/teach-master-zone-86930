@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -107,6 +108,26 @@ export function CampusChrome({
   onOpenStudentGuide,
 }: Props) {
   const navigate = useNavigate();
+  const [verTodoOpen, setVerTodoOpen] = useState(false);
+
+  const goToUnit = (moduleId: string, unitId?: string) => {
+    onSelectModule(moduleId);
+    setActiveTab("modules");
+    setVerTodoOpen(false);
+    if (unitId) {
+      // Best-effort scroll to the unit element if it's already rendered
+      setTimeout(() => {
+        const el =
+          document.querySelector(`[data-unit-id="${unitId}"]`) ||
+          document.getElementById(`unit-${unitId}`);
+        if (el) {
+          (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "start" });
+          (el as HTMLElement).classList.add("ring-2", "ring-amber-400");
+          setTimeout(() => (el as HTMLElement).classList.remove("ring-2", "ring-amber-400"), 2200);
+        }
+      }, 250);
+    }
+  };
 
   const isAdmin =
     userRole === "admin" || userRole === "teacher" || userRole === "super_admin";
@@ -291,10 +312,7 @@ export function CampusChrome({
                 );
               })}
               <button
-                onClick={() => {
-                  onSelectModule("");
-                  setActiveTab("modules");
-                }}
+                onClick={() => setVerTodoOpen(true)}
                 className="px-3 py-2 rounded text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 whitespace-nowrap"
               >
                 Ver Todo
@@ -391,6 +409,94 @@ export function CampusChrome({
         </div>
       </aside>
       )}
+
+      {/* "Ver Todo" — modal with all modules and their formative units */}
+      <Dialog open={verTodoOpen} onOpenChange={setVerTodoOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-6 pt-5 pb-3 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <ListChecks className="h-5 w-5 text-primary" />
+              Itinerario completo del certificado
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Selecciona cualquier unidad formativa para ir directamente a ella.
+            </p>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            {modules.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Este curso aún no tiene módulos configurados.
+              </p>
+            ) : (
+              modules.map((m, idx) => {
+                const status = moduleStatus(m);
+                const code = m.course_code || `MF${idx + 1}`;
+                const units = m.formative_units || [];
+                const StatusIcon =
+                  status === "done" ? CheckCircle2 : status === "current" ? PlayCircle : Lock;
+                return (
+                  <div
+                    key={m.id}
+                    className="border rounded-lg overflow-hidden"
+                  >
+                    <button
+                      onClick={() => goToUnit(m.id)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
+                        status === "done" && "bg-emerald-50 hover:bg-emerald-100",
+                        status === "current" && "bg-amber-50 hover:bg-amber-100",
+                        status === "todo" && "bg-slate-50 hover:bg-slate-100"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "px-2 py-1 rounded text-xs font-mono font-bold flex items-center gap-1.5 shrink-0",
+                          status === "done" && "bg-emerald-200 text-emerald-900",
+                          status === "current" && "bg-amber-400 text-white",
+                          status === "todo" && "bg-slate-200 text-slate-700"
+                        )}
+                      >
+                        <StatusIcon className="h-3.5 w-3.5" />
+                        {code}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">{m.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {units.length} {units.length === 1 ? "unidad formativa" : "unidades formativas"}
+                          {typeof m.progress === "number" && ` • ${m.progress}% completado`}
+                        </p>
+                      </div>
+                    </button>
+                    {units.length > 0 && (
+                      <ul className="bg-white divide-y">
+                        {units.map((u, uIdx) => (
+                          <li key={u.id}>
+                            <button
+                              onClick={() => goToUnit(m.id, u.id)}
+                              className="w-full flex items-start gap-3 px-5 py-2.5 text-left text-sm hover:bg-primary/5 transition-colors group"
+                            >
+                              <span className="text-xs font-mono text-muted-foreground mt-0.5 w-6 shrink-0 text-right">
+                                {uIdx + 1}.
+                              </span>
+                              <BookOpen className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                              <span className="flex-1">
+                                {u.unit_code && (
+                                  <span className="font-bold mr-1.5">{u.unit_code}</span>
+                                )}
+                                <span className="group-hover:text-primary">{u.title}</span>
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
