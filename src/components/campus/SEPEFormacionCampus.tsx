@@ -15,6 +15,7 @@ import { SupplementaryMaterialList } from "./SupplementaryMaterialList";
 import { UFActivitiesList } from "./UFActivitiesList";
 import { UFForumsList } from "./UFForumsList";
 import { ModuleLibrary } from "./ModuleLibrary";
+import { EvidenceManager } from "./EvidenceManager";
 import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import {
   BookOpen, Clock, FileText, CheckCircle2, ChevronDown, PlayCircle,
