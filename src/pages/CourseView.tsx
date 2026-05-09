@@ -970,7 +970,7 @@ export default function CourseView() {
               <Button
                 size="sm"
                 onClick={() => setActiveTab('student-guide')}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold shadow-lg ring-2 ring-amber-300 animate-pulse hover:animate-none"
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold shadow-lg ring-2 ring-amber-300"
               >
                 <Download className="h-4 w-4 mr-2" />
                 Guía del Alumno
@@ -1003,41 +1003,15 @@ export default function CourseView() {
                   >
                     Inicio
                   </button>
-                  {showSEPEFeatures && (
-                    (userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') ? (
-                      <>
-                        <button
-                          onClick={() => setActiveTab("tutor-guide")}
-                          className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutor-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                        >
-                          <BookMarked className="h-4 w-4" />
-                          Guía del Tutor
-                        </button>
-                        <button
-                          onClick={() => setActiveTab("student-guide")}
-                          className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "student-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                        >
-                          <BookMarked className="h-4 w-4" />
-                          Guía del Alumno
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => setActiveTab("student-guide")}
-                        className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "student-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                      >
-                        <BookMarked className="h-4 w-4" />
-                        Guía del Alumno
-                      </button>
-                    )
+                  {showSEPEFeatures && (userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') && (
+                    <button
+                      onClick={() => setActiveTab("tutor-guide")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutor-guide" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                    >
+                      <BookMarked className="h-4 w-4" />
+                      Guía del Tutor
+                    </button>
                   )}
-                  <button
-                    onClick={() => setActiveTab("course-program")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "course-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                  >
-                    <ClipboardList className="h-4 w-4" />
-                    Programa del Curso
-                  </button>
                   {showSEPEFeatures && (
                     <button
                       onClick={() => setActiveTab("work-plan")}
@@ -1159,17 +1133,9 @@ export default function CourseView() {
               <div className="lg:hidden overflow-x-auto pb-2">
                 <TabsList className="w-max min-w-full flex h-auto p-1 gap-1">
                   <TabsTrigger value="intro" className="text-xs px-2 py-1.5">Inicio</TabsTrigger>
-                  {showSEPEFeatures && (
-                    (userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') ? (
-                      <>
-                        <TabsTrigger value="tutor-guide" className="text-xs px-2 py-1.5">Guía Tutor</TabsTrigger>
-                        <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
-                      </>
-                    ) : (
-                      <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
-                    )
+                  {showSEPEFeatures && (userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') && (
+                    <TabsTrigger value="tutor-guide" className="text-xs px-2 py-1.5">Guía Tutor</TabsTrigger>
                   )}
-                  <TabsTrigger value="course-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>
                   {showSEPEFeatures && <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>}
                   {showSEPEFeatures && <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>}
                   <TabsTrigger value="modules" className="text-xs px-2 py-1.5">{isCFCCourse ? 'Contenido' : isPropio ? 'Temario' : 'Formación'}</TabsTrigger>
