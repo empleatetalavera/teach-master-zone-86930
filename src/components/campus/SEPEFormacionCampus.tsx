@@ -522,7 +522,7 @@ export function SEPEFormacionCampus({
             const totalActivities = (module.activities?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.activities?.length || 0), 0);
 
             return (
-              <Collapsible key={module.id}>
+              <Collapsible key={module.id} defaultOpen={modules.length === 1}>
                 <div className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                   <CollapsibleTrigger className="w-full text-left">
                     <div className="p-4 bg-gradient-to-r from-muted/40 to-muted/20">
