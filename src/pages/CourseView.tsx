@@ -794,6 +794,7 @@ export default function CourseView() {
         )}
 
         {/* Course Header */}
+        {!useCampusLayout && (
         <Card className="mb-6">
           <CardHeader>
             <div className="flex items-start justify-between">
