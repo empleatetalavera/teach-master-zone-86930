@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -22,24 +21,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export type CampusSection =
-  | "intro"
-  | "modules"
-  | "tutorials"
-  | "work-plan"
-  | "grades";
-
 interface ModuleLite {
   id: string;
   title: string;
   course_code?: string | null;
   order_index?: number;
+  progress?: number;
 }
 
 interface CenterContact {
   email?: string | null;
   phone?: string | null;
-  campus_url?: string | null;
 }
 
 interface Props {
@@ -51,24 +43,22 @@ interface Props {
   };
   modules: ModuleLite[];
   selectedModuleId: string | null;
-  onSelectModule: (id: string | null) => void;
-  moduleProgress?: Record<string, number>; // 0..100
+  onSelectModule: (id: string) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   userRole: string | null;
   centerContact: CenterContact;
-  centerName?: string;
   progressPercent?: number;
   onEditMode?: () => void;
-  children: ReactNode;
+  onBack?: () => void;
 }
 
-const RECURSOS_TABS: { id: CampusSection; label: string; tab: string }[] = [
-  { id: "intro", label: "Introducción", tab: "intro" },
-  { id: "modules", label: "Formación en campus", tab: "modules" },
-  { id: "tutorials", label: "Tutorías", tab: "tutorials" },
-  { id: "work-plan", label: "Plan de trabajo", tab: "work-plan" },
-  { id: "grades", label: "Evaluación", tab: "grades" },
+const RECURSOS_TABS = [
+  { label: "Introducción", tab: "intro" },
+  { label: "Formación en campus", tab: "modules" },
+  { label: "Tutorías", tab: "tutorials" },
+  { label: "Plan de trabajo", tab: "work-plan" },
+  { label: "Evaluación", tab: "grades" },
 ];
 
 const ORGANIZARME_ITEMS = [
@@ -79,30 +69,28 @@ const ORGANIZARME_ITEMS = [
   { id: "grades", label: "Mis calificaciones", Icon: Award },
 ];
 
-export function CertificateCampusLayout({
+export function CampusChrome({
   course,
   modules,
   selectedModuleId,
   onSelectModule,
-  moduleProgress = {},
   activeTab,
   setActiveTab,
   userRole,
   centerContact,
-  centerName,
   progressPercent = 0,
   onEditMode,
-  children,
+  onBack,
 }: Props) {
   const navigate = useNavigate();
 
   const isAdmin =
     userRole === "admin" || userRole === "teacher" || userRole === "super_admin";
 
-  const moduleStatus = (mId: string) => {
-    const p = moduleProgress[mId] ?? 0;
+  const moduleStatus = (m: ModuleLite) => {
+    const p = m.progress ?? 0;
     if (p >= 100) return "done";
-    if (mId === selectedModuleId) return "current";
+    if (m.id === selectedModuleId) return "current";
     return "todo";
   };
 
@@ -129,13 +117,13 @@ export function CertificateCampusLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Top header band */}
-      <div className="bg-white border-b">
-        <div className="max-w-[1600px] mx-auto px-4 py-2 flex items-center justify-between gap-4">
+    <>
+      {/* TOP BANDS — Sticky */}
+      <div className="sticky top-0 z-30 bg-white border-b shadow-sm -mx-3 sm:-mx-4 lg:-mx-6 2xl:-mx-10 mb-3">
+        <div className="px-4 py-2 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
-              onClick={() => navigate(-1)}
+              onClick={onBack ?? (() => navigate(-1))}
               className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -163,14 +151,12 @@ export function CertificateCampusLayout({
           </div>
         </div>
 
-        {/* Module pills */}
         {modules.length > 0 && (
-          <div className="max-w-[1600px] mx-auto px-4 pb-3">
+          <div className="px-4 pb-2">
             <div className="flex items-center gap-2 overflow-x-auto">
               {modules.map((m, idx) => {
-                const status = moduleStatus(m.id);
+                const status = moduleStatus(m);
                 const code = m.course_code || `MF${idx + 1}`;
-                const isSelected = m.id === selectedModuleId;
                 return (
                   <button
                     key={m.id}
@@ -186,8 +172,7 @@ export function CertificateCampusLayout({
                       status === "current" &&
                         "bg-amber-400 text-white border-amber-500 shadow",
                       status === "todo" &&
-                        "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200",
-                      isSelected && "ring-2 ring-primary"
+                        "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
                     )}
                   >
                     {status === "done" && <CheckCircle2 className="h-3.5 w-3.5" />}
@@ -200,104 +185,98 @@ export function CertificateCampusLayout({
             </div>
           </div>
         )}
+
+        {/* Recursos sub-tabs */}
+        <div className="bg-primary text-primary-foreground px-4 py-1.5 text-xs font-bold flex items-center gap-2">
+          <span>Recursos</span>
+          {selectedModuleId && (
+            <span className="opacity-90 font-mono ml-auto">
+              {modules.find((m) => m.id === selectedModuleId)?.course_code || ""}
+            </span>
+          )}
+        </div>
+        <div className="bg-white px-2 flex items-center gap-1 overflow-x-auto">
+          {RECURSOS_TABS.map((t) => {
+            const isActive = activeTab === t.tab;
+            return (
+              <button
+                key={t.tab}
+                onClick={() => setActiveTab(t.tab)}
+                className={cn(
+                  "px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                  isActive
+                    ? "border-primary text-primary"
+                    : "border-transparent text-slate-600 hover:text-slate-900"
+                )}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* 3-column body */}
-      <div className="max-w-[1600px] mx-auto flex gap-3 p-3">
-        {/* LEFT — Organizarme */}
-        <aside className="hidden lg:flex flex-col w-[120px] shrink-0">
-          <div className="bg-primary text-primary-foreground text-center text-sm font-bold py-2 rounded-t">
-            Organizarme
-          </div>
-          <div className="bg-white border border-t-0 rounded-b flex-1 p-2 flex flex-col gap-1">
-            {ORGANIZARME_ITEMS.map(({ id, label, Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={cn(
-                  "flex flex-col items-center gap-1 p-2 rounded text-[11px] text-center leading-tight transition-colors",
-                  activeTab === id
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-slate-700 hover:bg-slate-100"
-                )}
-              >
-                <Icon className="h-5 w-5" />
-                <span>{label}</span>
-              </button>
-            ))}
-            {(userRole === "auditor" || userRole === "admin" || userRole === "super_admin") && (
-              <button
-                onClick={() => setActiveTab("audit")}
-                className={cn(
-                  "flex flex-col items-center gap-1 p-2 rounded text-[11px] text-center leading-tight transition-colors",
-                  activeTab === "audit"
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-slate-700 hover:bg-slate-100"
-                )}
-              >
-                <ShieldCheck className="h-5 w-5" />
-                <span>Auditoría</span>
-              </button>
-            )}
-          </div>
-        </aside>
+      {/* LEFT RAIL — Fixed */}
+      <aside className="hidden xl:flex fixed left-2 top-44 flex-col w-[110px] z-20">
+        <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
+          Organizarme
+        </div>
+        <div className="bg-white border border-t-0 rounded-b p-1.5 flex flex-col gap-0.5 shadow-sm">
+          {ORGANIZARME_ITEMS.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className={cn(
+                "flex flex-col items-center gap-1 p-2 rounded text-[10px] text-center leading-tight transition-colors",
+                activeTab === id
+                  ? "bg-primary/10 text-primary font-semibold"
+                  : "text-slate-700 hover:bg-slate-100"
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{label}</span>
+            </button>
+          ))}
+          {(userRole === "auditor" || userRole === "admin" || userRole === "super_admin") && (
+            <button
+              onClick={() => setActiveTab("audit")}
+              className={cn(
+                "flex flex-col items-center gap-1 p-2 rounded text-[10px] text-center leading-tight transition-colors",
+                activeTab === "audit"
+                  ? "bg-primary/10 text-primary font-semibold"
+                  : "text-slate-700 hover:bg-slate-100"
+              )}
+            >
+              <ShieldCheck className="h-5 w-5" />
+              <span>Auditoría</span>
+            </button>
+          )}
+        </div>
+      </aside>
 
-        {/* CENTER — Recursos */}
-        <main className="flex-1 min-w-0 bg-white border rounded">
-          <div className="bg-primary text-primary-foreground px-4 py-2 rounded-t flex items-center justify-between">
-            <span className="text-sm font-bold">Recursos</span>
-            {selectedModuleId && (
-              <span className="text-xs opacity-90 font-mono">
-                {modules.find((m) => m.id === selectedModuleId)?.course_code || ""}
-              </span>
-            )}
-          </div>
-          <div className="border-b px-2 flex items-center gap-1 overflow-x-auto">
-            {RECURSOS_TABS.map((t) => {
-              const isActive = activeTab === t.tab;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.tab)}
-                  className={cn(
-                    "px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
-                    isActive
-                      ? "border-primary text-primary"
-                      : "border-transparent text-slate-600 hover:text-slate-900"
-                  )}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="p-3 md:p-4">{children}</div>
-        </main>
-
-        {/* RIGHT — Comunicarme */}
-        <aside className="hidden lg:flex flex-col w-[120px] shrink-0">
-          <div className="bg-primary text-primary-foreground text-center text-sm font-bold py-2 rounded-t">
-            Comunicarme
-          </div>
-          <div className="bg-white border border-t-0 rounded-b flex-1 p-2 flex flex-col gap-1">
-            {COMUNICARME_ITEMS.map(({ id, label, Icon, action, highlight }) => (
-              <button
-                key={id}
-                onClick={action}
-                className={cn(
-                  "flex flex-col items-center gap-1 p-2 rounded text-[11px] text-center leading-tight transition-colors",
-                  highlight
-                    ? "text-red-600 hover:bg-red-50 font-semibold"
-                    : "text-slate-700 hover:bg-slate-100"
-                )}
-              >
-                <Icon className="h-5 w-5" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
-      </div>
-    </div>
+      {/* RIGHT RAIL — Fixed */}
+      <aside className="hidden xl:flex fixed right-2 top-44 flex-col w-[110px] z-20">
+        <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
+          Comunicarme
+        </div>
+        <div className="bg-white border border-t-0 rounded-b p-1.5 flex flex-col gap-0.5 shadow-sm">
+          {COMUNICARME_ITEMS.map(({ id, label, Icon, action, highlight }) => (
+            <button
+              key={id}
+              onClick={action}
+              className={cn(
+                "flex flex-col items-center gap-1 p-2 rounded text-[10px] text-center leading-tight transition-colors",
+                highlight
+                  ? "text-red-600 hover:bg-red-50 font-semibold"
+                  : "text-slate-700 hover:bg-slate-100"
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </aside>
+    </>
   );
 }
