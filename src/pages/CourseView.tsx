@@ -28,6 +28,7 @@ import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { SEPEGradesSection } from "@/components/SEPEGradesSection";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { CampusChrome } from "@/components/CertificateCampusLayout";
 
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
@@ -323,6 +324,9 @@ export default function CourseView() {
   const isCFCCourse = course?.course_type === 'cfc';
   const isPropio = course?.course_type === 'propio';
   const showSEPEFeatures = !isCFCCourse && !isPropio; // Show SEPE features for certificate/SEPE courses only
+  // New 3-column "Empléate Talavera" style chrome for certificate courses (CFC + SEPE)
+  const useCampusLayout = !isPropio && !!course;
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   
   const openActivitySubmission = (activityId: string) => {
     setSelectedActivityId(activityId);
@@ -737,27 +741,60 @@ export default function CourseView() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className="w-full mx-auto py-6 px-3 sm:px-4 lg:px-6 2xl:px-10">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            const dashboardRoutes: Record<string, string> = {
-              'student': '/dashboard/student/courses',
-              'teacher': '/dashboard/teacher/courses',
-              'admin': '/dashboard/admin/courses',
-              'super_admin': '/dashboard/admin/courses',
-              'auditor': '/dashboard/auditor/courses',
-              'inspector': '/dashboard/auditor/courses'
-            };
-            navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
-          }}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
-        </Button>
+      <div className={`w-full mx-auto py-6 px-3 sm:px-4 lg:px-6 2xl:px-10 ${useCampusLayout ? 'xl:pl-[140px] xl:pr-[140px]' : ''}`}>
+        {!useCampusLayout && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              const dashboardRoutes: Record<string, string> = {
+                'student': '/dashboard/student/courses',
+                'teacher': '/dashboard/teacher/courses',
+                'admin': '/dashboard/admin/courses',
+                'super_admin': '/dashboard/admin/courses',
+                'auditor': '/dashboard/auditor/courses',
+                'inspector': '/dashboard/auditor/courses'
+              };
+              navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
+            }}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+        )}
+
+        {useCampusLayout && (
+          <CampusChrome
+            course={course}
+            modules={modules as any}
+            selectedModuleId={selectedModuleId}
+            onSelectModule={setSelectedModuleId}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            userRole={userRole}
+            centerContact={centerContact}
+            progressPercent={enrollment?.progress_percentage || 0}
+            onEditMode={
+              (userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin')
+                ? () => navigate(`/dashboard/admin/courses/${courseId}/content`)
+                : undefined
+            }
+            onBack={() => {
+              const dashboardRoutes: Record<string, string> = {
+                'student': '/dashboard/student/courses',
+                'teacher': '/dashboard/teacher/courses',
+                'admin': '/dashboard/admin/courses',
+                'super_admin': '/dashboard/admin/courses',
+                'auditor': '/dashboard/auditor/courses',
+                'inspector': '/dashboard/auditor/courses'
+              };
+              navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
+            }}
+          />
+        )}
 
         {/* Course Header */}
+        {!useCampusLayout && (
         <Card className="mb-6">
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -828,8 +865,10 @@ export default function CourseView() {
             )}
           </CardHeader>
         </Card>
+        )}
 
         {/* Toolbar - Always visible */}
+        {!useCampusLayout && (
         <Card className="mb-6 overflow-x-auto">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 flex-nowrap min-w-max">
@@ -989,10 +1028,12 @@ export default function CourseView() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Course Content Tabs */}
-        <div className="grid lg:grid-cols-[200px_1fr_280px] gap-6">
+        <div className={useCampusLayout ? '' : 'grid lg:grid-cols-[200px_1fr_280px] gap-6'}>
           {/* Left Sidebar - Navigation */}
+          {!useCampusLayout && (
           <div className="hidden lg:block">
             <Card className="sticky top-4">
               <CardContent className="p-2">
@@ -1125,9 +1166,10 @@ export default function CourseView() {
               </CardContent>
             </Card>
           </div>
+          )}
           
           {/* Main Content */}
-          <div className="min-w-0">
+          <div className={useCampusLayout ? '' : 'min-w-0'}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               {/* Mobile Tab Navigation */}
               <div className="lg:hidden overflow-x-auto pb-2">
@@ -2337,6 +2379,7 @@ export default function CourseView() {
           </div>
           
           {/* Right Sidebar - Tutor and Evaluations */}
+          {!useCampusLayout && (
           <div className="hidden lg:block space-y-4 sticky top-4 h-fit">
             {/* Tu Tutor */}
             <Card>
@@ -2671,6 +2714,7 @@ export default function CourseView() {
               </Card>
             )}
           </div>
+          )}
         </div>
       </div>
 
