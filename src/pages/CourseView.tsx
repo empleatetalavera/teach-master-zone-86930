@@ -2714,6 +2714,7 @@ export default function CourseView() {
               </Card>
             )}
           </div>
+          )}
         </div>
       </div>
 
