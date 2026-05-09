@@ -231,6 +231,7 @@ export function CampusChrome({
       </div>
 
       {/* LEFT RAIL — Fixed */}
+      {!editMode && (
       <aside className="hidden xl:flex fixed left-2 top-44 flex-col w-[110px] z-20">
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Organizarme
