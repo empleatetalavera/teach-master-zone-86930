@@ -1,101 +1,38 @@
-## Objetivo
-Replicar en Formación en Campus la estructura oficial de la guía homologada: **A) Introducción al MF/UF** + **B) Desarrollo (CIM + Material complementario + Actividades evaluables + Foros)** + **Biblioteca** del módulo. Estructura siempre visible; los items vacíos muestran "Pendiente de configurar" y, para admin/tutor, botón Añadir/Subir.
+## Cambios a aplicar
 
-## 1. Migración de base de datos
+### 1) CAU – arreglar comportamiento y añadir envío real de correo
+**Problema actual:** el botón CAU abre un popover, pero dentro del popover hay un botón "Visita Virtual" que navega a `/campus-guide`. Es probable que estés pulsando ese y por eso "te lleva a la guía". Además, hoy solo guarda en la tabla `communications`, no manda email real.
 
-### a) Extender `module_content` (sin cambios de esquema, solo nuevos `content_type`)
-Reutilizo la tabla existente. Nuevos valores permitidos en la columna `content_type` (texto libre, ya usable):
-- `intro_video` — vídeo de presentación de la UF/MF
-- `objectives_pdf` — PDF "Objetivos y contenidos"
-- `support_doc` — documento de apoyo (Material complementario)
-- `support_video` — vídeo de apoyo
-- `support_audio` — audio de apoyo
-- `biblioteca` — entrada de biblioteca (a nivel módulo, `formative_unit_id IS NULL`)
-- `manual_pdf` — ya existente, sin cambios
+**Cambios:**
+- Convertir el CAU en un **Dialog modal grande** (no popover): título "Centro de Atención al Usuario", el formulario ocupa el centro, sin botón "Visita Virtual" dentro (esos enlaces siguen disponibles en otras pestañas como ya están).
+- El botón Enviar:
+  1. Inserta el mensaje en `communications` (ya hace esto → queda registrado).
+  2. **Manda email real** al `support_email` del centro vía la infraestructura de emails app de Lovable Cloud (sin Resend).
+- Si el centro no tiene email configurado, mostrar aviso ("contacta por teléfono") y deshabilitar Enviar.
 
-No requiere ALTER, pero añado un `CHECK` opcional documental.
+**Infraestructura email (necesita configuración del usuario una vez):**
+- Configurar dominio de envío en Lovable Cloud → diálogo "Set up email domain" (paso único, requiere DNS).
+- Crear plantilla `cau-support-message` (subject "Nueva consulta CAU – {courseTitle}", body con asunto, mensaje, datos del alumno, link al adjunto si lo hay).
+- Edge Function `send-transactional-email` (la incluye Lovable) hará el envío.
 
-### b) `forum_topics` — soporte por UF y categoría
-```sql
-ALTER TABLE forum_topics
-  ADD COLUMN formative_unit_id uuid REFERENCES formative_units(id) ON DELETE CASCADE,
-  ADD COLUMN category text NOT NULL DEFAULT 'general';
-CREATE INDEX idx_forum_topics_uf ON forum_topics(formative_unit_id);
-```
-Categorías reconocidas en UI: `sesion_inicial`, `debate`, `dudas_contenido`, `dudas_actividades`, `dudas_tecnicas`, `general`.
+### 2) Foro general del curso
+Añadir una nueva **pestaña "Foro"** en `CourseView.tsx` (entre Mensajes/Soporte y Evaluaciones) que renderice `CourseForum` a nivel curso (sin `unitId`). Ya existe el componente con buscador transversal; solo falta exponerlo.
 
-### c) `evaluations` — distinguir tipo
-```sql
-ALTER TABLE evaluations
-  ADD COLUMN evaluation_type text NOT NULL DEFAULT 'unit';
--- valores: 'diagnostic' (cuestionario previo), 'unit', 'module', 'final', 'quality_survey', 'tutor_survey'
-```
+### 3) Subida de evidencias dentro de "Recursos Evaluación"
+Mover `EvidenceManager` desde su pestaña "Evidencias" independiente a un bloque destacado dentro del acordeón "Recursos Evaluación" en `SEPEFormacionCampus.tsx`, justo debajo del resumen "para superar el curso deberás:". Eliminar la pestaña suelta "Evidencias".
 
-## 2. Estructura visual por UF (acordeón "Unidad Didáctica N")
+## Detalles técnicos
 
-```text
-┌─ INTRODUCCIÓN ────────────────────────────────────────┐
-│ 🎬 Vídeo de presentación        [Reproducir] [Subir*]│
-│ 📑 Objetivos y Contenidos (PDF) [Abrir]    [Subir*] │
-│ 💬 Sesión Inicial (chat)        [Entrar]   [Crear*] │
-│ ❓ Cuestionario conocimientos    [Realizar] [Crear*] │
-└───────────────────────────────────────────────────────┘
-┌─ FORMACIÓN EN CAMPUS ─────────────────────────────────┐
-│ 🟪 Contenido Interactivo Multimedia    [Abrir CIM]   │
-│ 📘 Manual PDF                          [Abrir/Subir] │
-│                                                       │
-│ MATERIAL COMPLEMENTARIO                              │
-│  📄 Documento de apoyo 1 …                           │
-│  🎬 Vídeo de apoyo 1 …                               │
-│  🔊 Audio de apoyo 1 …                               │
-│  [+ Añadir recurso*]                                  │
-│                                                       │
-│ ACTIVIDADES DE APRENDIZAJE EVALUABLES                │
-│  ✏️ Actividad 1 — …                  [Entregar]     │
-│  ✏️ Actividad 2 — …                  [Entregar]     │
-│  [+ Nueva actividad*]                                 │
-│                                                       │
-│ FOROS                                                │
-│  💬 Foro de debate (UF)                              │
-│  ❓ Foro de dudas/consultas                          │
-│                                                       │
-│ TEST FINAL DE LA UF                  [Realizar]      │
-└───────────────────────────────────────────────────────┘
-```
-(*) sólo visible para admin/teacher.
+- **Dialog CAU:** `Dialog` + `DialogContent className="max-w-2xl"` reemplazando el `Popover`. Eliminar de `CAUSupportForm` los botones "Visita Virtual" y "FAQ".
+- **Email:** invocar `supabase.functions.invoke('send-transactional-email', { body: { templateName: 'cau-support-message', recipientEmail: supportEmail, idempotencyKey: \`cau-${commId}\`, templateData: { studentName, courseTitle, subject, message, attachmentUrl } } })`. La plantilla TSX vive en `supabase/functions/_shared/transactional-email-templates/cau-support-message.tsx` y se registra en `registry.ts`.
+- **Foro:** nuevo `<TabsTrigger value="forum">Foro</TabsTrigger>` + `<TabsContent value="forum"><CourseForum courseId={courseId!} /></TabsContent>`.
+- **Evidencias:** insertar `<EvidenceManager courseId={courseId!} userRole={userRole} />` al final del bloque `Recursos de Evaluación` en `SEPEFormacionCampus.tsx`. Quitar `TabsTrigger` y `TabsContent` `value="evidences"` de `CourseView.tsx`.
 
-Al final del módulo, un bloque **BIBLIOTECA** (recursos `biblioteca` del módulo) con búsqueda por palabra clave.
+## Orden de ejecución
+1. Configurar dominio de email (necesita tu acción en el diálogo).
+2. Scaffolding email + plantilla CAU + deploy.
+3. Refactor del CAU a Dialog + invocación del email.
+4. Añadir pestaña Foro.
+5. Mover EvidenceManager a Recursos Evaluación y quitar la pestaña suelta.
 
-## 3. Cambios de código
-
-### Componentes nuevos
-- `src/components/campus/UFIntroductionSection.tsx` — los 4 items de introducción.
-- `src/components/campus/SupplementaryMaterialList.tsx` — lista tipada (doc/vídeo/audio) con iconos diferenciados (azul/rojo/verde como guía).
-- `src/components/campus/UFActivitiesList.tsx` — lista todas las actividades de la UF (no sólo una).
-- `src/components/campus/UFForumsList.tsx` — debate + dudas con badges por categoría.
-- `src/components/campus/ModuleLibrary.tsx` — biblioteca al final del módulo.
-- `src/components/campus/AddResourceDialog.tsx` — diálogo único para subir/asociar cualquier `content_type` (intro_video, objectives_pdf, support_*, biblioteca).
-
-### Refactor
-- `src/components/campus/SEPEFormacionCampus.tsx` — sustituye los 4 `UnitResourceItem` actuales por las nuevas secciones (Introducción, CIM+Manual, Material complementario, Actividades, Foros, Test). Añade `<ModuleLibrary>` después de las UFs.
-
-### Hooks/datos
-- Cargar en CourseView (o hook `useCourseData`) los nuevos arrays:
-  - `module_content` filtrado por nuevos `content_type` (lo trae todo y se agrupa en cliente).
-  - `forum_topics` por `formative_unit_id` y `category`.
-  - `evaluations.evaluation_type` para distinguir diagnostic vs unit vs final.
-
-## 4. Permisos y RLS
-- `module_content` ya tiene RLS por curso/centro — sin cambios.
-- `forum_topics`: la nueva columna no rompe policies existentes; verifico que insert/select sigan funcionando.
-- `evaluations`: idem.
-
-## 5. Fuera de alcance
-- No se cambia el SCORM viewer ni el flujo de calificaciones.
-- No se cambia la pestaña "Plan de Trabajo / Cronograma".
-- No se cambia el componente CertificateCampusLayout (sólo se siguen usando sus pestañas).
-
-## 6. Validación
-- Como admin: subir vídeo intro, PDF objetivos, doc apoyo, audio, foro debate; comprobar que el alumno los ve.
-- Como alumno: ver "Pendiente de configurar" cuando no hay datos; los items configurados aparecen con el flujo correcto.
-- Verificar tipos en `src/integrations/supabase/types.ts` se regeneran tras la migración.
+¿Confirmas que quieres que arranquemos por el **paso 1 (configurar dominio de email)**? Sin eso, los pasos 2 y la parte de email del CAU no pueden completarse, pero sí puedo hacer en paralelo los puntos 3-5 (Dialog, Foro, Evidencias) mientras decides.
