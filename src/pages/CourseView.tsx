@@ -2937,6 +2937,25 @@ export default function CourseView() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Diagnóstico inicial del módulo */}
+      <Dialog open={!!diagnosticModule} onOpenChange={(o) => !o && setDiagnosticModule(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Diagnóstico inicial · {diagnosticModule?.title}</DialogTitle>
+          </DialogHeader>
+          {diagnosticModule && (
+            <PreAssessmentTest
+              moduleId={diagnosticModule.id}
+              moduleTitle={diagnosticModule.title}
+              onComplete={(res) => {
+                try { localStorage.setItem(diagnosticDoneKey(diagnosticModule.id), JSON.stringify({ at: res.completedAt })); } catch {}
+                toast({ title: "Diagnóstico guardado", description: "Tu diagnóstico se ha registrado correctamente." });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
