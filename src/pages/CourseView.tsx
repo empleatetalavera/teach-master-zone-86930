@@ -324,6 +324,9 @@ export default function CourseView() {
   const isCFCCourse = course?.course_type === 'cfc';
   const isPropio = course?.course_type === 'propio';
   const showSEPEFeatures = !isCFCCourse && !isPropio; // Show SEPE features for certificate/SEPE courses only
+  // New 3-column "Empléate Talavera" style chrome for certificate courses (CFC + SEPE)
+  const useCampusLayout = !isPropio && !!course;
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   
   const openActivitySubmission = (activityId: string) => {
     setSelectedActivityId(activityId);
