@@ -27,7 +27,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+
+interface UnitLite {
+  id: string;
+  title: string;
+  unit_code?: string | null;
+}
 
 interface ModuleLite {
   id: string;
@@ -35,6 +43,7 @@ interface ModuleLite {
   course_code?: string | null;
   order_index?: number;
   progress?: number;
+  formative_units?: UnitLite[];
 }
 
 interface CenterContact {
