@@ -50,6 +50,8 @@ interface Props {
   centerContact: CenterContact;
   progressPercent?: number;
   onEditMode?: () => void;
+  editMode?: boolean;
+  onOpenAdvancedEditor?: () => void;
   onBack?: () => void;
 }
 
