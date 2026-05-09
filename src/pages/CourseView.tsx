@@ -265,6 +265,8 @@ export default function CourseView() {
     postal_code?: string;
     cif?: string;
     campus_url?: string;
+    student_guide_pdf_url?: string | null;
+    tutor_guide_pdf_url?: string | null;
   }>({
     name: "",
     email: "", 
