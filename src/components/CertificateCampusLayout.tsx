@@ -146,10 +146,20 @@ export function CampusChrome({
               <BarChart3 className="h-3.5 w-3.5" />
               <span>{progressPercent}% completado</span>
             </div>
+            {isAdmin && onOpenAdvancedEditor && (
+              <Button size="sm" variant="ghost" onClick={onOpenAdvancedEditor} className="text-xs">
+                Editor avanzado
+              </Button>
+            )}
             {isAdmin && onEditMode && (
-              <Button size="sm" variant="outline" onClick={onEditMode}>
+              <Button
+                size="sm"
+                variant={editMode ? "default" : "outline"}
+                onClick={onEditMode}
+                className={editMode ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}
+              >
                 <Settings className="h-3.5 w-3.5 mr-1.5" />
-                Modo edición
+                {editMode ? "Salir de edición" : "Modo edición"}
               </Button>
             )}
           </div>
