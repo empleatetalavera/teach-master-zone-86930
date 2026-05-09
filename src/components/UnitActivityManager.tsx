@@ -115,6 +115,8 @@ export function UnitActivityManager({
           title: newTitle,
           description: newDescription,
           instructions: newInstructions || null,
+          evaluation_criteria: newEvaluationCriteria || null,
+          submission_instructions: newSubmissionInstructions || null,
           max_score: newMaxScore ? parseInt(newMaxScore) : 100,
           due_date: newDueDate || null,
           submission_type: newSubmissionType,
