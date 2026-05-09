@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -7,20 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { HelpCircle, Mail, Phone, Paperclip, X, Loader2, Send, BookOpen, FileQuestion } from "lucide-react";
+import { HelpCircle, Mail, Phone, Paperclip, X, Loader2, Send, AlertCircle } from "lucide-react";
 
 interface CAUSupportFormProps {
   courseId: string;
+  courseTitle?: string;
   supportEmail?: string;
   supportPhone?: string;
 }
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25MB
 
-export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupportFormProps) {
+export function CAUSupportForm({ courseId, courseTitle, supportEmail, supportPhone }: CAUSupportFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -38,7 +37,7 @@ export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupp
 
     setSending(true);
     try {
-      let metadata: Record<string, any> = { channel: "CAU", support_email: supportEmail || null };
+      let attachmentInfo: { path: string; name: string; size: number; type: string; url?: string } | null = null;
 
       if (attachment) {
         const safeName = attachment.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -47,27 +46,73 @@ export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupp
           .from("student-documents")
           .upload(path, attachment, { upsert: false, contentType: attachment.type });
         if (upErr) throw upErr;
-        metadata.attachment = {
+        const { data: signed } = await supabase.storage
+          .from("student-documents")
+          .createSignedUrl(path, 60 * 60 * 24 * 7); // 7 días
+        attachmentInfo = {
           path,
           name: attachment.name,
           size: attachment.size,
           type: attachment.type,
+          url: signed?.signedUrl,
         };
       }
 
-      const { error } = await supabase.from("communications").insert([{
+      const metadata: Record<string, any> = {
+        channel: "CAU",
+        support_email: supportEmail || null,
+        attachment: attachmentInfo,
+      };
+
+      // 1) Registrar en BBDD (siempre queda traza)
+      const { data: comm, error } = await supabase.from("communications").insert([{
         sender_id: user!.id,
         course_id: courseId,
         communication_type: "message",
         subject: `[CAU] ${subject}`,
         message,
         metadata,
-      }]);
+      }]).select("id").single();
       if (error) throw error;
+
+      // 2) Intentar envío de email real al CAU del centro (requiere infraestructura email)
+      let emailSent = false;
+      if (supportEmail) {
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, username")
+            .eq("id", user!.id)
+            .maybeSingle();
+          const studentName = profile?.full_name || profile?.username || user!.email || "Alumno/a";
+
+          const { error: fnErr } = await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "cau-support-message",
+              recipientEmail: supportEmail,
+              idempotencyKey: `cau-${comm.id}`,
+              templateData: {
+                studentName,
+                studentEmail: user!.email,
+                courseTitle: courseTitle || "Curso",
+                subject,
+                message,
+                attachmentUrl: attachmentInfo?.url,
+                attachmentName: attachmentInfo?.name,
+              },
+            },
+          });
+          if (!fnErr) emailSent = true;
+        } catch (e) {
+          console.warn("[CAU] email send skipped:", e);
+        }
+      }
 
       toast({
         title: "Consulta enviada",
-        description: "El Centro de Atención al Usuario te responderá en un plazo de 0 a 48 horas.",
+        description: emailSent
+          ? "Tu mensaje ha sido enviado al CAU. Te responderán en un plazo de 0 a 48 horas."
+          : "Tu mensaje queda registrado. El CAU te responderá en un plazo de 0 a 48 horas.",
       });
       setSubject("");
       setMessage("");
@@ -81,7 +126,7 @@ export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupp
   };
 
   return (
-    <div className="max-h-[70vh] overflow-y-auto">
+    <div className="max-h-[80vh] overflow-y-auto">
       <div className="p-4 border-b bg-gradient-to-r from-red-500/10 to-red-500/5">
         <h4 className="font-semibold flex items-center gap-2">
           <HelpCircle className="h-5 w-5 text-red-600" />
@@ -93,36 +138,6 @@ export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupp
       </div>
 
       <div className="p-4 space-y-4">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-red-300 text-red-700 hover:bg-red-50"
-            onClick={() => navigate("/campus-guide")}
-          >
-            <BookOpen className="h-4 w-4 mr-2" /> Visita Virtual
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-red-300 text-red-700 hover:bg-red-50"
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", "faqs");
-              window.history.pushState({}, "", url.toString());
-              window.dispatchEvent(new PopStateEvent("popstate"));
-            }}
-          >
-            <FileQuestion className="h-4 w-4 mr-2" /> FAQ
-          </Button>
-        </div>
-
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Antes de plantear tu consulta o incidencia técnica, puedes encontrar
-          información sobre el funcionamiento del Campus en la <span className="font-medium text-foreground">visita virtual</span> y
-          en las <span className="font-medium text-foreground">preguntas frecuentes</span>.
-        </p>
-
         <div className="rounded-md border bg-muted/30 p-3 space-y-2 text-xs">
           <div className="font-semibold text-foreground">VÍA FORMULARIO WEB:</div>
           <div className="text-muted-foreground">Rellena los siguientes campos y envía tu consulta o incidencia.</div>
@@ -134,7 +149,7 @@ export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupp
               </div>
             </>
           )}
-          {supportEmail && (
+          {supportEmail ? (
             <>
               <div className="font-semibold text-foreground pt-1">VÍA CORREO ELECTRÓNICO:</div>
               <div className="flex items-center gap-2">
@@ -142,6 +157,11 @@ export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupp
                 <a href={`mailto:${supportEmail}`} className="text-primary hover:underline">{supportEmail}</a>
               </div>
             </>
+          ) : (
+            <div className="flex items-start gap-2 pt-1 text-amber-700 dark:text-amber-400">
+              <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+              <span>El centro aún no ha configurado un email de soporte. Tu mensaje quedará registrado en la plataforma.</span>
+            </div>
           )}
           <div className="pt-2 text-muted-foreground">
             <span className="font-semibold text-foreground">ATENCIÓN:</span> El plazo de resolución de consultas o
@@ -166,7 +186,7 @@ export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupp
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Describe tu duda o incidencia con el mayor detalle posible"
-            rows={5}
+            rows={6}
           />
         </div>
 
@@ -195,7 +215,7 @@ export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupp
         <div className="flex justify-end pt-2 border-t">
           <Button onClick={handleSend} disabled={sending}>
             {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-            Enviar
+            Enviar consulta
           </Button>
         </div>
       </div>

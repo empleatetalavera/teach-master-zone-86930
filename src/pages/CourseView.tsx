@@ -53,7 +53,7 @@ import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import { CertificateDocumentsSection } from "@/components/CertificateDocumentsSection";
 import { ModuleContentUploader } from "@/components/ModuleContentUploader";
 import { ModuleManualUploader } from "@/components/ModuleManualUploader";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScormAuthorModal } from "@/components/scorm-author/ScormAuthorModal";
 import { ModuleFormativeUnitManager } from "@/components/ModuleFormativeUnitManager";
 import { CourseGlossary } from "@/components/CourseGlossary";
@@ -966,21 +966,25 @@ export default function CourseView() {
                 </PopoverContent>
               </Popover>
 
-              <Popover>
-                <PopoverTrigger asChild>
+              <Dialog>
+                <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
                     <HelpCircle className="h-4 w-4 mr-2" />
                     CAU
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[440px] p-0" align="start">
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+                  <DialogHeader className="sr-only">
+                    <DialogTitle>Centro de Atención al Usuario</DialogTitle>
+                  </DialogHeader>
                   <CAUSupportForm
                     courseId={courseId!}
+                    courseTitle={course.title}
                     supportEmail={centerContact.email || course.support_email}
                     supportPhone={centerContact.phone || course.support_phone}
                   />
-                </PopoverContent>
-              </Popover>
+                </DialogContent>
+              </Dialog>
 
               
               <Popover>
@@ -1147,13 +1151,6 @@ export default function CourseView() {
                     <BarChart3 className="h-4 w-4" />
                     {userRole === 'teacher' ? 'Corrección de Actividades' : 'Calificaciones'}
                   </button>
-                  <button
-                    onClick={() => setActiveTab("evidences")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "evidences" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                  >
-                    <FolderUp className="h-4 w-4" />
-                    Evidencias
-                  </button>
                   {showSEPEFeatures && (
                     <button
                       onClick={() => setActiveTab("tutorials")}
@@ -1252,7 +1249,7 @@ export default function CourseView() {
                   {showSEPEFeatures && <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>}
                   <TabsTrigger value="modules" className="text-xs px-2 py-1.5">{isCFCCourse ? 'Contenido' : isPropio ? 'Temario' : 'Formación'}</TabsTrigger>
                   <TabsTrigger value="grades" className="text-xs px-2 py-1.5">{userRole === 'teacher' ? 'Actividades' : 'Calificaciones'}</TabsTrigger>
-                  <TabsTrigger value="evidences" className="text-xs px-2 py-1.5">Evidencias</TabsTrigger>
+                  
                   
                   {showSEPEFeatures && <TabsTrigger value="tutorials" className="text-xs px-2 py-1.5">Tutorías</TabsTrigger>}
                   <TabsTrigger value="calendar" className="text-xs px-2 py-1.5">Calendario</TabsTrigger>
@@ -1737,9 +1734,6 @@ export default function CourseView() {
             />
           </TabsContent>
 
-          <TabsContent value="evidences" className="space-y-4">
-            <EvidenceManager courseId={courseId!} userRole={userRole} />
-          </TabsContent>
 
           <TabsContent value="grades" className="space-y-4">
             {userRole === 'teacher' ? (

@@ -15,6 +15,7 @@ import { SupplementaryMaterialList } from "./SupplementaryMaterialList";
 import { UFActivitiesList } from "./UFActivitiesList";
 import { UFForumsList } from "./UFForumsList";
 import { ModuleLibrary } from "./ModuleLibrary";
+import { EvidenceManager } from "./EvidenceManager";
 import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import {
   BookOpen, Clock, FileText, CheckCircle2, ChevronDown, PlayCircle,
@@ -801,6 +802,11 @@ export function SEPEFormacionCampus({
                     </p>
                   </div>
                 </div>
+              </div>
+
+              {/* Subida y gestión de evidencias evaluables */}
+              <div className="m-4">
+                <EvidenceManager courseId={courseId} userRole={userRole} />
               </div>
 
               {/* Aviso: Examen Final Presencial */}
