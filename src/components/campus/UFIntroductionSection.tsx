@@ -31,28 +31,37 @@ interface EvalRow {
   evaluation_type: string;
 }
 
-export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnitTitle, courseId, isAdmin }: Props) {
+export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnitTitle, courseId, isAdmin, scope = "unit" }: Props) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [contents, setContents] = useState<ContentRow[]>([]);
   const [evals, setEvals] = useState<EvalRow[]>([]);
+  const isModuleScope = scope === "module" || !formativeUnitId;
 
   const load = useCallback(async () => {
-    const { data: c } = await (supabase as any)
+    let cQuery = (supabase as any)
       .from("module_content")
       .select("id,title,description,file_path,external_url,content_type")
-      .eq("formative_unit_id", formativeUnitId)
       .in("content_type", ["intro_video", "objectives_pdf"]);
-    setContents((c ?? []) as ContentRow[]);
-
-    const { data: e } = await (supabase as any)
+    let eQuery = (supabase as any)
       .from("evaluations")
       .select("id,title,evaluation_type")
-      .eq("formative_unit_id", formativeUnitId)
       .eq("evaluation_type", "diagnostic")
       .eq("is_active", true);
+
+    if (isModuleScope) {
+      cQuery = cQuery.eq("module_id", moduleId).is("formative_unit_id", null);
+      eQuery = eQuery.eq("module_id", moduleId).is("formative_unit_id", null);
+    } else {
+      cQuery = cQuery.eq("formative_unit_id", formativeUnitId);
+      eQuery = eQuery.eq("formative_unit_id", formativeUnitId);
+    }
+
+    const { data: c } = await cQuery;
+    setContents((c ?? []) as ContentRow[]);
+    const { data: e } = await eQuery;
     setEvals((e ?? []) as EvalRow[]);
-  }, [formativeUnitId]);
+  }, [moduleId, formativeUnitId, isModuleScope]);
 
   useEffect(() => { load(); }, [load]);
 
