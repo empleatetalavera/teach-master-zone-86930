@@ -797,6 +797,7 @@ export default function CourseView() {
                 'inspector': '/dashboard/auditor/courses'
               };
               navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
+            }}
             onOpenStudentGuide={() => setActiveTab('student-guide')}
           />
         )}
