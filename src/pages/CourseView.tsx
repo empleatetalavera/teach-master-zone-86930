@@ -776,8 +776,14 @@ export default function CourseView() {
             userRole={userRole}
             centerContact={centerContact}
             progressPercent={enrollment?.progress_percentage || 0}
+            editMode={campusEditMode}
             onEditMode={
-              (userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin')
+              isAdminOrTeacher
+                ? () => setCampusEditMode((v) => !v)
+                : undefined
+            }
+            onOpenAdvancedEditor={
+              isAdminOrTeacher
                 ? () => navigate(`/dashboard/admin/courses/${courseId}/content`)
                 : undefined
             }
