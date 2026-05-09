@@ -1787,6 +1787,10 @@ export default function CourseView() {
             />
           </TabsContent>
 
+          <TabsContent value="evidences" className="space-y-4">
+            <EvidenceManager courseId={courseId!} userRole={userRole} />
+          </TabsContent>
+
           <TabsContent value="grades" className="space-y-4">
             {userRole === 'teacher' ? (
               <TeacherActivityCorrectionPanel courseId={courseId!} />
