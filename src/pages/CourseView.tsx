@@ -31,6 +31,7 @@ import remarkGfm from "remark-gfm";
 import { CampusChrome } from "@/components/CertificateCampusLayout";
 
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
+import { EvidenceManager } from "@/components/campus/EvidenceManager";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
 import { CourseWorkPlan } from "@/components/CourseWorkPlan";
 import { PreAssessmentTest } from "@/components/PreAssessmentTest";
