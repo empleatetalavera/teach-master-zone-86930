@@ -1160,8 +1160,7 @@ export default function CourseView() {
                       <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
                     )
                   )}
-                  {showSEPEFeatures && <TabsTrigger value="training-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>}
-                  {!showSEPEFeatures && <TabsTrigger value="course-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>}
+                  <TabsTrigger value="course-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>
                   {showSEPEFeatures && <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>}
                   {showSEPEFeatures && <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>}
                   <TabsTrigger value="modules" className="text-xs px-2 py-1.5">{isCFCCourse ? 'Contenido' : isPropio ? 'Temario' : 'Formación'}</TabsTrigger>
