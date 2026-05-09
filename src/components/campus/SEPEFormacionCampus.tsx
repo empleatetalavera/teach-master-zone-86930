@@ -450,6 +450,7 @@ function ModuleUnitsTabs({
 
         <SelfAssessmentQuiz courseId={courseId} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
       </div>
+      )}
     </div>
   );
 }
