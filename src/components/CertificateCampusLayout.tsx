@@ -17,8 +17,16 @@ import {
   PlayCircle,
   Lock,
   ShieldCheck,
+  Download,
+  GraduationCap,
+  Briefcase,
+  ClipboardList,
+  ListChecks,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 interface ModuleLite {
@@ -40,6 +48,7 @@ interface Props {
     title: string;
     course_code?: string | null;
     duration_hours?: number;
+    qualification_level?: number | string | null;
   };
   modules: ModuleLite[];
   selectedModuleId: string | null;
@@ -53,14 +62,15 @@ interface Props {
   editMode?: boolean;
   onOpenAdvancedEditor?: () => void;
   onBack?: () => void;
+  onOpenStudentGuide?: () => void;
 }
 
 const RECURSOS_TABS = [
-  { label: "Introducción", tab: "intro" },
-  { label: "Formación en campus", tab: "modules" },
-  { label: "Tutorías", tab: "tutorials" },
-  { label: "Plan de trabajo", tab: "work-plan" },
-  { label: "Evaluación", tab: "grades" },
+  { label: "Introducción", tab: "intro", Icon: Sparkles },
+  { label: "Formación en campus", tab: "modules", Icon: GraduationCap },
+  { label: "Tutorías", tab: "tutorials", Icon: Briefcase },
+  { label: "Plan de trabajo", tab: "work-plan", Icon: ClipboardList },
+  { label: "Evaluación", tab: "grades", Icon: ListChecks },
 ];
 
 const ORGANIZARME_ITEMS = [
@@ -85,6 +95,7 @@ export function CampusChrome({
   editMode = false,
   onOpenAdvancedEditor,
   onBack,
+  onOpenStudentGuide,
 }: Props) {
   const navigate = useNavigate();
 
@@ -122,32 +133,24 @@ export function CampusChrome({
 
   return (
     <>
-      {/* TOP BANDS — Sticky */}
+      {/* TOP STICKY HEADER */}
       <div className="sticky top-0 z-30 bg-white border-b shadow-sm -mx-3 sm:-mx-4 lg:-mx-6 2xl:-mx-10 mb-3">
-        <div className="px-4 py-2 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <button
-              onClick={onBack ?? (() => navigate(-1))}
-              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Mis cursos
-            </button>
-            <span className="text-muted-foreground">|</span>
-            <div className="text-sm font-semibold truncate">
-              {course.course_code && (
-                <span className="text-primary mr-2">{course.course_code}</span>
-              )}
-              {course.title}
-            </div>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
+        {/* Slim top row: back + admin actions */}
+        <div className="px-4 py-1.5 flex items-center justify-between gap-4 border-b border-slate-100">
+          <button
+            onClick={onBack ?? (() => navigate(-1))}
+            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Mis cursos
+          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground">
               <BarChart3 className="h-3.5 w-3.5" />
               <span>{progressPercent}% completado</span>
             </div>
             {isAdmin && onOpenAdvancedEditor && (
-              <Button size="sm" variant="ghost" onClick={onOpenAdvancedEditor} className="text-xs">
+              <Button size="sm" variant="ghost" onClick={onOpenAdvancedEditor} className="text-xs h-7">
                 Editor avanzado
               </Button>
             )}
@@ -156,7 +159,7 @@ export function CampusChrome({
                 size="sm"
                 variant={editMode ? "default" : "outline"}
                 onClick={onEditMode}
-                className={editMode ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}
+                className={cn("h-7", editMode && "bg-amber-500 hover:bg-amber-600 text-white")}
               >
                 <Settings className="h-3.5 w-3.5 mr-1.5" />
                 {editMode ? "Salir de edición" : "Modo edición"}
@@ -165,9 +168,42 @@ export function CampusChrome({
           </div>
         </div>
 
+        {/* HERO: title + badges + progress + Guía del Alumno */}
+        <div className="px-4 py-3 bg-gradient-to-r from-primary/5 via-background to-amber-50/40 flex flex-col md:flex-row items-start md:items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              {course.course_code && (
+                <Badge className="bg-primary text-primary-foreground font-bold">{course.course_code}</Badge>
+              )}
+              {course.qualification_level && (
+                <Badge variant="secondary">Nivel {course.qualification_level}</Badge>
+              )}
+              {course.duration_hours && (
+                <Badge variant="outline" className="text-xs">{course.duration_hours}h</Badge>
+              )}
+            </div>
+            <h1 className="text-base md:text-lg font-bold leading-tight truncate">{course.title}</h1>
+            <div className="flex items-center gap-2 mt-1.5">
+              <Progress value={progressPercent} className="h-2 max-w-[320px] flex-1" />
+              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">{progressPercent}% completado</span>
+            </div>
+          </div>
+          {onOpenStudentGuide && (
+            <Button
+              size="lg"
+              onClick={onOpenStudentGuide}
+              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold shadow-lg ring-2 ring-amber-300 shrink-0"
+            >
+              <Download className="h-5 w-5 mr-2" />
+              Guía del Alumno
+            </Button>
+          )}
+        </div>
+
+        {/* Module pills — full width, equal columns */}
         {modules.length > 0 && (
-          <div className="px-4 pb-2">
-            <div className="flex items-center gap-2 overflow-x-auto">
+          <div className="px-2 py-2 bg-slate-50 border-t">
+            <div className="flex items-stretch gap-1.5 w-full">
               {modules.map((m, idx) => {
                 const status = moduleStatus(m);
                 const code = m.course_code || `MF${idx + 1}`;
@@ -180,63 +216,34 @@ export function CampusChrome({
                     }}
                     title={m.title}
                     className={cn(
-                      "px-3 py-1.5 rounded text-xs font-bold border transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5",
+                      "flex-1 min-w-0 px-2 py-2 rounded text-xs font-bold border transition-all flex items-center justify-center gap-1.5 truncate",
                       status === "done" &&
-                        "bg-emerald-100 text-emerald-800 border-emerald-300",
+                        "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200",
                       status === "current" &&
                         "bg-amber-400 text-white border-amber-500 shadow",
                       status === "todo" &&
-                        "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
+                        "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
                     )}
                   >
-                    {status === "done" && <CheckCircle2 className="h-3.5 w-3.5" />}
-                    {status === "current" && <PlayCircle className="h-3.5 w-3.5" />}
-                    {status === "todo" && <Lock className="h-3.5 w-3.5" />}
-                    {code}
+                    {status === "done" && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                    {status === "current" && <PlayCircle className="h-3.5 w-3.5 shrink-0" />}
+                    {status === "todo" && <Lock className="h-3.5 w-3.5 shrink-0" />}
+                    <span className="truncate">{code}</span>
                   </button>
                 );
               })}
             </div>
           </div>
         )}
-
-        {/* Recursos sub-tabs */}
-        <div className="bg-primary text-primary-foreground px-4 py-1.5 text-xs font-bold flex items-center gap-2">
-          <span>Recursos</span>
-          {selectedModuleId && (
-            <span className="opacity-90 font-mono ml-auto">
-              {modules.find((m) => m.id === selectedModuleId)?.course_code || ""}
-            </span>
-          )}
-        </div>
-        <div className="bg-white px-2 flex items-center gap-1 overflow-x-auto">
-          {RECURSOS_TABS.map((t) => {
-            const isActive = activeTab === t.tab;
-            return (
-              <button
-                key={t.tab}
-                onClick={() => setActiveTab(t.tab)}
-                className={cn(
-                  "px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
-                  isActive
-                    ? "border-primary text-primary"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
-                )}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
-      {/* LEFT RAIL — Fixed */}
+      {/* LEFT RAIL — Organizarme + Recursos */}
       {!editMode && (
-      <aside className="hidden xl:flex fixed left-2 top-44 flex-col w-[110px] z-20">
+      <aside className="hidden xl:flex fixed left-2 top-40 flex-col w-[120px] z-20 max-h-[calc(100vh-10rem)] overflow-y-auto">
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Organizarme
         </div>
-        <div className="bg-white border border-t-0 rounded-b p-1.5 flex flex-col gap-0.5 shadow-sm">
+        <div className="bg-white border border-t-0 p-1.5 flex flex-col gap-0.5 shadow-sm">
           {ORGANIZARME_ITEMS.map(({ id, label, Icon }) => (
             <button
               key={id}
@@ -267,12 +274,34 @@ export function CampusChrome({
             </button>
           )}
         </div>
+
+        {/* Recursos — moved here from top */}
+        <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 mt-2 rounded-t">
+          Recursos
+        </div>
+        <div className="bg-white border border-t-0 rounded-b p-1.5 flex flex-col gap-0.5 shadow-sm">
+          {RECURSOS_TABS.map(({ label, tab, Icon }) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                "flex flex-col items-center gap-1 p-2 rounded text-[10px] text-center leading-tight transition-colors",
+                activeTab === tab
+                  ? "bg-primary/10 text-primary font-semibold"
+                  : "text-slate-700 hover:bg-slate-100"
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
       </aside>
       )}
 
-      {/* RIGHT RAIL — Fixed */}
+      {/* RIGHT RAIL — Comunicarme */}
       {!editMode && (
-      <aside className="hidden xl:flex fixed right-2 top-44 flex-col w-[110px] z-20">
+      <aside className="hidden xl:flex fixed right-2 top-40 flex-col w-[120px] z-20">
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Comunicarme
         </div>
