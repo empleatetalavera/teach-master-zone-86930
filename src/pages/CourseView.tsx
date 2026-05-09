@@ -1984,7 +1984,7 @@ export default function CourseView() {
             ) : (
               /* ===== SEPE / STANDARD MODULE VIEW ===== */
               <SEPEFormacionCampus
-                modules={modules}
+                modules={useCampusLayout && selectedModuleId ? modules.filter(m => m.id === selectedModuleId) : modules}
                 courseId={courseId!}
                 courseTitle={course?.title || 'Curso'}
                 userRole={userRole}
