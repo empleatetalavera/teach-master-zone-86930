@@ -729,6 +729,80 @@ export function SEPEFormacionCampus({
           </AccordionTrigger>
           <AccordionContent className="border border-t-0 rounded-b-lg p-0 bg-card">
             <div className="space-y-0">
+              {/* Recursos de Evaluación - Información completa */}
+              <div className="m-4 rounded-lg border border-primary/30 bg-primary/5 overflow-hidden">
+                <div className="bg-primary/10 px-4 py-2.5 border-b border-primary/20 flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-primary" />
+                  <span className="font-bold text-sm uppercase tracking-wide text-primary">Recursos de Evaluación</span>
+                </div>
+                <div className="p-4 space-y-4 text-sm text-foreground">
+                  <p>
+                    Durante toda la formación se llevará a cabo una <strong>evaluación sistemática y continua</strong>.
+                    Tendrás que ir realizando diferentes pruebas para que tu tutor-formador compruebe que vas adquiriendo
+                    las capacidades y competencias propias del certificado de profesionalidad que estás estudiando.
+                  </p>
+
+                  <div className="rounded-md border bg-card p-3">
+                    <p className="font-semibold text-foreground mb-1">1. Al inicio del módulo / unidad formativa</p>
+                    <p className="text-muted-foreground">
+                      Deberás realizar el <strong>"Cuestionario de conocimientos previos"</strong>. No influye en la nota final;
+                      sólo sirve para que tu tutor-formador pueda ayudarte mejor a alcanzar los objetivos.
+                    </p>
+                  </div>
+
+                  <div className="rounded-md border bg-card p-3 space-y-2">
+                    <p className="font-semibold text-foreground">2. Durante el desarrollo en el Campus Virtual</p>
+                    <ul className="list-disc pl-5 space-y-1.5 text-muted-foreground">
+                      <li><strong>Test de autoevaluación</strong> de cada unidad didáctica integrado en el Contenido Interactivo Multimedia (CIM). Conocerás el resultado al finalizar.</li>
+                      <li>
+                        <strong>Actividades de aprendizaje:</strong>
+                        <ul className="list-[circle] pl-5 mt-1 space-y-1">
+                          <li><span className="font-medium text-foreground">Individuales:</span> entrega la respuesta a través del Campus. Recibirás la valoración por correo electrónico.</li>
+                          <li><span className="font-medium text-foreground">Grupales:</span> tu tutor-formador creará grupos y un foro de actividad grupal por grupo. Allí os organizáis, distribuís tareas y elegiréis un coordinador/a que entregue el archivo final. Se evalúa tanto el documento como la participación en el foro.</li>
+                        </ul>
+                      </li>
+                      <li>Se tendrá en cuenta el <strong>número y la calidad de tus aportaciones</strong> en los foros de debate de cada unidad didáctica.</li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-md border bg-card p-3">
+                    <p className="font-semibold text-foreground mb-1">3. Durante las tutorías presenciales</p>
+                    <p className="text-muted-foreground">
+                      Realizarás actividades prácticas y/o realizaciones prácticas en el Centro de Formación. Los resultados
+                      se comunican a través del Campus y tu formador irá comentándolos durante el desarrollo de las prácticas.
+                    </p>
+                  </div>
+
+                  <div className="rounded-md border bg-card p-3 space-y-2">
+                    <p className="font-semibold text-foreground">4. Al finalizar el módulo / unidad formativa</p>
+                    <ul className="list-disc pl-5 space-y-1.5 text-muted-foreground">
+                      <li><strong>Test de evaluación en el Campus Virtual</strong> por unidad formativa: tipo test, corrección automática.</li>
+                      <li><strong>Prueba de evaluación final presencial</strong> en el Centro de Formación. Mínimo <strong>5 sobre 10</strong> para superar el módulo. Tu tutor-formador te informará de la valoración a través del Campus.</li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-md border bg-card p-3">
+                    <p className="font-semibold text-foreground mb-1">5. Cuestionario de calidad</p>
+                    <p className="text-muted-foreground">
+                      Una vez finalizada la formación deberás cumplimentar el <strong>"Cuestionario de evaluación de la calidad
+                      de la formación"</strong> para ayudar a mejorar el curso.
+                    </p>
+                  </div>
+
+                  <div className="rounded-md border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-3">
+                    <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">En resumen, para superar el curso deberás:</p>
+                    <ul className="list-disc pl-5 space-y-1 text-sm text-amber-900/90 dark:text-amber-200/90">
+                      <li>Realizar y participar en todas las actividades de aprendizaje del Campus (casos prácticos, foros, documentos, vídeos…) y las pruebas de evaluación.</li>
+                      <li>Asistir a las tutorías presenciales y realizar las actividades evaluables de esas sesiones.</li>
+                      <li>Obtener al menos <strong>5 puntos</strong> en la prueba de evaluación final presencial.</li>
+                    </ul>
+                    <p className="text-xs mt-2 text-amber-900/80 dark:text-amber-200/80">
+                      <strong>IMPORTANTE:</strong> también se tendrán en cuenta los tiempos de acceso al Campus Virtual.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Aviso: Examen Final Presencial */}
               <div className="m-4 rounded-lg border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4">
                 <div className="flex items-start gap-3">
