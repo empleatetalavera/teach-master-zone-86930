@@ -70,6 +70,7 @@ import TeacherTutorGuide from "@/pages/dashboard/TeacherTutorGuide";
 import { ElectiveModuleContent } from "@/components/ElectiveModuleContent";
 import { BatchContentGenerator } from "@/components/BatchContentGenerator";
 import ScormPlayer from "@/components/scorm/ScormPlayer";
+import tablaPuntuacionCurso from "@/assets/tabla-puntuacion-curso.png";
 
 interface Course {
   id: string;
