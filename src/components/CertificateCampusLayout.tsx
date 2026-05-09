@@ -142,17 +142,39 @@ export function CampusChrome({
     return "todo";
   };
 
+  const goToTab = (tab: string) => {
+    setActiveTab(tab);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 50);
+  };
+
   const COMUNICARME_ITEMS = [
-    { id: "profile", label: "Mi perfil", Icon: UserIcon, action: () => navigate("/dashboard/settings") },
-    { id: "contacts", label: "Mis contactos", Icon: UsersIcon, action: () => setActiveTab("forum") },
-    { id: "mail", label: "Correo", Icon: Mail, action: () => setActiveTab("forum") },
-    { id: "chat", label: "Chat", Icon: MessageSquare, action: () => setActiveTab("cafeteria") },
+    { id: "profile", label: "Mi perfil", Icon: UserIcon, action: () => navigate("/profile") },
+    { id: "contacts", label: "Mis contactos", Icon: UsersIcon, action: () => goToTab("forum") },
+    {
+      id: "mail",
+      label: "Correo",
+      Icon: Mail,
+      action: () => {
+        if (centerContact.email) {
+          window.location.href = `mailto:${centerContact.email}`;
+        } else {
+          goToTab("forum");
+        }
+      },
+    },
+    { id: "chat", label: "Chat", Icon: MessageSquare, action: () => goToTab("cafeteria") },
     {
       id: "phone",
       label: "Contacta en directo",
       Icon: Phone,
       action: () => {
-        if (centerContact.phone) window.location.href = `tel:${centerContact.phone}`;
+        if (centerContact.phone) {
+          window.location.href = `tel:${centerContact.phone.replace(/\s+/g, "")}`;
+        } else {
+          alert("El centro no ha configurado un teléfono de contacto. Contacta a través del CAU.");
+        }
       },
     },
     {
