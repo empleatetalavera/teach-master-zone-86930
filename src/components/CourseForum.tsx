@@ -24,7 +24,9 @@ import {
   PinOff,
   Unlock,
   User,
-  Clock
+  Clock,
+  Search,
+  Plus
 } from "lucide-react";
 import {
   DropdownMenu,
