@@ -1791,20 +1791,6 @@ export default function CourseView() {
               </div>
             </section>
 
-            {showSEPEFeatures && (
-              <section className="space-y-3">
-                <div className="border-b pb-3">
-                  <h2 className="flex items-center gap-2 text-base font-semibold">
-                    <FolderUp className="h-5 w-5 text-primary" />
-                    Recursos de Evaluación
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Informa sobre la evaluación subiendo evidencias, documentos, imágenes o vídeos asociados al curso, módulo o unidad formativa.
-                  </p>
-                </div>
-                <EvidenceManager courseId={courseId!} userRole={userRole || undefined} />
-              </section>
-            )}
 
             {userRole === 'teacher' ? (
               <TeacherActivityCorrectionPanel courseId={courseId!} />
