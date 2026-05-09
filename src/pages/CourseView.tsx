@@ -1028,10 +1028,12 @@ export default function CourseView() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Course Content Tabs */}
-        <div className="grid lg:grid-cols-[200px_1fr_280px] gap-6">
+        <div className={useCampusLayout ? '' : 'grid lg:grid-cols-[200px_1fr_280px] gap-6'}>
           {/* Left Sidebar - Navigation */}
+          {!useCampusLayout && (
           <div className="hidden lg:block">
             <Card className="sticky top-4">
               <CardContent className="p-2">
