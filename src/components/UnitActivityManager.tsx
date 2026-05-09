@@ -185,6 +185,8 @@ export function UnitActivityManager({
     setNewTitle(activity.title);
     setNewDescription(activity.description);
     setNewInstructions(activity.instructions || "");
+    setNewEvaluationCriteria(activity.evaluation_criteria || "");
+    setNewSubmissionInstructions(activity.submission_instructions || "");
     setNewMaxScore(activity.max_score?.toString() || "100");
     setNewDueDate(activity.due_date || "");
     setNewSubmissionType((activity.submission_type as "text" | "file" | "url" | "both") || "text");
