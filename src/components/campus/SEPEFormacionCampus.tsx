@@ -278,6 +278,7 @@ function ModuleUnitsTabs({
   toast: ReturnType<typeof useToast>["toast"];
 }) {
   const [selectedUnitId, setSelectedUnitId] = useState<string>(moduleUnits[0]?.id ?? "");
+  const [panelOpen, setPanelOpen] = useState<boolean>(true);
   useEffect(() => {
     if (!moduleUnits.find((u) => u.id === selectedUnitId)) {
       setSelectedUnitId(moduleUnits[0]?.id ?? "");
@@ -292,8 +293,8 @@ function ModuleUnitsTabs({
 
   return (
     <div className="bg-teal-50/30 dark:bg-teal-950/10">
-      {/* Pills row */}
-      <div className="flex flex-wrap gap-2 p-3 border-b border-teal-200/40 dark:border-teal-900/30">
+      {/* Pills row — sticky so always visible mientras se navega el contenido de la unidad */}
+      <div className="sticky top-0 z-20 flex flex-wrap gap-2 p-2.5 bg-teal-50/95 dark:bg-teal-950/60 backdrop-blur supports-[backdrop-filter]:bg-teal-50/70 border-b border-teal-200/40 dark:border-teal-900/30">
         {moduleUnits.map((u, i) => {
           const p = getUnitProgress(u.id).overall_progress;
           const active = u.id === selectedUnitId;
@@ -301,8 +302,15 @@ function ModuleUnitsTabs({
           return (
             <button
               key={u.id}
-              onClick={() => setSelectedUnitId(u.id)}
-              className={`group flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+              onClick={() => {
+                if (active) {
+                  setPanelOpen((o) => !o);
+                } else {
+                  setSelectedUnitId(u.id);
+                  setPanelOpen(true);
+                }
+              }}
+              className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
                 active
                   ? "bg-teal-600 text-white border-teal-700 shadow-sm"
                   : done
@@ -310,6 +318,7 @@ function ModuleUnitsTabs({
                   : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
               }`}
               title={u.title}
+              aria-expanded={active && panelOpen}
             >
               <span className={`flex items-center justify-center h-5 w-5 rounded-full text-[10px] font-bold shrink-0 ${
                 active ? "bg-white/20 text-white" : done ? "bg-green-200 text-green-900" : "bg-slate-100 text-slate-700"
@@ -318,12 +327,16 @@ function ModuleUnitsTabs({
               </span>
               <span className="max-w-[180px] truncate">UD {i + 1} · {u.title}</span>
               <span className={`text-[10px] font-bold ml-1 ${active ? "text-white/90" : "text-muted-foreground"}`}>{p}%</span>
+              {active && (
+                <ChevronDown className={`h-3 w-3 ml-0.5 transition-transform ${panelOpen ? "" : "-rotate-90"}`} />
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Selected unit panel */}
+      {/* Selected unit panel — desplegable */}
+      {panelOpen && (
       <div className="p-4 space-y-3">
         <div className="flex items-start gap-3 pb-2 border-b">
           <ProgressRing value={unitProgress.overall_progress} size={40} strokeWidth={3} />
@@ -437,6 +450,7 @@ function ModuleUnitsTabs({
 
         <SelfAssessmentQuiz courseId={courseId} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
       </div>
+      )}
     </div>
   );
 }
@@ -524,7 +538,7 @@ export function SEPEFormacionCampus({
             return (
               <Collapsible key={module.id} defaultOpen={modules.length === 1}>
                 <div className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  <CollapsibleTrigger className="w-full text-left">
+                  <CollapsibleTrigger className="w-full text-left sticky top-0 z-30 bg-background">
                     <div className="p-4 bg-gradient-to-r from-muted/40 to-muted/20">
                       <div className="flex items-start gap-3">
                         {/* Module number */}
