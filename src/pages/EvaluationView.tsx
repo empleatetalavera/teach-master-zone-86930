@@ -265,6 +265,7 @@ export default function EvaluationView() {
                   {questionsCount}
                 </p>
                 <p className="text-xs sm:text-sm text-muted-foreground">Preguntas</p>
+              </div>
             </div>
 
             {evaluation.instructions && (
