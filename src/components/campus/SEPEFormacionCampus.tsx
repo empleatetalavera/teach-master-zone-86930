@@ -538,7 +538,7 @@ export function SEPEFormacionCampus({
             return (
               <Collapsible key={module.id} defaultOpen={modules.length === 1}>
                 <div className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  <CollapsibleTrigger className="w-full text-left">
+                  <CollapsibleTrigger className="w-full text-left sticky top-0 z-30 bg-background">
                     <div className="p-4 bg-gradient-to-r from-muted/40 to-muted/20">
                       <div className="flex items-start gap-3">
                         {/* Module number */}
