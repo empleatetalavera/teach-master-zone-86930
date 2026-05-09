@@ -2044,6 +2044,29 @@ export default function CourseView() {
 
 
           <TabsContent value="exams" className="space-y-4">
+            <section className="rounded-lg border bg-card p-5 space-y-4 text-sm">
+              <h2 className="text-lg font-semibold text-primary">¿Cómo se puntúa en tu curso?</h2>
+              <p className="text-muted-foreground">
+                La nota final de cada módulo formativo/unidad formativa se calculará del siguiente modo:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li>
+                  Un <strong>30%</strong> de la nota final corresponde al promedio de notas obtenidas en las actividades de aprendizaje, valoración de la participación en los foros de debate y pruebas de evaluación realizadas tanto en el Campus Virtual como en las Tutorías Presenciales en el Centro de Formación.
+                </li>
+                <li>
+                  Un <strong>70%</strong> de la nota final corresponderá a la nota obtenida en la prueba de evaluación final presencial desarrollada en el Centro de Formación, en la que deberás obtener, al menos, una puntuación de <strong>5</strong> como te hemos comentado anteriormente.
+                </li>
+              </ul>
+              <p className="text-muted-foreground">
+                El valor de cada una de estas actividades de aprendizaje y pruebas de evaluación se muestra en la siguiente tabla:
+              </p>
+              <img
+                src={tablaPuntuacionCurso}
+                alt="Tabla de puntuación del curso: actividades en campus virtual (30%) y prueba presencial final (70%)"
+                className="w-full rounded-md border"
+              />
+            </section>
+
             {/* EVALUACIÓN Section - SEPE Style */}
             <Accordion type="single" collapsible defaultValue="evaluacion">
               <AccordionItem value="evaluacion" className="border-0">
