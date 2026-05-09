@@ -32,6 +32,7 @@ import { CampusChrome } from "@/components/CertificateCampusLayout";
 
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { EvidenceManager } from "@/components/campus/EvidenceManager";
+import { CAUSupportForm } from "@/components/campus/CAUSupportForm";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
 import { CourseWorkPlan } from "@/components/CourseWorkPlan";
 import { PreAssessmentTest } from "@/components/PreAssessmentTest";
