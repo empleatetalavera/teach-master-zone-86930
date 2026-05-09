@@ -3969,6 +3969,7 @@ export type Database = {
     }
     Functions: {
       clean_old_login_attempts: { Args: never; Returns: undefined }
+      current_training_center_id: { Args: never; Returns: string }
       get_email_by_username: {
         Args: { p_center_slug?: string; p_username: string }
         Returns: {
