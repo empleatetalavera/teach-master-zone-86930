@@ -114,7 +114,7 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
             trigger={<Button variant="outline" size="sm" className="h-7 text-xs gap-1"><Plus className="h-3 w-3" />{action ? "Editar" : "Subir"}</Button>}
             contentType={addType}
             moduleId={moduleId}
-            formativeUnitId={formativeUnitId}
+            formativeUnitId={isModuleScope ? null : formativeUnitId}
             defaultTitle={title}
             acceptFile={accept}
             onCreated={load}
