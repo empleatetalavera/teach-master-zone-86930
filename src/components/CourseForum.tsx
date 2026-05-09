@@ -751,7 +751,8 @@ export function CourseForum({ courseId, isAdmin = false, isEditable = false }: C
               </div>
             ))}
           </div>
-        )}
+        );
+        })()}
       </CardContent>
     </Card>
   );
