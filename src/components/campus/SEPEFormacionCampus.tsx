@@ -665,6 +665,51 @@ export function SEPEFormacionCampus({
                             />
                           </div>
                         )}
+
+                        {/* C) Tutorías presenciales */}
+                        <ModuleSectionBar title="C) Tutorías Presenciales">
+                          <TutoriasPresencialesGuide courseId={courseId} moduleId={module.id} isAdmin={isAdmin} />
+                        </ModuleSectionBar>
+
+                        {/* D) Tutoría virtual */}
+                        <ModuleSectionBar title="D) Tutoría Virtual">
+                          <div className="space-y-2">
+                            <p className="text-sm text-muted-foreground">
+                              Foro del módulo, mensajería con el tutor y sesiones online.
+                            </p>
+                            <UFForumsList courseId={courseId} moduleId={module.id} formativeUnitId={null as any} isAdmin={isAdmin} />
+                          </div>
+                        </ModuleSectionBar>
+
+                        {/* E) Evaluación del módulo */}
+                        <ModuleSectionBar title="E) Evaluación del Módulo">
+                          <div className="space-y-2">
+                            {(module.evaluations || []).filter((ev: any) => !ev.formative_unit_id).length === 0 ? (
+                              <p className="text-sm text-muted-foreground">Sin evaluación final configurada para este módulo.</p>
+                            ) : (
+                              (module.evaluations || [])
+                                .filter((ev: any) => !ev.formative_unit_id)
+                                .map((ev: any) => (
+                                  <div
+                                    key={ev.id}
+                                    className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 cursor-pointer transition-colors"
+                                    onClick={() => navigate(`/course/${courseId}/evaluation/${ev.id}`)}
+                                  >
+                                    <div className="p-2 bg-purple-100 rounded-lg">
+                                      <ClipboardList className="h-4 w-4 text-purple-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <span className="text-sm font-medium block">{ev.title}</span>
+                                      <p className="text-xs text-muted-foreground">Evaluación final del módulo</p>
+                                    </div>
+                                    <Button size="sm" className="h-7 text-xs gap-1 bg-purple-600 hover:bg-purple-700">
+                                      <PlayCircle className="h-3 w-3" />Realizar
+                                    </Button>
+                                  </div>
+                                ))
+                            )}
+                          </div>
+                        </ModuleSectionBar>
                       </div>
 
                       {/* === BIBLIOTECA del módulo === */}
