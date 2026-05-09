@@ -165,7 +165,7 @@ export function CampusChrome({
   return (
     <>
       {/* TOP STICKY HEADER */}
-      <div className="sticky top-0 z-30 bg-white border-b shadow-sm -mx-3 sm:-mx-4 lg:-mx-6 2xl:-mx-10 mb-3">
+      <div className="sticky top-0 z-30 bg-white border-b shadow-sm mb-3">
         {/* Slim top row: back + admin actions */}
         <div className="px-4 py-1.5 flex items-center justify-between gap-4 border-b border-slate-100">
           <button
