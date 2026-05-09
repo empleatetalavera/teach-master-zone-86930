@@ -165,7 +165,7 @@ export function CampusChrome({
   return (
     <>
       {/* TOP STICKY HEADER */}
-      <div className="sticky top-0 z-30 bg-white border-b shadow-sm -mx-3 sm:-mx-4 lg:-mx-6 2xl:-mx-10 mb-3">
+      <div className="sticky top-0 z-30 bg-white border-b shadow-sm mb-3">
         {/* Slim top row: back + admin actions */}
         <div className="px-4 py-1.5 flex items-center justify-between gap-4 border-b border-slate-100">
           <button
@@ -339,7 +339,10 @@ export function CampusChrome({
 
       {/* LEFT RAIL — Organizarme + Recursos */}
       {!editMode && (
-      <aside className="hidden lg:flex fixed left-1 xl:left-2 top-40 flex-col w-[150px] xl:w-[170px] 2xl:w-[190px] z-20 max-h-[calc(100vh-10rem)] overflow-y-auto">
+      <aside
+        className="hidden lg:flex fixed top-40 flex-col w-[150px] xl:w-[170px] 2xl:w-[190px] z-20 max-h-[calc(100vh-10rem)] overflow-y-auto"
+        style={{ left: "max(0.5rem, calc((100vw - 1800px) / 2 + 0.5rem))" }}
+      >
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Organizarme
         </div>
@@ -401,7 +404,10 @@ export function CampusChrome({
 
       {/* RIGHT RAIL — Comunicarme */}
       {!editMode && (
-      <aside className="hidden lg:flex fixed right-1 xl:right-2 top-40 flex-col w-[150px] xl:w-[170px] 2xl:w-[190px] z-20">
+      <aside
+        className="hidden lg:flex fixed top-40 flex-col w-[150px] xl:w-[170px] 2xl:w-[190px] z-20"
+        style={{ right: "max(0.5rem, calc((100vw - 1800px) / 2 + 0.5rem))" }}
+      >
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Comunicarme
         </div>
