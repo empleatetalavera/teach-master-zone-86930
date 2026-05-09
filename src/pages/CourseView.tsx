@@ -1197,6 +1197,13 @@ export default function CourseView() {
                     <BarChart3 className="h-4 w-4" />
                     {userRole === 'teacher' ? 'Corrección de Actividades' : 'Calificaciones'}
                   </button>
+                  <button
+                    onClick={() => setActiveTab("evidences")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "evidences" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <FolderUp className="h-4 w-4" />
+                    Evidencias
+                  </button>
                   {showSEPEFeatures && (
                     <button
                       onClick={() => setActiveTab("tutorials")}
