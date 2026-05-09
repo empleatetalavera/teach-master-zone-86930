@@ -42,6 +42,8 @@ export default function CenterSettings() {
   const [censusCode, setCensusCode] = useState("");
   const [campusUrl, setCampusUrl] = useState("");
   const [navigationGuideUrl, setNavigationGuideUrl] = useState<string | null>(null);
+  const [studentGuideUrl, setStudentGuideUrl] = useState<string | null>(null);
+  const [tutorGuideUrl, setTutorGuideUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadCenterData();
@@ -106,6 +108,8 @@ export default function CenterSettings() {
       setCensusCode(center.census_code || "");
       setCampusUrl(center.campus_url || "");
       setNavigationGuideUrl(center.navigation_guide_pdf_url || null);
+      setStudentGuideUrl((center as any).student_guide_pdf_url || null);
+      setTutorGuideUrl((center as any).tutor_guide_pdf_url || null);
     } catch (error) {
       console.error("Error loading center data:", error);
       toast.error("Error al cargar los datos del centro");
@@ -802,6 +806,56 @@ export default function CenterSettings() {
                   bucket="course-documents"
                   label="Guía de Navegación"
                   fileNamePrefix="guia-navegacion"
+                  onUpdate={loadCenterData}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Compass className="h-5 w-5" />
+                Guía del Alumno (propia del centro)
+              </CardTitle>
+              <CardDescription>
+                PDF que se mostrará a los alumnos de TODOS los cursos de tu centro como Guía del Alumno. Sustituye a la guía por defecto del curso.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {centerId && (
+                <CenterDocumentUploader
+                  centerId={centerId}
+                  documentUrl={studentGuideUrl}
+                  dbField="student_guide_pdf_url"
+                  bucket="course-documents"
+                  label="Guía del Alumno"
+                  fileNamePrefix="guia-alumno-centro"
+                  onUpdate={loadCenterData}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Compass className="h-5 w-5" />
+                Guía del Tutor (propia del centro)
+              </CardTitle>
+              <CardDescription>
+                PDF que se mostrará a los tutores de TODOS los cursos de tu centro como Guía del Tutor. Sustituye a la guía por defecto del curso.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {centerId && (
+                <CenterDocumentUploader
+                  centerId={centerId}
+                  documentUrl={tutorGuideUrl}
+                  dbField="tutor_guide_pdf_url"
+                  bucket="course-documents"
+                  label="Guía del Tutor"
+                  fileNamePrefix="guia-tutor-centro"
                   onUpdate={loadCenterData}
                 />
               )}

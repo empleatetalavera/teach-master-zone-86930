@@ -3345,6 +3345,8 @@ export type Database = {
           secondary_color: string | null
           sepe_registry_number: string | null
           slug: string | null
+          student_guide_pdf_url: string | null
+          tutor_guide_pdf_url: string | null
           updated_at: string | null
           whatsapp_phone: string | null
         }
@@ -3378,6 +3380,8 @@ export type Database = {
           secondary_color?: string | null
           sepe_registry_number?: string | null
           slug?: string | null
+          student_guide_pdf_url?: string | null
+          tutor_guide_pdf_url?: string | null
           updated_at?: string | null
           whatsapp_phone?: string | null
         }
@@ -3411,6 +3415,8 @@ export type Database = {
           secondary_color?: string | null
           sepe_registry_number?: string | null
           slug?: string | null
+          student_guide_pdf_url?: string | null
+          tutor_guide_pdf_url?: string | null
           updated_at?: string | null
           whatsapp_phone?: string | null
         }

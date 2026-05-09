@@ -265,6 +265,8 @@ export default function CourseView() {
     postal_code?: string;
     cif?: string;
     campus_url?: string;
+    student_guide_pdf_url?: string | null;
+    tutor_guide_pdf_url?: string | null;
   }>({
     name: "",
     email: "", 
@@ -466,7 +468,7 @@ export default function CourseView() {
       if (centerIdToUse) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name, email, phone, whatsapp_phone, address, city, province, postal_code, cif, logo_url, campus_url, contact_email, contact_phone")
+          .select("slug, name, email, phone, whatsapp_phone, address, city, province, postal_code, cif, logo_url, campus_url, contact_email, contact_phone, student_guide_pdf_url, tutor_guide_pdf_url")
           .eq("id", centerIdToUse)
           .single();
         
@@ -487,7 +489,9 @@ export default function CourseView() {
           province: centerData?.province || "",
           postal_code: centerData?.postal_code || "",
           cif: centerData?.cif || "",
-          campus_url: (centerData as any)?.campus_url || ""
+          campus_url: (centerData as any)?.campus_url || "",
+          student_guide_pdf_url: (centerData as any)?.student_guide_pdf_url || null,
+          tutor_guide_pdf_url: (centerData as any)?.tutor_guide_pdf_url || null
         });
       }
 
@@ -1018,24 +1022,13 @@ export default function CourseView() {
                       </button>
                     )
                   )}
-                  {showSEPEFeatures && (
-                    <button
-                      onClick={() => setActiveTab("training-program")}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "training-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                    >
-                      <ClipboardList className="h-4 w-4" />
-                      Programa Formativo
-                    </button>
-                  )}
-                  {!showSEPEFeatures && (
-                    <button
-                      onClick={() => setActiveTab("course-program")}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "course-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                    >
-                      <ClipboardList className="h-4 w-4" />
-                      Programa del Curso
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setActiveTab("course-program")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "course-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Programa del Curso
+                  </button>
                   {showSEPEFeatures && (
                     <button
                       onClick={() => setActiveTab("work-plan")}
@@ -1167,8 +1160,7 @@ export default function CourseView() {
                       <TabsTrigger value="student-guide" className="text-xs px-2 py-1.5">Guía Alumno</TabsTrigger>
                     )
                   )}
-                  {showSEPEFeatures && <TabsTrigger value="training-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>}
-                  {!showSEPEFeatures && <TabsTrigger value="course-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>}
+                  <TabsTrigger value="course-program" className="text-xs px-2 py-1.5">Programa</TabsTrigger>
                   {showSEPEFeatures && <TabsTrigger value="work-plan" className="text-xs px-2 py-1.5">Plan Trabajo</TabsTrigger>}
                   {showSEPEFeatures && <TabsTrigger value="schedule" className="text-xs px-2 py-1.5">Cronograma</TabsTrigger>}
                   <TabsTrigger value="modules" className="text-xs px-2 py-1.5">{isCFCCourse ? 'Contenido' : isPropio ? 'Temario' : 'Formación'}</TabsTrigger>
