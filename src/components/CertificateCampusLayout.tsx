@@ -108,6 +108,26 @@ export function CampusChrome({
   onOpenStudentGuide,
 }: Props) {
   const navigate = useNavigate();
+  const [verTodoOpen, setVerTodoOpen] = useState(false);
+
+  const goToUnit = (moduleId: string, unitId?: string) => {
+    onSelectModule(moduleId);
+    setActiveTab("modules");
+    setVerTodoOpen(false);
+    if (unitId) {
+      // Best-effort scroll to the unit element if it's already rendered
+      setTimeout(() => {
+        const el =
+          document.querySelector(`[data-unit-id="${unitId}"]`) ||
+          document.getElementById(`unit-${unitId}`);
+        if (el) {
+          (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "start" });
+          (el as HTMLElement).classList.add("ring-2", "ring-amber-400");
+          setTimeout(() => (el as HTMLElement).classList.remove("ring-2", "ring-amber-400"), 2200);
+        }
+      }, 250);
+    }
+  };
 
   const isAdmin =
     userRole === "admin" || userRole === "teacher" || userRole === "super_admin";
