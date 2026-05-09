@@ -261,7 +261,8 @@ export function CampusChrome({
                         className={cn(pillBase, "flex-1 min-w-0")}
                       >
                         <StatusIcon className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">{code}</span>
+                        <span className="font-bold shrink-0">{code}</span>
+                        <span className="truncate opacity-90">· {m.title}</span>
                       </button>
                     </PopoverTrigger>
                     <PopoverContent align="center" className="w-80 p-0">
