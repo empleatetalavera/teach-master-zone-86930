@@ -416,28 +416,44 @@ Toda la información relativa a las tutorías presenciales la encontrarás en:
         {
           number: "7.1",
           title: "ACTIVIDADES Y PRUEBAS EVALUABLES",
-          content: `Para superar cada módulo formativo o unidad formativa deberás realizar las siguientes pruebas:
+          content: `Durante toda la formación se va a llevar a cabo una evaluación sistemática y continua, es decir, tendrás que ir realizando diferentes pruebas de evaluación para que tu tutor-formador pueda ir comprobando que vas adquiriendo las capacidades y competencias propias del certificado de profesionalidad que estás estudiando.
 
-1. TEST FINAL EN CAMPUS (CIM)
-- Dispones de un solo intento
-- Podrás conocer los resultados una vez lo hayas realizado
+A continuación te recordamos las actividades y pruebas que servirán para evaluar tu progreso en cada módulo formativo / unidad formativa:
 
-2. PRUEBA DE EVALUACIÓN FINAL PRESENCIAL
-En el Centro de Formación, en la fecha y lugar indicados en el PLAN DE TRABAJO.
+1. AL INICIO DEL MÓDULO / UNIDAD FORMATIVA
+- Deberás realizar el "Cuestionario de conocimientos previos".
+- Este cuestionario NO influye en la nota final, sólo sirve para que tu tutor-formador pueda ayudarte mejor a alcanzar los objetivos del módulo / unidad formativa.
 
-Las pruebas de evaluación constan de varias partes:
-- Pruebas de evaluación de conocimiento: Pruebas objetivas (tipo test, respuestas cortas, etc.)
-- Pruebas de evaluación de destrezas: Pruebas prácticas en situaciones de trabajo simuladas
-- Pruebas de evaluación de actitudes: Observación de conductas y comportamientos
+2. DURANTE EL DESARROLLO EN EL CAMPUS VIRTUAL
+En cada unidad didáctica tendrás que realizar las siguientes actividades y pruebas de evaluación:
 
-Criterios de evaluación:
-- Para superar el módulo formativo es necesario obtener una puntuación mínima de 5
-- En caso de no superarlo se considerará NO APTO
+- Test de autoevaluación de cada unidad didáctica integrado en el Contenido Interactivo Multimedia (CIM), cuyo resultado podrás conocer al finalizar dicho test.
 
-Segunda convocatoria:
-Si no superas la primera convocatoria o no asistes por causa justificada, podrás presentarte a la segunda convocatoria en la fecha que te indicará tu tutor-formador.
+- Actividades de aprendizaje:
+   • Individuales: entregar la respuesta a través del Campus Virtual. Tu tutor-formador te facilitará la valoración y puntuación obtenida en cada una de ellas a través de correo electrónico.
+   • Grupales: tu tutor-formador creará distintos grupos de trabajo y te indicará a qué grupo perteneces, así como los miembros que lo forman. Posteriormente, creará un foro de actividad grupal para cada grupo en la plataforma. Este foro servirá para que organicéis y distribuyáis tareas, elaboréis el material, etc. Una vez finalicéis la actividad, elegiréis un coordinador/a que se encargará de adjuntar el archivo final con la solución al espacio que el tutor-formador habilite para ello. Tu tutor-formador evaluará tanto el documento entregado como la participación en el foro.
 
-IMPORTANTE: Para poder presentarte a la prueba de evaluación final debes haber realizado el total de las actividades de aprendizaje establecidas en el Campus Virtual, así como haber participado en los foros programados.`
+- Además, también se tendrá en cuenta el número y calidad de las aportaciones que realices en los foros de debate planteados en cada unidad didáctica.
+
+3. DURANTE EL DESARROLLO EN LAS TUTORÍAS PRESENCIALES
+En el Centro de Formación tendrás que realizar también actividades (actividades prácticas y/o realizaciones prácticas) cuyo resultado se te comunicará a través del Campus Virtual. Además, tu formador irá comentando los resultados en el momento mismo en que se vayan desarrollando las prácticas.
+
+4. AL FINALIZAR LA FORMACIÓN DEL MÓDULO / UNIDAD FORMATIVA
+Deberás realizar las siguientes pruebas de evaluación:
+
+- Test de evaluación en el Campus Virtual, para cada unidad formativa, a través de una prueba tipo test con varias opciones de respuesta y una única correcta, que se corrige automáticamente, por lo que podrás conocer tu puntuación una vez lo hayas realizado.
+
+- Prueba de evaluación final presencial en el Centro de Formación al finalizar el módulo formativo, en la que deberás obtener, al menos, una puntuación de 5 sobre un total de 10 puntos para poder superar el curso, y cuya valoración te informará tu tutor-formador a través del Campus Virtual.
+
+5. CUESTIONARIO DE EVALUACIÓN DE LA CALIDAD
+Una vez finalizada la formación, deberás cumplimentar el "Cuestionario de evaluación de la calidad de la formación", en el que valorarás cada uno de los aspectos del curso con objeto de poder mejorar la formación.
+
+EN RESUMEN, PARA SUPERAR EL CURSO DEBERÁS:
+• Realizar y participar en todas las actividades de aprendizaje planteadas a lo largo del curso en el Campus Virtual (casos prácticos, foros, documentos, vídeos, etc.), así como realizar las pruebas de evaluación.
+• Asistir a las tutorías presenciales y realizar las actividades de aprendizaje evaluables que se lleven a cabo en estas sesiones.
+• Obtener en la prueba de evaluación final del módulo formativo una puntuación mínima de 5.
+
+IMPORTANTE: Para superar la formación con evaluación positiva también se tendrán en cuenta los tiempos de acceso al Campus Virtual.`
         },
         {
           number: "7.2",
