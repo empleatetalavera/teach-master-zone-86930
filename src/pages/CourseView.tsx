@@ -2192,6 +2192,99 @@ export default function CourseView() {
               </AccordionItem>
             </Accordion>
 
+            {/* EVALUACIÓN SOBRE EL PROCESO FORMATIVO - SEPE Compliance */}
+            <Accordion type="single" collapsible defaultValue="proceso">
+              <AccordionItem value="proceso" className="border-0">
+                <AccordionTrigger className="bg-emerald-700 text-white px-4 py-3 rounded-t-lg hover:no-underline data-[state=open]:rounded-b-none">
+                  <span className="font-bold text-lg">EVALUACIÓN SOBRE EL PROCESO FORMATIVO</span>
+                </AccordionTrigger>
+                <AccordionContent className="border border-t-0 rounded-b-lg p-4 bg-white space-y-4">
+                  <p className="text-sm text-slate-700">
+                    Durante el desarrollo del módulo formativo se aplican las siguientes garantías de evaluación,
+                    conforme a lo establecido en el Proyecto Formativo y la normativa SEPE:
+                  </p>
+
+                  <div className="grid gap-3">
+                    {[
+                      {
+                        n: 1,
+                        title: "Planificación según Proyecto Formativo",
+                        text: "Se incluyen, durante el desarrollo del módulo, las actividades e instrumentos de evaluación especificados en la planificación del aprendizaje recogida en el Proyecto formativo del curso.",
+                      },
+                      {
+                        n: 2,
+                        title: "Medición de conocimientos, destrezas y habilidades",
+                        text: "Las actividades e instrumentos de evaluación están diseñados para medir el logro de los conocimientos, destrezas y habilidades recogidos en las capacidades y criterios de evaluación del módulo.",
+                      },
+                      {
+                        n: 3,
+                        title: "Representatividad y nivel de cualificación",
+                        text: "Las actividades de evaluación son representativas de las capacidades y criterios de evaluación a comprobar, con la complejidad y dificultad exigida por el nivel de cualificación del certificado.",
+                      },
+                      {
+                        n: 4,
+                        title: "Instrucciones claras al alumnado",
+                        text: "Cada actividad incluye instrucciones que explican qué se debe realizar, cómo se medirá el desempeño, los plazos de presentación, los criterios de corrección y, si procede, cómo y dónde remitir la actividad.",
+                      },
+                      {
+                        n: 5,
+                        title: "Consulta permanente de resultados",
+                        text: "Puedes consultar en todo momento los resultados obtenidos en las actividades y trabajos de evaluación desarrollados durante el proceso de aprendizaje desde la sección «Mis calificaciones», conociendo permanentemente tu rendimiento.",
+                      },
+                    ].map((item) => (
+                      <div key={item.n} className="flex gap-3 p-3 bg-emerald-50 border-l-4 border-l-emerald-600 rounded-r">
+                        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center">
+                          {item.n}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm text-emerald-900">{item.title}</p>
+                          <p className="text-sm text-slate-700 mt-1">{item.text}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="border-2 border-emerald-300 rounded-lg p-4 bg-emerald-50/50">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-slate-700">
+                        <p className="font-semibold text-emerald-900 mb-1">Instrumentos disponibles en este módulo</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Diagnóstico inicial por módulo (competencia digital y conocimientos previos).</li>
+                          <li>Tests de autoevaluación por unidad formativa con feedback inmediato.</li>
+                          <li>Actividades prácticas con criterios de corrección publicados y plazos definidos.</li>
+                          <li>Participación valorada en foros de debate del módulo.</li>
+                          <li>Test final de módulo en el Campus Virtual.</li>
+                          <li>Prueba de evaluación final presencial en el Centro de Formación.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setActiveTab("grades")}
+                    >
+                      <Award className="h-4 w-4" />
+                      Consultar mis calificaciones
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setActiveTab("work-plan")}
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Ver plazos en el Plan de trabajo
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
             {/* Info Banner sobre fechas y obligatoriedad */}
             <Card className="bg-primary/5 border-primary/20">
               <CardContent className="py-4">
