@@ -216,31 +216,89 @@ export function CampusChrome({
               {modules.map((m, idx) => {
                 const status = moduleStatus(m);
                 const code = m.course_code || `MF${idx + 1}`;
+                const units = m.formative_units || [];
+                const pillBase = cn(
+                  "w-full px-2 py-2 rounded text-xs font-bold border transition-all flex items-center justify-center gap-1.5 truncate",
+                  status === "done" &&
+                    "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200",
+                  status === "current" &&
+                    "bg-amber-400 text-white border-amber-500 shadow",
+                  status === "todo" &&
+                    "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                );
+                const StatusIcon =
+                  status === "done" ? CheckCircle2 : status === "current" ? PlayCircle : Lock;
                 return (
-                  <button
-                    key={m.id}
-                    onClick={() => {
-                      onSelectModule(m.id);
-                      setActiveTab("modules");
-                    }}
-                    title={m.title}
-                    className={cn(
-                      "flex-1 min-w-0 px-2 py-2 rounded text-xs font-bold border transition-all flex items-center justify-center gap-1.5 truncate",
-                      status === "done" &&
-                        "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200",
-                      status === "current" &&
-                        "bg-amber-400 text-white border-amber-500 shadow",
-                      status === "todo" &&
-                        "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
-                    )}
-                  >
-                    {status === "done" && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                    {status === "current" && <PlayCircle className="h-3.5 w-3.5 shrink-0" />}
-                    {status === "todo" && <Lock className="h-3.5 w-3.5 shrink-0" />}
-                    <span className="truncate">{code}</span>
-                  </button>
+                  <Popover key={m.id}>
+                    <PopoverTrigger asChild>
+                      <button
+                        onClick={() => {
+                          onSelectModule(m.id);
+                          setActiveTab("modules");
+                        }}
+                        title={m.title}
+                        className={cn(pillBase, "flex-1 min-w-0")}
+                      >
+                        <StatusIcon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{code}</span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="center" className="w-80 p-0">
+                      <div className="bg-primary text-primary-foreground px-3 py-2 text-xs font-bold">
+                        {code} — {m.title}
+                      </div>
+                      <div className="p-2 max-h-72 overflow-y-auto">
+                        {units.length === 0 ? (
+                          <p className="text-xs text-muted-foreground p-2">
+                            Este módulo aún no tiene unidades formativas.
+                          </p>
+                        ) : (
+                          units.map((u) => (
+                            <button
+                              key={u.id}
+                              onClick={() => {
+                                onSelectModule(m.id);
+                                setActiveTab("modules");
+                              }}
+                              className="w-full text-left flex items-start gap-2 px-2 py-1.5 rounded hover:bg-slate-100 text-xs"
+                            >
+                              <BookOpen className="h-3.5 w-3.5 mt-0.5 text-primary shrink-0" />
+                              <span>
+                                {u.unit_code && (
+                                  <span className="font-bold mr-1">{u.unit_code}</span>
+                                )}
+                                {u.title}
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                      <div className="border-t p-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs"
+                          onClick={() => {
+                            onSelectModule(m.id);
+                            setActiveTab("modules");
+                          }}
+                        >
+                          Ir al módulo completo
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 );
               })}
+              <button
+                onClick={() => {
+                  onSelectModule("");
+                  setActiveTab("modules");
+                }}
+                className="px-3 py-2 rounded text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 whitespace-nowrap"
+              >
+                Ver Todo
+              </button>
             </div>
           </div>
         )}
