@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload, CheckSquare, PenTool, ExternalLink, Award, Download, Send, FolderUp } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, ClipboardCheck, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload, CheckSquare, PenTool, ExternalLink, Award, Download, Send, FolderUp } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -332,6 +332,9 @@ export default function CourseView() {
   const useCampusLayout = !isPropio && !!course;
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [campusEditMode, setCampusEditMode] = useState(false);
+  const [diagnosticModule, setDiagnosticModule] = useState<{ id: string; title: string } | null>(null);
+  const diagnosticDoneKey = (mid: string) => `diagnostic_done_${user?.id || 'anon'}_${mid}`;
+  const isDiagnosticDone = (mid: string) => typeof window !== 'undefined' && !!localStorage.getItem(diagnosticDoneKey(mid));
   const isAdminOrTeacher = userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher';
   
   const openActivitySubmission = (activityId: string) => {
@@ -1838,6 +1841,27 @@ export default function CourseView() {
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-4 pb-4 pt-2 border-t">
+                        {/* Diagnóstico inicial del módulo (recomendado, no bloqueante) */}
+                        <div
+                          onClick={() => setDiagnosticModule({ id: module.id, title: module.title })}
+                          className="mb-3 flex items-center gap-3 p-3 bg-amber-50/60 dark:bg-amber-950/20 rounded-lg border border-amber-200/60 cursor-pointer hover:bg-amber-100/60 dark:hover:bg-amber-950/40 transition-colors"
+                        >
+                          <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded">
+                            <ClipboardCheck className="h-4 w-4 text-amber-700 dark:text-amber-300" />
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-sm font-semibold">Diagnóstico inicial del módulo</span>
+                            <p className="text-xs text-muted-foreground">
+                              Evalúa tu competencia digital y conocimientos previos antes de empezar (recomendado).
+                            </p>
+                          </div>
+                          {isDiagnosticDone(module.id) ? (
+                            <Badge variant="secondary" className="gap-1"><CheckCircle2 className="h-3 w-3" />Realizado</Badge>
+                          ) : (
+                            <Badge variant="outline">Pendiente</Badge>
+                          )}
+                        </div>
+
                         {moduleUnits.length === 0 ? (
                           <div className="space-y-3">
                             {/* Show module-level PDF even without UFs */}
@@ -2909,6 +2933,25 @@ export default function CourseView() {
               moduleTitle={manualUploaderModuleTitle}
               formativeUnitId={manualUploaderUnitId}
               courseId={courseId}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Diagnóstico inicial del módulo */}
+      <Dialog open={!!diagnosticModule} onOpenChange={(o) => !o && setDiagnosticModule(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Diagnóstico inicial · {diagnosticModule?.title}</DialogTitle>
+          </DialogHeader>
+          {diagnosticModule && (
+            <PreAssessmentTest
+              moduleId={diagnosticModule.id}
+              moduleTitle={diagnosticModule.title}
+              onComplete={(res) => {
+                try { localStorage.setItem(diagnosticDoneKey(diagnosticModule.id), JSON.stringify({ at: res.completedAt })); } catch {}
+                toast({ title: "Diagnóstico guardado", description: "Tu diagnóstico se ha registrado correctamente." });
+              }}
             />
           )}
         </DialogContent>
