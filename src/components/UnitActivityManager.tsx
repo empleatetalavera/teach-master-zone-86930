@@ -28,6 +28,8 @@ interface Activity {
   title: string;
   description: string;
   instructions: string | null;
+  evaluation_criteria: string | null;
+  submission_instructions: string | null;
   max_score: number | null;
   due_date: string | null;
   submission_type: string | null;
@@ -54,6 +56,8 @@ export function UnitActivityManager({
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newInstructions, setNewInstructions] = useState("");
+  const [newEvaluationCriteria, setNewEvaluationCriteria] = useState("");
+  const [newSubmissionInstructions, setNewSubmissionInstructions] = useState("");
   const [newMaxScore, setNewMaxScore] = useState("100");
   const [newDueDate, setNewDueDate] = useState("");
   const [newSubmissionType, setNewSubmissionType] = useState<"text" | "file" | "url" | "both">("text");
@@ -111,6 +115,8 @@ export function UnitActivityManager({
           title: newTitle,
           description: newDescription,
           instructions: newInstructions || null,
+          evaluation_criteria: newEvaluationCriteria || null,
+          submission_instructions: newSubmissionInstructions || null,
           max_score: newMaxScore ? parseInt(newMaxScore) : 100,
           due_date: newDueDate || null,
           submission_type: newSubmissionType,
@@ -129,6 +135,8 @@ export function UnitActivityManager({
       setNewTitle("");
       setNewDescription("");
       setNewInstructions("");
+      setNewEvaluationCriteria("");
+      setNewSubmissionInstructions("");
       setNewMaxScore("100");
       setNewDueDate("");
       setNewSubmissionType("text");
@@ -177,6 +185,8 @@ export function UnitActivityManager({
     setNewTitle(activity.title);
     setNewDescription(activity.description);
     setNewInstructions(activity.instructions || "");
+    setNewEvaluationCriteria(activity.evaluation_criteria || "");
+    setNewSubmissionInstructions(activity.submission_instructions || "");
     setNewMaxScore(activity.max_score?.toString() || "100");
     setNewDueDate(activity.due_date || "");
     setNewSubmissionType((activity.submission_type as "text" | "file" | "url" | "both") || "text");
@@ -201,6 +211,8 @@ export function UnitActivityManager({
           title: newTitle,
           description: newDescription,
           instructions: newInstructions || null,
+          evaluation_criteria: newEvaluationCriteria || null,
+          submission_instructions: newSubmissionInstructions || null,
           max_score: newMaxScore ? parseInt(newMaxScore) : 100,
           due_date: newDueDate || null,
           submission_type: newSubmissionType,
@@ -233,6 +245,8 @@ export function UnitActivityManager({
     setNewTitle("");
     setNewDescription("");
     setNewInstructions("");
+    setNewEvaluationCriteria("");
+    setNewSubmissionInstructions("");
     setNewMaxScore("100");
     setNewDueDate("");
     setNewSubmissionType("text");
@@ -278,6 +292,28 @@ export function UnitActivityManager({
             onChange={(e) => setNewInstructions(e.target.value)}
             placeholder="Instrucciones detalladas para el alumno..."
             rows={4}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="activity-criteria">Criterios de corrección (SEPE)</Label>
+          <Textarea
+            id="activity-criteria"
+            value={newEvaluationCriteria}
+            onChange={(e) => setNewEvaluationCriteria(e.target.value)}
+            placeholder="Cómo se evaluará el desempeño del alumno: rúbrica, porcentajes, criterios..."
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="activity-submission-instr">Cómo y dónde entregar</Label>
+          <Textarea
+            id="activity-submission-instr"
+            value={newSubmissionInstructions}
+            onChange={(e) => setNewSubmissionInstructions(e.target.value)}
+            placeholder="Indica el formato del archivo, plataforma, email, etc."
+            rows={2}
           />
         </div>
 
@@ -413,6 +449,28 @@ export function UnitActivityManager({
                       value={newInstructions}
                       onChange={(e) => setNewInstructions(e.target.value)}
                       rows={4}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-criteria">Criterios de corrección (SEPE)</Label>
+                    <Textarea
+                      id="edit-criteria"
+                      value={newEvaluationCriteria}
+                      onChange={(e) => setNewEvaluationCriteria(e.target.value)}
+                      placeholder="Cómo se evaluará el desempeño del alumno..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-submission-instr">Cómo y dónde entregar</Label>
+                    <Textarea
+                      id="edit-submission-instr"
+                      value={newSubmissionInstructions}
+                      onChange={(e) => setNewSubmissionInstructions(e.target.value)}
+                      placeholder="Indica el formato del archivo, plataforma, email, etc."
+                      rows={2}
                     />
                   </div>
 

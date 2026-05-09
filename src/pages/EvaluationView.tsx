@@ -13,6 +13,9 @@ interface Evaluation {
   id: string;
   title: string;
   description: string | null;
+  instructions: string | null;
+  evaluation_criteria: string | null;
+  due_date: string | null;
   passing_score: number;
   max_attempts: number | null;
   time_limit_minutes: number | null;
@@ -264,6 +267,33 @@ export default function EvaluationView() {
                 <p className="text-xs sm:text-sm text-muted-foreground">Preguntas</p>
               </div>
             </div>
+
+            {evaluation.instructions && (
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="font-semibold mb-2">Instrucciones</h3>
+                <p className="text-sm whitespace-pre-wrap">{evaluation.instructions}</p>
+              </div>
+            )}
+
+            {evaluation.evaluation_criteria && (
+              <div className="p-4 rounded-lg border-l-4 border-primary bg-primary/5">
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  Criterios de corrección
+                </h3>
+                <p className="text-sm whitespace-pre-wrap">{evaluation.evaluation_criteria}</p>
+              </div>
+            )}
+
+            {evaluation.due_date && (
+              <div className="p-3 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 text-sm flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-600" />
+                <span>
+                  <strong>Fecha límite:</strong>{" "}
+                  {new Date(evaluation.due_date).toLocaleString("es-ES")}
+                </span>
+              </div>
+            )}
 
             {bestScore !== null && (
               <div className="p-4 border rounded-lg">

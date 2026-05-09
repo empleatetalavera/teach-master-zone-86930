@@ -16,6 +16,8 @@ interface Activity {
   title: string;
   description: string;
   instructions: string | null;
+  evaluation_criteria: string | null;
+  submission_instructions: string | null;
   max_score: number | null;
   due_date: string | null;
   submission_type: string | null;
@@ -225,6 +227,37 @@ export default function ActivityView() {
               <div className="p-4 bg-muted rounded-lg">
                 <h3 className="font-semibold mb-2">Instrucciones</h3>
                 <p className="text-sm whitespace-pre-wrap">{activity.instructions}</p>
+              </div>
+            )}
+
+            {activity.evaluation_criteria && (
+              <div className="p-4 rounded-lg border-l-4 border-primary bg-primary/5">
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  Cómo se evaluará tu desempeño (criterios de corrección)
+                </h3>
+                <p className="text-sm whitespace-pre-wrap">{activity.evaluation_criteria}</p>
+              </div>
+            )}
+
+            {(activity.submission_instructions || activity.submission_type) && (
+              <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900">
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Cómo y dónde entregar
+                </h3>
+                {activity.submission_type && (
+                  <p className="text-sm mb-1">
+                    <span className="font-medium">Modo de entrega:</span>{" "}
+                    {activity.submission_type === 'text' && 'Respuesta de texto en la plataforma'}
+                    {activity.submission_type === 'file' && 'Subir un archivo en la plataforma'}
+                    {activity.submission_type === 'url' && 'Enlace (URL) a tu trabajo'}
+                    {activity.submission_type === 'both' && 'Texto y/o archivo en la plataforma'}
+                  </p>
+                )}
+                {activity.submission_instructions && (
+                  <p className="text-sm whitespace-pre-wrap mt-1">{activity.submission_instructions}</p>
+                )}
               </div>
             )}
 
