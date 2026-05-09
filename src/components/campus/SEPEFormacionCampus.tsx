@@ -375,7 +375,7 @@ function ModuleUnitsTabs({
           }
         />
 
-        <SupplementaryMaterialList moduleId={moduleId} formativeUnitId={u.id} isAdmin={isAdmin} />
+        <SupplementaryMaterialList moduleId={moduleId} courseId={courseId} formativeUnitId={u.id} isAdmin={isAdmin} />
         <UFActivitiesList courseId={courseId} moduleId={moduleId} formativeUnitId={u.id} formativeUnitTitle={u.title} isAdmin={isAdmin} onOpenActivityManager={onOpenActivityManager} />
         <UFForumsList courseId={courseId} moduleId={moduleId} formativeUnitId={u.id} isAdmin={isAdmin} />
 
