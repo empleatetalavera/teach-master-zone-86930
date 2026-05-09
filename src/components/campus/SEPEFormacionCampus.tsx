@@ -610,6 +610,11 @@ export function SEPEFormacionCampus({
                           )}
                         </div>
                       )}
+
+                      {/* === BIBLIOTECA del módulo === */}
+                      <div className="p-3 border-t bg-muted/10">
+                        <ModuleLibrary moduleId={module.id} isAdmin={isAdmin} />
+                      </div>
                     </div>
                   </CollapsibleContent>
                 </div>
