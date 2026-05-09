@@ -231,39 +231,98 @@ export function CampusChrome({
           )}
         </div>
 
-        {/* Module pills — full width, equal columns */}
+        {/* Itinerario row — pills with chevron popover, like the reference */}
         {modules.length > 0 && (
           <div className="px-2 py-2 bg-slate-50 border-t">
             <div className="flex items-stretch gap-1.5 w-full">
+              <div className="hidden md:flex items-center px-3 bg-primary text-primary-foreground rounded text-[10px] font-bold tracking-wider shrink-0">
+                ITINERARIO
+              </div>
               <div className="flex items-stretch gap-1.5 flex-1 min-w-0">
                 {modules.map((m, idx) => {
                   const status = moduleStatus(m);
                   const code = m.course_code || `MF${idx + 1}`;
+                  const units = m.formative_units || [];
+                  const isCurrent = m.id === selectedModuleId;
                   const pillBase = cn(
-                    "w-full h-full px-2 py-2 rounded text-xs font-bold border transition-all flex items-center justify-center gap-1.5 truncate",
+                    "h-full px-2 py-2 rounded-l text-xs font-semibold border transition-all flex items-center gap-1.5 truncate flex-1 min-w-0",
                     status === "done" &&
-                      "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200",
-                    status === "current" &&
+                      "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100",
+                    isCurrent &&
                       "bg-amber-400 text-white border-amber-500 shadow",
-                    status === "todo" &&
-                      "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                    status === "todo" && !isCurrent &&
+                      "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                   );
                   const StatusIcon =
-                    status === "done" ? CheckCircle2 : status === "current" ? PlayCircle : Lock;
+                    status === "done" ? CheckCircle2 : isCurrent ? PlayCircle : Lock;
                   return (
-                    <button
-                      key={m.id}
-                      onClick={() => {
-                        onSelectModule(m.id);
-                        setActiveTab("modules");
-                      }}
-                      title={m.title}
-                      className={cn(pillBase, "flex-1 min-w-0")}
-                    >
-                      <StatusIcon className="h-3.5 w-3.5 shrink-0" />
-                      <span className="font-bold shrink-0">{code}</span>
-                      <span className="truncate opacity-90">· {m.title}</span>
-                    </button>
+                    <div key={m.id} className="flex flex-1 min-w-0 items-stretch">
+                      <button
+                        onClick={() => {
+                          onSelectModule(m.id);
+                          setActiveTab("modules");
+                        }}
+                        title={m.title}
+                        className={pillBase}
+                      >
+                        <StatusIcon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="font-bold shrink-0">{code}</span>
+                        <span className="truncate opacity-90">· {m.title}</span>
+                      </button>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            title="Ver unidades formativas"
+                            className={cn(
+                              "px-1.5 rounded-r border border-l-0 transition-all flex items-center justify-center shrink-0",
+                              status === "done" && "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100",
+                              isCurrent && "bg-amber-400 text-white border-amber-500",
+                              status === "todo" && !isCurrent && "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-80 p-0">
+                          <div className="bg-primary text-primary-foreground px-3 py-2 text-xs font-bold">
+                            {code} — {m.title}
+                          </div>
+                          <div className="p-2 max-h-72 overflow-y-auto">
+                            {units.length === 0 ? (
+                              <p className="text-xs text-muted-foreground p-2">
+                                Este módulo aún no tiene unidades formativas.
+                              </p>
+                            ) : (
+                              units.map((u) => (
+                                <button
+                                  key={u.id}
+                                  onClick={() => goToUnit(m.id, u.id)}
+                                  className="w-full text-left flex items-start gap-2 px-2 py-1.5 rounded hover:bg-primary/5 text-xs"
+                                >
+                                  <BookOpen className="h-3.5 w-3.5 mt-0.5 text-primary shrink-0" />
+                                  <span>
+                                    {u.unit_code && (
+                                      <span className="font-bold mr-1">{u.unit_code}</span>
+                                    )}
+                                    {u.title}
+                                  </span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                          <div className="border-t p-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full text-xs"
+                              onClick={() => goToUnit(m.id)}
+                            >
+                              Ir al módulo completo
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   );
                 })}
               </div>
@@ -274,68 +333,6 @@ export function CampusChrome({
                 Ver Todo
               </button>
             </div>
-
-            {/* Fixed module name + collapsible units of selected module */}
-            {(() => {
-              const selected = modules.find((m) => m.id === selectedModuleId) || modules[0];
-              if (!selected) return null;
-              const sIdx = modules.findIndex((m) => m.id === selected.id);
-              const code = selected.course_code || `MF${sIdx + 1}`;
-              const units = selected.formative_units || [];
-              return (
-                <div className="mt-2 bg-white border rounded shadow-sm overflow-hidden">
-                  <button
-                    onClick={() => setUnitsOpen((v) => !v)}
-                    className="w-full flex items-center gap-2 px-3 py-2 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
-                  >
-                    <Badge className="bg-primary text-primary-foreground font-mono text-[10px] shrink-0">
-                      {code}
-                    </Badge>
-                    <span className="text-sm font-semibold flex-1 min-w-0 truncate">
-                      {selected.title}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground shrink-0">
-                      {units.length} {units.length === 1 ? "UF" : "UFs"}
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        "h-4 w-4 text-muted-foreground transition-transform shrink-0",
-                        unitsOpen && "rotate-180"
-                      )}
-                    />
-                  </button>
-                  {unitsOpen && (
-                    <ul className="divide-y">
-                      {units.length === 0 ? (
-                        <li className="px-4 py-3 text-xs text-muted-foreground">
-                          Este módulo aún no tiene unidades formativas configuradas.
-                        </li>
-                      ) : (
-                        units.map((u, uIdx) => (
-                          <li key={u.id}>
-                            <button
-                              onClick={() => goToUnit(selected.id, u.id)}
-                              className="w-full flex items-start gap-2 px-4 py-2 text-left text-xs hover:bg-primary/5 transition-colors group"
-                            >
-                              <span className="font-mono text-muted-foreground w-6 shrink-0 text-right">
-                                {uIdx + 1}.
-                              </span>
-                              <BookOpen className="h-3.5 w-3.5 mt-0.5 text-primary shrink-0" />
-                              <span className="flex-1">
-                                {u.unit_code && (
-                                  <span className="font-bold mr-1">{u.unit_code}</span>
-                                )}
-                                <span className="group-hover:text-primary">{u.title}</span>
-                              </span>
-                            </button>
-                          </li>
-                        ))
-                      )}
-                    </ul>
-                  )}
-                </div>
-              );
-            })()}
           </div>
         )}
       </div>
