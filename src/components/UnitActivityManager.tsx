@@ -452,6 +452,28 @@ export function UnitActivityManager({
                     />
                   </div>
 
+                  <div>
+                    <Label htmlFor="edit-criteria">Criterios de corrección (SEPE)</Label>
+                    <Textarea
+                      id="edit-criteria"
+                      value={newEvaluationCriteria}
+                      onChange={(e) => setNewEvaluationCriteria(e.target.value)}
+                      placeholder="Cómo se evaluará el desempeño del alumno..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-submission-instr">Cómo y dónde entregar</Label>
+                    <Textarea
+                      id="edit-submission-instr"
+                      value={newSubmissionInstructions}
+                      onChange={(e) => setNewSubmissionInstructions(e.target.value)}
+                      placeholder="Indica el formato del archivo, plataforma, email, etc."
+                      rows={2}
+                    />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="edit-score">Puntuación máxima</Label>
