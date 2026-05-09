@@ -7,6 +7,7 @@ import { FileText, Video, Volume2, ExternalLink, Plus, Trash2 } from "lucide-rea
 
 interface Props {
   moduleId: string;
+  courseId: string;
   formativeUnitId: string;
   isAdmin: boolean;
 }
@@ -26,7 +27,7 @@ const TYPE_META: Record<string, { label: string; icon: React.ReactNode; bg: stri
   support_audio: { label: "Audio de apoyo", icon: <Volume2 className="h-4 w-4" />, bg: "bg-emerald-100 dark:bg-emerald-900/30", color: "text-emerald-600", accept: "audio/*" },
 };
 
-export function SupplementaryMaterialList({ moduleId, formativeUnitId, isAdmin }: Props) {
+export function SupplementaryMaterialList({ moduleId, courseId, formativeUnitId, isAdmin }: Props) {
   const { toast } = useToast();
   const [rows, setRows] = useState<Row[]>([]);
 
@@ -83,6 +84,7 @@ export function SupplementaryMaterialList({ moduleId, formativeUnitId, isAdmin }
                 }
                 contentType={t}
                 moduleId={moduleId}
+                courseId={courseId}
                 formativeUnitId={formativeUnitId}
                 acceptFile={TYPE_META[t].accept}
                 onCreated={load}
