@@ -294,7 +294,6 @@ export default function EvaluationView() {
                 </span>
               </div>
             )}
-            </div>
 
             {bestScore !== null && (
               <div className="p-4 border rounded-lg">
