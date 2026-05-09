@@ -803,6 +803,11 @@ export function SEPEFormacionCampus({
                 </div>
               </div>
 
+              {/* Subida y gestión de evidencias evaluables */}
+              <div className="m-4">
+                <EvidenceManager courseId={courseId} userRole={userRole} />
+              </div>
+
               {/* Aviso: Examen Final Presencial */}
               <div className="m-4 rounded-lg border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4">
                 <div className="flex items-start gap-3">
