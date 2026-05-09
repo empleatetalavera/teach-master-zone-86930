@@ -742,24 +742,56 @@ export default function CourseView() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <div className="w-full mx-auto py-6 px-3 sm:px-4 lg:px-6 2xl:px-10">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            const dashboardRoutes: Record<string, string> = {
-              'student': '/dashboard/student/courses',
-              'teacher': '/dashboard/teacher/courses',
-              'admin': '/dashboard/admin/courses',
-              'super_admin': '/dashboard/admin/courses',
-              'auditor': '/dashboard/auditor/courses',
-              'inspector': '/dashboard/auditor/courses'
-            };
-            navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
-          }}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
-        </Button>
+        {!useCampusLayout && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              const dashboardRoutes: Record<string, string> = {
+                'student': '/dashboard/student/courses',
+                'teacher': '/dashboard/teacher/courses',
+                'admin': '/dashboard/admin/courses',
+                'super_admin': '/dashboard/admin/courses',
+                'auditor': '/dashboard/auditor/courses',
+                'inspector': '/dashboard/auditor/courses'
+              };
+              navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
+            }}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+        )}
+
+        {useCampusLayout && (
+          <CampusChrome
+            course={course}
+            modules={modules as any}
+            selectedModuleId={selectedModuleId}
+            onSelectModule={setSelectedModuleId}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            userRole={userRole}
+            centerContact={centerContact}
+            progressPercent={enrollment?.progress_percentage || 0}
+            onEditMode={
+              (userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin')
+                ? () => navigate(`/dashboard/admin/courses/${courseId}/content`)
+                : undefined
+            }
+            onBack={() => {
+              const dashboardRoutes: Record<string, string> = {
+                'student': '/dashboard/student/courses',
+                'teacher': '/dashboard/teacher/courses',
+                'admin': '/dashboard/admin/courses',
+                'super_admin': '/dashboard/admin/courses',
+                'auditor': '/dashboard/auditor/courses',
+                'inspector': '/dashboard/auditor/courses'
+              };
+              navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
+            }}
+          />
+        )}
 
         {/* Course Header */}
         <Card className="mb-6">
