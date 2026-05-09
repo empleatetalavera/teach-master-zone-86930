@@ -12,6 +12,7 @@ import { Upload, Link as LinkIcon, Loader2 } from "lucide-react";
 export type ResourceContentType =
   | "intro_video"
   | "objectives_pdf"
+  | "concept_map"
   | "support_doc"
   | "support_video"
   | "support_audio"
@@ -29,7 +30,8 @@ interface AddResourceDialogProps {
 
 const LABELS: Record<ResourceContentType, string> = {
   intro_video: "Vídeo de presentación",
-  objectives_pdf: "PDF Objetivos y Contenidos",
+  objectives_pdf: "Objetivos",
+  concept_map: "Mapa conceptual",
   support_doc: "Documento de apoyo",
   support_video: "Vídeo de apoyo",
   support_audio: "Audio de apoyo",
