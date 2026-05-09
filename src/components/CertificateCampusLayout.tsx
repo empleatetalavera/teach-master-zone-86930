@@ -87,6 +87,7 @@ const RECURSOS_TABS = [
 const ORGANIZARME_ITEMS = [
   { id: "student-guide", label: "Cómo hacer mi curso", Icon: BookOpen },
   { id: "calendar", label: "Mi agenda", Icon: CalendarIcon },
+  { id: "schedule", label: "Cronograma", Icon: ClipboardList },
   { id: "forum", label: "Mensajes pendientes", Icon: Inbox },
   { id: "time-tracking", label: "Mis progresos", Icon: BarChart3 },
   { id: "grades", label: "Mis calificaciones", Icon: Award },
