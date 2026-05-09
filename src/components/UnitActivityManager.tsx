@@ -245,6 +245,8 @@ export function UnitActivityManager({
     setNewTitle("");
     setNewDescription("");
     setNewInstructions("");
+    setNewEvaluationCriteria("");
+    setNewSubmissionInstructions("");
     setNewMaxScore("100");
     setNewDueDate("");
     setNewSubmissionType("text");
