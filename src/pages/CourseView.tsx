@@ -1678,6 +1678,21 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
+            {/* SEPE: Diagnóstico inicial - alfabetización digital y conocimientos previos */}
+            <Card className="border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50">
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg shrink-0">
+                  <Target className="h-5 w-5 text-amber-700" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-amber-900 mb-1">Diagnóstico inicial recomendado</h4>
+                  <p className="text-sm text-amber-800">
+                    Antes de comenzar cada módulo, te recomendamos realizar el <strong>test de diagnóstico inicial</strong> disponible en la primera unidad formativa de cada módulo. Evalúa tu nivel de competencia digital y tus conocimientos previos sobre los contenidos a aprender, para que tu tutor-formador pueda orientarte mejor.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
             {(isCFCCourse || isPropio) && (
               <>
                 <div className="flex items-center justify-between">
