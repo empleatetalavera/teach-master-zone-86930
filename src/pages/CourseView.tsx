@@ -53,7 +53,7 @@ import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import { CertificateDocumentsSection } from "@/components/CertificateDocumentsSection";
 import { ModuleContentUploader } from "@/components/ModuleContentUploader";
 import { ModuleManualUploader } from "@/components/ModuleManualUploader";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScormAuthorModal } from "@/components/scorm-author/ScormAuthorModal";
 import { ModuleFormativeUnitManager } from "@/components/ModuleFormativeUnitManager";
 import { CourseGlossary } from "@/components/CourseGlossary";
