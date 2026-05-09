@@ -984,6 +984,7 @@ export default function CourseView() {
                     courseTitle={course.title}
                     supportEmail={centerContact.email || course.support_email}
                     supportPhone={centerContact.phone || course.support_phone}
+                    supportSchedule={centerContact.support_schedule || undefined}
                   />
                 </DialogContent>
               </Dialog>
