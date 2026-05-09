@@ -327,6 +327,8 @@ export default function CourseView() {
   // New 3-column "Empléate Talavera" style chrome for certificate courses (CFC + SEPE)
   const useCampusLayout = !isPropio && !!course;
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [campusEditMode, setCampusEditMode] = useState(false);
+  const isAdminOrTeacher = userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher';
   
   const openActivitySubmission = (activityId: string) => {
     setSelectedActivityId(activityId);
@@ -741,7 +743,7 @@ export default function CourseView() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className={`w-full mx-auto py-6 ${useCampusLayout ? 'px-3 sm:px-4 xl:pl-[130px] xl:pr-[130px] 2xl:pl-[140px] 2xl:pr-[140px]' : 'px-3 sm:px-4 lg:px-6 2xl:px-10'}`}>
+      <div className={`w-full mx-auto py-6 ${useCampusLayout ? (campusEditMode ? 'px-3 sm:px-4 lg:px-6 2xl:px-10' : 'px-3 sm:px-4 xl:pl-[130px] xl:pr-[130px] 2xl:pl-[140px] 2xl:pr-[140px]') : 'px-3 sm:px-4 lg:px-6 2xl:px-10'}`}>
         {!useCampusLayout && (
           <Button
             variant="ghost"
@@ -774,8 +776,14 @@ export default function CourseView() {
             userRole={userRole}
             centerContact={centerContact}
             progressPercent={enrollment?.progress_percentage || 0}
+            editMode={campusEditMode}
             onEditMode={
-              (userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin')
+              isAdminOrTeacher
+                ? () => setCampusEditMode((v) => !v)
+                : undefined
+            }
+            onOpenAdvancedEditor={
+              isAdminOrTeacher
                 ? () => navigate(`/dashboard/admin/courses/${courseId}/content`)
                 : undefined
             }

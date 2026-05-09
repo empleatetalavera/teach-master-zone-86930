@@ -50,6 +50,8 @@ interface Props {
   centerContact: CenterContact;
   progressPercent?: number;
   onEditMode?: () => void;
+  editMode?: boolean;
+  onOpenAdvancedEditor?: () => void;
   onBack?: () => void;
 }
 
@@ -80,6 +82,8 @@ export function CampusChrome({
   centerContact,
   progressPercent = 0,
   onEditMode,
+  editMode = false,
+  onOpenAdvancedEditor,
   onBack,
 }: Props) {
   const navigate = useNavigate();
@@ -142,10 +146,20 @@ export function CampusChrome({
               <BarChart3 className="h-3.5 w-3.5" />
               <span>{progressPercent}% completado</span>
             </div>
+            {isAdmin && onOpenAdvancedEditor && (
+              <Button size="sm" variant="ghost" onClick={onOpenAdvancedEditor} className="text-xs">
+                Editor avanzado
+              </Button>
+            )}
             {isAdmin && onEditMode && (
-              <Button size="sm" variant="outline" onClick={onEditMode}>
+              <Button
+                size="sm"
+                variant={editMode ? "default" : "outline"}
+                onClick={onEditMode}
+                className={editMode ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}
+              >
                 <Settings className="h-3.5 w-3.5 mr-1.5" />
-                Modo edición
+                {editMode ? "Salir de edición" : "Modo edición"}
               </Button>
             )}
           </div>
@@ -217,6 +231,7 @@ export function CampusChrome({
       </div>
 
       {/* LEFT RAIL — Fixed */}
+      {!editMode && (
       <aside className="hidden xl:flex fixed left-2 top-44 flex-col w-[110px] z-20">
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Organizarme
@@ -253,8 +268,10 @@ export function CampusChrome({
           )}
         </div>
       </aside>
+      )}
 
       {/* RIGHT RAIL — Fixed */}
+      {!editMode && (
       <aside className="hidden xl:flex fixed right-2 top-44 flex-col w-[110px] z-20">
         <div className="bg-primary text-primary-foreground text-center text-xs font-bold py-2 rounded-t">
           Comunicarme
@@ -277,6 +294,7 @@ export function CampusChrome({
           ))}
         </div>
       </aside>
+      )}
     </>
   );
 }
