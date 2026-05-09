@@ -729,8 +729,36 @@ export function SEPEFormacionCampus({
           </AccordionTrigger>
           <AccordionContent className="border border-t-0 rounded-b-lg p-0 bg-card">
             <div className="space-y-0">
+              {/* Aviso: Examen Final Presencial */}
+              <div className="m-4 rounded-lg border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-amber-200 dark:bg-amber-900/40 rounded-lg flex-shrink-0">
+                    <ClipboardList className="h-5 w-5 text-amber-800 dark:text-amber-300" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm text-amber-900 dark:text-amber-200">EXAMEN FINAL PRESENCIAL</span>
+                      <Badge className="text-[10px] bg-amber-600 hover:bg-amber-600 text-white">Obligatorio</Badge>
+                    </div>
+                    <p className="text-xs text-amber-900/80 dark:text-amber-200/80 mt-1">
+                      La evaluación final del curso se realiza de forma <strong>presencial</strong>. Es imprescindible la asistencia para superar la formación.
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-3 mt-3">
+                      <div className="bg-white dark:bg-background/40 rounded-md border border-amber-200 px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-wide text-amber-700 dark:text-amber-400 font-semibold">Fecha del examen</p>
+                        <p className="text-sm font-medium text-foreground mt-0.5">Por confirmar — el centro comunicará la fecha y hora</p>
+                      </div>
+                      <div className="bg-white dark:bg-background/40 rounded-md border border-amber-200 px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-wide text-amber-700 dark:text-amber-400 font-semibold">Lugar del examen</p>
+                        <p className="text-sm font-medium text-foreground mt-0.5">Por confirmar — sede del centro de formación</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div 
-                className="flex items-center gap-3 p-4 border-b hover:bg-muted/30 cursor-pointer transition-colors"
+                className="flex items-center gap-3 p-4 border-b border-t hover:bg-muted/30 cursor-pointer transition-colors"
                 onClick={() => toast({ title: "Test Final Global", description: "Accediendo al test final de evaluación..." })}
               >
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -738,9 +766,9 @@ export function SEPEFormacionCampus({
                 </div>
                 <div className="flex-1">
                   <span className="text-sm font-medium">{courseTitle} - Test Final</span>
-                  <p className="text-xs text-muted-foreground">Evaluación final de todos los módulos</p>
+                  <p className="text-xs text-muted-foreground">Prueba final presencial · fecha y lugar a confirmar por el centro</p>
                 </div>
-                <Badge variant="outline" className="text-xs">Obligatorio</Badge>
+                <Badge variant="outline" className="text-xs">Presencial</Badge>
               </div>
 
               <div 
