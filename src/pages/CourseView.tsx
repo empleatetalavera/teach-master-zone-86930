@@ -1166,9 +1166,10 @@ export default function CourseView() {
               </CardContent>
             </Card>
           </div>
+          )}
           
           {/* Main Content */}
-          <div className="min-w-0">
+          <div className={useCampusLayout ? '' : 'min-w-0'}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               {/* Mobile Tab Navigation */}
               <div className="lg:hidden overflow-x-auto pb-2">
