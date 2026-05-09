@@ -327,6 +327,8 @@ export default function CourseView() {
   // New 3-column "Empléate Talavera" style chrome for certificate courses (CFC + SEPE)
   const useCampusLayout = !isPropio && !!course;
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [campusEditMode, setCampusEditMode] = useState(false);
+  const isAdminOrTeacher = userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher';
   
   const openActivitySubmission = (activityId: string) => {
     setSelectedActivityId(activityId);
