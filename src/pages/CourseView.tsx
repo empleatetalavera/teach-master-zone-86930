@@ -865,8 +865,10 @@ export default function CourseView() {
             )}
           </CardHeader>
         </Card>
+        )}
 
         {/* Toolbar - Always visible */}
+        {!useCampusLayout && (
         <Card className="mb-6 overflow-x-auto">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 flex-nowrap min-w-max">
