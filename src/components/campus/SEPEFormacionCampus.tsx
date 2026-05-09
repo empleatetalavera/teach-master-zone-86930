@@ -669,7 +669,7 @@ export function SEPEFormacionCampus({
 
                         {/* C) Tutorías presenciales */}
                         <ModuleSectionBar title="C) Tutorías Presenciales">
-                          <TutoriasPresencialesGuide courseId={courseId} moduleId={module.id} isAdmin={isAdmin} />
+                          <TutoriasPresencialesGuide courseId={courseId} userRole={userRole || undefined} courseName={courseTitle} />
                         </ModuleSectionBar>
 
                         {/* D) Tutoría virtual */}
