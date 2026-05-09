@@ -741,7 +741,7 @@ export default function CourseView() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className={`w-full mx-auto py-6 px-3 sm:px-4 lg:px-6 2xl:px-10 ${useCampusLayout ? 'xl:pl-[140px] xl:pr-[140px]' : ''}`}>
+      <div className={`w-full mx-auto py-6 ${useCampusLayout ? 'px-3 sm:px-4 xl:pl-[130px] xl:pr-[130px] 2xl:pl-[140px] 2xl:pr-[140px]' : 'px-3 sm:px-4 lg:px-6 2xl:px-10'}`}>
         {!useCampusLayout && (
           <Button
             variant="ghost"
@@ -791,6 +791,41 @@ export default function CourseView() {
               navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
             }}
           />
+        )}
+
+        {useCampusLayout && (
+          <Card className="mb-4 border-2 border-primary/20 bg-gradient-to-r from-primary/5 via-background to-amber-50/40">
+            <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  {course.course_code && (
+                    <Badge className="bg-primary text-primary-foreground font-bold">{course.course_code}</Badge>
+                  )}
+                  {course.qualification_level && (
+                    <Badge variant="secondary">Nivel {course.qualification_level}</Badge>
+                  )}
+                  {course.duration_hours && (
+                    <Badge variant="outline" className="text-xs">{course.duration_hours}h</Badge>
+                  )}
+                </div>
+                <h1 className="text-lg md:text-xl font-bold leading-tight truncate">{course.title}</h1>
+                <div className="flex items-center gap-2 mt-2">
+                  <Progress value={enrollment?.progress_percentage || 0} className="h-2 max-w-[280px]" />
+                  <span className="text-xs font-semibold text-muted-foreground">{enrollment?.progress_percentage || 0}% completado</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  size="lg"
+                  onClick={() => setActiveTab('student-guide')}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold shadow-lg ring-2 ring-amber-300"
+                >
+                  <Download className="h-5 w-5 mr-2" />
+                  Guía del Alumno
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Course Header */}
@@ -1730,8 +1765,19 @@ export default function CourseView() {
             )}
             {(isCFCCourse || isPropio) && modules.length > 0 ? (
               /* ===== CFC SIMPLIFIED MODULE VIEW ===== */
-              <Accordion type="multiple" className="space-y-3">
-                {modules.map((module, index) => {
+              <>
+                {useCampusLayout && selectedModuleId && (
+                  <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 mb-2">
+                    <span className="text-xs text-muted-foreground">
+                      Mostrando solo el módulo seleccionado en la barra superior
+                    </span>
+                    <Button size="sm" variant="ghost" onClick={() => setSelectedModuleId(null)}>
+                      Ver todos los módulos
+                    </Button>
+                  </div>
+                )}
+              <Accordion type="multiple" defaultValue={useCampusLayout && selectedModuleId ? [selectedModuleId] : []} className="space-y-3">
+                {modules.filter(m => !useCampusLayout || !selectedModuleId || m.id === selectedModuleId).map((module, index) => {
                   const moduleUnits = module.formative_units || [];
                   return (
                     <AccordionItem key={module.id} value={module.id} className="border rounded-lg overflow-hidden">
@@ -1934,10 +1980,11 @@ export default function CourseView() {
                   );
                 })}
               </Accordion>
+              </>
             ) : (
               /* ===== SEPE / STANDARD MODULE VIEW ===== */
               <SEPEFormacionCampus
-                modules={modules}
+                modules={useCampusLayout && selectedModuleId ? modules.filter(m => m.id === selectedModuleId) : modules}
                 courseId={courseId!}
                 courseTitle={course?.title || 'Curso'}
                 userRole={userRole}
