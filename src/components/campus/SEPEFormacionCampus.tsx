@@ -10,6 +10,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ModuleFormativeUnitManager } from "@/components/ModuleFormativeUnitManager";
 import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
+import { UFIntroductionSection } from "./UFIntroductionSection";
+import { SupplementaryMaterialList } from "./SupplementaryMaterialList";
+import { UFActivitiesList } from "./UFActivitiesList";
+import { UFForumsList } from "./UFForumsList";
+import { ModuleLibrary } from "./ModuleLibrary";
 import {
   BookOpen, Clock, FileText, CheckCircle2, ChevronDown, PlayCircle,
   Layers, PenTool, ClipboardList, ListChecks, Target, Upload,
