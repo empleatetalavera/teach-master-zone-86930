@@ -1736,6 +1736,23 @@ export default function CourseView() {
 
 
           <TabsContent value="grades" className="space-y-4">
+            {showSEPEFeatures && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <FolderUp className="h-5 w-5 text-primary" />
+                    Recursos de Evaluación
+                  </CardTitle>
+                  <CardDescription>
+                    Informa sobre la evaluación subiendo evidencias, documentos, imágenes o vídeos asociados al curso, módulo o unidad formativa.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <EvidenceManager courseId={courseId!} userRole={userRole || undefined} />
+                </CardContent>
+              </Card>
+            )}
+
             {userRole === 'teacher' ? (
               <TeacherActivityCorrectionPanel courseId={courseId!} />
             ) : (isCFCCourse || isPropio) ? (
