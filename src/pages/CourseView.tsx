@@ -332,6 +332,9 @@ export default function CourseView() {
   const useCampusLayout = !isPropio && !!course;
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [campusEditMode, setCampusEditMode] = useState(false);
+  const [diagnosticModule, setDiagnosticModule] = useState<{ id: string; title: string } | null>(null);
+  const diagnosticDoneKey = (mid: string) => `diagnostic_done_${user?.id || 'anon'}_${mid}`;
+  const isDiagnosticDone = (mid: string) => typeof window !== 'undefined' && !!localStorage.getItem(diagnosticDoneKey(mid));
   const isAdminOrTeacher = userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher';
   
   const openActivitySubmission = (activityId: string) => {
