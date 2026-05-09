@@ -25,8 +25,7 @@ import {
   Unlock,
   User,
   Clock,
-  Search,
-  Plus
+  Search
 } from "lucide-react";
 import {
   DropdownMenu,
