@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import {
+import { ChevronDown,
   ArrowLeft,
   Settings,
   BookOpen,
@@ -109,6 +109,7 @@ export function CampusChrome({
 }: Props) {
   const navigate = useNavigate();
   const [verTodoOpen, setVerTodoOpen] = useState(false);
+  const [unitsOpen, setUnitsOpen] = useState(true);
 
   const goToUnit = (moduleId: string, unitId?: string) => {
     onSelectModule(moduleId);
