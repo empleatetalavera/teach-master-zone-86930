@@ -972,63 +972,12 @@ export default function CourseView() {
                     CAU
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[400px] p-0" align="start">
-                  <div className="p-4 border-b bg-gradient-to-r from-red-500/10 to-red-500/5">
-                    <h4 className="font-semibold flex items-center gap-2">
-                      <HelpCircle className="h-5 w-5 text-red-600" />
-                      Centro de Atención al Usuario (CAU)
-                    </h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Soporte técnico y ayuda del campus
-                    </p>
-                  </div>
-                  <div className="p-4 space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      Si tienes alguna duda o consulta técnica, puedes contactar con el <span className="font-semibold text-foreground">Centro de Atención al Usuario</span>.
-                    </p>
-                    
-                    <p className="text-sm text-muted-foreground">
-                      Dispones de un enlace para consultar la <span className="font-semibold text-foreground">Ayuda del Campus Virtual</span> con vídeos tutoriales y "paseos virtuales" por las distintas áreas del Campus.
-                    </p>
-
-                    <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                      {centerContact.email ? (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-primary" />
-                          <a href={`mailto:${centerContact.email}`} className="text-primary hover:underline">
-                            {centerContact.email}
-                          </a>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="h-4 w-4" />
-                          <span>Email no configurado</span>
-                        </div>
-                      )}
-                      {centerContact.phone ? (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-primary" />
-                          <span>{centerContact.phone}</span>
-                          <span className="text-muted-foreground text-xs">(09:00 - 14:00)</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="h-4 w-4" />
-                          <span>Teléfono no configurado</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <Button 
-                      className="w-full" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => navigate('/campus-guide')}
-                    >
-                      <HelpCircle className="w-4 h-4 mr-2" />
-                      Ayuda del Campus Virtual
-                    </Button>
-                  </div>
+                <PopoverContent className="w-[440px] p-0" align="start">
+                  <CAUSupportForm
+                    courseId={courseId!}
+                    supportEmail={centerContact.email || course.support_email}
+                    supportPhone={centerContact.phone || course.support_phone}
+                  />
                 </PopoverContent>
               </Popover>
 
