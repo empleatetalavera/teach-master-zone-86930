@@ -270,6 +270,7 @@ export default function CourseView() {
     campus_url?: string;
     student_guide_pdf_url?: string | null;
     tutor_guide_pdf_url?: string | null;
+    support_schedule?: string | null;
   }>({
     name: "",
     email: "", 
@@ -476,7 +477,7 @@ export default function CourseView() {
       if (centerIdToUse) {
         const { data: centerData } = await supabase
           .from("training_centers")
-          .select("slug, name, email, phone, whatsapp_phone, address, city, province, postal_code, cif, logo_url, campus_url, contact_email, contact_phone, student_guide_pdf_url, tutor_guide_pdf_url")
+          .select("slug, name, email, phone, whatsapp_phone, address, city, province, postal_code, cif, logo_url, campus_url, contact_email, contact_phone, student_guide_pdf_url, tutor_guide_pdf_url, support_schedule")
           .eq("id", centerIdToUse)
           .single();
         
@@ -499,7 +500,8 @@ export default function CourseView() {
           cif: centerData?.cif || "",
           campus_url: (centerData as any)?.campus_url || "",
           student_guide_pdf_url: (centerData as any)?.student_guide_pdf_url || null,
-          tutor_guide_pdf_url: (centerData as any)?.tutor_guide_pdf_url || null
+          tutor_guide_pdf_url: (centerData as any)?.tutor_guide_pdf_url || null,
+          support_schedule: (centerData as any)?.support_schedule || null
         });
       }
 
