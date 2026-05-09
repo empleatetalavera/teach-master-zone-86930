@@ -24,6 +24,7 @@ interface TrainingCenter {
   footer_text: string | null;
   contact_email: string | null;
   contact_phone: string | null;
+  support_schedule?: string | null;
   address: string | null;
   is_active: boolean;
   created_at: string;
@@ -49,6 +50,7 @@ export default function AdminTrainingCenters() {
     footer_text: "",
     contact_email: "",
     contact_phone: "",
+    support_schedule: "De lunes a jueves de 9:00 a 18:30 h y viernes de 9:00 a 14:00 h",
     address: "",
     is_active: true,
     custom_domain: "",
@@ -261,6 +263,7 @@ export default function AdminTrainingCenters() {
       footer_text: center.footer_text || "",
       contact_email: center.contact_email || "",
       contact_phone: center.contact_phone || "",
+      support_schedule: (center as any).support_schedule || "De lunes a jueves de 9:00 a 18:30 h y viernes de 9:00 a 14:00 h",
       address: center.address || "",
       is_active: center.is_active,
       custom_domain: center.custom_domain || "",
@@ -321,6 +324,7 @@ export default function AdminTrainingCenters() {
       footer_text: "",
       contact_email: "",
       contact_phone: "",
+      support_schedule: "De lunes a jueves de 9:00 a 18:30 h y viernes de 9:00 a 14:00 h",
       address: "",
       is_active: true,
       custom_domain: "",
@@ -394,6 +398,15 @@ export default function AdminTrainingCenters() {
                       id="contact_phone"
                       value={formData.contact_phone}
                       onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="support_schedule">Horario de Atención (CAU)</Label>
+                    <Input
+                      id="support_schedule"
+                      value={formData.support_schedule}
+                      onChange={(e) => setFormData({ ...formData, support_schedule: e.target.value })}
+                      placeholder="De lunes a jueves de 9:00 a 18:30 h y viernes de 9:00 a 14:00 h"
                     />
                   </div>
                   <div>

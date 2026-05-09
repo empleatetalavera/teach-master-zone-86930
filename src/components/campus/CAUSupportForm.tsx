@@ -13,11 +13,12 @@ interface CAUSupportFormProps {
   courseTitle?: string;
   supportEmail?: string;
   supportPhone?: string;
+  supportSchedule?: string;
 }
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25MB
 
-export function CAUSupportForm({ courseId, courseTitle, supportEmail, supportPhone }: CAUSupportFormProps) {
+export function CAUSupportForm({ courseId, courseTitle, supportEmail, supportPhone, supportSchedule }: CAUSupportFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [subject, setSubject] = useState("");
@@ -165,7 +166,7 @@ export function CAUSupportForm({ courseId, courseTitle, supportEmail, supportPho
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="h-3.5 w-3.5" /> Teléfono: {supportPhone}
               </div>
-              <div className="text-muted-foreground pl-5">Horario de contacto: De lunes a jueves de 9:00 a 18:30 horas y viernes de 9:00 a 14:00 horas</div>
+              <div className="text-muted-foreground pl-5">Horario de contacto: {supportSchedule || "De lunes a jueves de 9:00 a 18:30 horas y viernes de 9:00 a 14:00 horas"}</div>
             </>
           )}
           {supportEmail ? (
