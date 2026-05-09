@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload, CheckSquare, PenTool, ExternalLink, Award } from "lucide-react";
+import { Loader2, BookOpen, Clock, BarChart3, ArrowLeft, Calendar, MessageSquare, FileText, CheckCircle2, CheckCircle, PlayCircle, ChevronDown, Mail, Phone, FileDown, ShieldCheck, User, Users, GraduationCap, MapIcon, Settings, ListChecks, Video, Headphones, FileQuestion, Layers, Presentation, Plus, BookMarked, ClipboardList, Circle, AlertCircle, Star, Edit2, Play, MonitorPlay, Inbox, Bell, HelpCircle, Target, Sparkles, Upload, CheckSquare, PenTool, ExternalLink, Award, Download } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -967,6 +967,15 @@ export default function CourseView() {
                 </PopoverContent>
               </Popover>
 
+              <Button
+                size="sm"
+                onClick={() => setActiveTab('student-guide')}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold shadow-lg ring-2 ring-amber-300 animate-pulse hover:animate-none"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Guía del Alumno
+              </Button>
+
               {(userRole === 'auditor' || userRole === 'admin' || userRole === 'super_admin') && (
                 <Button
                   variant="outline"
@@ -1507,7 +1516,7 @@ export default function CourseView() {
             <Card>
               <CardContent className="p-6">
                 <CourseStudentGuide 
-                  course={course} 
+                  course={{ ...course, student_guide_pdf_url: centerContact.student_guide_pdf_url || course.student_guide_pdf_url }} 
                   centerSlug={centerSlug} 
                 />
               </CardContent>
@@ -1520,72 +1529,6 @@ export default function CourseView() {
             <TeacherTutorGuide />
           </TabsContent>
 
-
-          <TabsContent value="training-program" className="space-y-4">
-            {/* Admin uploader for custom training program */}
-            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-              <SingleDocumentUploader
-                courseId={courseId || ''}
-                documentUrl={course.training_program_pdf_url}
-                documentType="program"
-                onUpdate={loadCourseData}
-                isAdmin={true}
-              />
-            )}
-            
-            {/* Credenciales de prueba - Solo visible para evaluadores (inspector, auditor) */}
-            {(userRole === 'inspector' || userRole === 'auditor') && (
-              <Card className="border-amber-300 bg-amber-50/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-amber-800 text-lg">
-                    <ShieldCheck className="h-5 w-5" />
-                    Credenciales de Prueba para Evaluación
-                  </CardTitle>
-                  <CardDescription className="text-amber-700">
-                    Utilice estas credenciales para acceder a la plataforma como alumno o tutor-formador
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr>
-                          <th className="bg-teal-600 text-white p-2 text-left font-semibold border" colSpan={2}>CLAVE ALUMNO</th>
-                          <th className="bg-teal-600 text-white p-2 text-left font-semibold border" colSpan={2}>CLAVE TUTOR-FORMADOR</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="bg-white">
-                          <td className="border p-2 text-muted-foreground">Usuario:</td>
-                          <td className="border p-2 font-mono font-medium">alumnocertificados</td>
-                          <td className="border p-2 text-muted-foreground">Usuario:</td>
-                          <td className="border p-2 font-mono font-medium">tutorcertificados</td>
-                        </tr>
-                        <tr className="bg-muted/30">
-                          <td className="border p-2 text-muted-foreground">Contraseña:</td>
-                          <td className="border p-2 font-mono font-medium">d123456-A</td>
-                          <td className="border p-2 text-muted-foreground">Contraseña:</td>
-                          <td className="border p-2 font-mono font-medium">d123456-T</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card>
-              <CardContent className="p-6">
-                <CourseTrainingProgram 
-                  course={course} 
-                  modules={modules}
-                  centerSlug={centerSlug}
-                  centerContact={centerContact}
-                  isEditable={userRole === 'admin' || userRole === 'teacher' || userRole === 'super_admin'}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* CFC Course Program - simplified version */}
           <TabsContent value="course-program" className="space-y-4">
@@ -1735,6 +1678,21 @@ export default function CourseView() {
           </TabsContent>
 
           <TabsContent value="modules" className="space-y-4">
+            {/* SEPE: Diagnóstico inicial - alfabetización digital y conocimientos previos */}
+            <Card className="border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50">
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg shrink-0">
+                  <Target className="h-5 w-5 text-amber-700" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-amber-900 mb-1">Diagnóstico inicial recomendado</h4>
+                  <p className="text-sm text-amber-800">
+                    Antes de comenzar cada módulo, te recomendamos realizar el <strong>test de diagnóstico inicial</strong> disponible en la primera unidad formativa de cada módulo. Evalúa tu nivel de competencia digital y tus conocimientos previos sobre los contenidos a aprender, para que tu tutor-formador pueda orientarte mejor.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
             {(isCFCCourse || isPropio) && (
               <>
                 <div className="flex items-center justify-between">
