@@ -55,15 +55,14 @@ export function CAUSupportForm({ courseId, supportEmail, supportPhone }: CAUSupp
         };
       }
 
-      const { error } = await supabase.from("communications").insert({
+      const { error } = await supabase.from("communications").insert([{
         sender_id: user!.id,
-        receiver_id: null,
         course_id: courseId,
-        communication_type: "cau_ticket",
+        communication_type: "message",
         subject: `[CAU] ${subject}`,
         message,
         metadata,
-      });
+      }]);
       if (error) throw error;
 
       toast({
