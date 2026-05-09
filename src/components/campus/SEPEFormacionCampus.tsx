@@ -278,6 +278,7 @@ function ModuleUnitsTabs({
   toast: ReturnType<typeof useToast>["toast"];
 }) {
   const [selectedUnitId, setSelectedUnitId] = useState<string>(moduleUnits[0]?.id ?? "");
+  const [panelOpen, setPanelOpen] = useState<boolean>(true);
   useEffect(() => {
     if (!moduleUnits.find((u) => u.id === selectedUnitId)) {
       setSelectedUnitId(moduleUnits[0]?.id ?? "");
