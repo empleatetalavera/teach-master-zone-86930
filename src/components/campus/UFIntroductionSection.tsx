@@ -1,12 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AddResourceDialog, ResourceContentType } from "./AddResourceDialog";
 import { ResourcePreviewDialog } from "./ResourcePreviewDialog";
 import { PlayCircle, FileText, MessageSquare, FileQuestion, Plus, Eye, Pencil, Network } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+type IntroResourceType = "intro_video" | "objectives_pdf" | "concept_map";
 
 interface Props {
   moduleId: string;
@@ -35,9 +36,13 @@ interface EvalRow {
 export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnitTitle, courseId, isAdmin, scope = "unit" }: Props) {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const introVideoInputRef = useRef<HTMLInputElement>(null);
+  const objectivesInputRef = useRef<HTMLInputElement>(null);
+  const conceptMapInputRef = useRef<HTMLInputElement>(null);
   const [contents, setContents] = useState<ContentRow[]>([]);
   const [evals, setEvals] = useState<EvalRow[]>([]);
   const [preview, setPreview] = useState<{ row: ContentRow; kind: "video" | "pdf" } | null>(null);
+  const [uploadingType, setUploadingType] = useState<IntroResourceType | null>(null);
   const isModuleScope = scope === "module" || !formativeUnitId;
 
   const load = useCallback(async () => {
@@ -76,12 +81,77 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
     setPreview({ row, kind });
   };
 
+  const sanitizeFileName = (name: string) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "-");
+
+  const handleUpload = async (file: File, resourceType: IntroResourceType) => {
+    const isVideo = resourceType === "intro_video";
+    if (!isVideo && file.type !== "application/pdf") {
+      toast({ title: "Archivo no válido", description: "Objetivos y Mapa conceptual deben subirse en PDF.", variant: "destructive" });
+      return;
+    }
+    if (isVideo && !file.type.startsWith("video/")) {
+      toast({ title: "Archivo no válido", description: "El vídeo de presentación debe ser un archivo de vídeo.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 250 * 1024 * 1024) {
+      toast({ title: "Archivo demasiado grande", description: "El archivo no puede superar 250MB.", variant: "destructive" });
+      return;
+    }
+
+    setUploadingType(resourceType);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) throw authError || new Error("Debes iniciar sesión para subir archivos.");
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("training_center_id")
+        .eq("id", authData.user.id)
+        .single();
+      if (profileError) throw profileError;
+      if (!profile?.training_center_id) throw new Error("Tu usuario no tiene centro formativo asignado.");
+
+      const safeName = sanitizeFileName(file.name);
+      const filePath = `${profile.training_center_id}/${courseId}/${moduleId}/${resourceType}/${Date.now()}-${safeName}`;
+      const { error: uploadError } = await supabase.storage
+        .from("module-content")
+        .upload(filePath, file, { upsert: false, contentType: file.type });
+      if (uploadError) throw uploadError;
+
+      const existing = contents.find((c) => c.content_type === resourceType);
+      const payload = {
+        module_id: moduleId,
+        formative_unit_id: isModuleScope ? null : formativeUnitId,
+        content_type: resourceType,
+        title: resourceType === "intro_video" ? "Vídeo de presentación" : resourceType === "objectives_pdf" ? "Objetivos" : "Mapa conceptual",
+        file_path: filePath,
+        file_name: file.name,
+        file_size: file.size,
+        external_url: null,
+        is_active: true,
+      };
+
+      const { error: saveError } = existing
+        ? await (supabase as any).from("module_content").update(payload).eq("id", existing.id)
+        : await (supabase as any).from("module_content").insert(payload);
+      if (saveError) throw saveError;
+
+      toast({ title: "Archivo subido", description: payload.title });
+      await load();
+    } catch (error: any) {
+      console.error("Error uploading intro resource:", error);
+      toast({ title: "Error al subir", description: error?.message || "No se pudo subir el archivo.", variant: "destructive" });
+    } finally {
+      setUploadingType(null);
+    }
+  };
+
   const Item = ({
-    icon, iconBg, iconColor, title, subtitle, action, addType, accept,
+    icon, iconBg, iconColor, title, subtitle, action, addType, accept, inputRef,
   }: {
     icon: React.ReactNode; iconBg: string; iconColor: string;
     title: string; subtitle: string; action?: React.ReactNode;
-    addType?: ResourceContentType; accept?: string;
+    addType?: IntroResourceType; accept?: string; inputRef?: React.RefObject<HTMLInputElement>;
   }) => (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-card hover:shadow-sm transition-shadow">
       <div className={`p-2 rounded-lg ${iconBg} shrink-0`}>
@@ -94,15 +164,28 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
       <div className="flex items-center gap-1.5 shrink-0">
         {action}
         {isAdmin && addType && (
-          <AddResourceDialog
-            trigger={<Button variant="outline" size="sm" className="h-7 text-xs gap-1"><Plus className="h-3 w-3" />{action ? "Editar" : "Subir"}</Button>}
-            contentType={addType}
-            moduleId={moduleId}
-            formativeUnitId={isModuleScope ? null : formativeUnitId}
-            defaultTitle={title}
-            acceptFile={accept}
-            onCreated={load}
-          />
+          <>
+            <input
+              ref={inputRef}
+              type="file"
+              hidden
+              accept={accept}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) handleUpload(file, addType);
+                event.target.value = "";
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs gap-1"
+              disabled={uploadingType === addType}
+              onClick={() => inputRef?.current?.click()}
+            >
+              <Plus className="h-3 w-3" />{uploadingType === addType ? "Subiendo" : action ? "Editar" : "Subir"}
+            </Button>
+          </>
         )}
       </div>
     </div>
