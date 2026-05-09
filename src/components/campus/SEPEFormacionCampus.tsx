@@ -285,11 +285,7 @@ function ModuleUnitsTabs({
     }
   }, [moduleUnits, selectedUnitId]);
 
-  const unit = moduleUnits.find((u) => u.id === selectedUnitId) || moduleUnits[0];
-  if (!unit) return null;
-  const unitProgress = getUnitProgress(unit.id);
-  const unitEvals = moduleEvaluations.filter((ev: any) => ev.formative_unit_id === unit.id);
-  const hasTest = unitEvals.length > 0;
+  if (moduleUnits.length === 0) return null;
 
   const renderUnitPanel = (u: FormativeUnit, idx: number) => {
     const up = getUnitProgress(u.id);
