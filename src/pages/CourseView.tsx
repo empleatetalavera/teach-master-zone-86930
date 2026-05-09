@@ -1024,11 +1024,11 @@ export default function CourseView() {
                   )}
                   {showSEPEFeatures && (
                     <button
-                      onClick={() => setActiveTab("training-program")}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "training-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                      onClick={() => setActiveTab("course-program")}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "course-program" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                     >
                       <ClipboardList className="h-4 w-4" />
-                      Programa Formativo
+                      Programa del Curso
                     </button>
                   )}
                   {!showSEPEFeatures && (
