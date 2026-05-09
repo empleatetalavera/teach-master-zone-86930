@@ -2379,6 +2379,7 @@ export default function CourseView() {
           </div>
           
           {/* Right Sidebar - Tutor and Evaluations */}
+          {!useCampusLayout && (
           <div className="hidden lg:block space-y-4 sticky top-4 h-fit">
             {/* Tu Tutor */}
             <Card>
