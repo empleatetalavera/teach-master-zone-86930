@@ -839,6 +839,7 @@ export type Database = {
           created_at: string | null
           description: string
           due_date: string | null
+          evaluation_criteria: string | null
           formative_unit_id: string | null
           id: string
           instructions: string | null
@@ -847,6 +848,7 @@ export type Database = {
           max_file_size_mb: number | null
           max_score: number | null
           module_id: string | null
+          submission_instructions: string | null
           submission_type: string | null
           title: string
           updated_at: string | null
@@ -858,6 +860,7 @@ export type Database = {
           created_at?: string | null
           description: string
           due_date?: string | null
+          evaluation_criteria?: string | null
           formative_unit_id?: string | null
           id?: string
           instructions?: string | null
@@ -866,6 +869,7 @@ export type Database = {
           max_file_size_mb?: number | null
           max_score?: number | null
           module_id?: string | null
+          submission_instructions?: string | null
           submission_type?: string | null
           title: string
           updated_at?: string | null
@@ -877,6 +881,7 @@ export type Database = {
           created_at?: string | null
           description?: string
           due_date?: string | null
+          evaluation_criteria?: string | null
           formative_unit_id?: string | null
           id?: string
           instructions?: string | null
@@ -885,6 +890,7 @@ export type Database = {
           max_file_size_mb?: number | null
           max_score?: number | null
           module_id?: string | null
+          submission_instructions?: string | null
           submission_type?: string | null
           title?: string
           updated_at?: string | null
@@ -1072,8 +1078,11 @@ export type Database = {
           course_id: string
           created_at: string | null
           description: string | null
+          due_date: string | null
+          evaluation_criteria: string | null
           formative_unit_id: string | null
           id: string
+          instructions: string | null
           is_active: boolean | null
           max_attempts: number | null
           module_id: string | null
@@ -1086,8 +1095,11 @@ export type Database = {
           course_id: string
           created_at?: string | null
           description?: string | null
+          due_date?: string | null
+          evaluation_criteria?: string | null
           formative_unit_id?: string | null
           id?: string
+          instructions?: string | null
           is_active?: boolean | null
           max_attempts?: number | null
           module_id?: string | null
@@ -1100,8 +1112,11 @@ export type Database = {
           course_id?: string
           created_at?: string | null
           description?: string | null
+          due_date?: string | null
+          evaluation_criteria?: string | null
           formative_unit_id?: string | null
           id?: string
+          instructions?: string | null
           is_active?: boolean | null
           max_attempts?: number | null
           module_id?: string | null
