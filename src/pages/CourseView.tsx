@@ -1516,7 +1516,7 @@ export default function CourseView() {
             <Card>
               <CardContent className="p-6">
                 <CourseStudentGuide 
-                  course={course} 
+                  course={{ ...course, student_guide_pdf_url: centerContact.student_guide_pdf_url || course.student_guide_pdf_url }} 
                   centerSlug={centerSlug} 
                 />
               </CardContent>
