@@ -967,6 +967,15 @@ export default function CourseView() {
                 </PopoverContent>
               </Popover>
 
+              <Button
+                size="sm"
+                onClick={() => setActiveTab('student-guide')}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold shadow-lg ring-2 ring-amber-300 animate-pulse hover:animate-none"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Guía del Alumno
+              </Button>
+
               {(userRole === 'auditor' || userRole === 'admin' || userRole === 'super_admin') && (
                 <Button
                   variant="outline"
