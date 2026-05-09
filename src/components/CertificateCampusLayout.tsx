@@ -82,6 +82,8 @@ export function CampusChrome({
   centerContact,
   progressPercent = 0,
   onEditMode,
+  editMode = false,
+  onOpenAdvancedEditor,
   onBack,
 }: Props) {
   const navigate = useNavigate();
