@@ -1,94 +1,101 @@
-# Plan de subsanación SEPE — Reproductor SCORM y plataforma
+## Objetivo
+Replicar en Formación en Campus la estructura oficial de la guía homologada: **A) Introducción al MF/UF** + **B) Desarrollo (CIM + Material complementario + Actividades evaluables + Foros)** + **Biblioteca** del módulo. Estructura siempre visible; los items vacíos muestran "Pendiente de configurar" y, para admin/tutor, botón Añadir/Subir.
 
-Este plan agrupa el trabajo en 4 bloques. Es extenso, así que lo ejecutaré por fases para que puedas validar cada hito antes de continuar.
+## 1. Migración de base de datos
 
----
+### a) Extender `module_content` (sin cambios de esquema, solo nuevos `content_type`)
+Reutilizo la tabla existente. Nuevos valores permitidos en la columna `content_type` (texto libre, ya usable):
+- `intro_video` — vídeo de presentación de la UF/MF
+- `objectives_pdf` — PDF "Objetivos y contenidos"
+- `support_doc` — documento de apoyo (Material complementario)
+- `support_video` — vídeo de apoyo
+- `support_audio` — audio de apoyo
+- `biblioteca` — entrada de biblioteca (a nivel módulo, `formative_unit_id IS NULL`)
+- `manual_pdf` — ya existente, sin cambios
 
-## Bloque 1 — SCORM + Calificaciones + Móvil
+No requiere ALTER, pero añado un `CHECK` opcional documental.
 
-**1.1 Reproductor SCORM robusto (scorm-again)**
-- Sustituir la API SCORM artesanal (`scorm12-api.ts`) por la librería `scorm-again` (estándar del sector, soporta SCORM 1.2 y 2004).
-- Exponer `window.API` (1.2) y `window.API_1484_11` (2004) desde el componente padre del iframe.
-- Conectar los callbacks `LMSCommit`/`LMSFinish` a `saveScormProgress` (ya existe) escribiendo `cmi.core.score.raw`, `lesson_status`, `session_time`.
-- Garantizar que `cmi.core.score.raw ≥ score_min` actualice también `enrollments.grade` y dispare `notify_grade_published`.
+### b) `forum_topics` — soporte por UF y categoría
+```sql
+ALTER TABLE forum_topics
+  ADD COLUMN formative_unit_id uuid REFERENCES formative_units(id) ON DELETE CASCADE,
+  ADD COLUMN category text NOT NULL DEFAULT 'general';
+CREATE INDEX idx_forum_topics_uf ON forum_topics(formative_unit_id);
+```
+Categorías reconocidas en UI: `sesion_inicial`, `debate`, `dudas_contenido`, `dudas_actividades`, `dudas_tecnicas`, `general`.
 
-**1.2 Vista permanente de calificaciones del alumno**
-- Nueva ruta `/dashboard/student/grades` (o ampliar `StudentEvaluations`) con:
-  - Tabla por curso → módulo → actividad/evaluación/SCORM.
-  - Columnas: nota, intentos, fecha, estado (aprobado/no apto), enlace al recurso.
-- Fuente: `evaluation_attempts`, `activity_submissions`, `scorm_progress`.
+### c) `evaluations` — distinguir tipo
+```sql
+ALTER TABLE evaluations
+  ADD COLUMN evaluation_type text NOT NULL DEFAULT 'unit';
+-- valores: 'diagnostic' (cuestionario previo), 'unit', 'module', 'final', 'quality_survey', 'tutor_survey'
+```
 
-**1.3 Compatibilidad móvil (Galaxy Tab Chrome / iPad Safari)**
-- Reproductor responsive: layout flex/grid con breakpoints, sidebar colapsable en `<md`, iframe con `100dvh` para evitar el bug de barra Safari.
-- Forzar `playsinline`, `allow="autoplay; fullscreen"` en iframe.
-- Service Worker: `updateViaCache:'none'` ya aplicado; añadir fallback no-SW para iOS antiguo (sirve blobs vía `URL.createObjectURL` en iframe `srcdoc`).
-- QA: verificar con viewport 800×1280 (Tab) y 820×1180 (iPad).
+## 2. Estructura visual por UF (acordeón "Unidad Didáctica N")
 
----
+```text
+┌─ INTRODUCCIÓN ────────────────────────────────────────┐
+│ 🎬 Vídeo de presentación        [Reproducir] [Subir*]│
+│ 📑 Objetivos y Contenidos (PDF) [Abrir]    [Subir*] │
+│ 💬 Sesión Inicial (chat)        [Entrar]   [Crear*] │
+│ ❓ Cuestionario conocimientos    [Realizar] [Crear*] │
+└───────────────────────────────────────────────────────┘
+┌─ FORMACIÓN EN CAMPUS ─────────────────────────────────┐
+│ 🟪 Contenido Interactivo Multimedia    [Abrir CIM]   │
+│ 📘 Manual PDF                          [Abrir/Subir] │
+│                                                       │
+│ MATERIAL COMPLEMENTARIO                              │
+│  📄 Documento de apoyo 1 …                           │
+│  🎬 Vídeo de apoyo 1 …                               │
+│  🔊 Audio de apoyo 1 …                               │
+│  [+ Añadir recurso*]                                  │
+│                                                       │
+│ ACTIVIDADES DE APRENDIZAJE EVALUABLES                │
+│  ✏️ Actividad 1 — …                  [Entregar]     │
+│  ✏️ Actividad 2 — …                  [Entregar]     │
+│  [+ Nueva actividad*]                                 │
+│                                                       │
+│ FOROS                                                │
+│  💬 Foro de debate (UF)                              │
+│  ❓ Foro de dudas/consultas                          │
+│                                                       │
+│ TEST FINAL DE LA UF                  [Realizar]      │
+└───────────────────────────────────────────────────────┘
+```
+(*) sólo visible para admin/teacher.
 
-## Bloque 2 — Trazabilidad SEPE
+Al final del módulo, un bloque **BIBLIOTECA** (recursos `biblioteca` del módulo) con búsqueda por palabra clave.
 
-**2.1 Registro de permanencia por recurso (migration)**
-- Tabla `resource_access_log`:
-  - `user_id`, `enrollment_id`, `course_id`, `module_id`, `unit_id`, `resource_type` (scorm/pdf/video/quiz), `resource_id`,
-  - `entered_at`, `left_at`, `active_seconds` (heartbeat),
-  - `ip_address`, `user_agent`.
-- RLS: alumno escribe lo suyo; tutor/admin lee de su centro.
-- Hook `useResourceTracker(resourceId, type)` con heartbeat 30s, pausa cuando `document.hidden`.
+## 3. Cambios de código
 
-**2.2 Barra de progreso por módulo formativo en tiempo real**
-- Componente `<ModuleProgressBar moduleId>` que calcula:
-  `% = (unidades completadas + actividades aprobadas + SCORM lesson_status='completed') / total`.
-- Usar `supabase.channel().on('postgres_changes', ...)` en `unit_progress` y `scorm_progress` para refresco en vivo.
-- Insertar en cabecera de `ModuleView` y en `StudentCourses`.
+### Componentes nuevos
+- `src/components/campus/UFIntroductionSection.tsx` — los 4 items de introducción.
+- `src/components/campus/SupplementaryMaterialList.tsx` — lista tipada (doc/vídeo/audio) con iconos diferenciados (azul/rojo/verde como guía).
+- `src/components/campus/UFActivitiesList.tsx` — lista todas las actividades de la UF (no sólo una).
+- `src/components/campus/UFForumsList.tsx` — debate + dudas con badges por categoría.
+- `src/components/campus/ModuleLibrary.tsx` — biblioteca al final del módulo.
+- `src/components/campus/AddResourceDialog.tsx` — diálogo único para subir/asociar cualquier `content_type` (intro_video, objectives_pdf, support_*, biblioteca).
 
-**2.3 Caducidad de sesión por inactividad**
-- Ya existe `useIdleTimeout` (25 min aviso / 30 min logout). Conectarlo en `DashboardLayout` para todos los roles de alumno.
+### Refactor
+- `src/components/campus/SEPEFormacionCampus.tsx` — sustituye los 4 `UnitResourceItem` actuales por las nuevas secciones (Introducción, CIM+Manual, Material complementario, Actividades, Foros, Test). Añade `<ModuleLibrary>` después de las UFs.
 
----
+### Hooks/datos
+- Cargar en CourseView (o hook `useCourseData`) los nuevos arrays:
+  - `module_content` filtrado por nuevos `content_type` (lo trae todo y se agrupa en cliente).
+  - `forum_topics` por `formative_unit_id` y `category`.
+  - `evaluations.evaluation_type` para distinguir diagnostic vs unit vs final.
 
-## Bloque 3 — Layout normativo 80/20
+## 4. Permisos y RLS
+- `module_content` ya tiene RLS por curso/centro — sin cambios.
+- `forum_topics`: la nueva columna no rompe policies existentes; verifico que insert/select sigan funcionando.
+- `evaluations`: idem.
 
-- En `ScormProPlayer` y `ModuleView`:
-  - Sidebar de navegación con `w-[20%] max-w-[280px]`, contenido `w-[80%]`.
-  - En móvil: sidebar `Sheet` (off-canvas) y contenido a 100%.
-- Mapa de navegación permanente: árbol jerárquico Curso → MF → UF → UD con iconos de estado (no iniciado / en curso / completado / aprobado).
-- Sticky en desktop, accesible vía botón hamburguesa en móvil.
+## 5. Fuera de alcance
+- No se cambia el SCORM viewer ni el flujo de calificaciones.
+- No se cambia la pestaña "Plan de Trabajo / Cronograma".
+- No se cambia el componente CertificateCampusLayout (sólo se siguen usando sus pestañas).
 
----
-
-## Bloque 4 — Recursos y soporte
-
-**4.1 Gestor de descargas**
-- Auditar `CourseStudentGuide` y `generateStudentGuidePDF` / `generateCIMNavigationGuidePDF`.
-- Aplicar el patrón `fetch → Blob → ObjectURL` (memoria del proyecto) para evitar bloqueadores.
-- Añadir registro en `resource_access_log` con `resource_type='download'`.
-
-**4.2 Chat y Foro por módulo**
-- Componentes ya existentes: `ModuleChat`, `CourseForum`, `TutorForum`, `UnitForum`.
-- Integrarlos como tabs dentro de `ModuleView` ("Contenido | Chat | Foro | Glosario") con realtime ya soportado.
-- Verificar RLS de `messages`/`forum_posts` por módulo.
-
-**4.3 Glosario con hiperenlaces**
-- Componente `<GlossaryTerm term="...">` que abre popover con definición desde `course_glossary`.
-- Parser de contenido HTML/Markdown que detecte términos del glosario y los envuelva automáticamente.
-- Página `/course/:id/glossary` permanente (ya existe `CourseGlossary`).
-
----
-
-## Detalles técnicos clave
-
-- **Dependencias nuevas**: `scorm-again` (`bun add scorm-again`).
-- **Migraciones**: 1 sola migración con `resource_access_log` + RLS + índices.
-- **Sin cambios** en buckets ni en tablas existentes salvo `enrollments.grade` (ya existe).
-- **Realtime**: añadir `unit_progress`, `scorm_progress`, `resource_access_log` a `supabase_realtime`.
-
----
-
-## Orden de ejecución propuesto
-
-1. **Fase A** (esta iteración): Bloque 1.1 + 1.2 + 2.1 + 2.3 (lo más crítico para SEPE).
-2. **Fase B**: Bloque 2.2 + 3 (progreso realtime + layout 80/20).
-3. **Fase C**: Bloque 1.3 (QA móvil) + Bloque 4 (descargas, chat/foro, glosario).
-
-¿Apruebas el plan y empezamos por la **Fase A**? Si prefieres otro orden o quitar algo, dímelo.
+## 6. Validación
+- Como admin: subir vídeo intro, PDF objetivos, doc apoyo, audio, foro debate; comprobar que el alumno los ve.
+- Como alumno: ver "Pendiente de configurar" cuando no hay datos; los items configurados aparecen con el flujo correcto.
+- Verificar tipos en `src/integrations/supabase/types.ts` se regeneran tras la migración.

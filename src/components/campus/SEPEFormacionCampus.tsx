@@ -10,6 +10,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ModuleFormativeUnitManager } from "@/components/ModuleFormativeUnitManager";
 import { SelfAssessmentQuiz } from "@/components/SelfAssessmentQuiz";
+import { UFIntroductionSection } from "./UFIntroductionSection";
+import { SupplementaryMaterialList } from "./SupplementaryMaterialList";
+import { UFActivitiesList } from "./UFActivitiesList";
+import { UFForumsList } from "./UFForumsList";
+import { ModuleLibrary } from "./ModuleLibrary";
 import {
   BookOpen, Clock, FileText, CheckCircle2, ChevronDown, PlayCircle,
   Layers, PenTool, ClipboardList, ListChecks, Target, Upload,
@@ -478,117 +483,113 @@ export function SEPEFormacionCampus({
                                         </div>
                                       )}
 
-                                      {/* Contenido Interactivo */}
-                                      <UnitResourceItem
-                                        icon={<Layers className="h-4 w-4" />}
-                                        iconBg="bg-primary/10"
-                                        iconColor="text-primary"
-                                        title="Contenido Interactivo"
-                                        subtitle="Material multimedia e interactivo de la unidad"
-                                        onClick={() => onOpenScormViewer(unit.id, unit.title, module.id)}
-                                        actions={
-                                          isAdmin ? (
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="h-7 text-xs gap-1"
-                                              onClick={() => onOpenScormAuthor(module.id, unit.id, unit.title)}
-                                            >
-                                              <Plus className="h-3 w-3" />Editor
-                                            </Button>
-                                          ) : undefined
-                                        }
+                                      {/* === A) INTRODUCCIÓN === */}
+                                      <UFIntroductionSection
+                                        moduleId={module.id}
+                                        formativeUnitId={unit.id}
+                                        formativeUnitTitle={unit.title}
+                                        courseId={courseId}
+                                        isAdmin={isAdmin}
                                       />
 
-                                      {/* Manual PDF */}
-                                      <UnitResourceItem
-                                        icon={<FileText className="h-4 w-4" />}
-                                        iconBg="bg-blue-50 dark:bg-blue-950/30"
-                                        iconColor="text-blue-600"
-                                        title="Manual / Documentación PDF"
-                                        subtitle="Documentación descargable del módulo formativo"
-                                        onClick={() => fetchAndOpenPDF(module.id, unit.id, toast)}
-                                        actions={
-                                          <>
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="h-7 text-xs gap-1"
-                                              onClick={() => fetchAndOpenPDF(module.id, unit.id, toast)}
-                                            >
-                                              <ExternalLink className="h-3 w-3" />PDF
-                                            </Button>
-                                            {isAdmin && (
-                                              <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-7 text-xs gap-1"
-                                                onClick={() => onOpenManualUploader(module.id, unit.title, unit.id)}
-                                              >
-                                                <Upload className="h-3 w-3" />Subir
-                                              </Button>
-                                            )}
-                                          </>
-                                        }
-                                      />
+                                      {/* === B) FORMACIÓN EN CAMPUS === */}
+                                      <div className="border border-teal-200/60 dark:border-teal-900/40 rounded-xl overflow-hidden">
+                                        <div className="bg-gradient-to-r from-teal-700 to-teal-600 text-white px-4 py-2.5 font-semibold text-xs uppercase tracking-wider">
+                                          B) DESARROLLO DE LA FORMACIÓN EN CAMPUS
+                                        </div>
+                                        <div className="p-3 space-y-3 bg-teal-50/30 dark:bg-teal-950/10">
+                                          {/* Contenido Interactivo (CIM) */}
+                                          <UnitResourceItem
+                                            icon={<Layers className="h-4 w-4" />}
+                                            iconBg="bg-violet-100 dark:bg-violet-900/30"
+                                            iconColor="text-violet-600"
+                                            title="Contenido Interactivo Multimedia (CIM)"
+                                            subtitle="Material multimedia, lecturas obligatorias y autoevaluaciones"
+                                            onClick={() => onOpenScormViewer(unit.id, unit.title, module.id)}
+                                            actions={
+                                              isAdmin ? (
+                                                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => onOpenScormAuthor(module.id, unit.id, unit.title)}>
+                                                  <Plus className="h-3 w-3" />Editor
+                                                </Button>
+                                              ) : undefined
+                                            }
+                                          />
 
-                                      {/* Actividad de Desarrollo */}
-                                      <UnitResourceItem
-                                        icon={<PenTool className="h-4 w-4" />}
-                                        iconBg="bg-green-50 dark:bg-green-950/30"
-                                        iconColor="text-green-600"
-                                        title="Actividad de Desarrollo"
-                                        subtitle="Ejercicio práctico para aplicar los conocimientos"
-                                        onClick={() => onOpenActivityManager(unit.id, unit.title)}
-                                        actions={
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-7 text-xs gap-1"
-                                            onClick={() => onOpenActivityManager(unit.id, unit.title)}
-                                          >
-                                            <PenTool className="h-3 w-3" />
-                                            {isAdmin ? 'Gestionar' : 'Entregar'}
-                                          </Button>
-                                        }
-                                      />
+                                          {/* Manual PDF */}
+                                          <UnitResourceItem
+                                            icon={<FileText className="h-4 w-4" />}
+                                            iconBg="bg-blue-100 dark:bg-blue-900/30"
+                                            iconColor="text-blue-600"
+                                            title="Manual PDF de la unidad"
+                                            subtitle="Contenido teórico imprimible"
+                                            onClick={() => fetchAndOpenPDF(module.id, unit.id, toast)}
+                                            actions={
+                                              <>
+                                                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => fetchAndOpenPDF(module.id, unit.id, toast)}>
+                                                  <ExternalLink className="h-3 w-3" />PDF
+                                                </Button>
+                                                {isAdmin && (
+                                                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => onOpenManualUploader(module.id, unit.title, unit.id)}>
+                                                    <Upload className="h-3 w-3" />Subir
+                                                  </Button>
+                                                )}
+                                              </>
+                                            }
+                                          />
 
-                                      {/* Test Final */}
-                                      <UnitResourceItem
-                                        icon={<ClipboardList className="h-4 w-4" />}
-                                        iconBg="bg-purple-50 dark:bg-purple-950/30"
-                                        iconColor="text-purple-600"
-                                        title="Test Final de la Unidad"
-                                        subtitle={hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Evaluación de preguntas para verificar el aprendizaje'}
-                                        onClick={hasTest ? () => navigate(`/course/${courseId}/evaluation/${unitEvals[0].id}`) : undefined}
-                                        actions={
-                                          <>
-                                            {hasTest && (
-                                              <Button
-                                                variant="default"
-                                                size="sm"
-                                                className="h-7 text-xs gap-1 bg-purple-600 hover:bg-purple-700"
-                                                onClick={() => navigate(`/course/${courseId}/evaluation/${unitEvals[0].id}`)}
-                                              >
-                                                <PlayCircle className="h-3 w-3" />Realizar
-                                              </Button>
-                                            )}
-                                            {isAdmin && !hasTest && (
-                                              <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-7 text-xs gap-1"
-                                                onClick={() => toast({ title: "Crear Test", description: "Usa el generador de tests en la UF." })}
-                                              >
-                                                <Plus className="h-3 w-3" />Crear
-                                              </Button>
-                                            )}
-                                          </>
-                                        }
-                                      />
+                                          {/* Material Complementario */}
+                                          <SupplementaryMaterialList
+                                            moduleId={module.id}
+                                            formativeUnitId={unit.id}
+                                            isAdmin={isAdmin}
+                                          />
 
-                                      {/* Self Assessment Quiz */}
-                                      <SelfAssessmentQuiz courseId={courseId} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
+                                          {/* Actividades evaluables */}
+                                          <UFActivitiesList
+                                            courseId={courseId}
+                                            moduleId={module.id}
+                                            formativeUnitId={unit.id}
+                                            formativeUnitTitle={unit.title}
+                                            isAdmin={isAdmin}
+                                            onOpenActivityManager={onOpenActivityManager}
+                                          />
+
+                                          {/* Foros */}
+                                          <UFForumsList
+                                            courseId={courseId}
+                                            moduleId={module.id}
+                                            formativeUnitId={unit.id}
+                                            isAdmin={isAdmin}
+                                          />
+
+                                          {/* Test Final UF */}
+                                          <UnitResourceItem
+                                            icon={<ClipboardList className="h-4 w-4" />}
+                                            iconBg="bg-purple-100 dark:bg-purple-900/30"
+                                            iconColor="text-purple-600"
+                                            title="Test Final de la Unidad"
+                                            subtitle={hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Pendiente de configurar'}
+                                            onClick={hasTest ? () => navigate(`/course/${courseId}/evaluation/${unitEvals[0].id}`) : undefined}
+                                            actions={
+                                              <>
+                                                {hasTest && (
+                                                  <Button variant="default" size="sm" className="h-7 text-xs gap-1 bg-purple-600 hover:bg-purple-700" onClick={() => navigate(`/course/${courseId}/evaluation/${unitEvals[0].id}`)}>
+                                                    <PlayCircle className="h-3 w-3" />Realizar
+                                                  </Button>
+                                                )}
+                                                {isAdmin && !hasTest && (
+                                                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => toast({ title: "Crear Test", description: "Usa el generador de tests en la UF." })}>
+                                                    <Plus className="h-3 w-3" />Crear
+                                                  </Button>
+                                                )}
+                                              </>
+                                            }
+                                          />
+
+                                          {/* Self Assessment Quiz */}
+                                          <SelfAssessmentQuiz courseId={courseId} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
+                                        </div>
+                                      </div>
                                     </div>
                                   </AccordionContent>
                                 </AccordionItem>
@@ -609,6 +610,11 @@ export function SEPEFormacionCampus({
                           )}
                         </div>
                       )}
+
+                      {/* === BIBLIOTECA del módulo === */}
+                      <div className="p-3 border-t bg-muted/10">
+                        <ModuleLibrary moduleId={module.id} isAdmin={isAdmin} />
+                      </div>
                     </div>
                   </CollapsibleContent>
                 </div>
