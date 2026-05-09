@@ -966,21 +966,25 @@ export default function CourseView() {
                 </PopoverContent>
               </Popover>
 
-              <Popover>
-                <PopoverTrigger asChild>
+              <Dialog>
+                <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
                     <HelpCircle className="h-4 w-4 mr-2" />
                     CAU
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[440px] p-0" align="start">
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+                  <DialogHeader className="sr-only">
+                    <DialogTitle>Centro de Atención al Usuario</DialogTitle>
+                  </DialogHeader>
                   <CAUSupportForm
                     courseId={courseId!}
+                    courseTitle={course.title}
                     supportEmail={centerContact.email || course.support_email}
                     supportPhone={centerContact.phone || course.support_phone}
                   />
-                </PopoverContent>
-              </Popover>
+                </DialogContent>
+              </Dialog>
 
               
               <Popover>
