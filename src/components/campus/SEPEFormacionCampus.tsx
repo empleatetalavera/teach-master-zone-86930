@@ -293,43 +293,44 @@ function ModuleUnitsTabs({
 
   return (
     <div className="bg-teal-50/30 dark:bg-teal-950/10">
-      {/* Pills row — sticky so always visible mientras se navega el contenido de la unidad */}
-      <div className="sticky top-0 z-20 flex flex-wrap gap-2 p-2.5 bg-teal-50/95 dark:bg-teal-950/60 backdrop-blur supports-[backdrop-filter]:bg-teal-50/70 border-b border-teal-200/40 dark:border-teal-900/30">
+      {/* Listado vertical de unidades didácticas — estilo barra con AMPLIAR/CONTRAER */}
+      <div className="flex flex-col divide-y divide-teal-200/40 dark:divide-teal-900/30">
         {moduleUnits.map((u, i) => {
           const p = getUnitProgress(u.id).overall_progress;
-          const active = u.id === selectedUnitId;
+          const active = u.id === selectedUnitId && panelOpen;
           const done = p >= 100;
           return (
             <button
               key={u.id}
               onClick={() => {
-                if (active) {
+                if (u.id === selectedUnitId) {
                   setPanelOpen((o) => !o);
                 } else {
                   setSelectedUnitId(u.id);
                   setPanelOpen(true);
                 }
               }}
-              className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+              className={`group flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                 active
-                  ? "bg-teal-600 text-white border-teal-700 shadow-sm"
-                  : done
-                  ? "bg-green-50 text-green-800 border-green-300 hover:bg-green-100"
-                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                  ? "bg-teal-600 text-white"
+                  : "bg-teal-500/90 text-white hover:bg-teal-600"
               }`}
-              title={u.title}
-              aria-expanded={active && panelOpen}
+              aria-expanded={active}
             >
-              <span className={`flex items-center justify-center h-5 w-5 rounded-full text-[10px] font-bold shrink-0 ${
-                active ? "bg-white/20 text-white" : done ? "bg-green-200 text-green-900" : "bg-slate-100 text-slate-700"
+              <span className={`flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold shrink-0 ${
+                done ? "bg-green-300 text-green-900" : "bg-white/20 text-white"
               }`}>
-                {done ? <CheckCircle2 className="h-3 w-3" /> : i + 1}
+                {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
               </span>
-              <span className="max-w-[180px] truncate">UD {i + 1} · {u.title}</span>
-              <span className={`text-[10px] font-bold ml-1 ${active ? "text-white/90" : "text-muted-foreground"}`}>{p}%</span>
-              {active && (
-                <ChevronDown className={`h-3 w-3 ml-0.5 transition-transform ${panelOpen ? "" : "-rotate-90"}`} />
-              )}
+              <span className="flex-1 text-sm font-medium leading-snug">
+                Unidad Didáctica {i + 1}. {u.title}
+              </span>
+              <span className="text-[11px] font-bold tabular-nums opacity-90 shrink-0">{p}%</span>
+              <span className={`text-[11px] font-bold tracking-wider px-2 py-1 rounded shrink-0 ${
+                active ? "bg-white text-teal-700" : "bg-amber-400 text-amber-950"
+              }`}>
+                {active ? "CONTRAER" : "AMPLIAR"}
+              </span>
             </button>
           );
         })}
@@ -337,9 +338,9 @@ function ModuleUnitsTabs({
 
       {/* Selected unit panel — desplegable */}
       {panelOpen && (
-      <div className="p-4 space-y-3">
-        <div className="flex items-start gap-3 pb-2 border-b">
-          <ProgressRing value={unitProgress.overall_progress} size={40} strokeWidth={3} />
+        <div className="p-4 space-y-3 border-t border-teal-200/60">
+          <div className="flex items-start gap-3 pb-2 border-b">
+            <ProgressRing value={unitProgress.overall_progress} size={40} strokeWidth={3} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono shrink-0">UD{moduleUnits.indexOf(unit) + 1}</Badge>
