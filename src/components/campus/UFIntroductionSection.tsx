@@ -181,6 +181,16 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
           ) : undefined}
         />
       </div>
+      {preview && (
+        <ResourcePreviewDialog
+          open={!!preview}
+          onOpenChange={(v) => !v && setPreview(null)}
+          title={preview.row.title}
+          filePath={preview.row.file_path}
+          externalUrl={preview.row.external_url}
+          kind={preview.kind}
+        />
+      )}
     </div>
   );
 }
