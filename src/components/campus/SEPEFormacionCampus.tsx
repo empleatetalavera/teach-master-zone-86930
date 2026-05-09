@@ -15,6 +15,7 @@ import { SupplementaryMaterialList } from "./SupplementaryMaterialList";
 import { UFActivitiesList } from "./UFActivitiesList";
 import { UFForumsList } from "./UFForumsList";
 import { ModuleLibrary } from "./ModuleLibrary";
+import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import {
   BookOpen, Clock, FileText, CheckCircle2, ChevronDown, PlayCircle,
   Layers, PenTool, ClipboardList, ListChecks, Target, Upload,
@@ -285,136 +286,87 @@ function ModuleUnitsTabs({
     }
   }, [moduleUnits, selectedUnitId]);
 
-  const unit = moduleUnits.find((u) => u.id === selectedUnitId) || moduleUnits[0];
-  if (!unit) return null;
-  const unitProgress = getUnitProgress(unit.id);
-  const unitEvals = moduleEvaluations.filter((ev: any) => ev.formative_unit_id === unit.id);
-  const hasTest = unitEvals.length > 0;
+  if (moduleUnits.length === 0) return null;
 
-  return (
-    <div className="bg-teal-50/30 dark:bg-teal-950/10">
-      {/* Listado vertical de unidades didácticas — estilo barra con AMPLIAR/CONTRAER */}
-      <div className="flex flex-col divide-y divide-teal-200/40 dark:divide-teal-900/30">
-        {moduleUnits.map((u, i) => {
-          const p = getUnitProgress(u.id).overall_progress;
-          const active = u.id === selectedUnitId && panelOpen;
-          const done = p >= 100;
-          return (
-            <button
-              key={u.id}
-              onClick={() => {
-                if (u.id === selectedUnitId) {
-                  setPanelOpen((o) => !o);
-                } else {
-                  setSelectedUnitId(u.id);
-                  setPanelOpen(true);
-                }
-              }}
-              className={`group flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                active
-                  ? "bg-teal-600 text-white"
-                  : "bg-teal-500/90 text-white hover:bg-teal-600"
-              }`}
-              aria-expanded={active}
-            >
-              <span className={`flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold shrink-0 ${
-                done ? "bg-green-300 text-green-900" : "bg-white/20 text-white"
-              }`}>
-                {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
-              </span>
-              <span className="flex-1 text-sm font-medium leading-snug">
-                Unidad Didáctica {i + 1}. {u.title}
-              </span>
-              <span className="text-[11px] font-bold tabular-nums opacity-90 shrink-0">{p}%</span>
-              <span className={`text-[11px] font-bold tracking-wider px-2 py-1 rounded shrink-0 ${
-                active ? "bg-white text-teal-700" : "bg-amber-400 text-amber-950"
-              }`}>
-                {active ? "CONTRAER" : "AMPLIAR"}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Selected unit panel — desplegable */}
-      {panelOpen && (
-        <div className="p-4 space-y-3 border-t border-teal-200/60">
-          <div className="flex items-start gap-3 pb-2 border-b">
-            <ProgressRing value={unitProgress.overall_progress} size={40} strokeWidth={3} />
+  const renderUnitPanel = (u: FormativeUnit, idx: number) => {
+    const up = getUnitProgress(u.id);
+    const evals = moduleEvaluations.filter((ev: any) => ev.formative_unit_id === u.id);
+    const hasT = evals.length > 0;
+    return (
+      <div className="p-4 space-y-3 bg-teal-50/40 border-y border-teal-200/60">
+        <div className="flex items-start gap-3 pb-2 border-b">
+          <ProgressRing value={up.overall_progress} size={40} strokeWidth={3} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono shrink-0">UD{moduleUnits.indexOf(unit) + 1}</Badge>
-              {unit.duration_hours && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono shrink-0">UD{idx + 1}</Badge>
+              {u.duration_hours && (
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" />{unit.duration_hours}h
+                  <Clock className="h-3 w-3" />{u.duration_hours}h
                 </span>
               )}
             </div>
-            <h4 className="font-semibold text-sm mt-0.5">{unit.title}</h4>
+            <h4 className="font-semibold text-sm mt-0.5">{u.title}</h4>
           </div>
         </div>
 
-        {/* Progress breakdown */}
         <div className="flex items-center gap-4 p-2.5 rounded-lg bg-muted/30 text-xs">
           <div className="flex-1">
             <div className="flex justify-between mb-1">
               <span className="text-muted-foreground">Contenido</span>
-              <span className="font-medium">{unitProgress.content_progress}%</span>
+              <span className="font-medium">{up.content_progress}%</span>
             </div>
-            <Progress value={unitProgress.content_progress} className="h-1.5" />
+            <Progress value={up.content_progress} className="h-1.5" />
           </div>
           <div className="w-px h-6 bg-border" />
           <div className="flex-1">
             <div className="flex justify-between mb-1">
               <span className="text-muted-foreground">Actividades</span>
-              <span className="font-medium">{unitProgress.activities_progress}%</span>
+              <span className="font-medium">{up.activities_progress}%</span>
             </div>
-            <Progress value={unitProgress.activities_progress} className="h-1.5" />
+            <Progress value={up.activities_progress} className="h-1.5" />
           </div>
         </div>
 
-        {unit.objectives && (
+        {u.objectives && (
           <div className="p-2.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/50">
             <div className="flex items-start gap-2">
               <Target className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
               <div>
                 <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-200 uppercase tracking-wide">Objetivo</span>
-                <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5 leading-relaxed">{unit.objectives}</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5 leading-relaxed">{u.objectives}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Contenido Interactivo (CIM) */}
         <UnitResourceItem
           icon={<Layers className="h-4 w-4" />}
           iconBg="bg-violet-100 dark:bg-violet-900/30"
           iconColor="text-violet-600"
           title="Contenido Interactivo"
           subtitle="Material multimedia, lecturas y autoevaluaciones"
-          onClick={() => onOpenScormViewer(unit.id, unit.title, moduleId)}
+          onClick={() => onOpenScormViewer(u.id, u.title, moduleId)}
           actions={isAdmin ? (
-            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => onOpenScormAuthor(moduleId, unit.id, unit.title)}>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => onOpenScormAuthor(moduleId, u.id, u.title)}>
               <Plus className="h-3 w-3" />Editor
             </Button>
           ) : undefined}
         />
 
-        {/* Manual PDF */}
         <UnitResourceItem
           icon={<FileText className="h-4 w-4" />}
           iconBg="bg-blue-100 dark:bg-blue-900/30"
           iconColor="text-blue-600"
           title="Manual PDF de la unidad"
           subtitle="Contenido teórico imprimible"
-          onClick={() => fetchAndOpenPDF(moduleId, unit.id, toast)}
+          onClick={() => fetchAndOpenPDF(moduleId, u.id, toast)}
           actions={
             <>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => fetchAndOpenPDF(moduleId, unit.id, toast)}>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => fetchAndOpenPDF(moduleId, u.id, toast)}>
                 <ExternalLink className="h-3 w-3" />PDF
               </Button>
               {isAdmin && (
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => onOpenManualUploader(moduleId, unit.title, unit.id)}>
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => onOpenManualUploader(moduleId, u.title, u.id)}>
                   <Upload className="h-3 w-3" />Subir
                 </Button>
               )}
@@ -422,25 +374,25 @@ function ModuleUnitsTabs({
           }
         />
 
-        <SupplementaryMaterialList moduleId={moduleId} formativeUnitId={unit.id} isAdmin={isAdmin} />
-        <UFActivitiesList courseId={courseId} moduleId={moduleId} formativeUnitId={unit.id} formativeUnitTitle={unit.title} isAdmin={isAdmin} onOpenActivityManager={onOpenActivityManager} />
-        <UFForumsList courseId={courseId} moduleId={moduleId} formativeUnitId={unit.id} isAdmin={isAdmin} />
+        <SupplementaryMaterialList moduleId={moduleId} formativeUnitId={u.id} isAdmin={isAdmin} />
+        <UFActivitiesList courseId={courseId} moduleId={moduleId} formativeUnitId={u.id} formativeUnitTitle={u.title} isAdmin={isAdmin} onOpenActivityManager={onOpenActivityManager} />
+        <UFForumsList courseId={courseId} moduleId={moduleId} formativeUnitId={u.id} isAdmin={isAdmin} />
 
         <UnitResourceItem
           icon={<ClipboardList className="h-4 w-4" />}
           iconBg="bg-purple-100 dark:bg-purple-900/30"
           iconColor="text-purple-600"
           title="Test Final de la Unidad"
-          subtitle={hasTest ? `Evaluación: ${unitEvals[0].title}` : 'Pendiente de configurar'}
-          onClick={hasTest ? () => navigate(`/course/${courseId}/evaluation/${unitEvals[0].id}`) : undefined}
+          subtitle={hasT ? `Evaluación: ${evals[0].title}` : 'Pendiente de configurar'}
+          onClick={hasT ? () => navigate(`/course/${courseId}/evaluation/${evals[0].id}`) : undefined}
           actions={
             <>
-              {hasTest && (
-                <Button variant="default" size="sm" className="h-7 text-xs gap-1 bg-purple-600 hover:bg-purple-700" onClick={() => navigate(`/course/${courseId}/evaluation/${unitEvals[0].id}`)}>
+              {hasT && (
+                <Button variant="default" size="sm" className="h-7 text-xs gap-1 bg-purple-600 hover:bg-purple-700" onClick={() => navigate(`/course/${courseId}/evaluation/${evals[0].id}`)}>
                   <PlayCircle className="h-3 w-3" />Realizar
                 </Button>
               )}
-              {isAdmin && !hasTest && (
+              {isAdmin && !hasT && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => toast({ title: "Crear Test", description: "Usa el generador de tests en la UF." })}>
                   <Plus className="h-3 w-3" />Crear
                 </Button>
@@ -449,9 +401,86 @@ function ModuleUnitsTabs({
           }
         />
 
-        <SelfAssessmentQuiz courseId={courseId} formativeUnitId={unit.id} formativeUnitTitle={unit.title} />
+        <SelfAssessmentQuiz courseId={courseId} formativeUnitId={u.id} formativeUnitTitle={u.title} />
       </div>
-      )}
+    );
+  };
+
+  return (
+    <div className="bg-teal-50/30 dark:bg-teal-950/10">
+      <div className="flex flex-col">
+        {moduleUnits.map((u, i) => {
+          const p = getUnitProgress(u.id).overall_progress;
+          const isOpen = u.id === selectedUnitId && panelOpen;
+          const done = p >= 100;
+          return (
+            <div key={u.id} className="border-b border-teal-200/40 dark:border-teal-900/30 last:border-b-0">
+              <button
+                onClick={() => {
+                  if (u.id === selectedUnitId) {
+                    setPanelOpen((o) => !o);
+                  } else {
+                    setSelectedUnitId(u.id);
+                    setPanelOpen(true);
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                  isOpen ? "bg-teal-700 text-white" : "bg-teal-500/90 text-white hover:bg-teal-600"
+                }`}
+                aria-expanded={isOpen}
+              >
+                <span className={`flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold shrink-0 ${
+                  done ? "bg-green-300 text-green-900" : "bg-white/20 text-white"
+                }`}>
+                  {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+                </span>
+                <span className="flex-1 text-sm font-medium leading-snug">
+                  Unidad Didáctica {i + 1}. {u.title}
+                </span>
+                <span className="text-[11px] font-bold tabular-nums opacity-90 shrink-0">{p}%</span>
+                <span className={`text-[11px] font-bold tracking-wider px-2 py-1 rounded shrink-0 ${
+                  isOpen ? "bg-white text-teal-700" : "bg-amber-400 text-amber-950"
+                }`}>
+                  {isOpen ? "CONTRAER" : "AMPLIAR"}
+                </span>
+              </button>
+              {isOpen && renderUnitPanel(u, i)}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Sección colapsable estilo barra (Tutorías / Evaluación) por módulo
+function ModuleSectionBar({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border-t border-teal-200/40">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors ${
+          open ? "bg-slate-700 text-white" : "bg-slate-600 text-white hover:bg-slate-700"
+        }`}
+        aria-expanded={open}
+      >
+        <span className="text-sm font-bold uppercase tracking-wider">{title}</span>
+        <span className={`text-[11px] font-bold tracking-wider px-2 py-1 rounded shrink-0 ${
+          open ? "bg-white text-slate-700" : "bg-amber-400 text-amber-950"
+        }`}>
+          {open ? "CONTRAER" : "AMPLIAR"}
+        </span>
+      </button>
+      {open && <div className="p-4 bg-slate-50/40">{children}</div>}
     </div>
   );
 }
@@ -637,6 +666,48 @@ export function SEPEFormacionCampus({
                             />
                           </div>
                         )}
+
+                        {/* C) Tutorías presenciales */}
+                        <ModuleSectionBar title="C) Tutorías Presenciales">
+                          <TutoriasPresencialesGuide courseId={courseId} userRole={userRole || undefined} courseName={courseTitle} />
+                        </ModuleSectionBar>
+
+                        {/* D) Tutoría virtual */}
+                        <ModuleSectionBar title="D) Tutoría Virtual">
+                          <p className="text-sm text-muted-foreground">
+                            Foro del módulo, mensajería con el tutor y consultas online. Accede desde la sección "Tutoría virtual" del curso.
+                          </p>
+                        </ModuleSectionBar>
+
+                        {/* E) Evaluación del módulo */}
+                        <ModuleSectionBar title="E) Evaluación del Módulo">
+                          <div className="space-y-2">
+                            {(module.evaluations || []).filter((ev: any) => !ev.formative_unit_id).length === 0 ? (
+                              <p className="text-sm text-muted-foreground">Sin evaluación final configurada para este módulo.</p>
+                            ) : (
+                              (module.evaluations || [])
+                                .filter((ev: any) => !ev.formative_unit_id)
+                                .map((ev: any) => (
+                                  <div
+                                    key={ev.id}
+                                    className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 cursor-pointer transition-colors"
+                                    onClick={() => navigate(`/course/${courseId}/evaluation/${ev.id}`)}
+                                  >
+                                    <div className="p-2 bg-purple-100 rounded-lg">
+                                      <ClipboardList className="h-4 w-4 text-purple-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <span className="text-sm font-medium block">{ev.title}</span>
+                                      <p className="text-xs text-muted-foreground">Evaluación final del módulo</p>
+                                    </div>
+                                    <Button size="sm" className="h-7 text-xs gap-1 bg-purple-600 hover:bg-purple-700">
+                                      <PlayCircle className="h-3 w-3" />Realizar
+                                    </Button>
+                                  </div>
+                                ))
+                            )}
+                          </div>
+                        </ModuleSectionBar>
                       </div>
 
                       {/* === BIBLIOTECA del módulo === */}
