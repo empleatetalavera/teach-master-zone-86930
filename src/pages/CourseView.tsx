@@ -1980,6 +1980,7 @@ export default function CourseView() {
                   );
                 })}
               </Accordion>
+              </>
             ) : (
               /* ===== SEPE / STANDARD MODULE VIEW ===== */
               <SEPEFormacionCampus
