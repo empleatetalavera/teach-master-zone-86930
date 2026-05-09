@@ -1049,6 +1049,75 @@ export default function CourseView() {
                 </PopoverContent>
               </Popover>
 
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Foros
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[420px] p-0" align="start">
+                  <div className="p-4 border-b bg-gradient-to-r from-teal-500/10 to-teal-500/5">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5 text-teal-600" />
+                      Foros de dudas y consultas
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Plantea preguntas a tu tutor/a y debate con tus compañeros/as
+                    </p>
+                  </div>
+                  <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
+                    <p className="text-sm text-foreground leading-relaxed">
+                      En cada unidad didáctica dispones de un foro de consultas/dudas
+                      donde podrás plantear en cualquier momento a tu tutor-formador
+                      cuestiones sobre:
+                    </p>
+                    <ul className="text-sm space-y-1 list-disc pl-5 text-foreground">
+                      <li>Los contenidos de la unidad didáctica.</li>
+                      <li>Las actividades de aprendizaje programadas.</li>
+                      <li>El funcionamiento del Campus Virtual.</li>
+                    </ul>
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Desde el foro del curso podrás <span className="font-semibold text-foreground">crear nuevos temas</span>,
+                        responder a tus compañeros y recibir notificaciones cuando tu
+                        tutor/a conteste.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      <Button
+                        className="w-full"
+                        size="sm"
+                        onClick={() => setActiveTab('forum')}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Ir al foro del curso
+                      </Button>
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setActiveTab('modules')}
+                      >
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Foros por unidad didáctica
+                      </Button>
+                      {userRole === 'teacher' && (
+                        <Button
+                          className="w-full"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setActiveTab('tutor-forum')}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          Foro privado de tutores
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               <Button
                 size="sm"
                 onClick={() => setActiveTab('student-guide')}
