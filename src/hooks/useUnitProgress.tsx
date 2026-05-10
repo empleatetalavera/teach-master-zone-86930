@@ -19,8 +19,27 @@ export function useUnitProgress({ enrollmentId, formativeUnitIds }: UseUnitProgr
   const [progressData, setProgressData] = useState<Record<string, UnitProgressData>>({});
   const [loading, setLoading] = useState(true);
 
+  // Stabilize the array of unit IDs by content (not reference) to avoid loops
+  // when the parent rebuilds the array on every render.
+  const unitIdsKey = useMemo(
+    () => [...formativeUnitIds].sort().join(','),
+    [formativeUnitIds],
+  );
+  const stableUnitIds = useMemo(
+    () => (unitIdsKey ? unitIdsKey.split(',') : []),
+    [unitIdsKey],
+  );
+
+  // Keep a ref to latest IDs so the realtime subscription doesn't need to
+  // re-subscribe when they change.
+  const unitIdsRef = useRef<string[]>(stableUnitIds);
+  useEffect(() => {
+    unitIdsRef.current = stableUnitIds;
+  }, [stableUnitIds]);
+
   const loadProgress = useCallback(async () => {
-    if (!user || !enrollmentId || formativeUnitIds.length === 0) {
+    const ids = unitIdsRef.current;
+    if (!user || !enrollmentId || ids.length === 0) {
       setLoading(false);
       return;
     }
@@ -30,7 +49,7 @@ export function useUnitProgress({ enrollmentId, formativeUnitIds }: UseUnitProgr
         .from('unit_progress')
         .select('*')
         .eq('enrollment_id', enrollmentId)
-        .in('formative_unit_id', formativeUnitIds);
+        .in('formative_unit_id', ids);
 
       if (error) throw error;
 
@@ -44,8 +63,7 @@ export function useUnitProgress({ enrollmentId, formativeUnitIds }: UseUnitProgr
         };
       });
 
-      // Add missing units with 0 progress
-      formativeUnitIds.forEach((id) => {
+      ids.forEach((id) => {
         if (!progressMap[id]) {
           progressMap[id] = {
             formative_unit_id: id,
@@ -62,11 +80,11 @@ export function useUnitProgress({ enrollmentId, formativeUnitIds }: UseUnitProgr
     } finally {
       setLoading(false);
     }
-  }, [user, enrollmentId, formativeUnitIds]);
+  }, [user, enrollmentId]);
 
   useEffect(() => {
     loadProgress();
-  }, [loadProgress]);
+  }, [loadProgress, unitIdsKey]);
 
   // Realtime: refresh when unit_progress or scorm_progress changes for this enrollment
   useEffect(() => {
