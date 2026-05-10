@@ -237,13 +237,14 @@ function ModuleUnitsTabs({
   if (moduleUnits.length === 0) return null;
 
   const renderUnitPanel = (u: FormativeUnit, idx: number) => {
-    const up = getUnitProgress(u.id);
     const evals = moduleEvaluations.filter((ev: any) => ev.formative_unit_id === u.id);
     const hasT = evals.length > 0;
     return (
       <div className="p-4 space-y-3 bg-teal-50/40 border-y border-teal-200/60">
         <div className="flex items-start gap-3 pb-2 border-b">
-          <ProgressRing value={up.overall_progress} size={40} strokeWidth={3} />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-600 text-sm font-bold text-white">
+            {idx + 1}
+          </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono shrink-0">UD{idx + 1}</Badge>
@@ -254,24 +255,6 @@ function ModuleUnitsTabs({
               )}
             </div>
             <h4 className="font-semibold text-sm mt-0.5">{u.title}</h4>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 p-2.5 rounded-lg bg-muted/30 text-xs">
-          <div className="flex-1">
-            <div className="flex justify-between mb-1">
-              <span className="text-muted-foreground">Contenido</span>
-              <span className="font-medium">{up.content_progress}%</span>
-            </div>
-            <Progress value={up.content_progress} className="h-1.5" />
-          </div>
-          <div className="w-px h-6 bg-border" />
-          <div className="flex-1">
-            <div className="flex justify-between mb-1">
-              <span className="text-muted-foreground">Actividades</span>
-              <span className="font-medium">{up.activities_progress}%</span>
-            </div>
-            <Progress value={up.activities_progress} className="h-1.5" />
           </div>
         </div>
 
