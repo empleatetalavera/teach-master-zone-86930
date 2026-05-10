@@ -45,7 +45,6 @@ import { SupplementaryMaterialManager } from "@/components/SupplementaryMaterial
 import { WorkPlanCalendar } from "@/components/WorkPlanCalendar";
 import { SyllabusEditor } from "@/components/SyllabusEditor";
 import { ActivitySubmissionViewer } from "@/components/ActivitySubmissionViewer";
-import { useUnitProgress } from "@/hooks/useUnitProgress";
 import { ModuleEvaluationTest } from "@/components/ModuleEvaluationTest";
 import { TeacherActivityCorrectionPanel } from "@/components/TeacherActivityCorrectionPanel";
 import { TutorStudentProgress } from "@/components/TutorStudentProgress";
@@ -276,17 +275,6 @@ export default function CourseView() {
     name: "",
     email: "", 
     phone: ""
-  });
-  
-  // Extract all formative unit IDs for progress tracking
-  const allFormativeUnitIds = modules.flatMap(m => 
-    (m.formative_units || []).map(u => u.id)
-  );
-
-  // Use unit progress hook - must be called before any conditional returns
-  const { getUnitProgress, updateContentProgress, updateActivityProgress } = useUnitProgress({
-    enrollmentId: enrollment?.id || null,
-    formativeUnitIds: allFormativeUnitIds,
   });
   
   // Content viewer state
@@ -2051,7 +2039,6 @@ export default function CourseView() {
                 courseId={courseId!}
                 courseTitle={course?.title || 'Curso'}
                 userRole={userRole}
-                getUnitProgress={getUnitProgress}
                 onOpenScormViewer={openScormViewer}
                 onOpenActivityManager={openActivityManager}
                 onOpenManualUploader={(moduleId, unitTitle, unitId) => {

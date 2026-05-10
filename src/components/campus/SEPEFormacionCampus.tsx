@@ -1,8 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +20,7 @@ import {
   BookOpen, Clock, FileText, CheckCircle2, ChevronDown, PlayCircle,
   Layers, PenTool, ClipboardList, ListChecks, Target, Upload,
   ExternalLink, Star, User, AlertCircle, MessageSquare, FileQuestion,
-  CheckSquare, Plus, BarChart3
+  CheckSquare, Plus
 } from "lucide-react";
 
 interface Module {
@@ -60,18 +59,11 @@ interface FormativeUnit {
   activities?: any[];
 }
 
-interface UnitProgressData {
-  content_progress: number;
-  activities_progress: number;
-  overall_progress: number;
-}
-
 interface SEPEFormacionCampusProps {
   modules: Module[];
   courseId: string;
   courseTitle: string;
   userRole: string | null;
-  getUnitProgress: (unitId: string) => UnitProgressData;
   onOpenScormViewer: (unitId: string, unitTitle: string, moduleId?: string) => void;
   onOpenActivityManager: (unitId: string, unitTitle: string) => void;
   onOpenManualUploader: (moduleId: string, unitTitle: string, unitId: string) => void;
@@ -162,49 +154,6 @@ async function fetchAndOpenPDF(
   }
 }
 
-// Progress ring component
-function ProgressRing({ value, size = 40, strokeWidth = 3 }: { value: number; size?: number; strokeWidth?: number }) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (value / 100) * circumference;
-  const color = value >= 100 ? 'text-green-500' : value > 50 ? 'text-primary' : value > 0 ? 'text-amber-500' : 'text-muted-foreground/30';
-  
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg className="transform -rotate-90" width={size} height={size}>
-        <circle
-          className="text-muted/30"
-          strokeWidth={strokeWidth}
-          stroke="currentColor"
-          fill="transparent"
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-        />
-        <circle
-          className={color}
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          stroke="currentColor"
-          fill="transparent"
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        {value >= 100 ? (
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
-        ) : (
-          <span className="text-[10px] font-bold text-foreground">{value}%</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // Unit resource item
 function UnitResourceItem({ 
   icon, 
@@ -258,7 +207,6 @@ function ModuleUnitsTabs({
   moduleUnits,
   courseId,
   isAdmin,
-  getUnitProgress,
   onOpenScormViewer,
   onOpenActivityManager,
   onOpenManualUploader,
@@ -271,7 +219,6 @@ function ModuleUnitsTabs({
   moduleUnits: FormativeUnit[];
   courseId: string;
   isAdmin: boolean;
-  getUnitProgress: (unitId: string) => UnitProgressData;
   onOpenScormViewer: (unitId: string, unitTitle: string, moduleId?: string) => void;
   onOpenActivityManager: (unitId: string, unitTitle: string) => void;
   onOpenManualUploader: (moduleId: string, unitTitle: string, unitId: string) => void;
@@ -290,13 +237,14 @@ function ModuleUnitsTabs({
   if (moduleUnits.length === 0) return null;
 
   const renderUnitPanel = (u: FormativeUnit, idx: number) => {
-    const up = getUnitProgress(u.id);
     const evals = moduleEvaluations.filter((ev: any) => ev.formative_unit_id === u.id);
     const hasT = evals.length > 0;
     return (
       <div className="p-4 space-y-3 bg-teal-50/40 border-y border-teal-200/60">
         <div className="flex items-start gap-3 pb-2 border-b">
-          <ProgressRing value={up.overall_progress} size={40} strokeWidth={3} />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-600 text-sm font-bold text-white">
+            {idx + 1}
+          </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono shrink-0">UD{idx + 1}</Badge>
@@ -307,24 +255,6 @@ function ModuleUnitsTabs({
               )}
             </div>
             <h4 className="font-semibold text-sm mt-0.5">{u.title}</h4>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 p-2.5 rounded-lg bg-muted/30 text-xs">
-          <div className="flex-1">
-            <div className="flex justify-between mb-1">
-              <span className="text-muted-foreground">Contenido</span>
-              <span className="font-medium">{up.content_progress}%</span>
-            </div>
-            <Progress value={up.content_progress} className="h-1.5" />
-          </div>
-          <div className="w-px h-6 bg-border" />
-          <div className="flex-1">
-            <div className="flex justify-between mb-1">
-              <span className="text-muted-foreground">Actividades</span>
-              <span className="font-medium">{up.activities_progress}%</span>
-            </div>
-            <Progress value={up.activities_progress} className="h-1.5" />
           </div>
         </div>
 
@@ -411,9 +341,7 @@ function ModuleUnitsTabs({
     <div className="bg-teal-50/30 dark:bg-teal-950/10">
       <div className="flex flex-col">
         {moduleUnits.map((u, i) => {
-          const p = getUnitProgress(u.id).overall_progress;
           const isOpen = u.id === selectedUnitId && panelOpen;
-          const done = p >= 100;
           return (
             <div key={u.id} className="border-b border-teal-200/40 dark:border-teal-900/30 last:border-b-0">
               <button
@@ -430,15 +358,12 @@ function ModuleUnitsTabs({
                 }`}
                 aria-expanded={isOpen}
               >
-                <span className={`flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold shrink-0 ${
-                  done ? "bg-green-300 text-green-900" : "bg-white/20 text-white"
-                }`}>
-                  {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+                <span className="flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold shrink-0 bg-white/20 text-white">
+                  {i + 1}
                 </span>
                 <span className="flex-1 text-sm font-medium leading-snug">
                   Unidad Didáctica {i + 1}. {u.title}
                 </span>
-                <span className="text-[11px] font-bold tabular-nums opacity-90 shrink-0">{p}%</span>
                 <span className={`text-[11px] font-bold tracking-wider px-2 py-1 rounded shrink-0 ${
                   isOpen ? "bg-white text-teal-700" : "bg-amber-400 text-amber-950"
                 }`}>
@@ -491,7 +416,6 @@ export function SEPEFormacionCampus({
   courseId,
   courseTitle,
   userRole,
-  getUnitProgress,
   onOpenScormViewer,
   onOpenActivityManager,
   onOpenManualUploader,
@@ -501,14 +425,6 @@ export function SEPEFormacionCampus({
   const { toast } = useToast();
   const navigate = useNavigate();
   const isAdmin = userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher';
-
-  // Calculate module progress from UF progress
-  const getModuleProgress = useCallback((module: Module) => {
-    const units = module.formative_units || [];
-    if (units.length === 0) return 0;
-    const totalProgress = units.reduce((sum, u) => sum + getUnitProgress(u.id).overall_progress, 0);
-    return Math.round(totalProgress / units.length);
-  }, [getUnitProgress]);
 
   return (
     <div className="space-y-4">
@@ -538,7 +454,7 @@ export function SEPEFormacionCampus({
         <CardContent className="py-3 px-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg shrink-0">
-              <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <ListChecks className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <p className="text-sm text-blue-800 dark:text-blue-200">
               Cada módulo incluye: <strong>contenido interactivo</strong>, <strong>manual PDF</strong>, <strong>actividad de desarrollo</strong> y <strong>test final</strong>. Nota mínima: 50%.
@@ -562,7 +478,6 @@ export function SEPEFormacionCampus({
         <div className="space-y-3">
           {modules.map((module, index) => {
             const moduleUnits = module.formative_units || [];
-            const moduleProgress = getModuleProgress(module);
             const totalEvaluations = (module.evaluations?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.evaluations?.length || 0), 0);
             const totalActivities = (module.activities?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.activities?.length || 0), 0);
 
@@ -574,7 +489,9 @@ export function SEPEFormacionCampus({
                       <div className="flex items-start gap-3">
                         {/* Module number */}
                         <div className="relative shrink-0">
-                          <ProgressRing value={moduleProgress} size={44} strokeWidth={3} />
+                          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                            {index + 1}
+                          </span>
                         </div>
 
                         {/* Module info */}
@@ -647,7 +564,6 @@ export function SEPEFormacionCampus({
                             moduleUnits={moduleUnits}
                             courseId={courseId}
                             isAdmin={isAdmin}
-                            getUnitProgress={getUnitProgress}
                             onOpenScormViewer={onOpenScormViewer}
                             onOpenActivityManager={onOpenActivityManager}
                             onOpenManualUploader={onOpenManualUploader}
