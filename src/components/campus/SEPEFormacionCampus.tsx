@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -341,9 +341,7 @@ function ModuleUnitsTabs({
     <div className="bg-teal-50/30 dark:bg-teal-950/10">
       <div className="flex flex-col">
         {moduleUnits.map((u, i) => {
-          const p = getUnitProgress(u.id).overall_progress;
           const isOpen = u.id === selectedUnitId && panelOpen;
-          const done = p >= 100;
           return (
             <div key={u.id} className="border-b border-teal-200/40 dark:border-teal-900/30 last:border-b-0">
               <button
@@ -360,15 +358,12 @@ function ModuleUnitsTabs({
                 }`}
                 aria-expanded={isOpen}
               >
-                <span className={`flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold shrink-0 ${
-                  done ? "bg-green-300 text-green-900" : "bg-white/20 text-white"
-                }`}>
-                  {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+                <span className="flex items-center justify-center h-6 w-6 rounded-full text-[11px] font-bold shrink-0 bg-white/20 text-white">
+                  {i + 1}
                 </span>
                 <span className="flex-1 text-sm font-medium leading-snug">
                   Unidad Didáctica {i + 1}. {u.title}
                 </span>
-                <span className="text-[11px] font-bold tabular-nums opacity-90 shrink-0">{p}%</span>
                 <span className={`text-[11px] font-bold tracking-wider px-2 py-1 rounded shrink-0 ${
                   isOpen ? "bg-white text-teal-700" : "bg-amber-400 text-amber-950"
                 }`}>
