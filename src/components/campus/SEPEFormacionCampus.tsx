@@ -15,6 +15,7 @@ import { UFActivitiesList } from "./UFActivitiesList";
 import { UFForumsList } from "./UFForumsList";
 import { ModuleLibrary } from "./ModuleLibrary";
 import { EvidenceManager } from "./EvidenceManager";
+import { UnitScormManager } from "@/components/scorm/UnitScormManager";
 import TutoriasPresencialesGuide from "@/components/TutoriasPresencialesGuide";
 import {
   BookOpen, Clock, FileText, CheckCircle2, ChevronDown, PlayCircle,
@@ -283,6 +284,12 @@ function ModuleUnitsTabs({
             </Button>
           ) : undefined}
         />
+
+        {isAdmin && (
+          <div className="rounded-lg border border-violet-200/60 bg-violet-50/30 p-3 dark:border-violet-900/40 dark:bg-violet-950/10">
+            <UnitScormManager moduleId={moduleId} unitId={u.id} unitTitle={u.title} />
+          </div>
+        )}
 
         <UnitResourceItem
           icon={<FileText className="h-4 w-4" />}
