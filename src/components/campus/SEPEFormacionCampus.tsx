@@ -154,49 +154,6 @@ async function fetchAndOpenPDF(
   }
 }
 
-// Progress ring component
-function ProgressRing({ value, size = 40, strokeWidth = 3 }: { value: number; size?: number; strokeWidth?: number }) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (value / 100) * circumference;
-  const color = value >= 100 ? 'text-green-500' : value > 50 ? 'text-primary' : value > 0 ? 'text-amber-500' : 'text-muted-foreground/30';
-  
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg className="transform -rotate-90" width={size} height={size}>
-        <circle
-          className="text-muted/30"
-          strokeWidth={strokeWidth}
-          stroke="currentColor"
-          fill="transparent"
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-        />
-        <circle
-          className={color}
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          stroke="currentColor"
-          fill="transparent"
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        {value >= 100 ? (
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
-        ) : (
-          <span className="text-[10px] font-bold text-foreground">{value}%</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // Unit resource item
 function UnitResourceItem({ 
   icon, 
@@ -250,7 +207,6 @@ function ModuleUnitsTabs({
   moduleUnits,
   courseId,
   isAdmin,
-  getUnitProgress,
   onOpenScormViewer,
   onOpenActivityManager,
   onOpenManualUploader,
@@ -263,7 +219,6 @@ function ModuleUnitsTabs({
   moduleUnits: FormativeUnit[];
   courseId: string;
   isAdmin: boolean;
-  getUnitProgress: (unitId: string) => UnitProgressData;
   onOpenScormViewer: (unitId: string, unitTitle: string, moduleId?: string) => void;
   onOpenActivityManager: (unitId: string, unitTitle: string) => void;
   onOpenManualUploader: (moduleId: string, unitTitle: string, unitId: string) => void;
