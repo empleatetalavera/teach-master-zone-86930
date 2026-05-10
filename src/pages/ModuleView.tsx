@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModuleChat } from "@/components/ModuleChat";
 import { InteractiveContent } from "@/components/InteractiveContent";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import ModuleProgressBar from "@/components/courses/ModuleProgressBar";
 import ModuleDownloads from "@/components/courses/ModuleDownloads";
 import { CourseForum } from "@/components/CourseForum";
 import { CourseGlossary } from "@/components/CourseGlossary";
@@ -253,11 +252,6 @@ export default function ModuleView() {
                 </SheetTitle>
               </SheetHeader>
               <div className="p-3 overflow-auto">
-                {enrollmentId && (
-                  <div className="mb-3 px-2">
-                    <ModuleProgressBar moduleId={moduleId!} enrollmentId={enrollmentId} />
-                  </div>
-                )}
                 <ModuleIndex onNavigate={() => {/* sheet auto-closes via overlay */}} />
               </div>
             </SheetContent>
@@ -282,11 +276,6 @@ export default function ModuleView() {
                     <CheckCircle2 className="h-8 w-8 text-green-500 shrink-0" />
                   )}
                 </div>
-                {enrollmentId && (
-                  <div className="mt-4 lg:hidden">
-                    <ModuleProgressBar moduleId={moduleId!} enrollmentId={enrollmentId} />
-                  </div>
-                )}
               </CardHeader>
 
               <CardContent className="space-y-6">
@@ -416,11 +405,6 @@ export default function ModuleView() {
           <aside className="hidden lg:block order-1 lg:order-2">
             <div className="sticky top-4 space-y-4">
               <Card className="p-3">
-                {enrollmentId && (
-                  <div className="px-1 pb-2 mb-2 border-b">
-                    <ModuleProgressBar moduleId={moduleId!} enrollmentId={enrollmentId} />
-                  </div>
-                )}
                 <ModuleIndex />
               </Card>
             </div>
