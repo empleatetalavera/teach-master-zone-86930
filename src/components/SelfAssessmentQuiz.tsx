@@ -202,6 +202,9 @@ export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTit
             <FileQuestion className="h-4 w-4" />
             {savedAttempt ? "Repetir Autoevaluación" : "Comenzar Autoevaluación"}
           </Button>
+          <div className="mt-3 flex justify-end">
+            <MarkAsDoneButton itemType="quiz" itemId={formativeUnitId} courseId={courseId} />
+          </div>
         </CardContent>
       </Card>
     );
