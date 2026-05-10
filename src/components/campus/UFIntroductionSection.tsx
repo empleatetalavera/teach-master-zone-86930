@@ -118,7 +118,8 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
           .maybeSingle();
         centerId = course?.training_center_id;
       }
-      if (!centerId) throw new Error("No se pudo determinar el centro formativo del curso.");
+      // Catalog courses have no center: use courseId as folder (super_admin bypasses RLS check)
+      if (!centerId) centerId = courseId;
 
       const safeName = sanitizeFileName(file.name);
       const filePath = `${centerId}/${courseId}/${moduleId}/${resourceType}/${Date.now()}-${safeName}`;
