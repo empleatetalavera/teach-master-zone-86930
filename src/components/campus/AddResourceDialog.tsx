@@ -107,7 +107,7 @@ export function AddResourceDialog({
         .maybeSingle();
       centerId = course?.training_center_id;
     }
-    if (!centerId) throw new Error("No se pudo determinar el centro formativo del curso.");
+    if (!centerId) centerId = resolvedCourseId;
 
     return `${centerId}/${resolvedCourseId}/${moduleId}`;
   };
