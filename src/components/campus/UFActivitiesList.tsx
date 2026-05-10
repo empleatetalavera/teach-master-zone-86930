@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PenTool, ChevronRight, Plus, Calendar } from "lucide-react";
+import { MarkAsDoneButton } from "@/components/MarkAsDoneButton";
 
 interface Activity {
   id: string;
