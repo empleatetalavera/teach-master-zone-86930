@@ -81,24 +81,35 @@ export function AddResourceDialog({
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) throw authError || new Error("Debes iniciar sesión para subir archivos.");
 
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("training_center_id")
       .eq("id", authData.user.id)
-      .single();
-    if (profileError) throw profileError;
-    if (!profile?.training_center_id) throw new Error("Tu usuario no tiene centro formativo asignado.");
+      .maybeSingle();
 
-    if (courseId) return `${profile.training_center_id}/${courseId}/${moduleId}`;
+    let resolvedCourseId = courseId;
+    if (!resolvedCourseId) {
+      const { data: moduleData, error: moduleError } = await supabase
+        .from("modules")
+        .select("course_id")
+        .eq("id", moduleId)
+        .single();
+      if (moduleError) throw moduleError;
+      resolvedCourseId = moduleData.course_id;
+    }
 
-    const { data: moduleData, error: moduleError } = await supabase
-      .from("modules")
-      .select("course_id")
-      .eq("id", moduleId)
-      .single();
-    if (moduleError) throw moduleError;
+    let centerId = profile?.training_center_id as string | null | undefined;
+    if (!centerId) {
+      const { data: course } = await (supabase as any)
+        .from("courses")
+        .select("training_center_id")
+        .eq("id", resolvedCourseId)
+        .maybeSingle();
+      centerId = course?.training_center_id;
+    }
+    if (!centerId) throw new Error("No se pudo determinar el centro formativo del curso.");
 
-    return `${profile.training_center_id}/${moduleData.course_id}/${moduleId}`;
+    return `${centerId}/${resolvedCourseId}/${moduleId}`;
   };
 
   const save = async (mode: "file" | "link") => {
