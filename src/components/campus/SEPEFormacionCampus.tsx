@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +20,7 @@ import {
   BookOpen, Clock, FileText, CheckCircle2, ChevronDown, PlayCircle,
   Layers, PenTool, ClipboardList, ListChecks, Target, Upload,
   ExternalLink, Star, User, AlertCircle, MessageSquare, FileQuestion,
-  CheckSquare, Plus, BarChart3
+  CheckSquare, Plus
 } from "lucide-react";
 
 interface Module {
@@ -60,18 +59,11 @@ interface FormativeUnit {
   activities?: any[];
 }
 
-interface UnitProgressData {
-  content_progress: number;
-  activities_progress: number;
-  overall_progress: number;
-}
-
 interface SEPEFormacionCampusProps {
   modules: Module[];
   courseId: string;
   courseTitle: string;
   userRole: string | null;
-  getUnitProgress: (unitId: string) => UnitProgressData;
   onOpenScormViewer: (unitId: string, unitTitle: string, moduleId?: string) => void;
   onOpenActivityManager: (unitId: string, unitTitle: string) => void;
   onOpenManualUploader: (moduleId: string, unitTitle: string, unitId: string) => void;
