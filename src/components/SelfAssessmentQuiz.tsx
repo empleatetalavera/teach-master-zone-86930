@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, XCircle, FileQuestion, ChevronLeft, ChevronRight, RotateCcw, Lightbulb, AlertCircle } from "lucide-react";
+import { MarkAsDoneButton } from "@/components/MarkAsDoneButton";
 
 interface SelfAssessmentQuestion {
   id: string;
