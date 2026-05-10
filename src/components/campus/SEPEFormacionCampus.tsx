@@ -416,7 +416,6 @@ export function SEPEFormacionCampus({
   courseId,
   courseTitle,
   userRole,
-  getUnitProgress,
   onOpenScormViewer,
   onOpenActivityManager,
   onOpenManualUploader,
@@ -426,14 +425,6 @@ export function SEPEFormacionCampus({
   const { toast } = useToast();
   const navigate = useNavigate();
   const isAdmin = userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher';
-
-  // Calculate module progress from UF progress
-  const getModuleProgress = useCallback((module: Module) => {
-    const units = module.formative_units || [];
-    if (units.length === 0) return 0;
-    const totalProgress = units.reduce((sum, u) => sum + getUnitProgress(u.id).overall_progress, 0);
-    return Math.round(totalProgress / units.length);
-  }, [getUnitProgress]);
 
   return (
     <div className="space-y-4">
@@ -463,7 +454,7 @@ export function SEPEFormacionCampus({
         <CardContent className="py-3 px-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg shrink-0">
-              <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <ListChecks className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <p className="text-sm text-blue-800 dark:text-blue-200">
               Cada módulo incluye: <strong>contenido interactivo</strong>, <strong>manual PDF</strong>, <strong>actividad de desarrollo</strong> y <strong>test final</strong>. Nota mínima: 50%.
@@ -487,7 +478,6 @@ export function SEPEFormacionCampus({
         <div className="space-y-3">
           {modules.map((module, index) => {
             const moduleUnits = module.formative_units || [];
-            const moduleProgress = getModuleProgress(module);
             const totalEvaluations = (module.evaluations?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.evaluations?.length || 0), 0);
             const totalActivities = (module.activities?.length || 0) + moduleUnits.reduce((sum, u) => sum + (u.activities?.length || 0), 0);
 
@@ -499,7 +489,9 @@ export function SEPEFormacionCampus({
                       <div className="flex items-start gap-3">
                         {/* Module number */}
                         <div className="relative shrink-0">
-                          <ProgressRing value={moduleProgress} size={44} strokeWidth={3} />
+                          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                            {index + 1}
+                          </span>
                         </div>
 
                         {/* Module info */}
@@ -572,7 +564,6 @@ export function SEPEFormacionCampus({
                             moduleUnits={moduleUnits}
                             courseId={courseId}
                             isAdmin={isAdmin}
-                            getUnitProgress={getUnitProgress}
                             onOpenScormViewer={onOpenScormViewer}
                             onOpenActivityManager={onOpenActivityManager}
                             onOpenManualUploader={onOpenManualUploader}
