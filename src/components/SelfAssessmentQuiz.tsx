@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, XCircle, FileQuestion, ChevronLeft, ChevronRight, RotateCcw, Lightbulb, AlertCircle } from "lucide-react";
+import { MarkAsDoneButton } from "@/components/MarkAsDoneButton";
 
 interface SelfAssessmentQuestion {
   id: string;
@@ -201,6 +202,9 @@ export function SelfAssessmentQuiz({ courseId, formativeUnitId, formativeUnitTit
             <FileQuestion className="h-4 w-4" />
             {savedAttempt ? "Repetir Autoevaluación" : "Comenzar Autoevaluación"}
           </Button>
+          <div className="mt-3 flex justify-end">
+            <MarkAsDoneButton itemType="quiz" itemId={formativeUnitId} courseId={courseId} />
+          </div>
         </CardContent>
       </Card>
     );

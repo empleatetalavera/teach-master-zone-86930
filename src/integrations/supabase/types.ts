@@ -3135,6 +3135,36 @@ export type Database = {
           },
         ]
       }
+      student_item_completions: {
+        Row: {
+          completed_at: string
+          course_id: string | null
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_support_messages: {
         Row: {
           created_at: string | null
