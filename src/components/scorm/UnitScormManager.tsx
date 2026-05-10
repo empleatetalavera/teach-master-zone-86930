@@ -136,7 +136,7 @@ export function UnitScormManager({ moduleId, unitId, unitTitle }: Props) {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".zip"
+            accept=".zip,application/zip,application/x-zip-compressed"
             className="hidden"
             onChange={handleFile}
           />
