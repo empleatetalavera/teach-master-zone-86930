@@ -103,16 +103,25 @@ export function UFIntroductionSection({ moduleId, formativeUnitId, formativeUnit
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData.user) throw authError || new Error("Debes iniciar sesión para subir archivos.");
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
         .select("training_center_id")
         .eq("id", authData.user.id)
-        .single();
-      if (profileError) throw profileError;
-      if (!profile?.training_center_id) throw new Error("Tu usuario no tiene centro formativo asignado.");
+        .maybeSingle();
+
+      let centerId = profile?.training_center_id as string | null | undefined;
+      if (!centerId) {
+        const { data: course } = await (supabase as any)
+          .from("courses")
+          .select("training_center_id")
+          .eq("id", courseId)
+          .maybeSingle();
+        centerId = course?.training_center_id;
+      }
+      if (!centerId) throw new Error("No se pudo determinar el centro formativo del curso.");
 
       const safeName = sanitizeFileName(file.name);
-      const filePath = `${profile.training_center_id}/${courseId}/${moduleId}/${resourceType}/${Date.now()}-${safeName}`;
+      const filePath = `${centerId}/${courseId}/${moduleId}/${resourceType}/${Date.now()}-${safeName}`;
       const { error: uploadError } = await supabase.storage
         .from("module-content")
         .upload(filePath, file, { upsert: false, contentType: file.type });
