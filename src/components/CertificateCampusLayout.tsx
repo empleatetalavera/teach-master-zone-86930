@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { CAUSupportForm } from "@/components/campus/CAUSupportForm";
 import { ContactsListDialog } from "@/components/campus/ContactsListDialog";
+import { TutorMessaging } from "@/components/TutorMessaging";
 
 interface UnitLite {
   id: string;
@@ -61,6 +62,7 @@ interface Props {
     course_code?: string | null;
     duration_hours?: number;
     qualification_level?: number | string | null;
+    tutor_id?: string | null;
   };
   modules: ModuleLite[];
   selectedModuleId: string | null;
@@ -114,6 +116,7 @@ export function CampusChrome({
   const [verTodoOpen, setVerTodoOpen] = useState(false);
   const [cauOpen, setCauOpen] = useState(false);
   const [contactsOpen, setContactsOpen] = useState(false);
+  const [tutorChatOpen, setTutorChatOpen] = useState(false);
   const [unitsOpen, setUnitsOpen] = useState(true);
 
   const goToUnit = (moduleId: string, unitId?: string) => {
@@ -168,8 +171,8 @@ export function CampusChrome({
       },
     },
     { id: "chat", label: "Chat", Icon: MessageSquare, action: () => goToTab("cafeteria") },
-    { id: "chat-tutor", label: "Chat con el tutor", Icon: MessageSquare, action: () => goToTab("forum") },
-    { id: "pending-messages", label: "Mensajes pendientes", Icon: Inbox, action: () => goToTab("forum") },
+    { id: "chat-tutor", label: "Chat con el tutor", Icon: MessageSquare, action: () => setTutorChatOpen(true) },
+    { id: "pending-messages", label: "Mensajes pendientes", Icon: Inbox, action: () => setTutorChatOpen(true) },
     {
       id: "phone",
       label: "Contacta en directo",
@@ -564,10 +567,29 @@ export function CampusChrome({
 
       <ContactsListDialog
         courseId={course.id || ""}
-        tutorId={null}
+        tutorId={course.tutor_id || null}
         open={contactsOpen}
         onOpenChange={setContactsOpen}
       />
+
+      <Dialog open={tutorChatOpen} onOpenChange={setTutorChatOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0">
+          <DialogHeader className="px-6 pt-5 pb-2 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              Chat con el tutor
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <TutorMessaging
+              courseId={course.id || ""}
+              tutorId={course.tutor_id || undefined}
+              supportEmail={centerContact.email || undefined}
+              supportPhone={centerContact.phone || undefined}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
