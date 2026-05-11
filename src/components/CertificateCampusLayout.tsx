@@ -32,6 +32,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { CAUSupportForm } from "@/components/campus/CAUSupportForm";
+import { ContactsListDialog } from "@/components/campus/ContactsListDialog";
 
 interface UnitLite {
   id: string;
@@ -112,6 +113,7 @@ export function CampusChrome({
   const navigate = useNavigate();
   const [verTodoOpen, setVerTodoOpen] = useState(false);
   const [cauOpen, setCauOpen] = useState(false);
+  const [contactsOpen, setContactsOpen] = useState(false);
   const [unitsOpen, setUnitsOpen] = useState(true);
 
   const goToUnit = (moduleId: string, unitId?: string) => {
@@ -152,7 +154,7 @@ export function CampusChrome({
 
   const COMUNICARME_ITEMS = [
     { id: "profile", label: "Mi perfil", Icon: UserIcon, action: () => navigate("/profile") },
-    { id: "contacts", label: "Mis contactos", Icon: UsersIcon, action: () => goToTab("forum") },
+    { id: "contacts", label: "Mis contactos", Icon: UsersIcon, action: () => setContactsOpen(true) },
     {
       id: "mail",
       label: "Correo",
@@ -559,6 +561,13 @@ export function CampusChrome({
           />
         </DialogContent>
       </Dialog>
+
+      <ContactsListDialog
+        courseId={course.id || ""}
+        tutorId={null}
+        open={contactsOpen}
+        onOpenChange={setContactsOpen}
+      />
     </>
   );
 }
