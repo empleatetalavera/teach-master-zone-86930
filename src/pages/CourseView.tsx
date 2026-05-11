@@ -32,6 +32,7 @@ import { CampusChrome } from "@/components/CertificateCampusLayout";
 
 import { CourseStudentGuide } from "@/components/CourseStudentGuide";
 import { EvidenceManager } from "@/components/campus/EvidenceManager";
+import { CourseContactsCard } from "@/components/campus/CourseContactsCard";
 import { CAUSupportForm } from "@/components/campus/CAUSupportForm";
 import { CourseTrainingProgram } from "@/components/CourseTrainingProgram";
 import { CourseWorkPlan } from "@/components/CourseWorkPlan";
@@ -2771,6 +2772,11 @@ export default function CourseView() {
                   </Dialog>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Mis Contactos (alumnos) */}
+            {userRole !== 'teacher' && (
+              <CourseContactsCard courseId={courseId!} tutorId={course.tutor_id} />
             )}
 
             {/* Tutorías Virtuales */}
