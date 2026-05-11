@@ -116,6 +116,7 @@ export function CampusChrome({
   const [verTodoOpen, setVerTodoOpen] = useState(false);
   const [cauOpen, setCauOpen] = useState(false);
   const [contactsOpen, setContactsOpen] = useState(false);
+  const [tutorChatOpen, setTutorChatOpen] = useState(false);
   const [unitsOpen, setUnitsOpen] = useState(true);
 
   const goToUnit = (moduleId: string, unitId?: string) => {
