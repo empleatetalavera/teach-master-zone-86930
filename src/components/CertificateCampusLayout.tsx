@@ -61,6 +61,7 @@ interface Props {
     course_code?: string | null;
     duration_hours?: number;
     qualification_level?: number | string | null;
+    tutor_id?: string | null;
   };
   modules: ModuleLite[];
   selectedModuleId: string | null;
