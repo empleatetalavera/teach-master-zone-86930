@@ -1,0 +1,156 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Users, Mail, Loader2 } from "lucide-react";
+
+interface Contact {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  role: "student" | "teacher";
+  online: boolean;
+}
+
+interface Props {
+  courseId: string;
+  tutorId?: string | null;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}
+
+const ONLINE_THRESHOLD_MIN = 10;
+
+export function ContactsListDialog({ courseId, tutorId, open, onOpenChange }: Props) {
+  const [loading, setLoading] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+
+  useEffect(() => {
+    if (!open || !courseId) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const { data: enrolls } = await supabase
+          .from("enrollments")
+          .select("user_id, enrollment_role")
+          .eq("course_id", courseId);
+
+        const ids = Array.from(
+          new Set([...(enrolls?.map((e: any) => e.user_id) ?? []), tutorId].filter(Boolean))
+        ) as string[];
+        if (ids.length === 0) {
+          if (!cancelled) setContacts([]);
+          return;
+        }
+
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", ids);
+
+        const sinceIso = new Date(Date.now() - ONLINE_THRESHOLD_MIN * 60000).toISOString();
+        const { data: sessions } = await supabase
+          .from("user_sessions")
+          .select("user_id, started_at, ended_at")
+          .in("user_id", ids)
+          .or(`ended_at.is.null,started_at.gte.${sinceIso}`);
+
+        const onlineSet = new Set<string>();
+        (sessions || []).forEach((s: any) => {
+          if (!s.ended_at) onlineSet.add(s.user_id);
+          else if (new Date(s.started_at).getTime() > Date.now() - ONLINE_THRESHOLD_MIN * 60000) {
+            onlineSet.add(s.user_id);
+          }
+        });
+
+        const built: Contact[] = (profiles || []).map((p: any) => {
+          const isTutor =
+            p.id === tutorId ||
+            enrolls?.find((e: any) => e.user_id === p.id)?.enrollment_role === "teacher";
+          return {
+            id: p.id,
+            full_name: p.full_name,
+            email: null,
+            role: isTutor ? "teacher" : "student",
+            online: onlineSet.has(p.id),
+          };
+        });
+        built.sort((a, b) => {
+          if (a.role !== b.role) return a.role === "teacher" ? -1 : 1;
+          return (a.full_name || "").localeCompare(b.full_name || "");
+        });
+        if (!cancelled) setContacts(built);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, courseId, tutorId]);
+
+  const initials = (name: string | null) =>
+    (name || "?").split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Contactos de mi grupo
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 pt-2">
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : contacts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              No hay contactos disponibles para este curso.
+            </p>
+          ) : (
+            contacts.map((c) => (
+              <div
+                key={c.id}
+                className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/40 transition-colors"
+              >
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="text-xs">{initials(c.full_name)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate">{c.full_name || "Sin nombre"}</p>
+                    <span
+                      className={`h-2 w-2 rounded-full shrink-0 ${c.online ? "bg-green-500" : "bg-red-500"}`}
+                      title={c.online ? "Conectado" : "Desconectado"}
+                    />
+                  </div>
+                  <div className="mt-0.5">
+                    <Badge
+                      variant={c.role === "teacher" ? "default" : "secondary"}
+                      className="text-[10px] py-0 px-1.5"
+                    >
+                      {c.role === "teacher" ? "Tutor-Formador" : "Alumno"}
+                    </Badge>
+                  </div>
+                </div>
+                {c.email && (
+                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" asChild>
+                    <a href={`mailto:${c.email}`} title="Enviar email">
+                      <Mail className="h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
