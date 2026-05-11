@@ -2773,6 +2773,11 @@ export default function CourseView() {
               </Card>
             )}
 
+            {/* Mis Contactos (alumnos) */}
+            {userRole !== 'teacher' && (
+              <CourseContactsCard courseId={courseId!} tutorId={course.tutor_id} />
+            )}
+
             {/* Tutorías Virtuales */}
             <Collapsible defaultOpen={false}>
               <Card>
