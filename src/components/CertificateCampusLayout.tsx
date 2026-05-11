@@ -561,6 +561,11 @@ export function CampusChrome({
           />
         </DialogContent>
       </Dialog>
-    </>
-  );
+
+      <ContactsListDialog
+        courseId={course.id || ""}
+        tutorId={null}
+        open={contactsOpen}
+        onOpenChange={setContactsOpen}
+      />
 }
