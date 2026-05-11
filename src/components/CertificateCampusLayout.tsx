@@ -32,6 +32,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { CAUSupportForm } from "@/components/campus/CAUSupportForm";
+import { ContactsListDialog } from "@/components/campus/ContactsListDialog";
 
 interface UnitLite {
   id: string;
