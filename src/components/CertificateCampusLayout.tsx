@@ -568,4 +568,6 @@ export function CampusChrome({
         open={contactsOpen}
         onOpenChange={setContactsOpen}
       />
+    </>
+  );
 }
