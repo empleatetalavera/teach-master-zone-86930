@@ -4000,10 +4000,78 @@ export type Database = {
     Functions: {
       clean_old_login_attempts: { Args: never; Returns: undefined }
       current_training_center_id: { Args: never; Returns: string }
+      get_center_overview: {
+        Args: never
+        Returns: {
+          avg_grade: number
+          avg_progress: number
+          center_name: string
+          pending_submissions: number
+          total_courses: number
+          total_enrollments: number
+          total_students: number
+          training_center_id: string
+        }[]
+      }
+      get_course_admin_breakdown: {
+        Args: { p_course_id: string }
+        Returns: {
+          avg_grade: number
+          avg_progress: number
+          course_id: string
+          course_title: string
+          graded_submissions: number
+          pending_submissions: number
+          students_count: number
+          total_time_seconds: number
+        }[]
+      }
+      get_course_students_overview: {
+        Args: { p_course_id: string }
+        Returns: {
+          avg_grade: number
+          avg_progress: number
+          email: string
+          full_name: string
+          graded_submissions: number
+          last_accessed_at: string
+          pending_submissions: number
+          total_seconds: number
+          user_id: string
+        }[]
+      }
       get_email_by_username: {
         Args: { p_center_slug?: string; p_username: string }
         Returns: {
           email: string
+        }[]
+      }
+      get_student_submissions_status: {
+        Args: { p_user_id: string }
+        Returns: {
+          course_id: string
+          graded: number
+          pending: number
+          submitted: number
+          total: number
+        }[]
+      }
+      get_student_time_per_course: {
+        Args: { p_user_id: string }
+        Returns: {
+          course_id: string
+          total_seconds: number
+        }[]
+      }
+      get_teacher_course_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          avg_grade: number
+          avg_progress: number
+          course_id: string
+          course_title: string
+          pending_submissions: number
+          students_count: number
         }[]
       }
       get_user_center_id: { Args: { _user_id: string }; Returns: string }
