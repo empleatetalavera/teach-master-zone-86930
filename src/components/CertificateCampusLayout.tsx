@@ -154,7 +154,7 @@ export function CampusChrome({
 
   const COMUNICARME_ITEMS = [
     { id: "profile", label: "Mi perfil", Icon: UserIcon, action: () => navigate("/profile") },
-    { id: "contacts", label: "Mis contactos", Icon: UsersIcon, action: () => goToTab("forum") },
+    { id: "contacts", label: "Mis contactos", Icon: UsersIcon, action: () => setContactsOpen(true) },
     {
       id: "mail",
       label: "Correo",
