@@ -567,10 +567,29 @@ export function CampusChrome({
 
       <ContactsListDialog
         courseId={course.id || ""}
-        tutorId={null}
+        tutorId={course.tutor_id || null}
         open={contactsOpen}
         onOpenChange={setContactsOpen}
       />
+
+      <Dialog open={tutorChatOpen} onOpenChange={setTutorChatOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0">
+          <DialogHeader className="px-6 pt-5 pb-2 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              Chat con el tutor
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <TutorMessaging
+              courseId={course.id || ""}
+              tutorId={course.tutor_id || undefined}
+              supportEmail={centerContact.email || undefined}
+              supportPhone={centerContact.phone || undefined}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
