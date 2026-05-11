@@ -2730,15 +2730,45 @@ export default function CourseView() {
                   <p className="text-xs text-muted-foreground italic">
                     Debes completar todos los datos requeridos en la ventana emergente que se abre al pinchar en el icono.
                   </p>
-                  <Button 
-                    className="w-full" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/profile')}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Ver Mi Perfil
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="w-full" variant="outline" size="sm">
+                        <User className="w-4 h-4 mr-2" />
+                        Ver Mi Perfil
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <User className="h-5 w-5 text-primary" />
+                          Mi Perfil
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 pt-2">
+                        <p className="text-sm text-foreground">
+                          En el icono <strong>Mi Perfil</strong> señalarás tus datos personales, para que otros compañeros tengan acceso a esa información y puedan acceder a ti en cualquier momento a través del correo electrónico que facilites. Así podréis recibir ayuda mutua y el aprendizaje será más fructífero.
+                        </p>
+                        <p className="text-sm text-muted-foreground italic">
+                          Debes completar todos los datos requeridos en la ventana emergente que se abre al pinchar en el icono.
+                        </p>
+                        <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                          <h4 className="font-semibold text-sm">Datos a completar:</h4>
+                          <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-5">
+                            <li>Nombre, apellidos y DNI</li>
+                            <li>Fecha de nacimiento y datos de contacto (teléfono, email)</li>
+                            <li>Formación, empresa y puesto</li>
+                            <li>Redes sociales (Facebook, Twitter, LinkedIn, Skype)</li>
+                            <li>Foto de perfil</li>
+                            <li>Preferencias de notificaciones y privacidad</li>
+                          </ul>
+                        </div>
+                        <Button className="w-full" onClick={() => navigate('/profile')}>
+                          <User className="w-4 h-4 mr-2" />
+                          Completar / editar mis datos
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </CardContent>
               </Card>
             )}
