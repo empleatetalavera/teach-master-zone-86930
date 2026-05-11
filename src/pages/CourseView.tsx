@@ -1573,23 +1573,72 @@ export default function CourseView() {
               </CardContent>
             </Card>
             
-            {/* Admin uploader for custom student guide */}
-            {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'teacher') && (
-              <SingleDocumentUploader
-                courseId={courseId || ''}
-                documentUrl={course.student_guide_pdf_url}
-                documentType="guide"
-                onUpdate={loadCourseData}
-                isAdmin={true}
-              />
-            )}
-            
             <Card>
-              <CardContent className="p-6">
-                <CourseStudentGuide 
-                  course={{ ...course, student_guide_pdf_url: centerContact.student_guide_pdf_url || course.student_guide_pdf_url }} 
-                  centerSlug={centerSlug} 
-                />
+              <CardHeader>
+                <CardTitle>Cómo hacer mi curso</CardTitle>
+                <CardDescription>
+                  Te presentamos de forma esquemática cada uno de los pasos que debes seguir para el desarrollo del curso.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[
+                  {
+                    title: "A) INTRODUCCIÓN AL MÓDULO FORMATIVO / UNIDAD FORMATIVA",
+                    intro: "Al inicio de cada módulo formativo o unidad formativa:",
+                    items: [
+                      "Acude al chat o a la sesión presencial de la sesión inicial.",
+                      "Consulta los objetivos y contenidos, en el documento PDF o a través del vídeo de presentación.",
+                      "Realiza el test de conocimientos previos.",
+                    ],
+                  },
+                  {
+                    title: "B) DESARROLLA TU FORMACIÓN EN EL CAMPUS VIRTUAL",
+                    intro: "En cada unidad didáctica:",
+                    items: [
+                      "Estudia los contenidos multimedia y amplía tus conocimientos con los materiales complementarios.",
+                      "Consulta los documentos y vídeos de apoyo.",
+                      "Realiza las actividades de aprendizaje.",
+                      "Participa en los foros de debate.",
+                      "Realiza el test de autoevaluación en Campus.",
+                    ],
+                  },
+                  {
+                    title: "C) DESARROLLA LA FORMACIÓN EN LA TUTORÍA PRESENCIAL",
+                    intro: "En la fecha y lugar que se te indique debes asistir a las tutorías presenciales en el Centro de formación. Consulta el cuaderno del alumno.",
+                    items: [],
+                  },
+                  {
+                    title: "D) PARTICIPA EN LAS TUTORÍAS VIRTUALES",
+                    intro: "Acude a la tutoría virtual grupal (a través de la herramienta de chat o \"Contacta en directo\").",
+                    items: [],
+                  },
+                  {
+                    title: "E) REALIZA LAS PRUEBAS DE EVALUACIÓN",
+                    intro: "Al finalizar cada módulo o unidad formativa deberás realizar las siguientes pruebas de evaluación:",
+                    items: [
+                      "TEST FINAL de evaluación en Campus.",
+                      "También debes responder a las cuestiones planteadas en el Cuestionario de Evaluación de la Calidad que ayudarán a mejorar la formación.",
+                      "PRUEBA DE EVALUACIÓN FINAL PRESENCIAL en el Centro de formación, al finalizar todas las unidades formativas que componen el módulo formativo.",
+                    ],
+                  },
+                ].map((step, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-lg border-2 border-primary/30 bg-card p-5 shadow-sm"
+                  >
+                    <h4 className="font-bold text-sm sm:text-base text-primary mb-2">
+                      {step.title}
+                    </h4>
+                    <p className="text-sm text-foreground mb-2">{step.intro}</p>
+                    {step.items.length > 0 && (
+                      <ol className="list-[lower-alpha] pl-6 space-y-1 text-sm text-foreground">
+                        {step.items.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
+                ))}
               </CardContent>
             </Card>
 
