@@ -48,20 +48,32 @@ export function CourseContactsCard({ courseId, tutorId }: Props) {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, email, last_seen_at")
+        .select("id, full_name")
         .in("id", ids);
 
-      const now = Date.now();
+      const sinceIso = new Date(Date.now() - ONLINE_THRESHOLD_MIN * 60000).toISOString();
+      const { data: sessions } = await supabase
+        .from("user_sessions")
+        .select("user_id, started_at, ended_at")
+        .in("user_id", ids)
+        .or(`ended_at.is.null,started_at.gte.${sinceIso}`);
+
+      const onlineSet = new Set<string>();
+      (sessions || []).forEach((s: any) => {
+        if (!s.ended_at) onlineSet.add(s.user_id);
+        else if (new Date(s.started_at).getTime() > Date.now() - ONLINE_THRESHOLD_MIN * 60000) {
+          onlineSet.add(s.user_id);
+        }
+      });
+
       const built: Contact[] = (profiles || []).map((p: any) => {
         const isTutor = p.id === tutorId || enrolls?.find((e: any) => e.user_id === p.id)?.enrollment_role === "teacher";
-        const lastSeen = p.last_seen_at ? new Date(p.last_seen_at).getTime() : 0;
-        const online = lastSeen > 0 && (now - lastSeen) / 60000 < ONLINE_THRESHOLD_MIN;
         return {
           id: p.id,
           full_name: p.full_name,
-          email: p.email,
+          email: null,
           role: isTutor ? "teacher" : "student",
-          online,
+          online: onlineSet.has(p.id),
         };
       });
 
