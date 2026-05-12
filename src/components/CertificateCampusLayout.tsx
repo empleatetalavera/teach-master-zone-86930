@@ -327,7 +327,7 @@ export function CampusChrome({
                   const units = m.formative_units || [];
                   const isCurrent = m.id === selectedModuleId;
                   const pillBase = cn(
-                    "h-full px-2 py-2 rounded-l text-xs font-semibold border transition-all flex items-center gap-1.5 truncate flex-1 min-w-0",
+                    "px-2 py-2 rounded-l text-xs font-semibold border transition-all flex items-start gap-1.5 flex-1 min-w-0",
                     status === "done" &&
                       "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100",
                     isCurrent &&
@@ -347,9 +347,9 @@ export function CampusChrome({
                         title={m.title}
                         className={pillBase}
                       >
-                        <StatusIcon className="h-3.5 w-3.5 shrink-0" />
+                        <StatusIcon className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                         <span className="font-bold shrink-0">{code}</span>
-                        <span className="truncate opacity-90">· {m.title}</span>
+                        <span className="line-clamp-2 opacity-90 whitespace-normal">· {m.title}</span>
                       </button>
                       <Popover>
                         <PopoverTrigger asChild>
