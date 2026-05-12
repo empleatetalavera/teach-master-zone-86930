@@ -271,6 +271,7 @@ export default function CourseView() {
     campus_url?: string;
     student_guide_pdf_url?: string | null;
     tutor_guide_pdf_url?: string | null;
+    training_program_pdf_url?: string | null;
     support_schedule?: string | null;
   }>({
     name: "",
