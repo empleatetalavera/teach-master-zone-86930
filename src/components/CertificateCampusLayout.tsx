@@ -120,6 +120,52 @@ export function CampusChrome({
   const [contactsOpen, setContactsOpen] = useState(false);
   const [tutorChatOpen, setTutorChatOpen] = useState(false);
   const [unitsOpen, setUnitsOpen] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
+  const { user } = useAuth();
+
+  // Fetch unread incoming messages for this course (real-time)
+  useEffect(() => {
+    if (!user?.id || !course.id) return;
+    const courseId = course.id;
+
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("communications")
+        .select("id", { count: "exact", head: true })
+        .eq("course_id", courseId)
+        .eq("receiver_id", user.id)
+        .eq("is_read", false);
+      setPendingCount(count || 0);
+    };
+    fetchCount();
+
+    const channel = supabase
+      .channel(`pending-msgs-${courseId}-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "communications", filter: `receiver_id=eq.${user.id}` },
+        () => fetchCount()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, course.id]);
+
+  // Mark messages as read when opening the tutor chat dialog
+  useEffect(() => {
+    if (!tutorChatOpen || !user?.id || !course.id || pendingCount === 0) return;
+    (async () => {
+      await supabase
+        .from("communications")
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq("course_id", course.id)
+        .eq("receiver_id", user.id)
+        .eq("is_read", false);
+      setPendingCount(0);
+    })();
+  }, [tutorChatOpen, user?.id, course.id, pendingCount]);
 
   const goToUnit = (moduleId: string, unitId?: string) => {
     onSelectModule(moduleId);
