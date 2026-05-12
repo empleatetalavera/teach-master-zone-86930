@@ -30,10 +30,12 @@ import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CAUSupportForm } from "@/components/campus/CAUSupportForm";
 import { ContactsListDialog } from "@/components/campus/ContactsListDialog";
 import { TutorMessaging } from "@/components/TutorMessaging";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UnitLite {
   id: string;
