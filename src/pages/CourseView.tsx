@@ -495,6 +495,7 @@ export default function CourseView() {
           campus_url: (centerData as any)?.campus_url || "",
           student_guide_pdf_url: (centerData as any)?.student_guide_pdf_url || null,
           tutor_guide_pdf_url: (centerData as any)?.tutor_guide_pdf_url || null,
+          training_program_pdf_url: (centerData as any)?.training_program_pdf_url || null,
           support_schedule: (centerData as any)?.support_schedule || null
         });
       }
