@@ -492,18 +492,25 @@ export function CampusChrome({
           Comunicarme
         </div>
         <div className="bg-white border border-t-0 rounded-b p-1.5 flex flex-col gap-0.5 shadow-sm">
-          {COMUNICARME_ITEMS.map(({ id, label, Icon, action, highlight }) => (
+          {COMUNICARME_ITEMS.map(({ id, label, Icon, action, highlight, badge }: any) => (
             <button
               key={id}
               onClick={action}
               className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded text-[10px] text-center leading-tight transition-colors",
+                "relative flex flex-col items-center gap-1 p-2 rounded text-[10px] text-center leading-tight transition-colors",
                 highlight
                   ? "text-red-600 hover:bg-red-50 font-semibold"
                   : "text-slate-700 hover:bg-slate-100"
               )}
             >
-              <Icon className="h-5 w-5" />
+              <div className="relative">
+                <Icon className="h-5 w-5" />
+                {badge ? (
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-red-600 text-white text-[9px] font-bold flex items-center justify-center">
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                ) : null}
+              </div>
               <span>{label}</span>
             </button>
           ))}
