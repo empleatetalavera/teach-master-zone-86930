@@ -48,13 +48,14 @@ const StudentDashboard = () => {
           .eq('user_id', user.id)
           .eq('document_type', 'dni');
 
-        const hasRequiredProfile = profileData?.dni_nie && profileData?.full_name && profileData?.phone;
-        const hasRequiredDocs = docs && docs.length > 0;
+        const hasRequiredProfile = Boolean(profileData?.dni_nie && profileData?.full_name && profileData?.phone);
+        const hasRequiredDocs = Boolean(docs && docs.length > 0);
+        const isComplete = hasRequiredProfile && hasRequiredDocs;
 
-        setProfileComplete(hasRequiredProfile && hasRequiredDocs);
+        setProfileComplete(isComplete);
 
-        // If profile is complete, load enrollments
-        if (hasRequiredProfile && hasRequiredDocs) {
+        // Always load enrollments so the dashboard reflects them even if profile is partially incomplete
+        {
           const { data: enrollmentsData, error } = await supabase
             .from('enrollments')
             .select(`
