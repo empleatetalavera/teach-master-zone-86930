@@ -44,6 +44,7 @@ export default function CenterSettings() {
   const [navigationGuideUrl, setNavigationGuideUrl] = useState<string | null>(null);
   const [studentGuideUrl, setStudentGuideUrl] = useState<string | null>(null);
   const [tutorGuideUrl, setTutorGuideUrl] = useState<string | null>(null);
+  const [trainingProgramUrl, setTrainingProgramUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadCenterData();
