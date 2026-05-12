@@ -864,6 +864,31 @@ export default function CenterSettings() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Compass className="h-5 w-5" />
+                Programa Formativo (propio del centro)
+              </CardTitle>
+              <CardDescription>
+                PDF que se mostrará a los alumnos de TODOS los cursos de tu centro como Programa Formativo. Sustituye al programa por defecto del curso.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {centerId && (
+                <CenterDocumentUploader
+                  centerId={centerId}
+                  documentUrl={trainingProgramUrl}
+                  dbField="training_program_pdf_url"
+                  bucket="course-documents"
+                  label="Programa Formativo"
+                  fileNamePrefix="programa-formativo-centro"
+                  onUpdate={loadCenterData}
+                />
+              )}
+            </CardContent>
+          </Card>
+
           <div className="flex justify-end gap-4">
             <Button
               type="button"
