@@ -1691,6 +1691,40 @@ export default function CourseView() {
                 <CardDescription>Información general, objetivos y contenidos del curso</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {(centerContact.training_program_pdf_url || course.training_program_pdf_url) && (
+                  <div className="flex items-center justify-between gap-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <ClipboardList className="h-5 w-5 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">Programa Formativo (PDF)</p>
+                        <p className="text-xs text-muted-foreground">Descarga el programa formativo oficial del curso.</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        const url = centerContact.training_program_pdf_url || course.training_program_pdf_url!;
+                        try {
+                          const res = await fetch(url);
+                          const blob = await res.blob();
+                          const blobUrl = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = blobUrl;
+                          a.download = `programa-formativo-${(course.title || "curso").toLowerCase().replace(/\s+/g, "-")}.pdf`;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                        } catch {
+                          window.open(url, "_blank", "noopener,noreferrer");
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Descargar PDF
+                    </Button>
+                  </div>
+                )}
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Descripción</h3>
                   <p className="text-muted-foreground">{course.description || "Sin descripción disponible."}</p>
