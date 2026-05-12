@@ -797,10 +797,12 @@ export default function CourseView() {
             }}
             onOpenStudentGuide={async () => {
               const customUrl = (course as any)?.student_guide_pdf_url;
+              console.log('[StudentGuide] click. customUrl =', customUrl);
               if (customUrl) {
+                const tId = toast({ title: 'Descargando Guía del Alumno...', description: 'Por favor espera, el archivo puede pesar varios MB.' });
                 try {
-                  const res = await fetch(customUrl);
-                  if (!res.ok) throw new Error('fetch failed');
+                  const res = await fetch(customUrl, { mode: 'cors' });
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
                   const blob = await res.blob();
                   const objUrl = URL.createObjectURL(blob);
                   const a = document.createElement('a');
@@ -810,9 +812,13 @@ export default function CourseView() {
                   a.click();
                   a.remove();
                   setTimeout(() => URL.revokeObjectURL(objUrl), 15000);
+                  toast({ title: 'Descarga lista', description: 'La Guía del Alumno se ha descargado correctamente.' });
                   return;
-                } catch (e) {
-                  console.warn('No se pudo descargar la guía personalizada, abriendo pestaña:', e);
+                } catch (e: any) {
+                  console.error('[StudentGuide] download failed:', e);
+                  toast({ title: 'Error al descargar', description: e?.message || 'No se pudo descargar la guía. Abriendo en nueva pestaña...', variant: 'destructive' });
+                  window.open(customUrl, '_blank', 'noopener,noreferrer');
+                  return;
                 }
               }
               setActiveTab('student-guide');
