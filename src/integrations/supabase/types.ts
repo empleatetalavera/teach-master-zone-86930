@@ -3469,6 +3469,7 @@ export type Database = {
           slug: string | null
           student_guide_pdf_url: string | null
           support_schedule: string | null
+          training_program_pdf_url: string | null
           tutor_guide_pdf_url: string | null
           updated_at: string | null
           whatsapp_phone: string | null
@@ -3505,6 +3506,7 @@ export type Database = {
           slug?: string | null
           student_guide_pdf_url?: string | null
           support_schedule?: string | null
+          training_program_pdf_url?: string | null
           tutor_guide_pdf_url?: string | null
           updated_at?: string | null
           whatsapp_phone?: string | null
@@ -3541,6 +3543,7 @@ export type Database = {
           slug?: string | null
           student_guide_pdf_url?: string | null
           support_schedule?: string | null
+          training_program_pdf_url?: string | null
           tutor_guide_pdf_url?: string | null
           updated_at?: string | null
           whatsapp_phone?: string | null

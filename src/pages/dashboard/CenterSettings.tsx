@@ -44,6 +44,7 @@ export default function CenterSettings() {
   const [navigationGuideUrl, setNavigationGuideUrl] = useState<string | null>(null);
   const [studentGuideUrl, setStudentGuideUrl] = useState<string | null>(null);
   const [tutorGuideUrl, setTutorGuideUrl] = useState<string | null>(null);
+  const [trainingProgramUrl, setTrainingProgramUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadCenterData();
@@ -110,6 +111,7 @@ export default function CenterSettings() {
       setNavigationGuideUrl(center.navigation_guide_pdf_url || null);
       setStudentGuideUrl((center as any).student_guide_pdf_url || null);
       setTutorGuideUrl((center as any).tutor_guide_pdf_url || null);
+      setTrainingProgramUrl((center as any).training_program_pdf_url || null);
     } catch (error) {
       console.error("Error loading center data:", error);
       toast.error("Error al cargar los datos del centro");
@@ -856,6 +858,31 @@ export default function CenterSettings() {
                   bucket="course-documents"
                   label="Guía del Tutor"
                   fileNamePrefix="guia-tutor-centro"
+                  onUpdate={loadCenterData}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Compass className="h-5 w-5" />
+                Programa Formativo (propio del centro)
+              </CardTitle>
+              <CardDescription>
+                PDF que se mostrará a los alumnos de TODOS los cursos de tu centro como Programa Formativo. Sustituye al programa por defecto del curso.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {centerId && (
+                <CenterDocumentUploader
+                  centerId={centerId}
+                  documentUrl={trainingProgramUrl}
+                  dbField="training_program_pdf_url"
+                  bucket="course-documents"
+                  label="Programa Formativo"
+                  fileNamePrefix="programa-formativo-centro"
                   onUpdate={loadCenterData}
                 />
               )}

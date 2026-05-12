@@ -84,6 +84,7 @@ interface Props {
 const RECURSOS_TABS = [
   { label: "Introducción", tab: "intro", Icon: Sparkles },
   { label: "Formación en campus", tab: "modules", Icon: GraduationCap },
+  { label: "Programa formativo", tab: "course-program", Icon: ClipboardList },
   { label: "Tutorías", tab: "tutorials", Icon: Briefcase },
   { label: "Plan de trabajo", tab: "work-plan", Icon: ClipboardList },
   { label: "Evaluación", tab: "exams", Icon: ListChecks },
