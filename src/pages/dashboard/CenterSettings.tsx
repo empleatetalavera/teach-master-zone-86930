@@ -111,6 +111,7 @@ export default function CenterSettings() {
       setNavigationGuideUrl(center.navigation_guide_pdf_url || null);
       setStudentGuideUrl((center as any).student_guide_pdf_url || null);
       setTutorGuideUrl((center as any).tutor_guide_pdf_url || null);
+      setTrainingProgramUrl((center as any).training_program_pdf_url || null);
     } catch (error) {
       console.error("Error loading center data:", error);
       toast.error("Error al cargar los datos del centro");
