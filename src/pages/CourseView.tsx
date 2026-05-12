@@ -795,7 +795,28 @@ export default function CourseView() {
               };
               navigate(dashboardRoutes[userRole || 'student'] || '/dashboard/student/courses');
             }}
-            onOpenStudentGuide={() => setActiveTab('student-guide')}
+            onOpenStudentGuide={async () => {
+              const customUrl = (course as any)?.student_guide_pdf_url;
+              if (customUrl) {
+                try {
+                  const res = await fetch(customUrl);
+                  if (!res.ok) throw new Error('fetch failed');
+                  const blob = await res.blob();
+                  const objUrl = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = objUrl;
+                  a.download = `Guia_Alumno_${(course.title || 'curso').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  setTimeout(() => URL.revokeObjectURL(objUrl), 15000);
+                  return;
+                } catch (e) {
+                  console.warn('No se pudo descargar la guía personalizada, abriendo pestaña:', e);
+                }
+              }
+              setActiveTab('student-guide');
+            }}
           />
         )}
 
