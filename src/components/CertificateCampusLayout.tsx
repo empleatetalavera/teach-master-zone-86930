@@ -30,10 +30,12 @@ import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CAUSupportForm } from "@/components/campus/CAUSupportForm";
 import { ContactsListDialog } from "@/components/campus/ContactsListDialog";
 import { TutorMessaging } from "@/components/TutorMessaging";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UnitLite {
   id: string;
@@ -118,6 +120,52 @@ export function CampusChrome({
   const [contactsOpen, setContactsOpen] = useState(false);
   const [tutorChatOpen, setTutorChatOpen] = useState(false);
   const [unitsOpen, setUnitsOpen] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
+  const { user } = useAuth();
+
+  // Fetch unread incoming messages for this course (real-time)
+  useEffect(() => {
+    if (!user?.id || !course.id) return;
+    const courseId = course.id;
+
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("communications")
+        .select("id", { count: "exact", head: true })
+        .eq("course_id", courseId)
+        .eq("receiver_id", user.id)
+        .eq("is_read", false);
+      setPendingCount(count || 0);
+    };
+    fetchCount();
+
+    const channel = supabase
+      .channel(`pending-msgs-${courseId}-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "communications", filter: `receiver_id=eq.${user.id}` },
+        () => fetchCount()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, course.id]);
+
+  // Mark messages as read when opening the tutor chat dialog
+  useEffect(() => {
+    if (!tutorChatOpen || !user?.id || !course.id || pendingCount === 0) return;
+    (async () => {
+      await supabase
+        .from("communications")
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq("course_id", course.id)
+        .eq("receiver_id", user.id)
+        .eq("is_read", false);
+      setPendingCount(0);
+    })();
+  }, [tutorChatOpen, user?.id, course.id, pendingCount]);
 
   const goToUnit = (moduleId: string, unitId?: string) => {
     onSelectModule(moduleId);
@@ -172,7 +220,7 @@ export function CampusChrome({
     },
     { id: "chat", label: "Chat", Icon: MessageSquare, action: () => goToTab("cafeteria") },
     { id: "chat-tutor", label: "Chat con el tutor", Icon: MessageSquare, action: () => setTutorChatOpen(true) },
-    { id: "pending-messages", label: "Mensajes pendientes", Icon: Inbox, action: () => setTutorChatOpen(true) },
+    { id: "pending-messages", label: "Mensajes pendientes", Icon: Inbox, action: () => setTutorChatOpen(true), badge: pendingCount },
     {
       id: "phone",
       label: "Contacta en directo",
@@ -444,18 +492,25 @@ export function CampusChrome({
           Comunicarme
         </div>
         <div className="bg-white border border-t-0 rounded-b p-1.5 flex flex-col gap-0.5 shadow-sm">
-          {COMUNICARME_ITEMS.map(({ id, label, Icon, action, highlight }) => (
+          {COMUNICARME_ITEMS.map(({ id, label, Icon, action, highlight, badge }: any) => (
             <button
               key={id}
               onClick={action}
               className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded text-[10px] text-center leading-tight transition-colors",
+                "relative flex flex-col items-center gap-1 p-2 rounded text-[10px] text-center leading-tight transition-colors",
                 highlight
                   ? "text-red-600 hover:bg-red-50 font-semibold"
                   : "text-slate-700 hover:bg-slate-100"
               )}
             >
-              <Icon className="h-5 w-5" />
+              <div className="relative">
+                <Icon className="h-5 w-5" />
+                {badge ? (
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-red-600 text-white text-[9px] font-bold flex items-center justify-center">
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                ) : null}
+              </div>
               <span>{label}</span>
             </button>
           ))}
